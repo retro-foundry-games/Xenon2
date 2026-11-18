@@ -57,6 +57,9 @@ the level running with its blob at `$54E00`; 512 KB each).  Read tables and stri
   audio chips stays faithful C (it runs on the Amiga and in the oracle) and carries `/* HLE: blitter */` (or `copper`, `disk`, `audio`)
   in its comment: the SDL port replaces such functions by high-level equivalents, it does not emulate the chips.  Waiting for the
   blitter: `while (custom->dmaconr & DMAF_BLTBUSY) ;` as the original does.
+- The registers with set/clear semantics (`dmacon`, `intena`, `intreq`, `adkcon`) are written only with `SETCLR_WRITE(dmacon, value)` (hw.h): the SDL port applies the write.  Palette registers
+  (`custom->color[n]`), `bplcon0`, `diwstrt`... are written directly; the picture is made from the copper list the game leaves in memory (`cop1lc`, a list of
+  MOVE/WAIT pairs that mostly sets the bitplane pointers) and from these registers.
 - Interrupt handlers (end with `rte`) are `void irq_...(void)` functions; the oracle cannot call them (it calls routines that end with
   `rts`); translate carefully and list them in your report as unchecked.
 - Self-modifying code (a `move.w #$4E75, addr` over a routine's first word, a branch patched into a slot) is a function pointer or a
