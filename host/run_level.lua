@@ -30,18 +30,19 @@ local ramat = {}
 for n in (args:match("ramat=([%d,]+)") or ""):gmatch("%d+") do ramat[tonumber(n)] = true end
 local ram_prefix = args:match("ramprefix=(%S+)") or "captures/ram"
 local covered, order = {}, {}
-local function on_cover()
-    local pc = ami.reg("pc")
-    if not covered[pc] then covered[pc] = true; order[#order + 1] = pc end
+-- the address comes from the closure: ami.reg("pc") inside a hook is the CPU's prefetched PC, not the instruction's address
+local function cover_hook(a)
+    return function()
+        if not covered[a] then covered[a] = true; order[#order + 1] = a end
+        if a == 0x921a then log_read() end
+    end
 end
 local cover_on = false
 local fire_until = 0
 while ami.frame() < until_frame do
     local f = ami.frame()
     if cover and not cover_on and f >= cover_from then
-        for a = cover_lo, cover_hi, 2 do
-            if a == 0x921a then ami.hook(a, function() on_cover(); log_read() end) else ami.hook(a, on_cover) end
-        end
+        for a = cover_lo, cover_hi, 2 do ami.hook(a, cover_hook(a)) end
         cover_on = true
     end
     if f >= 5200 and f % 150 == 0 then ami.joystick{ fire = true }; fire_until = f + 10 end
