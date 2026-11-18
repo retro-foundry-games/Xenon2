@@ -72,6 +72,16 @@ void host_setclr_write(unsigned register_offset, uint16_t value);
 #define SETCLR_WRITE(reg, value) (custom->reg = (uint16_t)(value))
 #endif
 
+/* A loop that waits for something an interrupt handler (or a chip) changes, as `while (!vblank_seen) HOST_IDLE();`: on the Amiga the
+ * interrupt comes by itself and HOST_IDLE() is nothing; in the SDL port it runs the interrupts that are due (the vertical blank every
+ * 20 ms of emulated time, with the picture and the sound) and waits for the clock. */
+#ifdef GAME_SDL
+void host_idle(void);
+#define HOST_IDLE() host_idle()
+#else
+#define HOST_IDLE() ((void)0)
+#endif
+
 #define DMAF_SETCLR 0x8000
 #define DMAF_BLITHOG 0x0400     /* blitter priority over the CPU */
 #define DMAF_BLTBUSY 0x4000     /* in dmaconr */
