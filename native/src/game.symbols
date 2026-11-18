@@ -1,0 +1,3 @@
+; Xenon 2: the variables and tables of the original at their addresses.  See tools/gen_symbols.py for the format.
+var scroll_pos 0xcd0 uint16_t ; level scroll position
+var level_done 0xd8c uint8_t
