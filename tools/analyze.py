@@ -1,9 +1,10 @@
 """Functions, calls and data references of the executed code, from an exact trace (host/trace_steps.lua).
 
-  uv run tools/analyze.py TRACE.pcs OUTDIR RAM.bin [RAM2.bin ...]
+  uv run tools/analyze.py TRACE.pcs OUTDIR --from FRAME --ram LO:HI:FILE [--ram LO:HI:FILE ...]
 
-TRACE.pcs: `pc count succ,succ,...` for every instruction that ran.  The RAM dumps hold the code: for each instruction the first dump
-whose decoding agrees with the observed successors is used (code is overlaid: the loaders, the level blob).  Writes
+TRACE.pcs: `pc count first_frame last_frame succ,succ,...` for every instruction that ran (host/trace_steps.lua).  Only instructions that
+first ran at FRAME or later are analysed (the code of one program: the low RAM is overlaid by the intro, the game, the level blob).
+Each --ram gives the dump to decode the addresses LO..HI (hex) from.  Writes
   OUTDIR/functions.txt  ENTRY kind size callers     kind: call, irq (reached by something that is not a branch), start
   OUTDIR/listing.txt    the instructions by function: address, bytes, text, and the count
   OUTDIR/refs.txt       absolute addresses the instructions read or write (data/variables), with the access sizes
@@ -18,7 +19,7 @@ def read_trace(path):
     for line in open(path):
         p = line.split()
         if not p: continue
-        trace[int(p[0], 16)] = (int(p[1]), {int(x, 16) for x in p[2].split(',')} if len(p) > 2 else set())
+        trace[int(p[0], 16)] = (int(p[1]), {int(x, 16) for x in p[4].split(',')} if len(p) > 4 else set(), int(p[2]), int(p[3]))
     return trace
 
 def classify(i):
@@ -40,35 +41,35 @@ def static_targets(i):
     return out
 
 def main():
-    trace_path, out, rams = sys.argv[1], sys.argv[2], [open(p, 'rb').read() for p in sys.argv[3:]]
+    argv = sys.argv[1:]
+    trace_path, out = argv[0], argv[1]
+    from_frame, rams = 0, []
+    i = 2
+    while i < len(argv):
+        if argv[i] == '--from': from_frame = int(argv[i + 1]); i += 2
+        elif argv[i] == '--ram':
+            lo, hi, f = argv[i + 1].split(':', 2); rams.append((int(lo, 16), int(hi, 16), open(f, 'rb').read())); i += 2
+        else: raise SystemExit('bad argument ' + argv[i])
     os.makedirs(out, exist_ok=True)
-    trace = read_trace(trace_path)
+    trace = {pc: v for pc, v in read_trace(trace_path).items() if v[2] >= from_frame}
     md = Cs(CS_ARCH_M68K, CS_MODE_M68K_000); md.detail = True
     ins, unresolved = {}, []
     for pc in sorted(trace):
-        count, succ = trace[pc]
-        chosen = None
-        for ram in rams:
-            got = None
-            for i in md.disasm(ram[pc:pc + 12], pc, 1):
-                try: i.groups
-                except Exception: continue
-                got = i
-            if got is None: continue
-            kind = classify(got)
-            nxt = pc + got.size
-            if kind == 'seq': ok = succ <= {nxt} or True    # an interrupt can follow any instruction
-            else: ok = True
-            if kind in ('seq', 'cond') and nxt not in succ and succ - {nxt} and kind == 'seq' and False: ok = False
-            chosen = got; break
-        if chosen is None: unresolved.append(pc)
-        else: ins[pc] = chosen
+        got = None
+        for lo, hi, ram in rams:
+            if lo <= pc < hi:
+                for i in md.disasm(ram[pc:pc + 12], pc, 1):
+                    try: i.groups
+                    except Exception: continue
+                    got = i
+        if got is None: unresolved.append(pc)
+        else: ins[pc] = got
     kinds = {pc: classify(i) for pc, i in ins.items()}
     entries = {}   # entry -> kind
     callers = collections.defaultdict(set)
     body_succ = collections.defaultdict(set)
     for pc, i in ins.items():
-        count, succ = trace[pc]
+        count, succ = trace[pc][:2]
         nxt, k = pc + i.size, kinds[pc]
         targets = set(static_targets(i)) if k in ('jump', 'cond', 'call') else set()
         for s in succ:

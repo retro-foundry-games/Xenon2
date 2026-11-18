@@ -24,7 +24,7 @@ COMMON := -m68000 -ffreestanding -fno-tree-loop-distribute-patterns -fno-tree-fo
 GAME_CFLAGS := $(COMMON) -O2 -DMATCH_MEMORY_LAYOUT -I$(SRC)
 WARN := -Wall -Wextra -Wno-unused-parameter
 GAME_MODULES := game data
-GAME_OBJS := $(GAME_MODULES:%=$(BUILD)/%.o)
+GAME_OBJS := $(GAME_MODULES:%=$(BUILD)/%.o) $(BUILD)/runtime.o
 
 .PHONY: all blob clean
 all: blob
@@ -33,6 +33,8 @@ $(BUILD):
 	mkdir -p $@
 $(BUILD)/%.o: $(SRC)/%.c $(wildcard $(SRC)/*.h) | $(BUILD)
 	$(CC) $(GAME_CFLAGS) $(WARN) -c $< -o $@
+$(BUILD)/runtime.o: $(SRC)/amiga/runtime.c | $(BUILD)
+	$(CC) $(GAME_CFLAGS) -fno-builtin -c $< -o $@
 $(BUILD)/game: $(GAME_OBJS) $(SRC)/game.ld
 	$(LD) -m amiga -T $(SRC)/game.ld -Map $(BUILD)/game.map -o $@ $(GAME_OBJS)
 	$(NM) $@ > $(BUILD)/game.sym
