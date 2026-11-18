@@ -1,3 +1,1 @@
-; Xenon 2: the variables and tables of the original at their addresses.  See tools/gen_symbols.py for the format.
-var random_a 0x1fee uint32_t ; random number generator state (inside the code area of the original)
-var random_b 0x1ff2 uint32_t
+; (the symbols moved to symbols/core.symbols)

@@ -1,0 +1,3 @@
+; the lead's own symbols (the random number generator, in the code area of the original)
+var random_a 0x1fee uint32_t ; random number generator state
+var random_b 0x1ff2 uint32_t
