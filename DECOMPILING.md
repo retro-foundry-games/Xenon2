@@ -55,7 +55,7 @@ the level running with its blob at `$54E00`; 512 KB each).  Read tables and stri
   it `extern` in your header; the lead renames it when its owner names it: `uv run tools/show.py` shows names).
 - The hardware: `native/src/amiga/hw.h` (`custom->bltcon0 = ...`, `CIAA_PRA`).  C that programs the blitter, the copper, the disk or
   audio chips stays faithful C (it runs on the Amiga and in the oracle) and carries `/* HLE: blitter */` (or `copper`, `disk`, `audio`)
-  in its comment: the SDL port replaces such functions by high-level equivalents, it does not emulate the chips.  Waiting for the
+  in its comment and is declared `HLE_WEAK` (hw.h; `HLE_WEAK void blit_text(...) { ... }`): the SDL port links high-level replacements over such functions, it does not emulate the chips.  Waiting for the
   blitter: `while (custom->dmaconr & DMAF_BLTBUSY) ;` as the original does.
 - The registers with set/clear semantics (`dmacon`, `intena`, `intreq`, `adkcon`) are written only with `SETCLR_WRITE(dmacon, value)` (hw.h): the SDL port applies the write.  Palette registers
   (`custom->color[n]`), `bplcon0`, `diwstrt`... are written directly; the picture is made from the copper list the game leaves in memory (`cop1lc`, a list of

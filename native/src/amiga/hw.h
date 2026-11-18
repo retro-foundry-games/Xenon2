@@ -72,6 +72,15 @@ void host_setclr_write(unsigned register_offset, uint16_t value);
 #define SETCLR_WRITE(reg, value) (custom->reg = (uint16_t)(value))
 #endif
 
+/* A function that programs a chip (the blitter, the disk DMA, ...) and is replaced in the SDL port by a high-level one with the same
+ * signature in native/src/sdl/ is declared `HLE_WEAK void blit_xxx(...)` (and has the comment `/* HLE: blitter */`): the C stays faithful for
+ * the Amiga build and the oracle, and the port's strong definition wins at link time. */
+#ifdef GAME_SDL
+#define HLE_WEAK __attribute__((weak))
+#else
+#define HLE_WEAK
+#endif
+
 /* A loop that waits for something an interrupt handler (or a chip) changes, as `while (!vblank_seen) HOST_IDLE();`: on the Amiga the
  * interrupt comes by itself and HOST_IDLE() is nothing; in the SDL port it runs the interrupts that are due (the vertical blank every
  * 20 ms of emulated time, with the picture and the sound) and waits for the clock. */
