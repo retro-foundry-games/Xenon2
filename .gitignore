@@ -1,0 +1,5 @@
+local/
+captures/
+build/
+native/build/
+__pycache__/
