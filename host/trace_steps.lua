@@ -2,7 +2,7 @@
 -- inputs as run_level.lua (fire every 150 frames from 5200, disk 2 in after the game's disk check).  Hooks report an address that is
 -- sometimes two bytes off while the machine free-runs; ami.step reports exact instruction addresses.
 --   --script-args "from=3000 until=13000 out=captures/trace [ramat=F,..]"
--- Writes OUT.pcs: `pc count successor,successor,...` for every instruction that ran, and OUT-F.bin RAM dumps.
+-- Writes OUT.pcs: `pc count first_frame last_frame successor,successor,...` for every instruction that ran, and OUT-F.bin RAM dumps.
 local args = ami.args or ""
 local from = tonumber(args:match("from=(%d+)") or "3000")
 local until_frame = tonumber(args:match("until=(%d+)") or "13000")
@@ -32,7 +32,7 @@ local function tick(f)
     if ramat[f] then ami.save_file(string.format("%s-%d.bin", out, f), ami.read(0, 0x80000)) end
 end
 while ami.frame() < from do tick(ami.frame()); ami.wait(1) end
-local count, succ = {}, {}
+local count, succ, firstf, lastf = {}, {}, {}, {}
 local prev, frame = nil, ami.frame()
 local done = false
 ami.step(function(pc)
@@ -47,7 +47,7 @@ ami.step(function(pc)
                 local nx = {}
                 for t in pairs(succ[k] or {}) do nx[#nx + 1] = string.format("%06x", t) end
                 table.sort(nx)
-                lines[#lines + 1] = string.format("%06x %d %s", k, count[k], table.concat(nx, ","))
+                lines[#lines + 1] = string.format("%06x %d %d %d %s", k, count[k], firstf[k], lastf[k], table.concat(nx, ","))
             end
             ami.save_file(out .. ".pcs", table.concat(lines, "\n") .. "\n")
             ami.save_file(out .. ".reads", table.concat(reads, "\n") .. "\n")
@@ -56,6 +56,8 @@ ami.step(function(pc)
         end
     end
     count[pc] = (count[pc] or 0) + 1
+    if not firstf[pc] then firstf[pc] = f end
+    lastf[pc] = f
     if prev then local s = succ[prev]; if not s then s = {}; succ[prev] = s end; s[pc] = true end
     prev = pc
     return true
