@@ -4,5 +4,5 @@ SECTIONS {
     .text 0xc0000 : { *(.text .text.*) *(.rodata .rodata.*) *(.data .data.*) }
     /DISCARD/ : { *(.comment) *(.note*) *(.eh_frame*) }
 }
-_scroll_pos = 0xcd0;
-_level_done = 0xd8c;
+_random_a = 0x1fee;
+_random_b = 0x1ff2;

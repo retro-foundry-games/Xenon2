@@ -14,22 +14,21 @@
 #endif
 #define LAYOUT_ASSERT(member, address) _Static_assert(offsetof(struct Xenon, member) == (address), #member " is not at its address")
 struct Xenon {
-    PAD(3280, 0x0)
-    uint16_t scroll_pos;  /* $000CD0 var */
-    PAD(186, 0x1)
-    uint8_t level_done;  /* $000D8C var */
+    PAD(8174, 0x0)
+    uint32_t random_a;  /* $001FEE var */
+    uint32_t random_b;  /* $001FF2 var */
 };
 extern struct Xenon xenon;
 #ifdef MATCH_MEMORY_LAYOUT
-LAYOUT_ASSERT(scroll_pos, 0xcd0);
-LAYOUT_ASSERT(level_done, 0xd8c);
+LAYOUT_ASSERT(random_a, 0x1fee);
+LAYOUT_ASSERT(random_b, 0x1ff2);
 #endif
-#define scroll_pos (xenon.scroll_pos)
-#define level_done (xenon.level_done)
+#define random_a (xenon.random_a)
+#define random_b (xenon.random_b)
 #else
 /* The Amiga build: each variable is at its address (game.ld). */
-extern uint16_t scroll_pos;
-extern uint8_t level_done;
+extern uint32_t random_a;
+extern uint32_t random_b;
 #endif
 
 #endif
