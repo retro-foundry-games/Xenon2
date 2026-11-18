@@ -20,7 +20,7 @@ import re, sys, os, struct, glob
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SRC = os.path.join(ROOT, 'native', 'src')
-SIZES = {'uint8_t': 1, 'int8_t': 1, 'uint16_t': 2, 'int16_t': 2, 'uint32_t': 4, 'int32_t': 4}
+SIZES = {'uint8_t': 1, 'int8_t': 1, 'uint16_t': 2, 'int16_t': 2, 'uint32_t': 4, 'int32_t': 4, 'irq_fn': 4}   # irq_fn: void (*)(void), types.h
 
 def parse():
     types, syms = {}, []

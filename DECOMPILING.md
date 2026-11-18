@@ -60,6 +60,9 @@ the level running with its blob at `$54E00`; 512 KB each).  Read tables and stri
 - The registers with set/clear semantics (`dmacon`, `intena`, `intreq`, `adkcon`) are written only with `SETCLR_WRITE(dmacon, value)` (hw.h): the SDL port applies the write.  Palette registers
   (`custom->color[n]`), `bplcon0`, `diwstrt`... are written directly; the picture is made from the copper list the game leaves in memory (`cop1lc`, a list of
   MOVE/WAIT pairs that mostly sets the bitplane pointers) and from these registers.
+- A loop that waits for something an interrupt handler or a chip changes (the vertical blank flag, a disk-done flag) is written
+  `while (!flag) HOST_IDLE();` (hw.h): nothing on the Amiga, the SDL host runs the interrupts that are due.  The vectors are the array
+  `irq_vectors` (core.symbols, `irq_fn`, levels 1-7 at $64..$7C): code that stores a handler address there assigns the C function.
 - Interrupt handlers (end with `rte`) are `void irq_...(void)` functions; the oracle cannot call them (it calls routines that end with
   `rts`); translate carefully and list them in your report as unchecked.
 - Self-modifying code (a `move.w #$4E75, addr` over a routine's first word, a branch patched into a slot) is a function pointer or a
