@@ -1,12 +1,12 @@
 -- Check the C functions of native/src (built as a blob by `make blob`) against the original, on the machine as it runs.
 --
 -- Boots the original disks in a machine with 1 MB chip RAM (the C blob sits above the original's 512 KB), restores a savestate
--- (host/mkstate.lua), and hooks the original's entry of every function in host/cases.lua.  At each call (the first SAMPLES of them)
+-- (host/mkstate.lua), and hooks the original's entry of every function in host/cases/NAME.lua.  At each call (the first SAMPLES of them)
 -- the state is saved, the original routine is run on it with ami.call, the memory is put back, the C function is run on the same
 -- state with the arguments in the registers the original has them in, and the two are compared: the result register and all of
 -- chip RAM (except the C code and the test's stack).  Then the state is put back, so the program goes on as if nothing had happened.
 --
---   ami9000_host host/oracle.lua --headless --script-args "state=NAME [only=NAME[,NAME]] [samples=N] [stride=N] [until=FRAMES] [joy=F:DIRS,...] [swap=1] [out=FILE]"
+--   ami9000_host host/oracle.lua --headless --script-args "state=NAME [only=NAME[,NAME]] [samples=N] [stride=N] [until=FRAMES] [joy=F:DIRS,...] [swap=1] [build=build/NAME] [out=FILE]"
 local args = ami.args or ""
 local only = {}
 for n in (args:match("only=([%w_,]+)") or ""):gmatch("[%w_]+") do only[n] = true end
@@ -15,6 +15,7 @@ local UNTIL = tonumber(args:match("until=(%d+)")) or 2000
 local STRIDE = tonumber(args:match("stride=(%d+)")) or 1   -- compare every STRIDE-th call, to spread the samples over the run
 local STATE = args:match("state=(%S+)")
 local OUT = args:match("out=(%S+)") or "captures/oracle.txt"
+local BUILD = args:match("build=(%S+)") or "build"   -- native/BUILD: where `make blob BUILD=...` left game.blob and game_syms.lua
 
 ami.machine{
     name = "Xenon2 oracle", model = "A500", system = "../local/system", save = "../local/save", files = "..",
@@ -25,9 +26,14 @@ ami.machine{
 ami.boot()
 
 local function read_file(name) return ami.file_read(name, 0, ami.file_size(name)) end
-local syms = load(read_file("native/build/game_syms.lua"))()
-local blob = read_file("native/build/game.blob")
-local cases = load(read_file("host/cases.lua"))()
+local syms = load(read_file("native/" .. BUILD .. "/game_syms.lua"))()
+local blob = read_file("native/" .. BUILD .. "/game.blob")
+local cases = {}
+for _, entry in ipairs(ami.dir("host/cases") or {}) do   -- one file for each module: host/cases/NAME.lua returns a list of cases
+    if entry.name:match("%.lua$") then
+        for _, case in ipairs(load(read_file("host/cases/" .. entry.name))()) do cases[#cases + 1] = case end
+    end
+end
 
 local SCRATCH = 0xE8000   -- a stack for the test, above the memory that is compared
 local CHIP = 0x100000     -- all of the machine's 1 MB chip RAM
@@ -131,7 +137,7 @@ for _, case in ipairs(cases) do
         active[#active + 1] = case
         ami.hook(case.orig, function() check(case) end)
     elseif not syms[case.c or case.name] then
-        say("missing in native/build/game_syms.lua: %s", case.c or case.name)
+        say("missing in the blob's game_syms.lua: %s", case.c or case.name)
     end
 end
 

@@ -4,3 +4,7 @@ build/
 native/build/
 __pycache__/
 .venv/
+native/src/game_state.h
+native/src/game.ld
+native/src/guest_members.h
+native/src/data.c

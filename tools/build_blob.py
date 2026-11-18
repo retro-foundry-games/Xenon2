@@ -2,11 +2,11 @@
 
     python3 tools/build_blob.py [BASE_HEX]        (run from native/, `make blob` does)
 """
-import re, struct, sys
+import os, re, struct, sys
 from pathlib import Path
 
 base = int(sys.argv[1], 16) if len(sys.argv) > 1 else 0xC0000
-build = Path('build')
+build = Path(os.environ.get('BUILD', 'build'))
 data = (build / 'game').read_bytes()
 pos, hunks = 0, []
 def u32(): 

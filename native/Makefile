@@ -10,7 +10,7 @@ CC  := m68k-amigaos-gcc
 LD  := m68k-amigaos-ld
 NM  := m68k-amigaos-nm
 SRC := src
-BUILD := build
+BUILD ?= build        # an agent working beside others builds in its own: make blob BUILD=build/NAME
 PYTHON ?= python3
 GAME_BASE ?= C0000
 
@@ -23,15 +23,22 @@ else
 COMMON := -m68000 -ffreestanding -fno-tree-loop-distribute-patterns -fno-tree-forwprop -fno-ivopts -nostdlib -fdata-sections -ffunction-sections
 GAME_CFLAGS := $(COMMON) -O2 -DMATCH_MEMORY_LAYOUT -I$(SRC)
 WARN := -Wall -Wextra -Wno-unused-parameter
-GAME_MODULES := game data
+GAME_MODULES := $(filter-out runtime,$(notdir $(basename $(wildcard $(SRC)/*.c))))   # every module in src/ (data.c is generated)
 GAME_OBJS := $(GAME_MODULES:%=$(BUILD)/%.o) $(BUILD)/runtime.o
 
-.PHONY: all blob clean
+.PHONY: all blob clean generate
 all: blob
+
+# game_state.h, game.ld, guest_members.h and data.c are made from the symbol files (tools/gen_symbols.py; the tables are read from XENON_RAM)
+XENON_RAM ?= ../captures/trace-10000.bin
+SYMBOL_FILES := $(wildcard $(SRC)/game.symbols $(SRC)/symbols/*.symbols)
+$(SRC)/game_state.h $(SRC)/game.ld $(SRC)/guest_members.h $(SRC)/data.c: $(SYMBOL_FILES) ../tools/gen_symbols.py
+	$(PYTHON) ../tools/gen_symbols.py --ram $(XENON_RAM)
+generate: $(SRC)/game_state.h
 
 $(BUILD):
 	mkdir -p $@
-$(BUILD)/%.o: $(SRC)/%.c $(wildcard $(SRC)/*.h) | $(BUILD)
+$(BUILD)/%.o: $(SRC)/%.c $(SRC)/game_state.h $(wildcard $(SRC)/*.h) | $(BUILD)
 	$(CC) $(GAME_CFLAGS) $(WARN) -c $< -o $@
 $(BUILD)/runtime.o: $(SRC)/amiga/runtime.c | $(BUILD)
 	$(CC) $(GAME_CFLAGS) -fno-builtin -c $< -o $@
@@ -41,7 +48,7 @@ $(BUILD)/game: $(GAME_OBJS) $(SRC)/game.ld
 
 # the code hunk and the function table, for the oracle
 blob: $(BUILD)/game
-	$(PYTHON) ../tools/build_blob.py $(GAME_BASE)
+	BUILD=$(BUILD) $(PYTHON) ../tools/build_blob.py $(GAME_BASE)
 
 clean:
 	rm -rf $(BUILD)
