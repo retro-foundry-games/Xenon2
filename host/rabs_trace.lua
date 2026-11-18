@@ -37,3 +37,5 @@ else
 end
 local out = args:match("ram=(%S+)")
 if out then ami.save_file(out, ami.read(0, 0x80000)) end
+
+ami.quit()

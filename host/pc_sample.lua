@@ -12,20 +12,24 @@ ami.boot()
 local swapped, st, sf = false, 0, 0
 ami.hook(0x8fe8, function() if not swapped and ami.peek32(0x49602) ~= 0x58324220 then swapped = true; st = 1 end end)
 local fire_until, hist = 0, {}
+-- the level-3 (vertical blank) handler: the stacked PC is where the main code was interrupted
+ami.hook(0x20c2, function()
+    if ami.frame() < from then return end
+    local pc = ami.peek32(ami.reg("a7") + 2)
+    local k = string.format("%06x", pc & 0xfff000)
+    hist[k] = (hist[k] or 0) + 1
+end)
 while ami.frame() < until_frame do
     local f = ami.frame()
     if f >= 5200 and f % 150 == 0 then ami.joystick{ fire = true }; fire_until = f + 10 end
     if fire_until ~= 0 and f >= fire_until then ami.joystick(); fire_until = 0 end
     if st == 1 then ami.disk_eject(true); st = 2; sf = f
     elseif st == 2 and f >= sf + 30 then ami.disk_select(1); ami.disk_eject(false); st = 3 end
-    if f >= from then
-        local pc = ami.reg("pc")
-        local k = string.format("%06x", pc & 0xfff000)
-        hist[k] = (hist[k] or 0) + 1
-    end
     ami.wait(1)
 end
 local keys = {}
 for k in pairs(hist) do keys[#keys + 1] = k end
 table.sort(keys)
 for _, k in ipairs(keys) do print(k, hist[k]) end
+
+ami.quit()

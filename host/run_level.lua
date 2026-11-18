@@ -59,3 +59,5 @@ if cover then
     for _, pc in ipairs(order) do out[#out + 1] = string.format("%06x", pc) end
     ami.save_file(cover, table.concat(out, "\n") .. "\n")
 end
+
+ami.quit()

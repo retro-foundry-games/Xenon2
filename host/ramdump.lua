@@ -19,3 +19,5 @@ for _, r in ipairs{ "pc", "sr", "d0","d1","d2","d3","d4","d5","d6","d7","a0","a1
     regs[#regs + 1] = string.format("%s=%08x", r, ami.reg(r))
 end
 ami.save_file(out .. ".regs", table.concat(regs, "\n") .. "\n")
+
+ami.quit()
