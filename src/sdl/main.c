@@ -20,6 +20,7 @@ static SDL_Window *window;
 static SDL_Renderer *renderer;
 static SDL_Texture *texture;
 static SDL_AudioStream *audio;
+static int probe_render_at = -1;
 static int headless, max_frames = -1, scale = 3, want_hash, dump_every, status_at = -1, status_every;
 static const char *dump_folder, *export_path;
 static unsigned export_vbl;
@@ -214,6 +215,8 @@ static void end_of_frame(void)
     int16_t samples[2 * 882];
 
     display_render(picture);
+    for (int i = 0; i < DISPLAY_W * DISPLAY_H; i++)
+        picture[i] |= 0xff000000u;   /* opaque */
     sound_mix(samples, 882);
     if (export_path && host_vbl_count() >= export_vbl) {
         host_export_ram(export_path);
@@ -236,6 +239,23 @@ static void end_of_frame(void)
         SDL_UpdateTexture(texture, 0, picture, DISPLAY_W * 4);
         SDL_RenderClear(renderer);
         SDL_RenderTexture(renderer, texture, 0, 0);
+        if (frames == probe_render_at) {   /* --probe-render F: how many pixels of what the renderer drew are not black */
+            SDL_Surface *shot = SDL_RenderReadPixels(renderer, 0);
+
+            if (shot) {
+                SDL_Surface *conv = SDL_ConvertSurface(shot, SDL_PIXELFORMAT_ARGB8888);
+                long lit = 0, total = 0;
+
+                for (int y = 0; conv && y < conv->h; y++)
+                    for (int x = 0; x < conv->w; x++, total++)
+                        lit += (((uint32_t *)((uint8_t *)conv->pixels + y * conv->pitch))[x] & 0xffffff) != 0;
+                printf("render probe at frame %ld: %ldx%d, %ld of %ld pixels not black (renderer %s)\n", frames, (long)shot->w, shot->h, lit, total, SDL_GetRendererName(renderer));
+                SDL_DestroySurface(conv);
+                SDL_DestroySurface(shot);
+            } else {
+                printf("render probe: cannot read the renderer: %s\n", SDL_GetError());
+            }
+        }
         SDL_RenderPresent(renderer);
         if (audio)
             SDL_PutAudioStreamData(audio, samples, sizeof samples);
@@ -304,6 +324,7 @@ int main(int argc, char **argv)
         else if (!strcmp(argv[i], "--headless")) headless = 1;
         else if (!strcmp(argv[i], "--frames") && i + 1 < argc) max_frames = atoi(argv[++i]);
         else if (!strcmp(argv[i], "--hash")) want_hash = 1;
+        else if (!strcmp(argv[i], "--probe-render") && i + 1 < argc) probe_render_at = atoi(argv[++i]);
         else if (!strcmp(argv[i], "--status-every") && i + 1 < argc) status_every = atoi(argv[++i]);
         else if (!strcmp(argv[i], "--export-ram") && i + 1 < argc) { export_path = argv[++i]; export_vbl = (unsigned)strtoul(strchr(export_path, ':') ? strchr(export_path, ':') + 1 : "0", 0, 0); if (strchr(export_path, ':')) *strchr(export_path, ':') = 0; }
         else if (!strcmp(argv[i], "--joy") && i + 1 < argc) joy_script = argv[++i];
@@ -334,8 +355,9 @@ int main(int argc, char **argv)
         }
         SDL_SetRenderVSync(renderer, 1);
         SDL_SetRenderLogicalPresentation(renderer, DISPLAY_W, DISPLAY_H, SDL_LOGICAL_PRESENTATION_INTEGER_SCALE);
-        texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, DISPLAY_W, DISPLAY_H);
+        texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_XRGB8888, SDL_TEXTUREACCESS_STREAMING, DISPLAY_W, DISPLAY_H);
         SDL_SetTextureScaleMode(texture, SDL_SCALEMODE_NEAREST);
+        SDL_SetTextureBlendMode(texture, SDL_BLENDMODE_NONE);
         audio = SDL_OpenAudioDeviceStream(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, &spec, 0, 0);
         if (audio)
             SDL_ResumeAudioStreamDevice(audio);
