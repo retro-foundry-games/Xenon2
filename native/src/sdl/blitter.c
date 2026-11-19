@@ -25,8 +25,11 @@ static uint16_t minterm(uint8_t lf, uint16_t a, uint16_t b, uint16_t c)
     return d;
 }
 
+unsigned host_blit_count;
+
 void host_blit_start(uint16_t bltsize)
 {
+    host_blit_count++;
     volatile struct Custom *c = custom;
     uint16_t con0 = c->bltcon0, con1 = c->bltcon1;
     int use_a = (con0 >> 11) & 1, use_b = (con0 >> 10) & 1, use_c = (con0 >> 9) & 1, use_d = (con0 >> 8) & 1;

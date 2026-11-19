@@ -6,6 +6,9 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+
+extern void host_idle(void);
 
 #include "game.h"
 #include "host.h"
@@ -24,8 +27,14 @@ int disk_read_sectors(uint16_t first_sector, uint16_t count, void *dest)
     if (!tmp)
         return -1;
     r = files_read_sectors(files_current_disk(), first_sector, count, tmp);
-    if (r == 0)
+    if (r == 0) {
+        /* the bytes as they are (big endian) into the memory, then the members that cover them in the host's byte order */
+        memcpy(dest, tmp, (size_t)count * 512);
         guest_load_range(guest_address(dest), tmp, (uint32_t)count * 512);
+    }
+    /* the real drive takes time (about a second for one sector: the motor, the head, the rotation): the game's own retry loops count frames */
+    for (int i = 0, frames = count == 1 ? 51 : 20 + count / 2; i < frames; i++)
+        host_idle();
     free(tmp);
     return r;
 }

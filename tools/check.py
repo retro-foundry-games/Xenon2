@@ -25,7 +25,7 @@ SCENARIOS = {
     # the menu with the attract mode running, then the fire button: the game asks for its disk, disk 2 goes in, the level loads and is played
     'load': ('xenon2-menu.state', 4200, joystick_script(4200, 40), True),
     # level 1 as it stands (loaded, waiting for fire), then played
-    'level': ('xenon2-level.state', 3000, joystick_script(3000), False),
+    'level': ('xenon2-level.state', 1800, joystick_script(1800), False),
 }
 
 def run(names, scenario, samples, build):

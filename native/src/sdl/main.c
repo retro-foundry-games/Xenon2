@@ -20,13 +20,14 @@ static SDL_Window *window;
 static SDL_Renderer *renderer;
 static SDL_Texture *texture;
 static SDL_AudioStream *audio;
-static int headless, max_frames = -1, scale = 3, want_hash, dump_every;
+static int headless, max_frames = -1, scale = 3, want_hash, dump_every, status_at = -1;
 static const char *dump_folder;
 static long frames;
 static uint32_t picture[DISPLAY_W * DISPLAY_H];
 static int quitting;
 static uint16_t dmacon_state, intena_state, intreq_state;
 static int joy_up, joy_down, joy_left, joy_right, joy_fire;
+static const char *joy_script;   /* --joy F:dirs,F:dirs (dirs joined by +, or none): the stick at frame F (tests) */
 
 /* ---- the registers with set/clear semantics (hw.h SETCLR_WRITE) ----------------------------------------------------------------------------------------------- */
 static uint16_t apply(uint16_t state, uint16_t value)
@@ -73,6 +74,9 @@ static void joystick_registers(void)
     if (joy_left) dat |= 0x200;
     if ((dat & 2 ? 1 : 0) ^ joy_down) dat |= 1;
     if ((dat & 0x200 ? 1 : 0) ^ joy_up) dat |= 0x100;
+    /* the beam: the game runs in the vertical blank period (below line 258); no beam is emulated */
+    c->vposr = 0x8001;     /* long frame, line number bit 8 set */
+    c->vhposr = 0x4000;    /* line 256 + 0x40 */
     c->joy0dat = dat;
     c->joy1dat = dat;
     CIAA_PRA = (uint8_t)(0xff & ~(joy_fire ? 0xc0 : 0));
@@ -162,6 +166,10 @@ static void end_of_frame(void)
 
     display_render(picture);
     sound_mix(samples, 882);
+    if (frames == status_at) {
+        display_status();
+        host_game_status();
+    }
     if (want_hash && frames % 50 == 0)
         printf("frame %ld picture %08x\n", frames, hash_of(picture, DISPLAY_W * DISPLAY_H));
     if (dump_every && dump_folder && frames % dump_every == 0)
@@ -183,6 +191,25 @@ static void end_of_frame(void)
             SDL_DelayNS(next - now);
         else if (now - next > 200000000)
             next = now;
+    }
+    if (joy_script) {
+        const char *p = joy_script;
+
+        while (*p) {
+            long f = strtol(p, (char **)&p, 10);
+            char dirs[64] = "";
+            int n = 0;
+
+            if (*p == ':')
+                p++;
+            while (*p && *p != ',' && n < 63)
+                dirs[n++] = *p++;
+            dirs[n] = 0;
+            if (*p == ',')
+                p++;
+            if (f == frames)
+                host_input(strstr(dirs, "fire") != 0, strstr(dirs, "up") != 0, strstr(dirs, "down") != 0, strstr(dirs, "left") != 0, strstr(dirs, "right") != 0);
+        }
     }
     joystick_registers();
     frames++;
@@ -219,10 +246,12 @@ int main(int argc, char **argv)
         else if (!strcmp(argv[i], "--headless")) headless = 1;
         else if (!strcmp(argv[i], "--frames") && i + 1 < argc) max_frames = atoi(argv[++i]);
         else if (!strcmp(argv[i], "--hash")) want_hash = 1;
+        else if (!strcmp(argv[i], "--joy") && i + 1 < argc) joy_script = argv[++i];
+        else if (!strcmp(argv[i], "--status") && i + 1 < argc) status_at = atoi(argv[++i]);
         else if (!strcmp(argv[i], "--dump-every") && i + 1 < argc) dump_every = atoi(argv[++i]);
         else if (!strcmp(argv[i], "--dump") && i + 1 < argc) dump_folder = argv[++i];
         else {
-            fprintf(stderr, "usage: xenon2-sdl [--disks FOLDER] [--scale N] [--headless --frames N [--hash] [--dump-every N --dump FOLDER]]\n");
+            fprintf(stderr, "usage: xenon2-sdl [--disks FOLDER] [--scale N] [--headless --frames N [--hash] [--status F] [--joy F:dirs,...] [--dump-every N --dump FOLDER]]\n");
             return 2;
         }
     }
