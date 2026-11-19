@@ -123,3 +123,13 @@ void host_game_start(void)
     else
         fprintf(stderr, "xenon2-sdl: the game's entry (game_entry) is not there\n");
 }
+
+/* a few variables of the game, for the headless tests (--status): the frame count, the level's scroll, the score digits, the list head of the objects */
+void host_game_status(void)
+{
+    printf("game: vbl %u scroll %04x cur_player %u objects at %08x score digits", (unsigned)xenon.vbl_count, (unsigned)xenon.v_0cd0, (unsigned)xenon.cur_player,
+           (unsigned)(uintptr_t)xenon.obj_list[0].next);
+    for (int i = 0; i < 7; i++)
+        printf(" %u", (unsigned)xenon.v_0d7c[i]);
+    printf("\n");
+}

@@ -148,3 +148,48 @@ void display_render(uint32_t *rgb)
         line++;
     }
 }
+
+/* a text report of what the picture is made from (for the --status option): the registers, the copper list, and how much of each bitplane is not zero */
+#include <stdio.h>
+void display_status(void)
+{
+    volatile struct Custom *c = custom;
+    const uint16_t *cop = (const uint16_t *)guest_ptr(c->cop1lc);
+
+    printf("bplcon0 %04x diw %04x-%04x ddf %04x-%04x mod %d/%d cop1lc %08x\n", c->bplcon0, c->diwstrt, c->diwstop, c->ddfstrt, c->ddfstop,
+           (int)(int16_t)c->bpl1mod, (int)(int16_t)c->bpl2mod, c->cop1lc);
+    {
+        extern unsigned host_blit_count;
+
+        printf("blits so far: %u\n", host_blit_count);
+    }
+    for (int b = 0; b < 2; b++) {
+        const uint8_t *p = (const uint8_t *)guest_ptr(b ? 0x4c700 : 0x44000);
+        int nz = 0;
+
+        for (int i = 0; p && i < 34560; i++)
+            nz += p[i] != 0;
+        printf("screen at %05x: %d of 34560 bytes not zero\n", b ? 0x4c700 : 0x44000, nz);
+    }
+    printf("colors:");
+    for (int i = 0; i < 16; i++)
+        printf(" %03x", c->color[i]);
+    printf("\ncopper:");
+    for (int i = 0; cop && i < 24; i++)
+        printf(" %04x", cop[i]);
+    printf("\n");
+    if (cop) {
+        uint32_t pt[4];
+
+        for (int i = 0; i < 4; i++)
+            pt[i] = ((uint32_t)cop[i * 4 + 1] << 16) | cop[i * 4 + 3];
+        for (int i = 0; i < 4; i++) {
+            const uint8_t *p = (const uint8_t *)guest_ptr(pt[i]);
+            int nz = 0;
+
+            for (int b = 0; p && b < 40 * 200; b++)
+                nz += p[b] != 0;
+            printf("plane %d at %08x: %d of 8000 bytes not zero\n", i, pt[i], nz);
+        }
+    }
+}
