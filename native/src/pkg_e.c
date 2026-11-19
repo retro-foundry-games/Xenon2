@@ -242,8 +242,10 @@ void init_objects(void)
     }
     for (i = 0; i < 7; i++)
         v_0c66[i * 3] = 0;
+    fn_004afc();
     for (i = 0; i < 14; i++)
         v_0caa[i] = 0;
+    fn_00352e();
     v_0c60 = 8;
     v_0c62 = 8;
     v_0c64 = 1;
@@ -268,7 +270,9 @@ void init_objects(void)
     v_0ccc = 1;
     v_0d85 = 0;
     v_0cf0 = 3;
+    fn_00176e();
     v_0a6b = 0xff;
+    fn_0016be();
 }
 
 /* orig $0068b0: an option's update: follows the player at an offset given by v_0cde, fires when the button says so */
@@ -277,6 +281,7 @@ void option_update(Object *a0)
     uint16_t d0, d1;
     uint8_t bit;
 
+    fn_002c5a(a0);
     d0 = player.x;
     d1 = (uint16_t)v_0cde;
     if ((int16_t)d1 < 0)
@@ -332,6 +337,7 @@ void reset_extra_objects(void)
     while (a1->type) {
         Object *p = a1->prev;
 
+        fn_005c9e(a1);
         a1 = p;
     }
     obj_list[1].prev = v_0cf4;
@@ -529,10 +535,15 @@ void clear_level_objects(void)
     Object *a1;
     uint16_t i;
 
+    fn_019fe4();
     if (v_0ca2)
         reset_extra_objects();
     d7 = v_0ce6 - v_0cd0;
+    fn_005d8c(obj_list[4].prev, d7);
+    fn_005d8c(obj_list[3].prev, d7);
+    fn_005d8c(obj_list[2].prev, d7);
     for (a1 = obj_list[1].prev; a1->type; a1 = obj_list[1].prev)
+        fn_005c9e(a1);
     for (i = 0; i < 80; i++) {
         shots[i].x = -1;
         shots[i].y = -1;
@@ -621,9 +632,11 @@ void respawn_player(void)
     }
     v_8836[18] = (uint8_t)(cur_player + 0x31);
     v_8428 = 0xff;
+    fn_00842a(v_8836);
     v_8428 = 0;
     clear_palette();
     if (v_0ca2)
+        fn_004a0a();
 }
 
 /* orig $006ec6: after a death: clears the level objects and, if the other player is in, gives the turn to him */
@@ -668,6 +681,7 @@ void level_reset_scroll(void)
     v_0cd8 = 1;
     v_0cda = 0;
     v_0cde = 0;
+    fn_054e20();
     v_0ce0 = 0;
     v_042e = 0;
     v_0cdc = 0;

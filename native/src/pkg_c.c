@@ -495,6 +495,7 @@ void scroll_events(void)
         if (d2 < 0)
             break;
         if (d0 > d2 && d1 <= d2) {
+            fn_054e10(a1->w2, a1);
             d0 = (int16_t)v_0cd2;
             d1 = (int16_t)v_0cd0;
         }
@@ -511,6 +512,7 @@ void scroll_events(void)
         if (d2 < 0)
             break;
         if (d0 > d2 && d1 <= d2) {
+            fn_054e18(a1->w2, a1);
             d0 = (int16_t)v_0cd4;
             d1 = (int16_t)v_0cd0;
         }

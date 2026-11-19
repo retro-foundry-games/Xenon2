@@ -57,6 +57,7 @@ the level running with its blob at `$54E00`; 512 KB each).  Read tables and stri
   audio chips stays faithful C (it runs on the Amiga and in the oracle) and carries `/* HLE: blitter */` (or `copper`, `disk`, `audio`)
   in its comment and is declared `HLE_WEAK` (hw.h; `HLE_WEAK void blit_text(...) { ... }`): the SDL port links high-level replacements over such functions, it does not emulate the chips.  Waiting for the
   blitter: `while (custom->dmaconr & DMAF_BLTBUSY) ;` as the original does.
+- The blitter is started only with `BLTSIZE_WRITE(value)` (hw.h; the SDL host performs the blit at once from the registers).  The other blitter registers are plain writes.
 - The registers with set/clear semantics (`dmacon`, `intena`, `intreq`, `adkcon`) are written only with `SETCLR_WRITE(dmacon, value)` (hw.h): the SDL port applies the write.  Palette registers
   (`custom->color[n]`), `bplcon0`, `diwstrt`... are written directly; the picture is made from the copper list the game leaves in memory (`cop1lc`, a list of
   MOVE/WAIT pairs that mostly sets the bitplane pointers) and from these registers.

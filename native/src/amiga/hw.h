@@ -72,6 +72,15 @@ void host_setclr_write(unsigned register_offset, uint16_t value);
 #define SETCLR_WRITE(reg, value) (custom->reg = (uint16_t)(value))
 #endif
 
+/* Starting the blitter: the write to BLTSIZE.  On the Amiga it is the plain write; in the SDL port the host performs the whole operation (the area blit with the
+ * registers as they are: shifts, masks, minterm, modulos) at once, so the blitter is never busy.  Write BLTSIZE only with BLTSIZE_WRITE(value). */
+#ifdef GAME_SDL
+void host_blit_start(uint16_t bltsize);
+#define BLTSIZE_WRITE(value) host_blit_start((uint16_t)(value))
+#else
+#define BLTSIZE_WRITE(value) (custom->bltsize = (uint16_t)(value))
+#endif
+
 /* A function that programs a chip (the blitter, the disk DMA, ...) and is replaced in the SDL port by a high-level one with the same
  * signature in native/src/sdl/ is declared `HLE_WEAK void blit_xxx(...)` (and its comment says HLE: blitter): the C stays faithful for
  * the Amiga build and the oracle, and the port strong definition wins at link time. */

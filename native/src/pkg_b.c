@@ -199,6 +199,8 @@ void irq_vblank_hooked(void)
 
         irq_div = 2;
         draw_screen = show_screen;
+        fn_00861c();
+        fn_00854c();
         draw_screen = saved;
     }
     irq_vblank();
@@ -226,6 +228,7 @@ static void apply_palette(void)
 static void music_restart_if_enabled(void)
 {
     if (v_09fc) {
+        fn_019f9e(0);
         music_flag_1a584 = 0x30;
     }
 }
@@ -324,8 +327,10 @@ static void wait_vbl_and_show(void)
 
     while (t == vbl_count)
         HOST_IDLE();
+    fn_0017d6();
     stars_draw();
     swap_screens_192();
+    fn_0088b6(level_palette);
 }
 
 /* orig $0078CE-$007D9A: the main loop, one pass for each frame.  Returns when the restart key was pressed or a player's game
@@ -341,8 +346,17 @@ static void main_loop(void)
             v_0cec += 2;
         }
         scroll_pos_update(v_0cd8);
+        fn_0017d6();
         v_0cda = 1;
         stars_draw();
+        fn_006766();
+        fn_0016be();
+        fn_00683c();
+        fn_054e24();
+        fn_0035d4();
+        fn_006372();
+        fn_0061e6();
+        fn_003554();
         if (key_code != 0) {
             uint8_t key = key_code;
 
@@ -359,7 +373,11 @@ static void main_loop(void)
             v_0cc6 = 0x27;
             v_0a6b = 0xff;
             v_0cca--;
+            fn_00176e();
             if (v_0cca == 0) {
+                fn_006fe8();
+                fn_008a16();
+                fn_006fe8();
                 v_0cf0--;
                 if (v_0cf0 == 0 || continue_screen()) {
                     v_0a03[cur_player] = 0;
@@ -367,12 +385,15 @@ static void main_loop(void)
                         return;
                 } else {
                     v_0cca = 3;
+                    fn_00176e();
                     v_0c92 = 0;
                     for (int i = 0; i < 7; i++)
                         v_0d7c[i] = 0;
                     v_0c96 = 0;
+                    fn_00668c();
                 }
             }
+            fn_006ec6();
         }
         if (v_0ca4 != 0)
             continue;
@@ -383,6 +404,7 @@ static void main_loop(void)
             uint16_t other;
             uint32_t d1 = 0;
 
+            fn_019fba();
             if ((int16_t)v_0cd0 <= 0x1e0) {
                 d1 = v_54e3c;
                 v_09fa = (uint16_t)d1;
@@ -408,9 +430,12 @@ static void main_loop(void)
             other = cur_player ^ 1;
             if ((int16_t)v_0cd0 > 0x3c0 || v_0e04 != 5 ||
                 (v_8fec = 0xff, players != 2) || v_0a03[other] == 0 || v_0a03[other + 2] != 0) {
+                fn_008ff2();
+                fn_00176e();
             }
             v_0a6c = 0;
             if (v_0ca2)
+                fn_004a0a();
             if (v_0a07 == 0) {
                 if (v_09fc)
                     music_restart_if_enabled();
@@ -425,8 +450,10 @@ static void main_loop(void)
 
                 if (a1->type == 0)
                     break;
+                fn_005c9e(a1);
             }
             fn_005540();
+            fn_00352e();
             v_0cf0++;
         }
         {
@@ -434,11 +461,20 @@ static void main_loop(void)
 
             if (v_0a03[other] != 0 && v_0a03[other + 2] == 0) {
                 v_0a03[cur_player + 2] = 0xff;
+                fn_006d22();
+                fn_006862(obj_list[2].prev);
+                fn_006862(obj_list[4].prev);
+                fn_006862(obj_list[3].prev);
                 fn_006eca();
                 music_restart_if_enabled();
                 continue;
             }
         }
+        fn_006fe8();
+        fn_006d22();
+        fn_006862(obj_list[2].prev);
+        fn_006862(obj_list[4].prev);
+        fn_006862(obj_list[3].prev);
         v_0e04++;
         if ((int16_t)v_0e04 >= 6) {
             v_0e04 = 1;
@@ -447,9 +483,14 @@ static void main_loop(void)
             v_8f96 = 0;
         }
         v_8c41 = (uint8_t)(v_0e04 + 0x30);
+        fn_00917e();
+        fn_006d74();
         if (v_0ca2)
+            fn_004a0a();
+        fn_006f94();
         v_0a03[2] = 0;
         v_0a03[3] = 0;
+        fn_006ec6();
         wait_vbl_and_show();
         music_restart_if_enabled();
     }
@@ -458,6 +499,8 @@ static void main_loop(void)
 /* orig $007800: (re)start of a game: palette faded out, level text and "GET READY" shown, then the first frame */
 static void game_session_start(void)
 {
+    fn_006fe8();
+    fn_006bc8();
     key_code = 0;
     v_0a00 = 0;
     v_0a01 = 0;
@@ -466,15 +509,23 @@ static void game_session_start(void)
     v_0418 = -1;
     v_041a = -1;
     v_0404 = vbl_count;
+    fn_008220();
+    fn_008cb6();
+    fn_006fe8();
     v_8f94 = 1;
     v_8f96 = 0;
     v_0e04 = 1;
     v_8c41 = 0x31;
+    fn_00917e();
+    fn_006bea();
+    fn_006f94();
     v_8836[18] = 0x31;
     if (v_0a03[0] == 0)
         v_8836[18] = 0x32;
     v_8428 = 0xff;
+    fn_00842a(v_8836);
     v_8428 = 0;
+    fn_006fe8();
     music_restart_if_enabled();
     wait_vbl_and_show();
     v_0a00 = 0;
@@ -543,6 +594,7 @@ void game_entry(void)
         irq_vectors[i] = game_entry;
     for (int i = 0; i < 224; i++)
         exc_vectors_hi[i] = game_entry;
+    fn_006fe8();
     v_0404 = 0;
     draw_screen = screen_b;
     show_screen = screen_a;
@@ -568,6 +620,7 @@ void game_entry(void)
         rows[i] = off;
         off += 0xa0;
     }
+    fn_007d9e();
     players = 1;
     for (;;) {
         game_session_start();

@@ -426,6 +426,8 @@ void shop_run(void)
     uint16_t i;
 
     palette_fade_out(2);
+    fn_019fe4();
+    fn_019fba();
     saved_level_init = level_init_src;
     for (;;) {
         title_in_shop();
