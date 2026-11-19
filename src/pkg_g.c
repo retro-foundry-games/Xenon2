@@ -117,10 +117,10 @@ void draw_big_text(const uint8_t *text, uint16_t *dest)
         idx = (int16_t)((uint16_t)idx << 7);
         g = (const uint16_t *)((const uint8_t *)font + idx);
         for (row = 0; row < 16; row++) {
-            dest[0] = *g++;
-            dest[20] = *g++;
-            dest[40] = *g++;
-            dest[60] = *g++;
+            wr16(&dest[0], rd16(g)); g++;
+            wr16(&dest[20], rd16(g)); g++;
+            wr16(&dest[40], rd16(g)); g++;
+            wr16(&dest[60], rd16(g)); g++;
             dest += 80;
         }
         dest -= 0x4ff;
@@ -387,7 +387,7 @@ int game_disk_present(void)
     irq_vectors[2] = irq_vblank_hooked;
     disk_read_sectors(0, 1, &screen_a[0x5600]);
     irq_vectors[2] = irq_vblank;
-    ok = *(uint32_t *)&screen_a[0x5602] == 0x58324220;
+    ok = rd32(&screen_a[0x5602]) == 0x58324220;
     return ok;
 }
 
@@ -616,12 +616,12 @@ uint8_t *mfm_decode(uint8_t *dest, uint8_t *src, uint16_t bytes)
     uint16_t n = (uint16_t)((bytes >> 2) - 1);
 
     do {
-        uint32_t o = *(uint32_t *)odd & 0x55555555u;
-        uint32_t e = *(uint32_t *)even & 0x55555555u;
+        uint32_t o = rd32(odd) & 0x55555555u;
+        uint32_t e = rd32(even) & 0x55555555u;
 
         odd += 4;
         even += 4;
-        *(uint32_t *)dest = (o + o) | e;
+        wr32(dest, (o + o) | e);
         dest += 4;
     } while (n-- != 0);
     return even;
@@ -643,7 +643,7 @@ int32_t mfm_align(const uint16_t *src)
 
     for (;;) {
         for (;;) {
-            d2 = *a0++;
+            d2 = rd16(a0++);
             if (d2 == 0x5555) {
                 a2 = mfm_sync_a;
                 d0 = 0xf;
@@ -657,11 +657,11 @@ int32_t mfm_align(const uint16_t *src)
             if (!(a0 < limit))
                 return -1;
         }
-        while (d2 == *a0++)
+        while (d2 == rd16(a0++))
             ;
         a0--;
         {
-            uint32_t pat = ((uint32_t)a0[0] << 16) | a0[1];
+            uint32_t pat = ((uint32_t)rd16(&a0[0]) << 16) | rd16(&a0[1]);
 
             for (;;) {
                 if (pat == *a2++)
@@ -676,10 +676,10 @@ found:
     out = SCREEN_A_WORDS(0x1600);
     d1 = (uint16_t)(0x10 - d0);
     for (i = 0; i < 0x2000; i++) {
-        uint16_t hi = (uint16_t)((uint32_t)a0[-1] << d1);
-        uint16_t lo = (uint16_t)(*a0++ >> d0);
+        uint16_t hi = (uint16_t)((uint32_t)rd16(&a0[-1]) << d1);
+        uint16_t lo = (uint16_t)(rd16(a0++) >> d0);
 
-        *out++ = (uint16_t)(lo | hi);
+        wr16(out++, (uint16_t)(lo | hi));
     }
     return d0;
 }
@@ -711,7 +711,7 @@ retry:
     if (disk_error)
         goto fail;
     a1 = &screen_a[0x1602];
-    while (*(uint16_t *)a1 == 0x4489)
+    while (rd16(a1) == 0x4489)
         a1 += 2;
     for (n = 10; n >= 0; n--) {
         uint16_t sector;
@@ -728,7 +728,7 @@ retry:
         if (disk_header[3] == 1) {
             mfm_align((const uint16_t *)a1);
             a1 = &screen_a[0x1602];
-            while (*(uint16_t *)a1 == 0x4489)
+            while (rd16(a1) == 0x4489)
                 a1 += 2;
         } else {
             a1 += 8;
@@ -888,9 +888,9 @@ move:
     }
 next_command:
     for (;;) {
-        const uint16_t *cmd = o->cursor;
+        const uint8_t *cmd = o->cursor;
 
-        switch (*cmd) {
+        switch (rd16(cmd)) {
         case 0: {
             int i;
             ObjMove *e;
@@ -928,16 +928,16 @@ next_command:
             }
         }
         case 2:
-            o->angle = cmd[1];
-            o->turn = (uint32_t)((int32_t)((uint32_t)cmd[2] << 16) >> 8);
-            o->turn_step = (int16_t)cmd[3];
-            o->wait = (int16_t)cmd[4];
-            o->cursor = cmd + 5;
+            o->angle = rd16(cmd + 2);
+            o->turn = (uint32_t)((int32_t)((uint32_t)rd16(cmd + 4) << 16) >> 8);
+            o->turn_step = (int16_t)rd16(cmd + 6);
+            o->wait = (int16_t)rd16(cmd + 8);
+            o->cursor = cmd + 10;
             goto move;
         case 4: {
-            uint16_t t = cmd[1];
+            uint16_t t = rd16(cmd + 2);
 
-            o->cursor = cmd + 2;
+            o->cursor = cmd + 4;
             d7 = (uint16_t)(d7 - t);
             if ((int16_t)d7 > 0)
                 continue;
@@ -948,16 +948,16 @@ next_command:
             int16_t t;
 
             do {
-                t = (int16_t)cmd[1 + (random_next() & 0xe) / 2];
+                t = (int16_t)rd16(cmd + 2 + (random_next() & 0xe));
             } while (t < 0);
-            o->cursor = (const uint16_t *)(o->script + t);
+            o->cursor = o->script + t;
             continue;
         }
         case 8:
-            o->cursor = (const uint16_t *)(o->script + (int16_t)cmd[1]);
+            o->cursor = o->script + (int16_t)rd16(cmd + 2);
             continue;
         case 10:
-            o->cursor = cmd + 3;
+            o->cursor = cmd + 6;
             continue;
         default:
             return;

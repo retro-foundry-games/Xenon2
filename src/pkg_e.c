@@ -559,8 +559,8 @@ void swap_player_state(void)
     uint32_t *b = (uint32_t *)obj_list;   /* the block runs on over the variables that follow the lists */
     uint8_t *pa = (uint8_t *)&player;
     uint8_t *pb = v_0a08;
-    uint32_t *la = level_init_src;
-    uint32_t *lb = v_3bcac;
+    uint8_t *la = level_init_src;
+    uint8_t *lb = v_3bcac;
     uint16_t i;
 
     for (i = 0; i < 202; i++) {
@@ -575,8 +575,8 @@ void swap_player_state(void)
         pa[i] = pb[i];
         pb[i] = t;
     }
-    for (i = 0; i < 3000; i++) {
-        uint32_t t = la[i];
+    for (i = 0; i < 12000; i++) {
+        uint8_t t = la[i];
 
         la[i] = lb[i];
         lb[i] = t;
@@ -695,10 +695,10 @@ void level_reset_scroll(void)
 /* orig $006f94: copies the level's initial data in and resets the start state of each player */
 void level_start(void)
 {
-    const uint32_t *a0 = level_init_src;
+    const uint8_t *a0 = level_init_src;
     uint16_t i;
 
-    for (i = 0; i < 3000; i++)
+    for (i = 0; i < 12000; i++)
         v_3bcac[i] = a0[i];
     v_0436 = 0;
     v_04e2 = 0;
