@@ -73,6 +73,7 @@ local log = {}
 local function say(...) log[#log + 1] = string.format(...) end
 
 local busy = false
+local in_call   -- the comparison in progress (for the watchdog)
 local function check(case)
     if DEBUG then say("hook %s frame %d busy=%s refire=%s done=%s", case.name, ami.frame(), tostring(busy), tostring(case.refire), tostring(case.done)) end
     if busy then return end   -- the hook fires inside the calls this function makes
@@ -83,7 +84,9 @@ local function check(case)
     busy = true
     local regs = {}
     for _, r in ipairs(DATA_REGS) do regs[r] = ami.reg(r) end
+    regs.a7, regs.sr, regs.pc = ami.reg("a7"), ami.reg("sr"), ami.reg("pc")
     local before = ami.read(0, CHIP)
+    in_call = { case = case, before = before, regs = regs, frame = ami.frame() }
     local function fresh()
         local run = {}
         for k, v in pairs(regs) do run[k] = v end
@@ -117,6 +120,7 @@ local function check(case)
     local after_c = ami.read(0, CHIP)
     ami.write(0, before)
     busy = false
+    in_call = nil
     case.refire = true
     case.done = case.done + 1
     local problems = {}
@@ -200,7 +204,20 @@ local start = ami.frame()
 while ami.frame() - start < UNTIL do
     ami.wait(1)
     local f = ami.frame() - start
+    if in_call and ami.frame() - in_call.frame > 3 then
+        -- the call has not come back (a routine that waits for something the call cannot get: an interrupt, the beam): put the machine back as it was at the hook
+        local c = in_call
+        ami.write(0, c.before)
+        for k, v in pairs(c.regs) do ami.set_reg(k, v) end
+        busy = false
+        in_call = nil
+        c.case.hung = true
+        c.case.done = SAMPLES
+        c.case.refire = true
+        say("HUNG %s: the call did not return in 3 frames (not compared; it waits for something)", c.case.name)
+    end
     if joys[f] then ami.joystick(joys[f]) end
+    if DEBUG and f % 20 == 0 then say("f%d pc=%06x busy=%s", f, ami.reg("pc"), tostring(busy)) end
     if do_swap then
         local id = ami.peek32(0x49602)
         if not swapped and nreads > 0 and ami.frame() >= last_read + 60 and id ~= 0x58324220 then swapped = true; st = 1 end
