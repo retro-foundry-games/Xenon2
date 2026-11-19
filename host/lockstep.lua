@@ -8,6 +8,7 @@
 --     play=1        play it: ami9000_host host/lockstep.lua --script-args "play=1 state=frame-8880 tolerant=1"  (a window, not --headless): arrows = stick, Ctrl / Space / Return = fire;
 --                   the keys are applied to both sides at the sync points; the port's picture and the difference are shown beside the original; the first difference pauses both
 --     auto=1        the autoplayer (host/autoplay.lua) plays, headless or in the window: finds differences in a run no one has to play
+--     record=FILE   where the input of play=1 / auto=1 is written (default captures/input/play-latest.txt, overwritten each run)
 --     hold=1        stop at the first difference and stay there, both sides standing: with `ami9000_host --control PATH` a client (ami9000/host/ctl.py PATH 'LS.port_call("print(port.peek16(0x41c))")')
 --                   asks the port and the original: LS.port_call(LUA) runs a line in the port's Lua shell, LS.port_binary(LUA) a call that answers BIN, LS.snap the original's ram at the point (LS.snap.ram), LS.ram16(addr) the original's live memory
 --     calls=1       also compare the number of calls of every function between two sync points (finds where a difference starts)
@@ -56,6 +57,7 @@ for name in (args:match("ignore=(%S+)") or ""):gmatch("[%w_]+") do IGNORE[name] 
 local SHOW = {}
 for name in (args:match("show=(%S+)") or ""):gmatch("[%w_]+") do SHOW[#SHOW + 1] = name end
 
+local RECORD = args:match("record=(%S+)") or "captures/input/play-latest.txt"   -- where the applied input of a played or auto-played run is written
 local REPLAY = args:match("replay=(%S+)")   -- the input of a played run (captures/input/play-latest.txt), as it was applied: the same run again, e.g. headless
 local replay_keys = {}   -- [sync] = { {raw, down}, ... }
 local joys = {}
@@ -210,7 +212,7 @@ local function sync_point()
         local lines = {}
         for _, k in ipairs(pending[#pending].keys or {}) do lines[#lines + 1] = ("%d key %d %d\n"):format(n, k[1], k[2]) end
         if st then lines[#lines + 1] = ("%d joy %d %d %d %d %d\n"):format(n, st.up, st.down, st.left, st.right, st.fire) end
-        if #lines > 0 then input_log = input_log .. table.concat(lines); ami.save_file("captures/input/play-latest.txt", input_log) end
+        if #lines > 0 then input_log = input_log .. table.concat(lines); ami.save_file(RECORD, input_log) end
     end
     if st then
         ami.joystick{ up = st.up == 1, down = st.down == 1, left = st.left == 1, right = st.right == 1, fire = st.fire == 1 }
