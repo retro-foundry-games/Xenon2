@@ -81,6 +81,10 @@ From a savestate with the level running: `state=frame-8880` loads the emulator's
 
     python3 ../amiga_porting/ami9000/pidrun.py -- $AMI host/lockstep.lua --headless --script-args "state=frame-8880 syncs=200 tolerant=1 continue=1"
 
+To play it (a window; arrows = stick, Ctrl / Space / Return = fire; the port's picture and the difference are shown beside the original, and the first difference pauses both):
+
+    python3 ../amiga_porting/ami9000/pidrun.py -- $AMI host/lockstep.lua --script-args "play=1 state=frame-8880 tolerant=1"
+
 `hold=1` stops at the first difference and stays there (with the emulator's `--control PATH`: `LS.port_call(LUA)` asks the port, `LS.snap.ram` is the original's memory at the point); `calls=1` also compares the number of calls of each function (a hint where a difference starts, not exact: the original's hooks fire at labels inside functions); `joy=SYNC:DIRS,...` gives both sides the same stick from sync point SYNC on.
 Last full run: `state=frame-8880 syncs=1500 tolerant=1` with the stick and fire on a schedule: 1500 sync points, no differences in memory or picture.
 

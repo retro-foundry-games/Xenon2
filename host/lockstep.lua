@@ -5,6 +5,8 @@
 --   ami9000_host host/lockstep.lua --headless --script-args "[syncs=N] [tolerant=1] [continue=1] [mem=0] [pic=0] [ignore=NAME,NAME] [joy=SYNC:DIRS,...] [show=NAME,NAME] [strict=1] [report=FILE]"
 --     state=NAME    start from the emulator's savestate local/save/NAME.state (frame-8880: level 1 running) instead of the start of the game: the port plays to the level by itself
 --                   (the fire button on the schedule of tools/verify_port.sh) and takes the original's memory at the first sync point
+--     play=1        play it: ami9000_host host/lockstep.lua --script-args "play=1 state=frame-8880 tolerant=1"  (a window, not --headless): arrows = stick, Ctrl / Space / Return = fire;
+--                   the keys are applied to both sides at the sync points; the port's picture and the difference are shown beside the original; the first difference pauses both
 --     hold=1        stop at the first difference and stay there, both sides standing: with `ami9000_host --control PATH` a client (ami9000/host/ctl.py PATH 'LS.port_call("print(port.peek16(0x41c))")')
 --                   asks the port and the original: LS.port_call(LUA) runs a line in the port's Lua shell, LS.port_binary(LUA) a call that answers BIN, LS.snap the original's ram at the point (LS.snap.ram), LS.ram16(addr) the original's live memory
 --     calls=1       also compare the number of calls of every function between two sync points (finds where a difference starts)
@@ -27,7 +29,7 @@
 -- The picture: the emulator's frame one frame after the sync point against the port's picture at the sync point (the flip takes effect at the next vertical blank);
 -- where the port's 320 x 256 picture sits in the emulator's frame is found from the first point by the shift at which the lit pixels coincide.
 local args = ami.args or ""
-local SYNCS = tonumber(args:match("syncs=(%d+)") or "300")
+local SYNCS = tonumber(args:match("syncs=(%d+)") or (args:match("play=1") and "1000000000" or "300"))
 local ADDRS = {}
 for a in (args:match("addr=(%S+)") or "2026,202e"):gmatch("%x+") do ADDRS[#ADDRS + 1] = tonumber(a, 16) end
 local PORT_ADDR = tonumber(args:match("%f[%w]port=(%x+)") or "2034", 16)
@@ -36,7 +38,8 @@ local COMPARE_MEM = args:match("mem=0") == nil
 local CONTINUE = args:match("continue=1") ~= nil
 local STRICT = args:match("strict=1") ~= nil
 local REPORT = args:match("report=(%S+)")
-local HOLD = args:match("hold=1") ~= nil   -- at the first difference stay paused (with --control PATH: LS.port_call(LUA) runs Lua in the port, LS.snap is the original's memory and frame at the point)
+local PLAY = args:match("play=1") ~= nil   -- you play: arrows = stick, Ctrl / Space / Return = fire, in the emulator's window (without --headless); implies hold=1, no sync limit
+local HOLD = PLAY or args:match("hold=1") ~= nil   -- at the first difference stay paused (with --control PATH: LS.port_call(LUA) runs Lua in the port, LS.snap is the original's memory and frame at the point)
 local CALLS = args:match("calls=1") ~= nil   -- also compare how often each function of the game was called between two sync points (the code table of the port)
 local STATE = args:match("state=(%S+)")   -- the original starts from local/save/NAME.state (a level running); the port plays itself to the level and takes the original's memory at the first sync point
 local ROOT = ami.script_dir .. "/.."
@@ -132,6 +135,17 @@ local pending, n = {}, 0
 local FRAME_W, FRAME_H = 720, 287      -- the emulator's frame
 local ring = {}                        -- ring[frame] = the emulator's whole frame at that frame (the last 16)
 
+local stick, applied_stick = { up = 0, down = 0, left = 0, right = 0, fire = 0 }, { up = 0, down = 0, left = 0, right = 0, fire = 0 }
+local KEY_STICK = { [273] = "up", [274] = "down", [275] = "right", [276] = "left", [305] = "fire", [306] = "fire", [32] = "fire", [13] = "fire" }   -- libretro key codes
+local fire_keys = {}
+local function read_keys()   -- what was pressed since the last call: the stick that is held now
+    for _, e in ipairs(ami.input()) do
+        if e[1] == "k" and KEY_STICK[e[2]] then
+            local what = KEY_STICK[e[2]]
+            if what == "fire" then fire_keys[e[2]] = e[3] == 1 and true or nil; stick.fire = next(fire_keys) and 1 or 0 else stick[what] = e[3] end
+        end
+    end
+end
 local call_names, call_counts = {}, {}   -- the functions of the code table: original address -> name; the calls since the last sync point on the original's side
 local function sync_point()
     if not started then return end
@@ -141,6 +155,15 @@ local function sync_point()
     call_counts = {}
     pending[#pending + 1] = { n = n, frame = ami.frame(), calls = calls, ram = (COMPARE_MEM or (STATE and n == 1)) and ami.read(0, 0x80000) or nil }
     local st = joys[n]
+    if PLAY then   -- the stick as it is held now, on both sides from here on
+        read_keys()
+        local changed = false
+        for k, v in pairs(stick) do if applied_stick[k] ~= v then changed = true end end
+        if changed then
+            st = { up = stick.up, down = stick.down, left = stick.left, right = stick.right, fire = stick.fire }
+            for k, v in pairs(stick) do applied_stick[k] = v end
+        end
+    end
     if st then
         ami.joystick{ up = st.up == 1, down = st.down == 1, left = st.left == 1, right = st.right == 1, fire = st.fire == 1 }
         pending[#pending].joy = st   -- the port gets it after it has reached this point (it is behind the original): the next interval on both sides
@@ -337,7 +360,11 @@ local function compare_picture(snap, port_pic)
     local frame = ring[snap.frame + win.lag] or ring[snap.frame + 1]
     if not frame then return 0 end
     local original = cut(frame, win)
-    local diffs, first = ami.rgb_diff(original, port_pic)
+    local diffs, first, diff_image = ami.rgb_diff(original, port_pic)
+    if PLAY then
+        ami.panel(1, port_pic, 320, 256, 2, 1, 0)
+        if diff_image then ami.panel(2, diff_image, 320, 256, 2, 1, 0) end
+    end
     if diffs == 0 then return 0 end
     -- the flip takes effect at a vertical blank: whether the original's frame is the one at the usual lag or the one next to it depends on where the interrupt fell
     for _, d in ipairs{ 1, -1 } do
@@ -448,6 +475,7 @@ while not done do
         if compared >= SYNCS then done = true; break end
     end
     if not done then
+        if PLAY then read_keys() end
         if COMPARE_PIC then
             ring[ami.frame()] = ami.frame_rgb(0, 0, FRAME_W, FRAME_H, 1)
             ring[ami.frame() - 16] = nil
