@@ -507,7 +507,9 @@ local function compare_picture(snap, port_pic)
     for i = 0, 320 * 256 - 1 do
         local a, b = original:sub(i * 3 + 1, i * 3 + 3), port_pic:sub(i * 3 + 1, i * 3 + 3)
         if a ~= b then
-            rows[i // 320] = true
+            local y, x = i // 320, i % 320
+            local r = rows[y]
+            if not r then r = { x, x, a, b }; rows[y] = r else r[2] = x end
             if shown < 6 then
                 shown = shown + 1
                 say("   pixel %3d,%3d original %02x%02x%02x port %02x%02x%02x", i % 320, i // 320, a:byte(1), a:byte(2), a:byte(3), b:byte(1), b:byte(2), b:byte(3))
@@ -518,9 +520,14 @@ local function compare_picture(snap, port_pic)
     for y in pairs(rows) do list[#list + 1] = y end
     table.sort(list)
     say("   rows with differences: %d, from %d to %d", #list, list[1], list[#list])
+    for k = 1, math.min(#list, 8) do
+        local r = rows[list[k]]
+        say("   row %3d: x %d..%d, first original %02x%02x%02x port %02x%02x%02x", list[k], r[1], r[2], r[3]:byte(1), r[3]:byte(2), r[3]:byte(3), r[4]:byte(1), r[4]:byte(2), r[4]:byte(3))
+    end
     return diffs
 end
 
+local prev_orig_ram, prev_port_ram, last_orig_ram, last_port_ram
 local different, compared, mem_bad, pic_bad = 0, 0, 0, 0
 local done = false
 while not done do
@@ -568,6 +575,7 @@ while not done do
                 end
             end
             local bad = compare_memory(snap, port_ram)
+            prev_orig_ram, prev_port_ram, last_orig_ram, last_port_ram = last_orig_ram, last_port_ram, snap.ram, port_ram
             if bad > 0 then mem_bad = mem_bad + 1; problems[#problems + 1] = ("%d named members differ"):format(bad) end
         end
         if CALLS then
@@ -605,7 +613,7 @@ while not done do
             if not CONTINUE then
                 ami.pause()
                 if HOLD then
-                    LS = { port_call = port_call, port_binary = port_binary, snap = snap, hex = hex, ram16 = function(a) return ami.peek16(a) end, ram32 = function(a) return ami.peek32(a) end }
+                    LS = { prev = function() return prev_orig_ram, prev_port_ram end, peer = peer, wait_ready = wait_ready, orig_picture = function(d) d = d or 0; return cut(ring[snap.frame + win.lag + d] or ring[snap.frame + 1], win) end, port_call = port_call, port_binary = port_binary, snap = snap, hex = hex, ram16 = function(a) return ami.peek16(a) end, ram32 = function(a) return ami.peek32(a) end }
                     say("holding at sync %d: both sides stand (the emulator is paused, the port is stopped in swap_screens)", snap.n)
                     while true do ami.wait(1) end
                 end
