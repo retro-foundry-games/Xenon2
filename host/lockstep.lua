@@ -185,8 +185,10 @@ local function read_keys()   -- what was pressed since the last call: the stick 
     end
 end
 local call_names, call_counts = {}, {}   -- the functions of the code table: original address -> name; the calls since the last sync point on the original's side
+local last_sync_frame = 0
 local function sync_point()
     if not started then return end
+    last_sync_frame = ami.frame()
     n = n + 1
     if n > SYNCS then return end
     local calls = call_counts
@@ -277,6 +279,7 @@ if CALLS then
     port_call(('count_calls("%s")'):format(table.concat(list, ",")))
 end
 
+local shop_reported = false
 local panels_shown, warned_window, picture_synced = false, false, false
 local shifted_pictures, shifted_by = 0, { [1] = 0, [-1] = 0 }   -- pictures that equal the original's frame next to the usual one
 -- where the port's 320 x 256 picture sits in the emulator's frame: given (window=X,Y,SX,LAG; level 1 from a state: 40,18,2,1), else found from the first pictures that have few enough lit pixels to match
@@ -549,6 +552,21 @@ while not done do
         end
         if compared % 100 == 0 then say("%d sync points compared, %d with differences (memory %d, picture %d)", compared, different, mem_bad, pic_bad) end
         if compared >= SYNCS then done = true; break end
+    end
+    -- the original runs code the port has no C for (the shop program, loaded from the disk at $54E00): it passes no sync point
+    if not done and started and n >= 1 and ami.frame() - last_sync_frame > 300 and ami.reg("pc") >= 0x54e00 and ami.reg("pc") < 0x80000 and not shop_reported then
+        shop_reported = true
+        say("sync point %d was the last: for %d frames the original has run code at $%06x, from the disk, that the port has no C for (the shop, fn_054e00): the port skipped it", n, ami.frame() - last_sync_frame, ami.reg("pc"))
+        different = different + 1
+        if not CONTINUE then
+            ami.pause()
+            if HOLD then
+                LS = { port_call = port_call, port_binary = port_binary, hex = hex, ram16 = function(a) return ami.peek16(a) end, ram32 = function(a) return ami.peek32(a) end }
+                say("holding: the original is in the shop, the port is stopped in swap_screens")
+                while true do ami.wait(1) end
+            end
+            done = true
+        end
     end
     if not done then
         if PLAY then read_keys() end
