@@ -5,14 +5,13 @@
 
 /* An address stored in the original's memory (a long in a raw buffer) as a pointer: the identity on the 68000; in the SDL port the address of the
  * original's memory is an offset into the block, an address of code is the C function that has it. */
+extern void *guest_code(uint32_t address);   /* code_table.c (generated): the C function that has this address of the original's code */
+#define GFN(a) ((void *)guest_code(a))
 #ifdef GAME_SDL
 extern void *guest_ptr(uint32_t address);
-extern void *guest_code(uint32_t address);
 #define GPTR(a) ((void *)guest_ptr(a))
-#define GFN(a) ((void *)guest_code(a))
 #else
 #define GPTR(a) ((void *)(uintptr_t)(a))
-#define GFN(a) ((void *)(uintptr_t)(a))
 #endif
 /* an animation header (raw bytes): picture address (long), delay (word), then the script */
 static inline void anim_header_set(Object *o, const uint8_t *h)
