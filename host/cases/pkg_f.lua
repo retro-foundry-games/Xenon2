@@ -9,6 +9,7 @@ return {
     { name = "draw_text_squeezed", orig = 0x007f64, args = { "a1" } },
     { name = "stars_update",       orig = 0x00854c, args = {} },
     { name = "stars_erase",        orig = 0x00861c, args = {} },
+    { name = "title_restore",      orig = 0x00847e, args = {} },
     { name = "stars_init_dots",    orig = 0x007d9e, args = {} },
     { name = "title_stars_start",  orig = 0x008442, args = {} },
 }

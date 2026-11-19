@@ -33,5 +33,5 @@ tab mfm_sync_b 0x95c4 uint32_t 8
 var work_area_users 0x963e uint16_t                ; how many have the work area saved
 arr rand_saved 0x9660 uint32_t 4                   ; random state: [0..1] kept by the first script run, [2..3] the caller's
 tab sine_table 0x98f6 int8_t 320                   ; sine of a 256-step circle (the cosine is 64 on)
-arr work_area 0x4fa uint32_t 320                   ; 1280 bytes of the low RAM that the title page saves and restores
+arr work_area 0x4fa uint8_t 1280                   ; 1280 bytes of the low RAM that the title page saves and restores
 var enemy_shot_gfx 0x54e28 uint8_t *               ; the level's picture of an enemy shot

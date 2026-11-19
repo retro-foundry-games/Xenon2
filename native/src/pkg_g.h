@@ -45,8 +45,6 @@ void obj_script_run(Object *o);                             /* orig $9734 */
 void obj_script_step(Object *o);                            /* orig $9740 */
 
 /* callees without C yet (registers as the original takes them) */
-extern void fn_00847e(void);                                /* the palette back, the dot stars again (end of title_message) */
-extern void fn_00318c(uint16_t x, uint16_t y, uint16_t angle, uint16_t steps, const void *gfx);
 extern void fn_054e00(void);                                /* the level's code: the three pointers at its start run as harmless ori.b */
 
 /* C of other modules this one calls (prototypes as theirs) */

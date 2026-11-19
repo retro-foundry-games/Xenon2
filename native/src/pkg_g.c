@@ -18,7 +18,7 @@ static void title_in(const uint8_t *s)
 static void title_out(const uint8_t *s)
 {
     show_text_sequence(0xc, s, wipe_out);
-    fn_00847e();
+    title_restore();
 }
 
 /* orig $8C58: the HIGH SCORE line comes in */
@@ -333,7 +333,7 @@ void menu(void)
     }
     players = (uint16_t)(sel + 1);
     show_text_sequence(0xc, menu_text, wipe_out);
-    fn_00847e();
+    title_restore();
 }
 
 /* orig $8E88: CONTINUE GAME with a countdown from 9 (about 80 frames); fire says yes: returns 1, the countdown running out 0 */
@@ -356,13 +356,13 @@ uint16_t continue_screen(void)
         swap_screens_200();
         if (v_0a01) {
             show_text_sequence(0x50, continue_text, wipe_out);
-            fn_00847e();
+            title_restore();
             v_0a01 = 0;
             return 1;
         }
         if (--n == 0) {
             show_text_sequence(0x50, continue_text, wipe_out);
-            fn_00847e();
+            title_restore();
             return 0;
         }
     }
@@ -486,7 +486,7 @@ void shop_run(void)
     if (v_0a07 != 0)
         return;
     for (i = 0; i < 8; i++) {
-        uint32_t v = level_palette[i];
+        uint32_t v = rd32(&level_palette[i]);
 
         if (v_0c90 != 0)
             v >>= 1;
@@ -805,10 +805,10 @@ void irq_disk_block(void)
 void work_area_save(void)
 {
     if (work_area_users == 0) {
-        const uint32_t *saved = panel_b;
+        const uint8_t *saved = panel_b;
         int i;
 
-        for (i = 0; i < 320; i++)
+        for (i = 0; i < 1280; i++)
             work_area[i] = saved[i];
     }
     work_area_users++;
@@ -818,11 +818,11 @@ void work_area_save(void)
 void work_area_restore(void)
 {
     if (--work_area_users == 0) {
-        uint32_t *c = panel_a;
-        uint32_t *saved = panel_b;
+        uint8_t *c = panel_a;
+        uint8_t *saved = panel_b;
         int i;
 
-        for (i = 0; i < 320; i++) {
+        for (i = 0; i < 1280; i++) {
             saved[i] = work_area[i];
             *c++ = work_area[i];
         }
@@ -831,7 +831,7 @@ void work_area_restore(void)
 
 /* ---- enemy path script ---- */
 
-/* orig $9740: an object's path: steps along the angle (position += sin/cos, the angle changes by turn) for steps calls; when
+/* orig $F38, $9740: an object's path: steps along the angle (position += sin/cos, the angle changes by turn) for steps calls; when
  * the current command has run out the script at cursor gives the next one: 0 end (the object dies), 2 new heading and turn and
  * duration, 4 wait, 6 jump to one of 8 random places, 8 jump, 10 skip */
 void obj_script_step(Object *obj)
@@ -897,8 +897,9 @@ next_command:
 
             if (o->id != 0) {
                 for (i = 0; i < 8; i++) {
-                    if ((uint16_t)(v_043c[i] >> 16) == o->id) {
-                        v_043c[i] = 0;
+                    if (v_043c[2 * i] == o->id) {
+                        v_043c[2 * i] = 0;
+                        v_043c[2 * i + 1] = 0;
                         break;
                     }
                 }
@@ -965,7 +966,7 @@ next_command:
     }
 }
 
-/* orig $9734: the path script, then the box of the object unless it is dying */
+/* orig $EF6, $9734: the path script, then the box of the object unless it is dying */
 void obj_script_run(Object *o)
 {
     obj_script_step(o);
@@ -973,7 +974,7 @@ void obj_script_run(Object *o)
         bbox_from_frame(o);
 }
 
-/* orig $96B6: an enemy's update: the animation, the path, and now and then a shot (at the player when shot_rate is 100 or more,
+/* orig $E0C, $96B6: an enemy's update: the animation, the path, and now and then a shot (at the player when shot_rate is 100 or more,
  * else in a random direction) */
 void enemy_update(Object *obj)
 {
@@ -1000,10 +1001,10 @@ void enemy_update(Object *obj)
     } else {
         dir = direction8((int16_t)(player.x - (int16_t)(o->x >> 16)), (int16_t)(player.y - (int16_t)(o->y >> 16)));
     }
-    fn_00318c((uint16_t)(o->x >> 16), (uint16_t)(o->y >> 16), dir, 6, enemy_shot_gfx);
+    spawn_enemy_shot((uint16_t)(o->x >> 16), (uint16_t)(o->y >> 16), dir, 6, enemy_shot_gfx);
 }
 
-/* orig $9670: the random state is kept for enemy_update_seeded, then enemy_update */
+/* orig $EEA, $9670: the random state is kept for enemy_update_seeded, then enemy_update */
 void enemy_update_keep_seed(Object *o)
 {
     rand_saved[0] = random_a;
@@ -1011,7 +1012,7 @@ void enemy_update_keep_seed(Object *o)
     enemy_update(o);
 }
 
-/* orig $9682: enemy_update with the random state of enemy_update_keep_seed; the caller's state is put back */
+/* orig $EF0, $9682: enemy_update with the random state of enemy_update_keep_seed; the caller's state is put back */
 void enemy_update_seeded(Object *o)
 {
     rand_saved[2] = random_a;

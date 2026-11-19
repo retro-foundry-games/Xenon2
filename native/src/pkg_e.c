@@ -25,8 +25,12 @@ static void clear_screens(uint16_t d0)
             a[i] = 0;
             b[i] = 0;
         } else {
-            panel_b[i - 0x1e00] = 0;
-            panel_a[i - 0x1e00] = 0;
+            int k;
+
+            for (k = 0; k < 4; k++) {
+                panel_b[(i - 0x1e00) * 4 + k] = 0;
+                panel_a[(i - 0x1e00) * 4 + k] = 0;
+            }
         }
     }
 }
@@ -138,7 +142,7 @@ void update_score_display(void)
 /* orig $006bea: sets up a level: flags, both screens' panel, the free list of objects, the shot list, the objects */
 void init_level_state(void)
 {
-    uint16_t *a0, *a1;
+    uint8_t *a0, *a1;
     const uint16_t *a2 = v_19a9e;
     uint16_t g, c, i;
     Object *o;
@@ -152,21 +156,21 @@ void init_level_state(void)
     v_0a03[2] = 0;
     v_0a03[3] = 0;
     clear_screens_small();
-    a0 = (uint16_t *)panel_b;   /* what $6bce leaves in a0 and a1: the panels */
-    a1 = (uint16_t *)panel_a;
+    a0 = panel_b;   /* what $6bce leaves in a0 and a1: the panels */
+    a1 = panel_a;
     for (g = 0; g < 8; g++) {
         for (c = 0; c < 20; c++) {
             uint16_t d1;
 
-            d1 = *a2++; a0[0] = d1; a1[0] = d1;
-            d1 = *a2++; a0[20] = d1; a1[20] = d1;
-            d1 = *a2++; a0[40] = d1; a1[40] = d1;
-            d1 = *a2++; a0[60] = d1; a1[60] = d1;
-            a0++;
-            a1++;
+            d1 = *a2++; wr16(a0, d1); wr16(a1, d1);
+            d1 = *a2++; wr16(a0 + 40, d1); wr16(a1 + 40, d1);
+            d1 = *a2++; wr16(a0 + 80, d1); wr16(a1 + 80, d1);
+            d1 = *a2++; wr16(a0 + 120, d1); wr16(a1 + 120, d1);
+            a0 += 2;
+            a1 += 2;
         }
-        a0 += 60;
-        a1 += 60;
+        a0 += 120;
+        a1 += 120;
     }
     v_0a07 = 0;
     o = obj_pool;
@@ -220,7 +224,7 @@ void init_objects(void)
     o->x = 0xa0;
     o->y = 0xb0;
     for (i = 0; i < 4; i++) {
-        const uint16_t *rec = &ship_records[i * 12];   /* the record the table at $6CB2 points to */
+        const uint8_t *rec = &ship_records[i * 24];   /* the record the table at $6CB2 points to */
         Object *h = &obj_list[0];
         Object *first;
 
@@ -233,9 +237,7 @@ void init_objects(void)
         o->type = 0xc4;
         o->fn_update = option_update;
         o->fn_draw = obj_nop;
-        o->gfx = (void *)(((uint32_t)rec[0] << 16) | rec[1]);
-        o->anim_delay = rec[2];
-        o->anim = &rec[3];
+        anim_header_set(o, rec);
         o->x = 0xa0;
         o->y = 0xb0;
         o->v30 = 3 - i;
@@ -362,7 +364,7 @@ void frame_update(void)
             uint16_t i;
 
             for (i = 0; i < 8; i++) {
-                uint32_t d = a0[i];
+                uint32_t d = rd32(&a0[i]);
 
                 palette_shadow[i * 2] = (uint16_t)(d >> 16);
                 palette_shadow[i * 2 + 1] = (uint16_t)d;
@@ -430,7 +432,8 @@ void update_shots(void)
         a1 += (int16_t)row_offset[d1];
         x16 = d0 & 0xf;
         a1 += (uint16_t)((d0 ^ x16) >> 3);
-#define W(off) (*(uint16_t *)(a1 + (off)))
+#define ORW(off, v) wr16(a1 + (off), (uint16_t)(rd16(a1 + (off)) | (v)))
+#define ANDW(off, v) wr16(a1 + (off), (uint16_t)(rd16(a1 + (off)) & (v)))
         if ((int16_t)x16 <= 0xc) {
             lo2 = (uint16_t)(0xe000u >> x16 | 0xe000u << (16 - x16));
             lo3 = (uint16_t)(0x4000u >> x16 | 0x4000u << (16 - x16));
@@ -445,37 +448,38 @@ void update_shots(void)
             lo3 = (uint16_t)d3;
             hi3 = (uint16_t)(d3 >> 16);
         }
-        W(0) |= lo2;
-        W(0x28) |= lo3;
-        W(0x50) |= lo2;
-        W(0x140) |= lo2;
-        W(0x168) |= lo3;
-        W(0x190) |= lo2;
-        W(0x78) &= (uint16_t)~lo3;
-        W(0x1b8) &= (uint16_t)~lo3;
-        W(0xa0) |= lo2;
-        W(0xc8) |= lo2;
-        W(0xf0) |= lo2;
-        W(0x118) &= (uint16_t)~lo2;
+        ORW(0, lo2);
+        ORW(0x28, lo3);
+        ORW(0x50, lo2);
+        ORW(0x140, lo2);
+        ORW(0x168, lo3);
+        ORW(0x190, lo2);
+        ANDW(0x78, (uint16_t)~lo3);
+        ANDW(0x1b8, (uint16_t)~lo3);
+        ORW(0xa0, lo2);
+        ORW(0xc8, lo2);
+        ORW(0xf0, lo2);
+        ANDW(0x118, (uint16_t)~lo2);
         if ((int16_t)x16 > 0xc) {
-            W(2) |= hi2;
-            W(0x2a) |= hi3;
-            W(0x52) |= hi2;
-            W(0x1e2) |= hi2;
-            W(0x20a) |= hi3;
-            W(0x232) |= hi2;
-            W(0x7a) &= (uint16_t)~hi3;
-            W(0x25a) &= (uint16_t)~hi3;
-            W(0xa2) |= hi2;
-            W(0xca) |= hi2;
-            W(0xf2) |= hi2;
-            W(0x142) |= hi2;
-            W(0x16a) |= hi2;
-            W(0x192) |= hi2;
-            W(0x11a) &= (uint16_t)~hi2;
-            W(0x1ba) &= (uint16_t)~hi2;
+            ORW(2, hi2);
+            ORW(0x2a, hi3);
+            ORW(0x52, hi2);
+            ORW(0x1e2, hi2);
+            ORW(0x20a, hi3);
+            ORW(0x232, hi2);
+            ANDW(0x7a, (uint16_t)~hi3);
+            ANDW(0x25a, (uint16_t)~hi3);
+            ORW(0xa2, hi2);
+            ORW(0xca, hi2);
+            ORW(0xf2, hi2);
+            ORW(0x142, hi2);
+            ORW(0x16a, hi2);
+            ORW(0x192, hi2);
+            ANDW(0x11a, (uint16_t)~hi2);
+            ANDW(0x1ba, (uint16_t)~hi2);
         }
-#undef W
+#undef ORW
+#undef ANDW
     }
 }
 
@@ -494,7 +498,7 @@ void draw_enemy_list(void)
     v_04e2 = d1;
 }
 
-/* orig $006862: puts the objects of a chain (towards the previous ones) back on the free list */
+/* orig $F02, $006862: puts the objects of a chain (towards the previous ones) back on the free list */
 void free_object_chain(Object *a1)
 {
     while (a1->type) {
@@ -615,7 +619,7 @@ void respawn_player(void)
     v_0cce = (uint16_t)((v_0ce6 >> 4) * 0x28);
     create_queued_objects();
     v_0c9a = v_0ca6;
-    for (i = 0; i < 8; i++)
+    for (i = 0; i < 16; i++)
         v_043c[i] = 0;
     v_0430 = 0;
     v_042e = 0;
@@ -703,7 +707,7 @@ void level_start(void)
     v_0436 = 0;
     v_04e2 = 0;
     v_043a = 0;
-    for (i = 0; i < 8; i++)
+    for (i = 0; i < 16; i++)
         v_043c[i] = 0;
     v_0a6c = 0;
     v_0a00 = 0;

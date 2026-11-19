@@ -384,14 +384,20 @@ void title_stars_start(void)
     }
 }
 
+/* orig $00847E: the saved palette back, the work area, the dot stars */
+void title_restore(void)
+{
+    set_palette(palette_saved);
+    work_area_restore();
+    stars_init_dots();
+}
+
 /* orig $00842A: a text page of the intro over the starfield, then the old palette and the dot stars */
 void title_message(const uint8_t *text)
 {
     title_stars_start();
     show_text_sequence(0x64, text, title_script);
-    set_palette(palette_saved);
-    work_area_restore();
-    stars_init_dots();
+    title_restore();
 }
 
 /* orig $007D9E: 48 dot stars: screen offset (row * 160 + even byte), bit mask, 0 (same records as the 3D stars) */

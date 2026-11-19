@@ -32,3 +32,28 @@ python3 ../amiga_porting/ami9000/pidrun.py -- $AMI host/xenon2.lua --script-args
 The title and menu poll the joystick in port 1 (`joy1`); arrows = stick, Ctrl = fire. Flags are listed at the top
 of `host/xenon2.lua`. `host/ramdump.lua` dumps chip RAM and registers from a state, `host/rabs_trace.lua` logs the
 game's disk reads.
+
+## The port
+
+`native/` is the reconstruction (the C of the game proper: menu, level 1 and the music player, in `src/pkg_*.c`, each function with `/* orig $ADDR */`),
+built in the reproducible shell of `native/flake.nix` (`nix develop`, or just `make`, which re-enters it):
+
+    make -C native blob BUILD=build/x     the game for the 68000 as a blob at $C0000 (what the oracle runs against the original)
+    make -C native sdl                    the SDL3 port: native/build/sdl/xenon2-sdl
+    make -C native sdl-run                build and run it (disks from ../local)
+
+    native/build/sdl/xenon2-sdl --disks local                 arrows = joystick, Ctrl / Space / Return = fire, Esc = quit
+    ... --headless --frames N --joy "100:fire,110:none,..."   scripted, no window; --status F prints registers and game variables
+    ... --export-ram PATH:VBL                                  the memory in the original's byte order (tools/compare_state.py)
+
+The port runs the game's C from its start-up (`game_entry`, orig `$400`) on the main thread.  The Amiga is the `native/src/sdl/` machine: `guest.c` (the
+memory is `struct Xenon`, loaded from disk 1 at `$70C00`), `files.c`/`disk.c` (the ADFs; the game's disk loader is replaced; disk 2 goes in after the game
+has asked for it twice), `display.c` (the picture from the copper list and registers), `blitter.c` (the blit at the `BLTSIZE` write), `sound.c` (Paula
+from the channel registers), `main.c` (the window, the 50 Hz loop, `HOST_IDLE`, the interrupts).
+
+Checking against the original (one emulator at a time):
+
+    uv run tools/check.py --build build/x [NAME ...]       per function, original vs C, two scenarios (menu to level; level played)
+
+Routines that wait for the vertical blank or the disk cannot be called by the oracle (a watchdog reports them as HUNG); interrupt handlers neither.
+Code that never ran in the recorded run has no C: the port logs `the original's code at $XXXXXX has no C` when it is reached.

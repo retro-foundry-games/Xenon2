@@ -17,11 +17,35 @@ static Object *list_insert(int list)
 }
 
 /* word $4A of an object (a pointer; struct Object has it among its padding) */
-static void set_ptr4a(Object *o, const uint16_t *p)
+static void set_ptr4a(Object *o, const uint8_t *p)
 {
-    typedef const uint16_t *__attribute__((may_alias)) word_ptr;
+    typedef const uint8_t *__attribute__((may_alias)) byte_ptr;
 
-    *(word_ptr *)(void *)&o->pad4a[0] = p;
+    *(byte_ptr *)(void *)&o->pad4a[0] = p;
+}
+
+/* the records of the level's data are raw bytes (big endian): read into a record of this machine */
+static void spawnrec_load(struct SpawnRec *r, const uint8_t *p)
+{
+    r->scroll = (int16_t)rd16(p);
+    r->w2 = rd16(p + 2);
+    r->count = rd16(p + 4);
+    r->index = rd16(p + 6);
+    r->x = (int16_t)rd16(p + 8);
+    r->y = (int16_t)rd16(p + 10);
+    r->w0c = rd16(p + 12);
+}
+
+static void spawndef_load(struct SpawnDef *d, const uint8_t *p)
+{
+    d->kind = rd16(p);
+    d->w2 = rd16(p + 2);
+    d->update = (void (*)(void))GFN(rd32(p + 4));
+    d->draw = (void (*)(void))GFN(rd32(p + 8));
+    d->hit = (void (*)(void))GFN(rd32(p + 12));
+    d->anim = (const uint8_t *)GPTR(rd32(p + 0x10));
+    d->to_flag35 = p[0x16];
+    d->to_flag34 = p[0x17];
 }
 
 /* an object that does nothing any more */
@@ -37,12 +61,12 @@ static void kill_object(Object *o)
 
 /* ---- animation scripts ---- */
 
-/* orig $002C5A: advance the animation of object a0: count the delay down, then take the next step of the script (a picture and
+/* orig $E9C, $002C5A: advance the animation of object a0: count the delay down, then take the next step of the script (a picture and
  * a delay, or a zero picture followed by the address of a routine that is called with the script position) */
 void anim_step(Object *o)
 {
-    const uint16_t *w;
-    const uint16_t *gfx;
+    const uint8_t *w;
+    uint32_t gfx;
     int16_t t = (int16_t)(o->anim_delay - 1);
 
     o->anim_delay = t;
@@ -53,33 +77,28 @@ void anim_step(Object *o)
     if (t != 0)
         return;
     w = o->anim;
-    gfx = *(const uint16_t *const *)w;
-    w += 2;
+    gfx = rd32(w);
+    w += 4;
     if (gfx == 0) {
-        AnimOp op = *(const AnimOp *)w;
+        AnimOp op = (AnimOp)GFN(rd32(w));
 
-        w += 2;
+        w += 4;
         op(o, w);
         return;
     }
-    o->gfx = gfx;
-    o->anim_delay = (int16_t)*w++;
-    o->anim = w;
+    o->gfx = GPTR(gfx);
+    o->anim_delay = (int16_t)rd16(w);
+    o->anim = w + 2;
 }
 
-/* orig $002C82: script step "jump": the next longword is the address of the script to go on with */
-void anim_op_jump(Object *o, const uint16_t *a1)
+/* orig $E2A, $002C82: script step "jump": the next longword is the address of the script to go on with */
+void anim_op_jump(Object *o, const uint8_t *a1)
 {
-    const uint16_t *w = *(const uint16_t *const *)a1;
-
-    o->gfx = *(const void *const *)w;
-    w += 2;
-    o->anim_delay = (int16_t)*w++;
-    o->anim = w;
+    anim_header_set(o, (const uint8_t *)GPTR(rd32(a1)));
 }
 
-/* orig $002C92: script step "end": the object (and the pieces chained to it, if it is one of a group) goes dead */
-void anim_op_free(Object *o, const uint16_t *a1)
+/* orig $E30, $002C92: script step "end": the object (and the pieces chained to it, if it is one of a group) goes dead */
+void anim_op_free(Object *o, const uint8_t *a1)
 {
     Object *p;
     Object *next;
@@ -113,7 +132,7 @@ static const uint8_t *tile_mask_ptr(uint16_t w)
  * Inlined: $2D7A (the three pointers of a row of cells, results in a4, a5, a6). */
 void map_tile_mask(uint16_t x, uint16_t y, uint16_t rows)
 {
-    const uint16_t *a1 = (const uint16_t *)((const uint8_t *)level_init_src + (int16_t)v_0cce);
+    const uint8_t *a1 = level_init_src + (int16_t)v_0cce;
     const uint8_t *a4, *a5, *a6;
     uint16_t d3, d4;
     uint16_t *out = tile_mask_buf;
@@ -125,22 +144,22 @@ void map_tile_mask(uint16_t x, uint16_t y, uint16_t rows)
     d3 = (uint16_t)(d3 + d3);
     d3 = (uint16_t)(d3 + d4);
     d3 = (uint16_t)(d3 + d3);
-    a1 = (const uint16_t *)((const uint8_t *)a1 + (int16_t)(uint16_t)((uint32_t)(y >> 4) * 0x28));
-    a1 = (const uint16_t *)((const uint8_t *)a1 + (uint16_t)((x >> 3) & 0xfe));
-    a4 = tile_mask_ptr(a1[0]);
-    a5 = tile_mask_ptr(a1[1]);
-    a6 = tile_mask_ptr(a1[2]);
-    a1 += 20;
+    a1 += (int16_t)(uint16_t)((uint32_t)(y >> 4) * 0x28);
+    a1 += (uint16_t)((x >> 3) & 0xfe);
+    a4 = tile_mask_ptr(rd16(a1));
+    a5 = tile_mask_ptr(rd16(a1 + 2));
+    a6 = tile_mask_ptr(rd16(a1 + 4));
+    a1 += 40;
     do {
-        *out++ = *(const uint16_t *)(a4 + d3);
-        *out++ = *(const uint16_t *)(a5 + d3);
-        *out++ = *(const uint16_t *)(a6 + d3);
+        *out++ = rd16(a4 + d3);
+        *out++ = rd16(a5 + d3);
+        *out++ = rd16(a6 + d3);
         d3 = (uint16_t)(d3 + 10);
         if (d3 == 0xa0) {
-            a4 = tile_mask_ptr(a1[0]);
-            a5 = tile_mask_ptr(a1[1]);
-            a6 = tile_mask_ptr(a1[2]);
-            a1 += 20;
+            a4 = tile_mask_ptr(rd16(a1));
+            a5 = tile_mask_ptr(rd16(a1 + 2));
+            a6 = tile_mask_ptr(rd16(a1 + 4));
+            a1 += 40;
             d3 = 0;
         }
     } while ((uint16_t)--rows != 0xffff);
@@ -270,7 +289,7 @@ static uint16_t direction_half(int16_t d0, int16_t d1)
     return (uint16_t)(8 - r) & 7;
 }
 
-/* orig $003132: the direction (0 to 7) of (dx, dy) */
+/* orig $E7E, $003132: the direction (0 to 7) of (dx, dy) */
 uint16_t direction8(int16_t dx, int16_t dy)
 {
     uint16_t r;
@@ -283,12 +302,12 @@ uint16_t direction8(int16_t dx, int16_t dy)
 
 /* ---- objects ---- */
 
-/* orig $003130: a routine that does nothing (the "no update", "no draw" of a dead object) */
+/* orig $E48, $003130: a routine that does nothing (the "no update", "no draw" of a dead object) */
 void obj_nop(Object *o)
 {
 }
 
-/* orig $003286: the object after a1 in its list, or, for a part of a group (flag $34), the first one after the group's other
+/* orig $EC6, $003286: the object after a1 in its list, or, for a part of a group (flag $34), the first one after the group's other
  * parts (parts of one owner follow each other) */
 Object *owner_chain_next(Object *a1)
 {
@@ -305,38 +324,40 @@ Object *owner_chain_next(Object *a1)
     return a2;
 }
 
-/* orig $0032AA: spawn rec->count copies of the formation a2 describes (a chain of objects, one for each definition), the copies
+/* orig $E60, $0032AA: spawn rec->count copies of the formation a2 describes (a chain of objects, one for each definition), the copies
  * rec->x apart; at the end the kind is recorded in the table at $43C.  Returns the last object made (a0 itself when none). */
-Object *spawn_formation(Object *a0, Object *rec_obj, const struct SpawnDef *a2)
+Object *spawn_formation(Object *a0, const uint8_t *rec_raw, const uint8_t *a2)
 {
-    const struct SpawnRec *a1 = (const struct SpawnRec *)rec_obj;
-    uint16_t d7 = a1->count;
+    struct SpawnRec rec_data;
+    const struct SpawnRec *a1 = &rec_data;
+    uint16_t d7;
     uint16_t d6 = 0;
     uint16_t *slot;
     uint16_t d1;
     int i;
 
+    spawnrec_load(&rec_data, rec_raw);
+    d7 = a1->count;
     if (d7 == 0)
         return a0;
 
     while (d7-- != 0) {
-        const struct SpawnDef *a4 = a2;
+        const uint8_t *a4raw = a2;
+        struct SpawnDef def;
+        const struct SpawnDef *a4 = &def;
         Object *a5;
-        const uint16_t *a3;
-        const int16_t *e;
+        const uint8_t *e;
         uint16_t d0;
 
         a0 = list_insert(LIST_ENEMY);
         a5 = a0;
         for (;;) {
+            spawndef_load(&def, a4raw);
             a0->type = a4->kind;
             a0->fn_update = (obj_fn)a4->update;
             a0->fn_draw = (obj_fn)a4->draw;
             a0->fn_hit = (void *)a4->hit;
-            a3 = a4->anim;
-            a0->gfx = *(const void *const *)a3;
-            a0->anim_delay = (int16_t)a3[2];
-            a0->anim = a3 + 3;
+            anim_header_set(a0, a4->anim);
             a0->x = (int16_t)d6;
             a0->x_frac = 0;
             a0->y = 0;
@@ -353,18 +374,18 @@ Object *spawn_formation(Object *a0, Object *rec_obj, const struct SpawnDef *a2)
             }
             if (a5 != a0)
                 a0->v28 = (int16_t)(a0->v28 - (int16_t)a4->w2);
-            e = (const int16_t *)level_formations[(int16_t)(uint16_t)((a1->index - 1) * 4) / 4];
+            e = (const uint8_t *)GPTR(rd32(level_formations + (int16_t)(uint16_t)((a1->index - 1) * 4)));
             if ((const void *)e < (const void *)level_data_start || (const void *)e >= (const void *)level_events_a)
                 return a0;
-            a0->v46 = (uint16_t *)e;
-            if (*(const uint16_t *)e == 0xa) {
-                a0->x = e[1];
-                a0->y = e[2];
+            a0->v46 = (uint8_t *)e;
+            if (rd16(e) == 0xa) {
+                a0->x = (int16_t)rd16(e + 2);
+                a0->y = (int16_t)rd16(e + 4);
                 if ((int16_t)a1->x >= 100)
                     a0->x = (int16_t)(a0->x + (int16_t)d6);
-                e += 3;
+                e += 6;
             }
-            set_ptr4a(a0, (const uint16_t *)e);
+            set_ptr4a(a0, e);
             a0->v54 = (int16_t)a1->w0c;
             a0->v5e = (int16_t)a1->y;
             d0 = (uint16_t)random_next();
@@ -379,7 +400,8 @@ Object *spawn_formation(Object *a0, Object *rec_obj, const struct SpawnDef *a2)
             a0->flag34 = (int8_t)a4->to_flag34;
             bbox_from_frame(a0);
             a0->target = a5;
-            a4++;
+            a4raw += 0x18;
+            spawndef_load(&def, a4raw);
             if (a4->kind != 0) {
                 Object *a6 = a0;
                 Object *nxt;
@@ -404,14 +426,14 @@ Object *spawn_formation(Object *a0, Object *rec_obj, const struct SpawnDef *a2)
     d1 = v_045e;
     if (a0->flag35 == 0)
         d1 = v_045c;
-    slot = (uint16_t *)v_043c;
+    slot = v_043c;
     for (i = 0; i < 8; i++, slot += 2) {
         if (slot[0] == d1) {
             slot[1] = (uint16_t)(slot[1] + a1->count);
             return a0;
         }
     }
-    slot = (uint16_t *)v_043c;
+    slot = v_043c;
     for (i = 0; i < 8; i++, slot += 2) {
         if (slot[0] == 0) {
             slot[0] = d1;
@@ -423,23 +445,23 @@ Object *spawn_formation(Object *a0, Object *rec_obj, const struct SpawnDef *a2)
     return a0;
 }
 
-/* orig $0034EA: the box of object o (hit[]) from its picture: the four words before the picture are the box's offset and size,
+/* orig $E4E, $0034EA: the box of object o (hit[]) from its picture: the four words before the picture are the box's offset and size,
  * the two words of the picture the hot spot */
 void bbox_from_frame(Object *o)
 {
-    const int16_t *f = (const int16_t *)o->gfx;
-    int16_t x0 = (int16_t)(f[-4] + o->x - f[0]);
-    int16_t y0 = (int16_t)(f[-3] + o->y - f[1]);
+    const uint8_t *f = (const uint8_t *)o->gfx;
+    int16_t x0 = (int16_t)((int16_t)rd16(f - 8) + o->x - (int16_t)rd16(f));
+    int16_t y0 = (int16_t)((int16_t)rd16(f - 6) + o->y - (int16_t)rd16(f + 2));
 
     o->hit[0] = x0;
     o->hit[1] = y0;
-    o->hit[2] = (int16_t)(x0 + f[-2] - 1);
-    o->hit[3] = (int16_t)(y0 + f[-1] - 1);
+    o->hit[2] = (int16_t)(x0 + (int16_t)rd16(f - 4) - 1);
+    o->hit[3] = (int16_t)(y0 + (int16_t)rd16(f - 2) - 1);
 }
 
-/* orig $0031EC: an effect (list of effects) at (x, y) that plays the animation a2 (header: picture long, delay, script) and is
+/* orig $EC0, $0031EC: an effect (list of effects) at (x, y) that plays the animation a2 (header: picture long, delay, script) and is
  * drawn by a3; it asks for the sound $85 when the animation is $270E, else $83 */
-void spawn_effect(int16_t x, int16_t y, const uint16_t *a2, ObjFn a3)
+void spawn_effect(int16_t x, int16_t y, const uint8_t *a2, ObjFn a3)
 {
     Object *a0;
 
@@ -450,22 +472,20 @@ void spawn_effect(int16_t x, int16_t y, const uint16_t *a2, ObjFn a3)
     a0->fn_draw = (obj_fn)a3;
     a0->x = x;
     a0->y = y;
-    a0->gfx = *(const void *const *)a2;
-    a0->anim_delay = (int16_t)a2[2];
-    a0->anim = a2 + 3;
+    anim_header_set(a0, a2);
 }
 
-/* orig $003518 (reached by a jump; goes on in $352E): remember the record of a spawn */
-void note_spawn_record(const struct SpawnRec *a1, uint16_t d2)
+/* orig $EA2, $003518 (reached by a jump; goes on in $352E): remember the record of a spawn */
+void note_spawn_record(const uint8_t *a1, uint16_t d2)
 {
-    v_0ce2 = a1->x;
-    v_0ce4 = a1->y;
-    v_0ce6 = (uint16_t)a1->scroll;
+    v_0ce2 = rd16(a1 + 8);
+    v_0ce4 = rd16(a1 + 10);
+    v_0ce6 = rd16(a1);
     v_0ca6 = v_0c9a;
     latch_slots(d2);
 }
 
-/* orig $00352E: copy the type and the score ($42) of the object of each of the 7 weapon slots to v_0caa unless v_0ca2 is set
+/* orig $F4A, $00352E: copy the type and the score ($42) of the object of each of the 7 weapon slots to v_0caa unless v_0ca2 is set
  * (d2 is what an empty slot gets after the first one that was not: the caller's register) */
 void latch_slots(uint16_t d2)
 {
@@ -487,17 +507,17 @@ void latch_slots(uint16_t d2)
  * position (v_0cd0) and the old one calls the level's routine ($54E10 for the first list, $54E18 for the second) */
 void scroll_events(void)
 {
-    const struct SpawnRec *a1 = (const struct SpawnRec *)level_events_a;
+    const uint8_t *a1 = level_events_a;
     int16_t d0 = (int16_t)v_0cd2;
     int16_t d1 = (int16_t)v_0cd0;
 
-    for (;; a1++) {
-        int16_t d2 = a1->scroll;
+    for (;; a1 += 14) {
+        int16_t d2 = (int16_t)rd16(a1);
 
         if (d2 < 0)
             break;
         if (d0 > d2 && d1 <= d2) {
-            level1_event(a1->w2);
+            level1_event(rd16(a1 + 2), a1);
             d0 = (int16_t)v_0cd2;
             d1 = (int16_t)v_0cd0;
         }
@@ -505,16 +525,16 @@ void scroll_events(void)
     if (d1 >= d0)
         return;
     v_0cd2 = (uint16_t)d1;
-    a1 = (const struct SpawnRec *)level_events_b;
+    a1 = level_events_b;
     d0 = (int16_t)v_0cd4;
     d1 = (int16_t)v_0cd0;
-    for (;; a1++) {
-        int16_t d2 = a1->scroll;
+    for (;; a1 += 14) {
+        int16_t d2 = (int16_t)rd16(a1);
 
         if (d2 < 0)
             break;
         if (d0 > d2 && d1 <= d2) {
-            level1_hook(a1->w2);
+            level1_hook(rd16(a1 + 2), a1, (uint16_t)d2);
             d0 = (int16_t)v_0cd4;
             d1 = (int16_t)v_0cd0;
         }
@@ -565,7 +585,7 @@ void update_all(void)
     run_draws(LIST_HEAD(LIST_ENEMY));
     run_draws(LIST_HEAD(LIST_EFFECT));
     run_draws(LIST_HEAD(LIST_FRONT));
-    slot = (uint16_t *)v_043c;
+    slot = v_043c;
     for (i = 0; i < 8; i++, slot += 2) {
         Object *a1;
 
@@ -586,31 +606,27 @@ void update_all(void)
 void spawn_debris(Object *a1)
 {
     Object *a0 = list_insert(LIST_EFFECT);
-    const struct SpawnKind *k;
-    const uint16_t *a2;
+    const uint8_t *k;
 
     a0->v30 = a1->v30;
-    k = (const struct SpawnKind *)((const uint8_t *)spawn_kinds + (int16_t)(uint16_t)(6 * (uint16_t)a1->v30));
-    a0->type = k->kind;
+    k = spawn_kinds + (int16_t)(uint16_t)(6 * (uint16_t)a1->v30);
+    a0->type = rd16(k);
     v_0414 = 0x11;
     a0->fn_update = (obj_fn)pickup_update;
     a0->fn_draw = (obj_fn)draw_bob_masked;
     a0->x = a1->x;
     a0->y = a1->y;
-    a2 = k->anim;
-    a0->gfx = *(const void *const *)a2;
-    a0->anim_delay = (int16_t)a2[2];
-    a0->anim = a2 + 3;
+    anim_header_set(a0, (const uint8_t *)GPTR(rd32(k + 2)));
     a0->v28 = 7;
     kill_object(a1);
 }
 
 /* ---- entries the recorded run did not reach ---- */
 
-/* orig $003252: spawn the formation at $326C for record a1, then remember its word $54 in $30 */
-Object *spawn_wave_326c(Object *a0, Object *a1)
+/* orig $E5A, $003252: spawn the formation at $326C for record a1, then remember its word $54 in $30 */
+Object *spawn_wave_326c(Object *a0, const uint8_t *a1)
 {
-    a0 = spawn_formation(a0, a1, (const struct SpawnDef *)spawn_def_326c);
+    a0 = spawn_formation(a0, a1, spawn_def_326c);
     a0->v30 = a0->v54;
     a0->v54 = 3;
     a0->v44 = 0;
@@ -618,7 +634,7 @@ Object *spawn_wave_326c(Object *a0, Object *a1)
 }
 
 /* the end of $345E and $3480: a marker object that sits on the map cell under the record's position */
-static Object *marker_tail(Object *a0, uint16_t d0, const struct SpawnRec *a1, void (*a2)(void))
+static Object *marker_tail(Object *a0, uint16_t d0, const uint8_t *a1, void (*a2)(void))
 {
     uint16_t x, y;
 
@@ -626,25 +642,76 @@ static Object *marker_tail(Object *a0, uint16_t d0, const struct SpawnRec *a1, v
     a0->fn_update = (obj_fn)a2;
     a0->fn_draw = (obj_fn)obj_nop;
     a0->v5e = 0;
-    x = (uint16_t)(a1->x - 8);
+    x = (uint16_t)(rd16(a1 + 8) - 8);
     a0->x = (int16_t)x;
-    y = (uint16_t)(a1->y - 8);
+    y = (uint16_t)(rd16(a1 + 10) - 8);
     a0->y = (int16_t)y;
-    a0->v46 = (uint16_t *)((const uint8_t *)level_init_src + (uint16_t)((x >> 3) & 0xfe) +
-                           (int16_t)(uint16_t)((uint32_t)(y >> 4) * 0x28));
+    a0->v46 = level_init_src + (uint16_t)((x >> 3) & 0xfe) + (int16_t)(uint16_t)((uint32_t)(y >> 4) * 0x28);
     a0->v28 = 0;
     a0->v30 = 0;
     return a0;
 }
 
-/* orig $00345E: a marker in the list of enemies */
-Object *spawn_marker_enemy(uint16_t d0, const struct SpawnRec *a1, void (*a2)(void))
+/* orig $F56, $00345E: a marker in the list of enemies */
+Object *spawn_marker_enemy(uint16_t d0, const uint8_t *a1, void (*a2)(void))
 {
     return marker_tail(list_insert(LIST_ENEMY), d0, a1, a2);
 }
 
-/* orig $003480: a marker in the list at the front */
-Object *spawn_marker_front(uint16_t d0, const struct SpawnRec *a1, void (*a2)(void))
+/* orig $F50, $003480: a marker in the list at the front */
+Object *spawn_marker_front(uint16_t d0, const uint8_t *a1, void (*a2)(void))
 {
     return marker_tail(list_insert(LIST_FRONT), d0, a1, a2);
+}
+
+/* orig $EFC, $003912: update of a shot of an enemy: animation, moves by steps (v54) along one of 8 directions (v2a), gone when it leaves the
+ * screen; when it meets the player the player is hit (unless v_0cc8) and the shot goes */
+void enemy_shot_update(Object *a0)
+{
+    uint16_t d2;
+    uint32_t d0, d1;
+    int32_t m;
+
+    anim_step(a0);
+    d2 = (uint16_t)a0->v2a;
+    d0 = ((uint32_t)(uint16_t)a0->x << 16) | a0->x_frac;
+    d1 = ((uint32_t)(uint16_t)a0->y << 16) | a0->y_frac;
+    m = (int32_t)enemy_shot_dx[d2] * (int16_t)a0->v54;
+    d0 += (uint32_t)m << 2;
+    m = (int32_t)enemy_shot_dy[d2] * (int16_t)a0->v54;
+    d1 += (uint32_t)m << 2;
+    a0->x = (int16_t)(d0 >> 16);
+    a0->x_frac = (uint16_t)d0;
+    a0->y_frac = (uint16_t)d1;
+    d0 >>= 16;
+    d1 = (uint16_t)((d1 >> 16) + v_0cd8);
+    a0->y = (int16_t)d1;
+    if (d0 < 0x140 && d1 < 0xc0) {
+        bbox_from_frame(a0);
+        if (!player_hits(a0))
+            return;
+        if (v_0cc8 == 0) {
+            player_damage(a0, 4);
+            PLAYER->fn_draw = (obj_fn)draw_bob_or_first;
+        }
+    }
+    kill_object(a0);
+}
+
+/* orig $00318C: a shot of an enemy at (x, y), moving by steps in direction angle, drawn from gfx */
+void spawn_enemy_shot(uint16_t x, uint16_t y, uint16_t angle, uint16_t steps, const void *gfx)
+{
+    Object *a0 = list_insert(LIST_EFFECT);
+
+    a0->type = 0x14;
+    a0->fn_update = (obj_fn)enemy_shot_update;
+    a0->fn_draw = (obj_fn)draw_bob_masked;
+    a0->gfx = gfx;
+    a0->anim_delay = 0;
+    a0->x = (int16_t)x;
+    a0->y = (int16_t)y;
+    a0->v2a = (int16_t)angle;
+    a0->v54 = (int16_t)steps;
+    a0->hit[0] = 0x3e8;
+    a0->hit[2] = 0x3e8;
 }

@@ -18,6 +18,8 @@ return {
     { name = "bbox_from_frame",   orig = 0x0034ea, args = { "a0" } },
     { name = "note_spawn_record", orig = 0x003518, args = { "a1", "d2.w" } },
     { name = "latch_slots",       orig = 0x00352e, args = { "d2.w" } },
+    { name = "enemy_shot_update", orig = 0x003912, args = { "a0" } },
+    { name = "spawn_enemy_shot",  orig = 0x00318c, args = { "d0.w", "d1.w", "d2.w", "d3.w", "a2" } },
     { name = "spawn_wave_326c",   orig = 0x003252, args = { "a0", "a1" }, ret = "a0" },
     { name = "scroll_events",     orig = 0x003554, args = {} },
     { name = "run_updates",       orig = 0x003656, args = { "a0" } },

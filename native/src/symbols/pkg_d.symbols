@@ -14,55 +14,55 @@ var v_0424 0x424 uint16_t
 var v_0426 0x426 uint16_t
 tab v_2404 0x2404 int16_t 8                       ; x/y offsets of the four weapon slots
 tab v_476c 0x476c int16_t 16                      ; x/y steps of a pickup's eight-step circle
-tab v_60d0 0x60d0 uint32_t 13                     ; the player's pictures by v_0cde + 6
-tab v_614a 0x614a uint32_t 4                      ; the player's pictures while v_0430 is 1..4
+arr v_60d0 0x60d0 uint8_t * 13                     ; the player's pictures by v_0cde + 6
+arr v_614a 0x614a uint8_t * 4                      ; the player's pictures while v_0430 is 1..4
 tab v_7970 0x7970 uint16_t 2                      ; score added when a shot kills ($7972: when the pod shot does)
-tab v_27c2 0x27c2 uint32_t 12                     ; pictures of the player's shots (three each)
-tab anim_2540 0x2540 uint16_t 3                   ; animation headers: picture (long), delay, then the script
-tab anim_25a0 0x25a0 uint16_t 3
-tab anim_25be 0x25be uint16_t 3
-tab anim_25e2 0x25e2 uint16_t 3
-tab anim_2612 0x2612 uint16_t 3
-tab anim_264e 0x264e uint16_t 3
-tab anim_26ae 0x26ae uint16_t 3
-tab anim_270e 0x270e uint16_t 3
-tab anim_273a 0x273a uint16_t 3
-tab anim_2760 0x2760 uint16_t 3
-tab anim_280a 0x280a uint16_t 3
-tab anim_283a 0x283a uint16_t 3
-tab anim_28b2 0x28b2 uint16_t 3
-tab anim_28d0 0x28d0 uint16_t 3
-tab anim_28ee 0x28ee uint16_t 3
-tab anim_2912 0x2912 uint16_t 3
-tab anim_2930 0x2930 uint16_t 3
-tab anim_294e 0x294e uint16_t 3
-tab anim_296c 0x296c uint16_t 3
-tab anim_298a 0x298a uint16_t 3
-tab anim_29a8 0x29a8 uint16_t 3
-tab anim_29c6 0x29c6 uint16_t 3
-tab anim_29e4 0x29e4 uint16_t 3
-tab anim_2a02 0x2a02 uint16_t 3
-tab anim_2c24 0x2c24 uint16_t 3
+arr v_27c2 0x27c2 uint8_t * 12                     ; pictures of the player's shots (three each)
+tab anim_2540 0x2540 uint8_t 6                   ; animation headers: picture (long), delay, then the script
+tab anim_25a0 0x25a0 uint8_t 6
+tab anim_25be 0x25be uint8_t 6
+tab anim_25e2 0x25e2 uint8_t 6
+tab anim_2612 0x2612 uint8_t 6
+tab anim_264e 0x264e uint8_t 6
+tab anim_26ae 0x26ae uint8_t 6
+tab anim_270e 0x270e uint8_t 6
+tab anim_273a 0x273a uint8_t 6
+tab anim_2760 0x2760 uint8_t 6
+tab anim_280a 0x280a uint8_t 6
+tab anim_283a 0x283a uint8_t 6
+tab anim_28b2 0x28b2 uint8_t 6
+tab anim_28d0 0x28d0 uint8_t 6
+tab anim_28ee 0x28ee uint8_t 6
+tab anim_2912 0x2912 uint8_t 6
+tab anim_2930 0x2930 uint8_t 6
+tab anim_294e 0x294e uint8_t 6
+tab anim_296c 0x296c uint8_t 6
+tab anim_298a 0x298a uint8_t 6
+tab anim_29a8 0x29a8 uint8_t 6
+tab anim_29c6 0x29c6 uint8_t 6
+tab anim_29e4 0x29e4 uint8_t 6
+tab anim_2a02 0x2a02 uint8_t 6
+tab anim_2c24 0x2c24 uint8_t 6
 tab level_54e58 0x54e58 uint16_t 2                ; level 1: energy of the boss ($54E58) and of a second object ($54E5A)
 var v_5dd0 0x5dd0 int16_t                         ; a copy of v_0cde the code area holds
 tab level_558a2 0x558a2 uint16_t 80               ; level 1: sixteen records (offset, four words) the scroll patches the level data with
-tab level_567bc 0x567bc uint16_t 1                ; level 1: table the boss is drawn from
-tab level_5c0e4 0x5c0e4 uint16_t 1                ; level 1: pictures of the boss's eye
-tab level_5c194 0x5c194 uint16_t 1
-tab level_5c244 0x5c244 uint16_t 1
-tab level_56810 0x56810 uint32_t 12               ; level 1: three sources (four longs each) of the boss draw table
-arr level_567fa 0x567fa uint32_t 5                ; level 1: the boss draw table
-tab v_192ba 0x192ba uint16_t 1                    ; a picture
-tab level_59e28 0x59e28 uint16_t 1                ; level 1: picture of the boss's parts
+tab level_567bc 0x567bc uint8_t 2                ; level 1: table the boss is drawn from
+tab level_5c0e4 0x5c0e4 uint8_t 2                ; level 1: pictures of the boss's eye
+tab level_5c194 0x5c194 uint8_t 2
+tab level_5c244 0x5c244 uint8_t 2
+tab level_56810 0x56810 uint8_t 48               ; level 1: three sources (four longs each) of the boss draw table
+arr level_567fa 0x567fa uint8_t 20                ; level 1: the boss draw table
+tab v_192ba 0x192ba uint8_t 2                    ; a picture
+tab level_59e28 0x59e28 uint8_t 2                ; level 1: picture of the boss's parts
 arr level_data_src 0x6e80a uint8_t 12000         ; level 1: data copied once to level_data_dst
 arr level_data_dst 0x7d120 uint8_t 12000
-tab level_54e66 0x54e66 uint16_t 1                ; level 1: tables the $54E10 dispatcher hands to the level engine
-tab level_54e80 0x54e80 uint16_t 1
-tab level_54e9a 0x54e9a uint16_t 1
-tab level_54eb4 0x54eb4 uint16_t 1
-tab level_54ece 0x54ece uint16_t 1
-tab level_54ee8 0x54ee8 uint16_t 1
-tab level_54f02 0x54f02 uint16_t 1
-tab level_54f34 0x54f34 uint16_t 1
-tab level_54f4e 0x54f4e uint16_t 1
-tab level_54f68 0x54f68 uint16_t 1
+tab level_54e66 0x54e66 uint8_t 2                ; level 1: tables the $54E10 dispatcher hands to the level engine
+tab level_54e80 0x54e80 uint8_t 2
+tab level_54e9a 0x54e9a uint8_t 2
+tab level_54eb4 0x54eb4 uint8_t 2
+tab level_54ece 0x54ece uint8_t 2
+tab level_54ee8 0x54ee8 uint8_t 2
+tab level_54f02 0x54f02 uint8_t 2
+tab level_54f34 0x54f34 uint8_t 2
+tab level_54f4e 0x54f4e uint8_t 2
+tab level_54f68 0x54f68 uint8_t 2

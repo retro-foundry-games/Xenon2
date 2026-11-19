@@ -1,15 +1,14 @@
 #include "pkg_a.h"
 #include "game_all.h"
 
-typedef uint16_t u16a __attribute__((may_alias));
-
-#define W(p) (*(u16a *)(p))
+#define ORW(p, v) wr16((p), (uint16_t)(rd16(p) | (v)))
+#define ANDW(p, v) wr16((p), (uint16_t)(rd16(p) & (v)))
 #define BLIT_WAIT() while (custom->dmaconr & DMAF_BLTBUSY) ;
 
 /* inlined: $400 (bra.w to the start-up code) */
 /* inlined: $E0C, $E12, $E18, $E2A, $E54, $E5A (jmp thunks of the table at $E0C: callers call the target) */
 
-/* orig $FEE, $FF2, $1002 and $100E: take an object out of its list and put it on the free list */
+/* orig $E42, $FEE, $FF2, $1002 and $100E: take an object out of its list and put it on the free list */
 void free_object(Object *obj)
 {
     Object *next = obj->next, *prev = obj->prev;
@@ -49,10 +48,10 @@ static int clip_bob(Clip *c, int16_t x, int16_t y)
     int16_t d0 = x, d1 = y, d3, d4, d5, d6, d7;
     int32_t sum;
 
-    d0 = (int16_t)(d0 - (int16_t)W(a0)); a0 += 2;
+    d0 = (int16_t)(d0 - (int16_t)rd16(a0)); a0 += 2;
     if (d0 >= 0x140)
         return 0;
-    d1 = (int16_t)(d1 - (int16_t)W(a0)); a0 += 2;
+    d1 = (int16_t)(d1 - (int16_t)rd16(a0)); a0 += 2;
     d5 = (int16_t)(clip_bottom - d1);
     if (d5 < 0)
         return 0;
@@ -66,13 +65,13 @@ static int clip_bob(Clip *c, int16_t x, int16_t y)
     d1 = (int16_t)(d1 - d0);
     d1 >>= 3;
     c->dst += d1;
-    d1 = (int16_t)W(a0); a0 += 2;
+    d1 = (int16_t)rd16(a0); a0 += 2;
     d4 = d3;
     sum = (int32_t)d3 + d1;
     d3 = (int16_t)sum;
     if (sum <= 0)
         return 0;
-    d6 = (int16_t)W(a0); a0 += 2;
+    d6 = (int16_t)rd16(a0); a0 += 2;
     if (d6 > d5)
         d6 = d5;
     if (-(int32_t)d7 > 0) {
@@ -188,7 +187,7 @@ first_mask:
     c->size += 2;
 }
 
-/* orig $129A: draw a bob (masked, cookie-cut) at x, y; gfx = its header; HLE: blitter */
+/* orig $E90, $129A: draw a bob (masked, cookie-cut) at x, y; gfx = its header; HLE: blitter */
 HLE_WEAK void draw_bob_masked_at(uint16_t x, uint16_t y, const uint8_t *gfx)
 {
     Clip c;
@@ -218,13 +217,13 @@ HLE_WEAK void draw_bob_masked_at(uint16_t x, uint16_t y, const uint8_t *gfx)
     }
 }
 
-/* orig $128E, $133E, $1350, $135C and $1366: draw the bob of an object, masked; HLE: blitter */
+/* orig $E12, $128E, $133E, $1350, $135C and $1366: draw the bob of an object, masked; HLE: blitter */
 HLE_WEAK void draw_bob_masked(Object *obj)
 {
     draw_bob_masked_at(obj->x, obj->y, (const uint8_t *)obj->gfx);
 }
 
-/* orig $137C, $1384, $139E, $13AA, $13B4, $13BE, $13D0, $13DA, $13EA, $1404, $1414, $142C and $1436: draw a bob by OR-ing its mask
+/* orig $F14, $137C, $1384, $139E, $13AA, $13B4, $13BE, $13D0, $13DA, $13EA, $1404, $1414, $142C and $1436: draw a bob by OR-ing its mask
  * into planes 0-2 and clearing it in plane 3 (a flash); HLE: blitter */
 HLE_WEAK void draw_bob_or_at(uint16_t x, uint16_t y, const uint8_t *gfx)
 {
@@ -254,13 +253,13 @@ HLE_WEAK void draw_bob_or_at(uint16_t x, uint16_t y, const uint8_t *gfx)
     }
 }
 
-/* orig $1370 and $1378: draw the bob of an object as above */
+/* orig $F08, $1370 and $1378: draw the bob of an object as above */
 HLE_WEAK void draw_bob_or(Object *obj)
 {
     draw_bob_or_at(obj->x, obj->y, (const uint8_t *)obj->gfx);
 }
 
-/* orig $1368: the object is drawn masked from now on, this time as above */
+/* orig $E66, $1368: the object is drawn masked from now on, this time as above */
 HLE_WEAK void draw_bob_or_first(Object *obj)
 {
     obj->fn_draw = (obj_fn)draw_bob_masked;
@@ -361,26 +360,26 @@ void redraw_energy_bar(void)
         if (d0 != 0) {
             d0--;
             do {
-                W(a0 + d4) &= d3;
-                W(a0 + 0x28 + d4) |= d2;
-                W(a0 + 0x50 + d4) |= d2;
-                W(a0 + 0x78 + d4) |= d2;
-                W(a1 + d4) &= d3;
-                W(a1 + 0x28 + d4) |= d2;
-                W(a1 + 0x50 + d4) |= d2;
-                W(a1 + 0x78 + d4) |= d2;
+                ANDW(a0 + d4, d3);
+                ORW(a0 + 0x28 + d4, d2);
+                ORW(a0 + 0x50 + d4, d2);
+                ORW(a0 + 0x78 + d4, d2);
+                ANDW(a1 + d4, d3);
+                ORW(a1 + 0x28 + d4, d2);
+                ORW(a1 + 0x50 + d4, d2);
+                ORW(a1 + 0x78 + d4, d2);
                 d4 = (int16_t)(d4 + 0xa0);
             } while (d4 <= 0x140);
         } else {
             do {
-                W(a0 + d4) &= d3;
-                W(a0 + 0x28 + d4) &= d3;
-                W(a0 + 0x50 + d4) &= d3;
-                W(a0 + 0x78 + d4) &= d3;
-                W(a1 + d4) &= d3;
-                W(a1 + 0x28 + d4) &= d3;
-                W(a1 + 0x50 + d4) &= d3;
-                W(a1 + 0x78 + d4) &= d3;
+                ANDW(a0 + d4, d3);
+                ANDW(a0 + 0x28 + d4, d3);
+                ANDW(a0 + 0x50 + d4, d3);
+                ANDW(a0 + 0x78 + d4, d3);
+                ANDW(a1 + d4, d3);
+                ANDW(a1 + 0x28 + d4, d3);
+                ANDW(a1 + 0x50 + d4, d3);
+                ANDW(a1 + 0x78 + d4, d3);
                 d4 = (int16_t)(d4 + 0xa0);
             } while (d4 <= 0x140);
         }
@@ -472,7 +471,7 @@ HLE_WEAK void draw_background(void)
     uint16_t d1 = (uint16_t)(0xc0 - scroll);
     uint8_t *a0 = map_image + (int16_t)(uint16_t)(scroll * 0x50u);
     uint8_t *a1 = draw_screen, *a4, *a5;
-    const uint16_t *cells;
+    const uint8_t *cells;
     const uint8_t *tiles;
     int16_t d2, rows;
 
@@ -501,7 +500,7 @@ HLE_WEAK void draw_background(void)
     if (v_0d85)
         return;
 
-    cells = (const uint16_t *)((const uint8_t *)level_init_src + (int16_t)v_0cce);
+    cells = level_init_src + (int16_t)v_0cce;
     rows = 0xc;
     d2 = (int16_t)-(int16_t)v_0cd6;
     a0 = draw_screen;
@@ -511,7 +510,7 @@ HLE_WEAK void draw_background(void)
     custom->bltafwm = 0xffff;
     custom->bltalwm = 0xffff;
     while (d2 <= -16) {
-        cells += 20;
+        cells += 40;
         d2 = (int16_t)(d2 + 0x10);
         if (rows-- == 0)
             return;
@@ -529,7 +528,9 @@ HLE_WEAK void draw_background(void)
                 d7 = ((d7 % 0xa0) << 16) | (d7 / 0xa0);
             size = (uint16_t)((uint16_t)((uint16_t)d7 << 6) + 1);
             for (int n = 0; n < 20; n++, col += 2) {
-                uint16_t cell = *cells++;
+                uint16_t cell = rd16(cells);
+
+                cells += 2;
 
                 if (cell == 0)
                     continue;
@@ -543,7 +544,9 @@ HLE_WEAK void draw_background(void)
             uint8_t *col = a0;
 
             for (int n = 0; n < 20; n++, col += 2) {
-                uint16_t cell = *cells++;
+                uint16_t cell = rd16(cells);
+
+                cells += 2;
 
                 if (cell != 0)
                     put_tile(tiles, cell, col, 0, 0);

@@ -20,6 +20,7 @@ void show_text_sequence(uint16_t row, const uint8_t *text, const uint16_t *steps
 void title_message(const uint8_t *text);
 void title_stars_start(void);
 void stars_init_dots(void);
+void title_restore(void);
 void title_credits(void);
 
 /* callees without C yet (registers as the original takes them) */
