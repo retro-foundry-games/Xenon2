@@ -29,6 +29,7 @@ Object *scan_boxes(Object *a1, int16_t x0, int16_t y0, int16_t x1, int16_t y1);
 Object *point_in_enemy(int16_t x, int16_t y);
 uint16_t direction8(int16_t dx, int16_t dy);
 void obj_nop(Object *o);
+void obj_nop_thunk(Object *o);
 Object *owner_chain_next(Object *a1);
 Object *spawn_formation(Object *a0, const uint8_t *a1, const uint8_t *a2);
 void bbox_from_frame(Object *o);

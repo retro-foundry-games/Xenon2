@@ -18,6 +18,17 @@ static void kill_object(Object *o)
     o->flag60 = 0;
 }
 
+/* the same, as the level's code (orig $55000 and up) does it: it stores the jump-table entries ($E42, $E48), not the routines ($FEE, $3130) */
+static void kill_object_thunk(Object *o)
+{
+    o->type = 4;
+    o->fn_update = (obj_fn)free_object;
+    o->fn_draw = (obj_fn)obj_nop_thunk;
+    o->fn_hit = (void *)obj_nop_thunk;
+    o->flag34 = 0;
+    o->flag60 = 0;
+}
+
 /* inlined: $2418 and the insertion before the sentinel of list A / B (the object comes back in a0) */
 static Object *alloc_a(Object *a0)
 {
@@ -1464,7 +1475,7 @@ static void copy4(uint8_t *dst, const uint8_t *src)
 static int level1_turret_gone(Object *a0)
 {
     if ((int16_t)(v_0cea + 0xd0) < a0->y) {
-        kill_object(a0);
+        kill_object_thunk(a0);
         return 1;
     }
     return 0;
@@ -1591,7 +1602,7 @@ void level1_launcher_update(Object *a0)
     int d7;
 
     if ((int16_t)(v_0cea + 0xd0 - v_0cd0) < a0->y) {
-        kill_object(a0);
+        kill_object_thunk(a0);
         return;
     }
     anim_step(a0);
@@ -2816,7 +2827,7 @@ void level1_spawn_unit(uint16_t d6)
     a0 = alloc_c();
     a0->type = 0x10c;
     a0->fn_update = FN(level1_head_update);
-    a0->fn_draw = obj_nop;
+    a0->fn_draw = obj_nop_thunk;
     a0->fn_hit = (void *)level1_hit_free;
     a0->v2e = d3;
     SET_V5E(a0, 0);
@@ -2836,7 +2847,7 @@ void level1_spawn_unit(uint16_t d6)
         a0 = alloc_c();
         a0->type = seg->type;
         a0->fn_update = FN(level1_segment_update);
-        a0->fn_draw = obj_nop;
+        a0->fn_draw = obj_nop_thunk;
         a0->fn_hit = (void *)seg->hit;
         a0->gfx = seg->gfx;
         a0->v42 = (int16_t)seg->score;
@@ -2858,16 +2869,16 @@ void level1_spawn_unit(uint16_t d6)
     }
     a0 = alloc_c();
     a0->type = 0xb8;
-    a0->fn_update = obj_nop;
-    a0->fn_draw = obj_nop;
-    a0->fn_hit = (void *)obj_nop;
+    a0->fn_update = obj_nop_thunk;
+    a0->fn_draw = obj_nop_thunk;
+    a0->fn_hit = (void *)obj_nop_thunk;
     a0->hit[0] = 0x3e8;
     a0->hit[2] = 0x3e8;
     a0->chain = first;
     first->type = 0xbc;
     first->fn_update = FN(group_box_update);
-    first->fn_draw = obj_nop;
-    first->fn_hit = (void *)obj_nop;
+    first->fn_draw = obj_nop_thunk;
+    first->fn_hit = (void *)obj_nop_thunk;
     first->hit[0] = 0x3e8;
     first->hit[2] = 0x3e8;
     first->target = a0;
@@ -2886,7 +2897,7 @@ void level1_head_update(Object *a0)
 /* orig $056034: hit routine of the head: the object hit (a1) is freed */
 void level1_hit_free(Object *a0, Object *a1, uint16_t d0)
 {
-    kill_object(a1);
+    kill_object_thunk(a1);
 }
 
 /* orig $0560C2: update of a piece of a unit (types $110, $114): it takes the place and the direction of the object before it in the list;
@@ -2902,7 +2913,7 @@ void level1_segment_update(Object *a0)
     if (a1->type == 0xbc) {
         if (v_0d26[(uint16_t)a0->v2e] == 0)
             v_0d26[(uint16_t)a0->v2e] = 0x14;
-        kill_object(a0);
+        kill_object_thunk(a0);
         a0->fn_update(a0);
         return;
     }
@@ -2911,7 +2922,7 @@ void level1_segment_update(Object *a0)
     a0->v2a = a1->v2a;
     a0->v2c = a1->v2c;
     a0->v28 = a1->v28;
-    if (a0->fn_draw == obj_nop && a0->v28 >= 0)
+    if (a0->fn_draw == obj_nop_thunk && a0->v28 >= 0)
         a0->fn_draw = draw_bob_masked;
     d2 = (uint16_t)(((uint16_t)(a0->v2c + 0x10) >> 3) & 0x1c);
     tab = &level_56174[a0->type == 0x110 ? 8 : 0];
@@ -2933,7 +2944,7 @@ static void level1_piece_burst(Object *a1, const uint8_t *a2)
     n->v2a = 0;
     n->v2c = (int16_t)(random_next() & 0xff);
     v_0c92 += (uint16_t)a1->v42;
-    kill_object(a1);
+    kill_object_thunk(a1);
 }
 
 /* orig $055C2E: hit routine of a piece: it flashes; with no energy left it bursts (anim $55250) */
@@ -2974,7 +2985,7 @@ void level1_debris_update(Object *a0)
     d0 = (int16_t)(d0 + a0->x);
     d1 = (int16_t)(d1 + a0->y);
     if ((uint16_t)d0 >= 0x140 || (uint16_t)d1 >= 0xc0) {
-        kill_object(a0);
+        kill_object_thunk(a0);
         return;
     }
     a0->x = d0;
@@ -3009,7 +3020,7 @@ void level1_boss_hit(Object *a0, Object *a1, uint16_t d0)
     if (old > d0)
         return;
     v_0d8b = 0;
-    kill_object(a1);
+    kill_object_thunk(a1);
     spawn_bonuses(8);
     debris_burst(a0, 0x13, 0, 0, 0x140, 0xc0, v_0f64);
     free_object_chain(LIST_HEAD(LIST_ENEMY));
@@ -3024,7 +3035,7 @@ void level1_boss_part_update(Object *a0)
     Object *a1;
 
     if (v_0d8b == 0) {
-        kill_object(a0);
+        kill_object_thunk(a0);
         return;
     }
     a1 = (Object *)a0->anim;
