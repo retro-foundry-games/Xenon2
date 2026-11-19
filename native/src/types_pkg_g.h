@@ -19,7 +19,7 @@ struct ObjMove {
     uint8_t pad35[15];          /* 35 */
     uint16_t id;                /* 44 */
     const uint8_t *script;      /* 46: the script's start */
-    const uint16_t *cursor;     /* 4a: the next command */
+    const uint8_t *cursor;      /* 4a: the next command */
     uint32_t turn;              /* 4e: angle change per step, 8.24 */
     int16_t turn_step;          /* 52 */
     uint16_t steps;             /* 54: steps per call */

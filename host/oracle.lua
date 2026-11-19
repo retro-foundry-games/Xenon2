@@ -204,7 +204,7 @@ local start = ami.frame()
 while ami.frame() - start < UNTIL do
     ami.wait(1)
     local f = ami.frame() - start
-    if in_call and ami.frame() - in_call.frame > 3 then
+    if in_call and ami.frame() - in_call.frame > 60 then
         -- the call has not come back (a routine that waits for something the call cannot get: an interrupt, the beam): put the machine back as it was at the hook
         local c = in_call
         ami.write(0, c.before)
@@ -214,7 +214,7 @@ while ami.frame() - start < UNTIL do
         c.case.hung = true
         c.case.done = SAMPLES
         c.case.refire = true
-        say("HUNG %s: the call did not return in 3 frames (not compared; it waits for something)", c.case.name)
+        say("HUNG %s: the call did not return in 60 frames (not compared; it waits for something)", c.case.name)
     end
     if joys[f] then ami.joystick(joys[f]) end
     if DEBUG and f % 20 == 0 then say("f%d pc=%06x busy=%s", f, ami.reg("pc"), tostring(busy)) end

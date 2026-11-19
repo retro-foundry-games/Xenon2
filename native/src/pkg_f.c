@@ -2,7 +2,8 @@
 #include "game_all.h"
 #include "amiga/hw.h"
 
-#define WORD(p, off) (*(uint16_t *)((uint8_t *)(p) + (off)))
+#define WORD(p, off) rd16((const uint8_t *)(p) + (off))
+#define SETW(p, off, v) wr16((uint8_t *)(p) + (off), (v))
 
 /* divs.w: the low word the register holds afterwards (quotient; the dividend's low word when the quotient overflows) */
 static uint16_t divs_low(int32_t dividend, int16_t divisor)
@@ -70,10 +71,10 @@ void draw_text_row_at(uint8_t *dst, const uint8_t *s, uint16_t count)
             int row;
 
             for (row = 0; row < 22; row++) {
-                WORD(a0, 0) = *g++;
-                WORD(a0, 0x28) = *g++;
-                WORD(a0, 0x50) = *g++;
-                WORD(a0, 0x78) = *g++;
+                SETW(a0, 0, *g++);
+                SETW(a0, 0x28, *g++);
+                SETW(a0, 0x50, *g++);
+                SETW(a0, 0x78, *g++);
                 a0 += 0xa0;
             }
             a0 -= 0xdc0;
@@ -151,10 +152,10 @@ void draw_text_squeezed(const uint8_t *s)
                     }
                     sh = (int16_t)(0x10 - col - title_scale);
                     if (sh >= 0) {
-                        WORD(a0, 0x28) |= (uint16_t)((p2 >> 16) << sh);
-                        WORD(a0, 0x50) |= (uint16_t)((p3 >> 16) << sh);
-                        WORD(a0, 0x78) |= (uint16_t)((p4 >> 16) << sh);
-                        WORD(a0, 0) |= (uint16_t)((p1 >> 16) << sh);
+                        SETW(a0, 0x28, WORD(a0, 0x28) | (uint16_t)((p2 >> 16) << sh));
+                        SETW(a0, 0x50, WORD(a0, 0x50) | (uint16_t)((p3 >> 16) << sh));
+                        SETW(a0, 0x78, WORD(a0, 0x78) | (uint16_t)((p4 >> 16) << sh));
+                        SETW(a0, 0, WORD(a0, 0) | (uint16_t)((p1 >> 16) << sh));
                         a0 += 2;
                     } else {
                         sh += 0x10;
@@ -162,15 +163,15 @@ void draw_text_squeezed(const uint8_t *s)
                         p2 = (p2 << sh) | (p2 >> (32 - sh));
                         p3 = (p3 << sh) | (p3 >> (32 - sh));
                         p4 = (p4 << sh) | (p4 >> (32 - sh));
-                        WORD(a0, 0x28) |= (uint16_t)p2;
-                        WORD(a0, 0x50) |= (uint16_t)p3;
-                        WORD(a0, 0x78) |= (uint16_t)p4;
-                        WORD(a0, 0) |= (uint16_t)p1;
+                        SETW(a0, 0x28, WORD(a0, 0x28) | (uint16_t)p2);
+                        SETW(a0, 0x50, WORD(a0, 0x50) | (uint16_t)p3);
+                        SETW(a0, 0x78, WORD(a0, 0x78) | (uint16_t)p4);
+                        SETW(a0, 0, WORD(a0, 0) | (uint16_t)p1);
                         a0 += 2;
-                        WORD(a0, 0) = (uint16_t)(p1 >> 16);
-                        WORD(a0, 0x28) = (uint16_t)(p2 >> 16);
-                        WORD(a0, 0x50) = (uint16_t)(p3 >> 16);
-                        WORD(a0, 0x78) = (uint16_t)(p4 >> 16);
+                        SETW(a0, 0, (uint16_t)(p1 >> 16));
+                        SETW(a0, 0x28, (uint16_t)(p2 >> 16));
+                        SETW(a0, 0x50, (uint16_t)(p3 >> 16));
+                        SETW(a0, 0x78, (uint16_t)(p4 >> 16));
                     }
                     a0 += 0x9e;
                 }
@@ -236,10 +237,10 @@ void stars_update(void)
             continue;
         }
         c = star_colors[(((uint16_t)z << 6) | ((uint16_t)z >> 10)) & 7];
-        if (c & 1) WORD(a1, 0) |= mask;
-        if (c & 2) WORD(a1, 0x28) |= mask;
-        if (c & 4) WORD(a1, 0x50) |= mask;
-        if (c & 8) WORD(a1, 0x78) |= mask;
+        if (c & 1) SETW(a1, 0, WORD(a1, 0) | mask);
+        if (c & 2) SETW(a1, 0x28, WORD(a1, 0x28) | mask);
+        if (c & 4) SETW(a1, 0x50, WORD(a1, 0x50) | mask);
+        if (c & 8) SETW(a1, 0x78, WORD(a1, 0x78) | mask);
     }
 }
 
@@ -264,10 +265,10 @@ void stars_erase(void)
         t = (uint16_t)((px - d) >> 3);
         a1 += (int16_t)t;
         keep = (uint16_t)((0x7fff >> d) | (0x7fff << (16 - d)));
-        WORD(a1, 0) &= keep;
-        WORD(a1, 0x28) &= keep;
-        WORD(a1, 0x50) &= keep;
-        WORD(a1, 0x78) &= keep;
+        SETW(a1, 0, WORD(a1, 0) & keep);
+        SETW(a1, 0x28, WORD(a1, 0x28) & keep);
+        SETW(a1, 0x50, WORD(a1, 0x50) & keep);
+        SETW(a1, 0x78, WORD(a1, 0x78) & keep);
     }
 }
 
@@ -323,10 +324,10 @@ void title_draw_logo(void)
     a0 = draw_screen + 0xc86;
     for (row = 0; row < 54; row++) {
         for (k = 0; k < 13; k++) {
-            WORD(a0, 2 * k) = *g++;
-            WORD(a0, 2 * k + 0x28) = *g++;
-            WORD(a0, 2 * k + 0x50) = *g++;
-            WORD(a0, 2 * k + 0x78) = *g++;
+            SETW(a0, 2 * k, *g++);
+            SETW(a0, 2 * k + 0x28, *g++);
+            SETW(a0, 2 * k + 0x50, *g++);
+            SETW(a0, 2 * k + 0x78, *g++);
         }
         a0 += 0xa0;
     }

@@ -54,8 +54,8 @@ tab level_56810 0x56810 uint32_t 12               ; level 1: three sources (four
 arr level_567fa 0x567fa uint32_t 5                ; level 1: the boss draw table
 tab v_192ba 0x192ba uint16_t 1                    ; a picture
 tab level_59e28 0x59e28 uint16_t 1                ; level 1: picture of the boss's parts
-arr level_data_src 0x6e80a uint32_t 3000          ; level 1: data copied once to level_data_dst
-arr level_data_dst 0x7d120 uint32_t 3000
+arr level_data_src 0x6e80a uint8_t 12000         ; level 1: data copied once to level_data_dst
+arr level_data_dst 0x7d120 uint8_t 12000
 tab level_54e66 0x54e66 uint16_t 1                ; level 1: tables the $54E10 dispatcher hands to the level engine
 tab level_54e80 0x54e80 uint16_t 1
 tab level_54e9a 0x54e9a uint16_t 1

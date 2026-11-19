@@ -133,3 +133,66 @@ void host_game_status(void)
         printf(" %u", (unsigned)xenon.v_0d7c[i]);
     printf("\n");
 }
+
+/* ---- the memory as the original had it, for comparing the port with the original (tools/compare_state.py) ------------------------------------------------------------
+ * The whole block (raw buffers keep their bytes) with every named member converted back to the original's byte order and addresses. */
+extern void guest_unswap_record(const char *type, void *record);
+extern uint32_t guest_code_address(const void *function);
+
+unsigned host_vbl_count(void) { return xenon.vbl_count; }
+
+int host_export_ram(const char *path)
+{
+    uint8_t *ram = malloc(sizeof xenon);
+    FILE *f;
+
+    if (!ram)
+        return -1;
+    memcpy(ram, &xenon, sizeof xenon);
+    for (unsigned i = 0; i < sizeof guest_members / sizeof guest_members[0]; i++) {
+        uint8_t *m = ram + guest_members[i].address;
+        uint32_t size = guest_members[i].size, elem = guest_members[i].elem;
+
+        if (guest_members[i].rec) {
+            unsigned rsize = guest_record_size(guest_members[i].rec);
+
+            for (uint32_t o = 0; rsize && o + rsize <= size; o += rsize)
+                guest_unswap_record(guest_members[i].rec, m + o);
+        } else if (elem > 1) {
+            for (uint32_t o = 0; o + elem <= size; o += elem) {
+                uint32_t v = 0;
+
+                if (elem == 2) {
+                    uint16_t w;
+
+                    memcpy(&w, m + o, 2);
+                    v = w;
+                } else {
+                    memcpy(&v, m + o, 4);
+                    if (guest_members[i].ptr == 1 && v)
+                        v = guest_address((void *)(uintptr_t)v);
+                    else if (guest_members[i].ptr == 2 && v)
+                        v = guest_code_address((void *)(uintptr_t)v);
+                }
+                if (elem == 2) {
+                    m[o] = (uint8_t)(v >> 8);
+                    m[o + 1] = (uint8_t)v;
+                } else {
+                    m[o] = (uint8_t)(v >> 24);
+                    m[o + 1] = (uint8_t)(v >> 16);
+                    m[o + 2] = (uint8_t)(v >> 8);
+                    m[o + 3] = (uint8_t)v;
+                }
+            }
+        }
+    }
+    f = fopen(path, "wb");
+    if (!f) {
+        free(ram);
+        return -1;
+    }
+    fwrite(ram, 1, 0x80000, f);   /* the 512 KB the original had */
+    fclose(f);
+    free(ram);
+    return 0;
+}

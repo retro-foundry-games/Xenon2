@@ -104,6 +104,11 @@ def main():
            'static void s16(uint8_t *p) { uint16_t v = (uint16_t)(p[0] << 8 | p[1]); memcpy(p, &v, 2); }',
            'static void s32(uint8_t *p) { uint32_t v = (uint32_t)p[0] << 24 | (uint32_t)p[1] << 16 | (uint32_t)p[2] << 8 | p[3]; memcpy(p, &v, 4); }',
            'static void sptr(uint8_t *p) { uint32_t v = (uint32_t)p[0] << 24 | (uint32_t)p[1] << 16 | (uint32_t)p[2] << 8 | p[3]; v = v ? (uint32_t)(uintptr_t)guest_ptr(v) : 0; memcpy(p, &v, 4); }',
+           'extern uint32_t guest_code_address(const void *function);',
+           'static void u16(uint8_t *p) { uint16_t v; memcpy(&v, p, 2); p[0] = (uint8_t)(v >> 8); p[1] = (uint8_t)v; }',
+           'static void u32(uint8_t *p) { uint32_t v; memcpy(&v, p, 4); p[0] = (uint8_t)(v >> 24); p[1] = (uint8_t)(v >> 16); p[2] = (uint8_t)(v >> 8); p[3] = (uint8_t)v; }',
+           'static void uptr(uint8_t *p) { uint32_t v; memcpy(&v, p, 4); v = v ? guest_address((void *)(uintptr_t)v) : 0; p[0] = (uint8_t)(v >> 24); p[1] = (uint8_t)(v >> 16); p[2] = (uint8_t)(v >> 8); p[3] = (uint8_t)v; }',
+           'static void ufn(uint8_t *p) { uint32_t v; memcpy(&v, p, 4); v = v ? guest_code_address((void *)(uintptr_t)v) : 0; p[0] = (uint8_t)(v >> 24); p[1] = (uint8_t)(v >> 16); p[2] = (uint8_t)(v >> 8); p[3] = (uint8_t)v; }',
            'static void sfn(uint8_t *p) { uint32_t v = (uint32_t)p[0] << 24 | (uint32_t)p[1] << 16 | (uint32_t)p[2] << 8 | p[3]; v = v ? (uint32_t)(uintptr_t)guest_code(v) : 0; memcpy(p, &v, 4); }', '']
     names = sorted(structs)
     for n in names: layout(n, structs, memo)
@@ -124,12 +129,27 @@ def main():
                 elif kind == 'fn': out.append('    sfn(r + %d);' % o)
                 else: out.append('    swap_%s(r + %d);' % (kind[4:], o))
         out.append('}\n')
+        out.append('static void unswap_%s(uint8_t *r)\n{\n    (void)r;' % n)
+        for off, kind, count, sz in items:
+            if kind == '8': continue
+            for i in range(count):
+                o = off + i * sz
+                if kind == '16': out.append('    u16(r + %d);' % o)
+                elif kind == '32': out.append('    u32(r + %d);' % o)
+                elif kind == 'ptr': out.append('    uptr(r + %d);' % o)
+                elif kind == 'fn': out.append('    ufn(r + %d);' % o)
+                else: out.append('    unswap_%s(r + %d);' % (kind[4:], o))
+        out.append('}\n')
     # swap_X may call swap_Y defined later: declare first
-    decls = ['static void swap_%s(uint8_t *r);' % n for n in names]
+    decls = ['static void swap_%s(uint8_t *r);' % n for n in names] + ['static void unswap_%s(uint8_t *r);' % n for n in names]
     out = out[:out.index('unsigned guest_record_size(const char *type)\n{')] + decls + [''] + out[out.index('unsigned guest_record_size(const char *type)\n{'):]
     out.append('void guest_swap_record(const char *type, void *record)\n{')
     for n in names:
         out.append('    if (!strcmp(type, "%s")) { swap_%s(record); return; }' % (n, n))
+    out.append('}')
+    out.append('\nvoid guest_unswap_record(const char *type, void *record)\n{')
+    for n in names:
+        out.append('    if (!strcmp(type, "%s")) { unswap_%s(record); return; }' % (n, n))
     out.append('}')
     os.makedirs(os.path.join(SRC, 'sdl'), exist_ok=True)
     open(os.path.join(SRC, 'sdl', 'records.c'), 'w').write('\n'.join(out) + '\n')
@@ -138,7 +158,7 @@ def main():
     tab += ['extern void %s();' % n for n in sorted(set(funcs.values()))]
     tab += ['', 'static const struct { uint32_t address; void *function; } code_table[] = {']
     tab += ['    { 0x%x, (void *)%s },' % (a, funcs[a]) for a in sorted(funcs)]
-    tab += ['};', '', 'void *guest_code(uint32_t address)', '{', '    unsigned lo = 0, hi = sizeof code_table / sizeof code_table[0];', '    while (lo < hi) {', '        unsigned mid = (lo + hi) / 2;',
+    tab += ['};', '', 'uint32_t guest_code_address(const void *function)', '{', '    for (unsigned i = 0; i < sizeof code_table / sizeof code_table[0]; i++)', '        if (code_table[i].function == function)', '            return code_table[i].address;', '    return 0;', '}', '', 'void *guest_code(uint32_t address)', '{', '    unsigned lo = 0, hi = sizeof code_table / sizeof code_table[0];', '    while (lo < hi) {', '        unsigned mid = (lo + hi) / 2;',
             '        if (code_table[mid].address < address) lo = mid + 1; else hi = mid;', '    }',
             '    return lo < sizeof code_table / sizeof code_table[0] && code_table[lo].address == address ? code_table[lo].function : 0;', '}']
     open(os.path.join(SRC, 'sdl', 'code_table.c'), 'w').write('\n'.join(tab) + '\n')

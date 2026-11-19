@@ -1627,7 +1627,7 @@ void level1_init(void)
     int i;
 
     if (level_init_src == level_data_src) {
-        for (i = 2999; i >= 0; i--)
+        for (i = 11999; i >= 0; i--)
             level_data_dst[i] = level_data_src[i];
         level_init_src = level_data_dst;
     }
