@@ -3,6 +3,7 @@
 #define HOST_H
 
 #include <stdint.h>
+#include <stddef.h>
 #include <stdio.h>
 
 /* guest.c: the game's memory is struct Xenon (game_state.h); the chips' registers are objects of their own */
@@ -19,6 +20,15 @@ int host_export_ram(const char *path);              /* the memory in the origina
 void host_game_status(void);                        /* print a few variables of the game (tests) */
 void host_game_start(void);                         /* call the game's entry (nothing if the C has none yet) */
 int guest_load_game_image(void);                    /* disk 1, tracks 82-159, from $70C00: the game's program and data, as the loader of disk 1 leaves them at $400 */
+
+/* The machine's state for a savestate (the dev build): every module hands its objects to a visitor in a fixed order; the visitor writes them to a file or reads them back.
+ * Objects hold addresses of this executable (the game's memory block, the samples of a sound channel): a state is for the build that made it (no PIE). */
+typedef void (*host_state_visit)(void *data, size_t size, void *arg);
+void host_state(host_state_visit visit, void *arg);   /* main.c: the memory, the chips, the disks, the sound, the input, the frame count */
+void guest_state(host_state_visit visit, void *arg);  /* guest.c */
+void sound_state(host_state_visit visit, void *arg);  /* sound.c */
+void files_state(host_state_visit visit, void *arg);  /* files.c: the disk in the drive */
+void disk_state(host_state_visit visit, void *arg);   /* disk.c */
 
 /* files.c: the disks (ADF images) */
 int files_open(const char *folder);

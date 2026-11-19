@@ -113,6 +113,25 @@ static int amiga_raw(SDL_Scancode s)
 
 static int key_queue[32], key_queue_n;
 
+void host_state(host_state_visit visit, void *arg)
+{
+    guest_state(visit, arg);
+    sound_state(visit, arg);
+    files_state(visit, arg);
+    disk_state(visit, arg);
+    visit(&frames, sizeof frames, arg);
+    visit(&dmacon_state, sizeof dmacon_state, arg);
+    visit(&intena_state, sizeof intena_state, arg);
+    visit(&intreq_state, sizeof intreq_state, arg);
+    visit(&joy_up, sizeof joy_up, arg);
+    visit(&joy_down, sizeof joy_down, arg);
+    visit(&joy_left, sizeof joy_left, arg);
+    visit(&joy_right, sizeof joy_right, arg);
+    visit(&joy_fire, sizeof joy_fire, arg);
+    visit(key_queue, sizeof key_queue, arg);
+    visit(&key_queue_n, sizeof key_queue_n, arg);
+}
+
 static void deliver_keys(void)
 {
     for (int i = 0; i < key_queue_n; i++) {

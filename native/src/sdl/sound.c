@@ -19,6 +19,11 @@ struct channel {
 
 static struct channel channel[4];
 
+void sound_state(host_state_visit visit, void *arg)
+{
+    visit(channel, sizeof channel, arg);
+}
+
 void sound_init(void)
 {
     memset(channel, 0, sizeof channel);

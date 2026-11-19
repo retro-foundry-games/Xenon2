@@ -18,6 +18,8 @@
  *   port.peek8/16/32(address)    from the same (cached until the game runs again)
  *   port.picture()               RGB, 3 bytes a pixel, 320 x 256;  port.picture_hash()
  *   port.load_ram(str)           the memory of the original (0x80000 bytes, its byte order) into the port, before the game has started
+ *   port.save_state(PATH)        the whole state of the port (memory block, chips, sound, disk, input, the game's stack and context); port.load_state(PATH) puts it back,
+ *                                also into a new process of the same build (the game stands where it stood: at a frame's end, or inside the function of a stop)
  *   port.disk(n)                 put disk 1 or 2 in the drive;  port.quit()
  *   port.listen(PATH)            a unix socket server (fd);  port.accept(fd, ms)  a client (fd) or nil on timeout (ms nil: wait)
  *   port.readline(fd, ms)        a line without its newline; nil, "timeout" or "eof";  port.read(fd, n): n bytes (nil at eof);  port.write(fd, str);  port.close(fd)
@@ -83,17 +85,138 @@ static void resume(void)
     in_game = 0;
 }
 
+static char game_stack[1 << 20];
+
 static void start_game(void)
 {
-    static char stack[1 << 20];
-
     getcontext(&game_ctx);
-    game_ctx.uc_stack.ss_sp = stack;
-    game_ctx.uc_stack.ss_size = sizeof stack;
+    game_ctx.uc_stack.ss_sp = game_stack;
+    game_ctx.uc_stack.ss_size = sizeof game_stack;
     game_ctx.uc_link = 0;
     makecontext(&game_ctx, game_main, 0);
     game_started = 1;
     resume();   /* to the first host_idle */
+}
+
+/* ---- savestates --------------------------------------------------------------------------------------------------------------------------------------------------- */
+/* A state is the machine (host_state: the memory block, the chips, the sound, the disk, the input, the frame count) and the game: the part of its stack that is in use and the
+ * context it is suspended in (at a host_idle, or inside the function a stop is in).  It holds addresses of this executable (the stack's frames point into the stack and the
+ * memory block), so the dev build is not a PIE, has no stack protector, and a state is refused by another build (a hash of the code). */
+#define STATE_MAGIC "X2DEVST2"
+
+struct state_flags { int game_started, suspended_at_hook; };
+
+static uint32_t build_hash(void)
+{
+    extern char __executable_start, etext;
+    uint32_t h = 2166136261u;
+
+    for (const unsigned char *p = (const unsigned char *)&__executable_start; p < (const unsigned char *)&etext; p++)
+        h = (h ^ *p) * 16777619u;
+    return h;
+}
+
+struct state_io { FILE *f; int saving, bad; };
+
+static void state_chunk(void *data, size_t size, void *arg)
+{
+    struct state_io *io = arg;
+    uint32_t n = (uint32_t)size, got;
+
+    if (io->bad)
+        return;
+    if (io->saving) {
+        io->bad = fwrite(&n, 4, 1, io->f) != 1 || (size && fwrite(data, size, 1, io->f) != 1);
+    } else {
+        io->bad = fread(&got, 4, 1, io->f) != 1 || got != n || (size && fread(data, size, 1, io->f) != 1);
+        if (io->bad)
+            fprintf(stderr, "dev: the state does not fit (an object of %u bytes where %u are wanted)\n", (unsigned)got, n);
+    }
+}
+
+/* the part of the game's stack that is in use: from the saved stack pointer (a little below, for the red zone) to the top */
+static void stack_range(char **from, size_t *size)
+{
+    char *top = game_stack + sizeof game_stack;
+    char *sp = (char *)(uintptr_t)game_ctx.uc_mcontext.gregs[REG_ESP];
+
+    if (sp < game_stack + 256 || sp > top)
+        sp = game_stack + 256;
+    *from = sp - 256;
+    *size = (size_t)(top - *from);
+}
+
+static const char *save_state(const char *path)
+{
+    struct state_io io = { fopen(path, "wb"), 1, 0 };
+    struct state_flags flags = { game_started, suspended_at_hook };
+    uint32_t hash = build_hash();
+
+    if (!io.f)
+        return strerror(errno);
+    fwrite(STATE_MAGIC, 8, 1, io.f);
+    fwrite(&hash, 4, 1, io.f);
+    state_chunk(&flags, sizeof flags, &io);
+    host_state(state_chunk, &io);
+    if (game_started) {
+        char *from;
+        size_t size;
+
+        stack_range(&from, &size);
+        state_chunk(&game_ctx, sizeof game_ctx, &io);
+        state_chunk(from, size, &io);
+    }
+    if (fclose(io.f) || io.bad)
+        return "write error";
+    return 0;
+}
+
+static const char *load_state(const char *path)
+{
+    struct state_io io = { fopen(path, "rb"), 0, 0 };
+    struct state_flags flags;
+    char magic[8];
+    uint32_t hash;
+
+    if (!io.f)
+        return strerror(errno);
+    if (fread(magic, 8, 1, io.f) != 1 || memcmp(magic, STATE_MAGIC, 8) || fread(&hash, 4, 1, io.f) != 1) {
+        fclose(io.f);
+        return "not a state of the dev build";
+    }
+    if (hash != build_hash()) {
+        fclose(io.f);
+        return "the state is of another build";
+    }
+    state_chunk(&flags, sizeof flags, &io);
+    host_state(state_chunk, &io);
+    if (!io.bad && flags.game_started) {
+        /* the context first: it says how much of the stack the file holds */
+        uint32_t n;
+        ucontext_t ctx;
+
+        io.bad = fread(&n, 4, 1, io.f) != 1 || n != sizeof ctx || fread(&ctx, sizeof ctx, 1, io.f) != 1;
+        if (!io.bad) {
+            char *top = game_stack + sizeof game_stack, *from;
+            size_t size;
+            ucontext_t saved = game_ctx;
+
+            game_ctx = ctx;
+            stack_range(&from, &size);
+            game_ctx = saved;
+            io.bad = fread(&n, 4, 1, io.f) != 1 || n != size || fread(from, size, 1, io.f) != 1 || from + size != top;
+            if (!io.bad)
+                game_ctx = ctx;
+        }
+    }
+    fclose(io.f);
+    if (io.bad)
+        return "the state is damaged or does not fit";
+    game_started = flags.game_started;
+    suspended_at_hook = flags.suspended_at_hook;
+    stopped_at_hook = 0;
+    cache_valid = 0;
+    return 0;
 }
 
 /* ---- hooks: -finstrument-functions calls this on entry to every function of the game ------------------------------------------------------------------------------ */
@@ -387,6 +510,30 @@ static int l_load_ram(lua_State *s)
     return 0;
 }
 
+static int l_save_state(lua_State *s)
+{
+    const char *error;
+
+    if (in_game)
+        return luaL_error(s, "save_state from a hook: the game is running");
+    error = save_state(luaL_checkstring(s, 1));
+    if (error)
+        return luaL_error(s, "save_state: %s", error);
+    return 0;
+}
+
+static int l_load_state(lua_State *s)
+{
+    const char *error;
+
+    if (in_game)
+        return luaL_error(s, "load_state from a hook: the game is running");
+    error = load_state(luaL_checkstring(s, 1));
+    if (error)
+        return luaL_error(s, "load_state: %s", error);
+    return 0;
+}
+
 static int l_disk(lua_State *s) { files_insert((int)luaL_checkinteger(s, 1)); return 0; }
 static int l_quit(lua_State *s) { (void)s; exit(0); }
 
@@ -551,7 +698,7 @@ static int l_close(lua_State *s)
 static const luaL_Reg port_functions[] = {
     { "step", l_step }, { "run", l_run }, { "run_until", l_run_until }, { "hook", l_hook }, { "unhook", l_unhook }, { "stop_on", l_stop_on },
     { "frame", l_frame }, { "trace", l_trace }, { "joy", l_joy }, { "key", l_key }, { "ram", l_ram }, { "peek8", l_peek8 }, { "peek16", l_peek16 }, { "peek32", l_peek32 },
-    { "load_ram", l_load_ram }, { "picture", l_picture }, { "picture_hash", l_picture_hash }, { "disk", l_disk }, { "quit", l_quit }, { "listen", l_listen }, { "accept", l_accept }, { "readline", l_readline }, { "read", l_read }, { "write", l_write }, { "close", l_close }, { 0, 0 }
+    { "load_ram", l_load_ram }, { "picture", l_picture }, { "picture_hash", l_picture_hash }, { "disk", l_disk }, { "save_state", l_save_state }, { "load_state", l_load_state }, { "quit", l_quit }, { "listen", l_listen }, { "accept", l_accept }, { "readline", l_readline }, { "read", l_read }, { "write", l_write }, { "close", l_close }, { 0, 0 }
 };
 
 int main(int argc, char **argv)

@@ -22,6 +22,13 @@ volatile uint8_t host_cia_raw[0x2000];
 #endif
 
 /* an address of the original's memory is an offset into struct Xenon; a value that is already an address of the block (a pointer the C made) stays */
+void guest_state(host_state_visit visit, void *arg)
+{
+    visit(&xenon, sizeof xenon, arg);
+    visit((void *)host_custom_raw, sizeof host_custom_raw, arg);
+    visit((void *)host_cia_raw, sizeof host_cia_raw, arg);
+}
+
 void *guest_ptr(uint32_t address)
 {
     uint32_t base = (uint32_t)(uintptr_t)&xenon;
