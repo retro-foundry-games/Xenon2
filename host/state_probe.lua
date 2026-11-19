@@ -11,8 +11,18 @@ ami.machine{
 ami.boot()
 ami.wait(1)
 assert(ami.snapshot_load(STATE))
-for i = 0, frames, math.max(1, frames // 8) do
-    print(string.format("+%d vec6c=%08x vbl=%04x scroll=%04x show=%08x", i, ami.peek32(0x6c), ami.peek16(0x41c), ami.peek16(0xcd0), ami.peek32(0x40a)))
-    ami.wait(math.max(1, frames // 8))
+local joys = {}
+for f, dirs in (args:match("joy=(%S+)") or ""):gmatch("(%d+):([%a+]+)") do
+    local st = {}
+    for d in dirs:gmatch("%a+") do if d ~= "none" then st[d] = true end end
+    joys[tonumber(f)] = st
+end
+local step = math.max(1, frames // 12)
+for i = 0, frames do
+    if joys[i] then ami.joystick(joys[i]) end
+    if i % step == 0 then
+        print(string.format("+%d vec6c=%08x vbl=%04x scroll=%04x show=%08x objs=%08x", i, ami.peek32(0x6c), ami.peek16(0x41c), ami.peek16(0xcd0), ami.peek32(0x40a), ami.peek32(0xa76)))
+    end
+    ami.wait(1)
 end
 ami.quit()

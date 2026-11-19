@@ -6,7 +6,7 @@ authority and nothing is "fixed" because it looks wrong.  The method is the `ami
 
 ## What is decompiled
 
-The **game proper**: the program that disk 1 (tracks 80-159, raw, loaded at `$400`) starts at frame ~7000 with `jmp $400` (`bra $7032`):
+The **game proper**: the program that disk 1 (tracks 82-159, from $70C00, raw, loaded at `$400`) starts at frame ~7000 with `jmp $400` (`bra $7032`):
 its initialisation, the menu, the check for the game disk, the load of level 1 (the 229 sectors of disk 2 from sector 11 to `$54E00`,
 the level's own code and data), the level loop, the music player, the interrupt handlers.  Not the intro, the title or the copy-protection
 stages before it (`$64194`, `$7D896`): the port starts at `$400` with the image in memory.

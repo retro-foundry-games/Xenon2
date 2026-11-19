@@ -15,6 +15,7 @@ local UNTIL = tonumber(args:match("until=(%d+)")) or 2000
 local STRIDE = tonumber(args:match("stride=(%d+)")) or 1   -- compare every STRIDE-th call, to spread the samples over the run
 local STATE = args:match("state=(%S+)")
 local OUT = args:match("out=(%S+)") or "captures/oracle.txt"
+local DEBUG = args:match("debug=1")
 local BUILD = args:match("build=(%S+)") or "build"   -- native/BUILD: where `make blob BUILD=...` left game.blob and game_syms.lua
 
 ami.machine{
@@ -34,6 +35,8 @@ local blob_to_orig = {}
 for name, list in pairs(origs) do
     if syms[name] then for _, a in ipairs(list) do blob_to_orig[syms[name]] = blob_to_orig[syms[name]] or {}; blob_to_orig[syms[name]][a] = true end end
 end
+local waits = load(read_file("native/" .. BUILD .. "/game_waits.lua"))()
+local case_names = {}
 local cases = {}
 for _, entry in ipairs(ami.dir("host/cases") or {}) do   -- one file for each module: host/cases/NAME.lua returns a list of cases
     if entry.name:match("%.lua$") then
@@ -71,6 +74,7 @@ local function say(...) log[#log + 1] = string.format(...) end
 
 local busy = false
 local function check(case)
+    if DEBUG then say("hook %s frame %d busy=%s refire=%s done=%s", case.name, ami.frame(), tostring(busy), tostring(case.refire), tostring(case.done)) end
     if busy then return end   -- the hook fires inside the calls this function makes
     if case.refire then case.refire = false; return end   -- and once more as the program goes on after a comparison
     if case.where and not case.where(ami) then return end
@@ -87,11 +91,17 @@ local function check(case)
         return run
     end
     local function settle() if case.blitter and syms.blitter_wait then ami.call(syms.blitter_wait, { a7 = SCRATCH, sr = 0x2700 }) end end   -- (the blitter code waits for itself when there is no blitter_wait in the C)
+    -- the routines that wait for the vertical blank return at once (a call made here cannot get across a frame): in the original, and below in the C
+    local function patch_original()
+        for _, a in ipairs(waits.orig) do if a ~= case.orig then ami.write(a, "\x4e\x75") end end
+    end
+    patch_original()
     local r1 = ami.call(case.orig, fresh())
     settle()
     local after_orig = ami.read(0, CHIP)
     ami.write(0, before)
     -- the original once more: what differs between the two runs is done by the chips and is left out of the comparison
+    patch_original()
     ami.call(case.orig, fresh())
     settle()
     local noise = differences(after_orig, ami.read(0, CHIP))
@@ -100,6 +110,8 @@ local function check(case)
         ami.write(SCRATCH + 4 * (i - 1), string.pack(">I4", reg_value(spec, regs)))
     end
     ami.write(syms.base, blob)   -- the program may have used the memory the C code sits in
+    patch_original()             -- (the same bytes of the original are patched in both runs, so that the memory compares)
+    for _, n in ipairs(waits.c) do if syms[n] and n ~= (case.c or case.name) then ami.write(syms[n], "\x4e\x75") end end
     local r2 = ami.call(syms[case.c or case.name], fresh())
     settle()
     local after_c = ami.read(0, CHIP)
