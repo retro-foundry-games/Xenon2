@@ -234,8 +234,8 @@ Object *point_in_enemy(int16_t x, int16_t y)
     return level1_collision_hook() ? a1 : 0;
 }
 
-/* orig $003132: the direction (0 to 7) of (dx, dy) */
-static uint16_t direction_octant(int16_t d0, int16_t d1)   /* $3156: both not negative */
+/* orig $003156: the direction (0 to 7) of (dx, dy), both not negative */
+static uint16_t direction_octant(int16_t d0, int16_t d1)
 {
     uint32_t q;
 
@@ -259,7 +259,8 @@ static uint16_t direction_octant(int16_t d0, int16_t d1)   /* $3156: both not ne
     return (int16_t)q >= 0x3504 ? 3 : 4;
 }
 
-static uint16_t direction_half(int16_t d0, int16_t d1)     /* $3144 */
+/* orig $003144: the direction of (dx, dy) with dy not negative */
+static uint16_t direction_half(int16_t d0, int16_t d1)
 {
     uint16_t r;
 
@@ -269,6 +270,7 @@ static uint16_t direction_half(int16_t d0, int16_t d1)     /* $3144 */
     return (uint16_t)(8 - r) & 7;
 }
 
+/* orig $003132: the direction (0 to 7) of (dx, dy) */
 uint16_t direction8(int16_t dx, int16_t dy)
 {
     uint16_t r;
@@ -495,7 +497,7 @@ void scroll_events(void)
         if (d2 < 0)
             break;
         if (d0 > d2 && d1 <= d2) {
-            fn_054e10(a1->w2, a1);
+            level1_event(a1->w2);
             d0 = (int16_t)v_0cd2;
             d1 = (int16_t)v_0cd0;
         }
@@ -512,7 +514,7 @@ void scroll_events(void)
         if (d2 < 0)
             break;
         if (d0 > d2 && d1 <= d2) {
-            fn_054e18(a1->w2, a1);
+            level1_hook(a1->w2);
             d0 = (int16_t)v_0cd4;
             d1 = (int16_t)v_0cd0;
         }

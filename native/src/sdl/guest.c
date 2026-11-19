@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#define GAME_NO_MEMBER_MACROS   /* this file names the members itself (guest_members.h) */
 #include "game.h"
 #include "host.h"
 
@@ -102,4 +103,20 @@ int guest_load_game_image(void)
     guest_load_range(GAME_IMAGE_ADDRESS, image, GAME_IMAGE_SIZE);
     free(image);
     return 0;
+}
+
+void host_irq_dispatch(int level)
+{
+    if (level >= 1 && level <= 7 && xenon.irq_vectors[level - 1])
+        xenon.irq_vectors[level - 1]();
+}
+
+extern void game_entry(void) __attribute__((weak));   /* pkg_b: the start-up flow of the original ($400) */
+
+void host_game_start(void)
+{
+    if (game_entry)
+        game_entry();
+    else
+        fprintf(stderr, "xenon2-sdl: the game's entry (game_entry) is not there\n");
 }

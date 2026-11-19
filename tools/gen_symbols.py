@@ -87,8 +87,10 @@ def write_state(types, syms):
         pos = s['addr'] + s['size']
     out += ['};', 'extern struct Xenon xenon;']
     out += ['#ifdef MATCH_MEMORY_LAYOUT'] + ['LAYOUT_ASSERT(%s, 0x%x);' % (s['name'], s['addr']) for s in syms] + ['#endif']
+    out.append('#ifndef GAME_NO_MEMBER_MACROS   /* (the host files that name the members themselves define it) */')
     for s in syms:
         out.append('#define %s (xenon.%s)' % (s['name'], s['name']))
+    out.append('#endif')
     out += ['#else', '/* The Amiga build: each variable is at its address (game.ld). */']
     out += ['extern %s;' % decl(s) for s in syms]
     out += ['#endif', '', '#endif']

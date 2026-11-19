@@ -12,16 +12,15 @@ extern void fn_000e60(const uint16_t *a2);                                 /* a2
 extern void fn_000e8a(const void *a1, uint16_t d0, uint16_t d1, uint16_t d2, uint16_t d3);
 extern void fn_000e90(const void *a0, uint16_t d0, uint16_t d1);
 extern void fn_000f56(uint16_t d0, const uint16_t *a2);
-extern void fn_001438(void);
+extern void fn_001438(Object *a0);
 extern void fn_001bd0(uint16_t d0, uint16_t d1, uint16_t d2, uint16_t d3, const void *a1);
-extern uint16_t fn_003132(int16_t d0, int16_t d1);                         /* direction 0..7 from a vector */
 extern void fn_006912(Object *a0);
-extern void fn_003868(void); extern void fn_0039a2(void); extern void fn_003b4a(void); extern void fn_003b94(void);
-extern void fn_003c7a(void); extern void fn_003cdc(void); extern void fn_003e2c(void); extern void fn_003f3a(void);
-extern void fn_004094(void); extern void fn_00415a(void); extern void fn_004340(void); extern void fn_0042a6(void);
+extern void fn_003868(Object *a0); extern void fn_0039a2(Object *a0); extern void fn_003b4a(Object *a0); extern void fn_003b94(Object *a0);
+extern void fn_003c7a(Object *a0); extern void fn_003cdc(Object *a0); extern void fn_003e2c(Object *a0); extern void fn_003f3a(Object *a0);
+extern void fn_004094(Object *a0); extern void fn_00415a(Object *a0); extern void fn_004340(Object *a0); extern void fn_0042a6(Object *a0);
 extern void fn_055e2c(void);
-extern void fn_000e5a(void); extern void fn_000ea2(void); extern void fn_000e12(void); extern void fn_000f2c(void);
-extern void fn_056278(void); extern void fn_0561da(void);
+extern void fn_000e5a(void); extern void fn_000ea2(void); extern void fn_000e12(Object *a0); extern void fn_000f2c(Object *a0);
+extern void fn_056278(Object *a0); extern void fn_0561da(Object *a0);
 void weapon94_update(Object *a0); void weapon98_update(Object *a0); void weapon44_update(Object *a0);
 void weapon9c_update(Object *a0); void weaponA0_update(Object *a0);
 void enemy_killed(Object *a0, Object *a1);
@@ -35,6 +34,7 @@ void level1_hook(uint16_t d0);
 #define SLOT(i) ((Slot *)&v_0c66[3 * (i)])
 
 Object *weapon_select(uint16_t d1, Object *a0, Object *a1);               /* orig $004822 */
+Object *refill_slot0(Object *a0, Object *a1);                                /* orig $005540 */
 Object *weapon_94(Object *a0, Object *a1);                                 /* orig $004AFC */
 void init_weapons(Object *a0);                                             /* orig $004A0A */
 void pickup_update(Object *a0);                                            /* orig $004634 */

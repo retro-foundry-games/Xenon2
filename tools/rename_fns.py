@@ -41,8 +41,8 @@ def main():
                     missing.setdefault(a, set()).add(os.path.basename(f)); continue
                 if len({c[0] for c in (same_file or nonstatic)}) > 1:
                     ambiguous[a] = {c[0] for c in cands}
-                if decl_only and f.endswith('.h') or decl_only and pick[2] != os.path.basename(f):
-                    new = None; break          # drop the placeholder declaration: the real prototype is in its module's header
+                if decl_only and f.endswith('.h'):
+                    new = None; break          # drop the placeholder declaration of a header only (a call statement looks like a declaration: never drop lines of a .c)
                 new = new.replace(m.group(0), pick[0]); count += 1
             if new is not None: out_lines.append(new)
         if not dry and '\n'.join(out_lines) != text: open(f, 'w').write('\n'.join(out_lines))

@@ -61,6 +61,9 @@ SDL_HOST_SOURCES := $(sort $(wildcard $(SRC)/sdl/*.c) $(SRC)/sdl/records.c $(SRC
 SDL_OBJS := $(SDL_GAME_MODULES:%=$(SDL_BUILD)/g_%.o) $(patsubst $(SRC)/sdl/%.c,$(SDL_BUILD)/h_%.o,$(SDL_HOST_SOURCES))
 $(SDL_BUILD)/g_%.o: $(SRC)/%.c $(SRC)/game_state.h $(wildcard $(SRC)/*.h) | $(SDL_BUILD)
 	gcc $(SDL_CFLAGS) -c $< -o $@
+# (the files that include SDL's headers are built without -fpack-struct=2, which the game's structs need and SDL's must not have)
+$(SDL_BUILD)/h_main.o: $(SRC)/sdl/main.c $(wildcard $(SRC)/sdl/*.h $(SRC)/amiga/*.h) | $(SDL_BUILD)
+	gcc $(filter-out -fpack-struct=2,$(SDL_CFLAGS)) -c $< -o $@
 $(SDL_BUILD)/h_%.o: $(SRC)/sdl/%.c $(SRC)/game_state.h $(wildcard $(SRC)/*.h $(SRC)/sdl/*.h $(SRC)/amiga/*.h) | $(SDL_BUILD)
 	gcc $(SDL_CFLAGS) -c $< -o $@
 $(SDL_BUILD):

@@ -279,7 +279,7 @@ void title_fade_out(void)
         clear_screen();
         fn_008092(title_gfx, -0x70, -0x50, 0xcf, 0x35);
         stars_update();
-        fn_002026();
+        swap_screens_200();
         title_scale--;
         if (title_scale == 0)
             break;
@@ -295,7 +295,7 @@ void title_fade_in(void)
     do {
         clear_screen();
         stars_update();
-        fn_002026();
+        swap_screens_200();
         if (v_0a01)
             break;
     } while (--n != 0);
@@ -305,7 +305,7 @@ void title_fade_in(void)
         clear_screen();
         fn_008092(title_gfx, -0x70, -0x50, 0xcf, 0x35);
         stars_update();
-        fn_002026();
+        swap_screens_200();
         title_scale++;
         if ((int16_t)title_scale >= 0x10)
             return;
@@ -362,7 +362,7 @@ void show_text_sequence(uint16_t row, const uint8_t *text, const uint16_t *steps
             draw_text_squeezed(title_text);
         }
         stars_update();
-        fn_002026();
+        swap_screens_200();
         set_palette(title_palette);
     }
 }
@@ -374,8 +374,8 @@ void title_stars_start(void)
 
     for (i = 0; i < 16; i++)
         palette_saved[i] = palette_shadow[i];
-    fn_006fe8();
-    fn_0095f4();
+    clear_palette();
+    work_area_save();
     for (i = 0; i < 48; i++) {
         stars[i].x = (int16_t)random_next();
         stars[i].y = (int16_t)random_next();
@@ -389,7 +389,7 @@ void title_message(const uint8_t *text)
     title_stars_start();
     show_text_sequence(0x64, text, title_script);
     set_palette(palette_saved);
-    fn_009618();
+    work_area_restore();
     stars_init_dots();
 }
 
@@ -418,7 +418,7 @@ void title_credits(void)
 
     for (i = 0; i < 16; i++)
         palette_saved[i] = palette_shadow[i];
-    fn_019f9e(0);
+    music_start(0);
     music_flag_1a584 = 0x3f;
     title_text = title_lines;
     title_index = 0;
@@ -465,7 +465,7 @@ l82ae:
     title_fade_out();
     if (v_0a01)
         goto abort;
-    fn_0089dc();
+    hiscore_show();
     if (v_0a01)
         goto abort;
     title_fade_in();
@@ -478,14 +478,14 @@ frame:
     stars_update();
     if (v_0a01) {
         v_0a01 = 0;
-        fn_019fba();
+        music_silence();
         title_fade_out();
         goto restore;
     }
-    fn_002026();
+    swap_screens_200();
     goto l82aa;
 abort:
-    fn_019fba();
+    music_silence();
 restore:
     v_0a01 = 0;
     set_palette(palette_saved);
