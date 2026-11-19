@@ -85,8 +85,8 @@ void guest_load_range(uint32_t address, const uint8_t *image, uint32_t length)
     }
 }
 
-/* disk 1 from track 80 on is the game's program, data and variables, as the loader of disk 1 puts them at $400 ($6B400 bytes) */
-#define GAME_IMAGE_SECTOR (80 * 11)
+/* disk 1 from track 82 on is the game's program, data and variables, as the loader of disk 1 puts them at $400 ($6B400 bytes) */
+#define GAME_IMAGE_SECTOR (82 * 11)   /* disk offset $70C00 */
 #define GAME_IMAGE_ADDRESS 0x400
 #define GAME_IMAGE_SIZE 0x6b400
 
@@ -100,6 +100,9 @@ int guest_load_game_image(void)
         return -1;
     }
     memset(&xenon, 0, sizeof xenon);
+    /* the whole image as it is (big endian): the bytes that no member names are still the original's memory, read as bytes by the C that computes addresses
+     * from a base; the named members are then converted over it */
+    memcpy((uint8_t *)&xenon + GAME_IMAGE_ADDRESS, image, GAME_IMAGE_SIZE);
     guest_load_range(GAME_IMAGE_ADDRESS, image, GAME_IMAGE_SIZE);
     free(image);
     return 0;
