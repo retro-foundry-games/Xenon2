@@ -12,7 +12,7 @@
 #define STAR_MASK(s) ((s)->y)
 #define STAR_POS(s) ((s)->z)
 
-/* orig $001F22: the background's scroll position (v_0436, high word) moves back by half the scroll speed; d0.w = scroll speed */
+/* orig $ED8, $001F22: the background's scroll position (v_0436, high word) moves back by half the scroll speed; d0.w = scroll speed */
 void scroll_pos_update(uint16_t d0)
 {
     uint16_t d2 = d0;
@@ -31,7 +31,7 @@ void scroll_pos_update(uint16_t d0)
     }
 }
 
-/* orig $00200A: do two boxes overlap?  The original returns it in the Z flag: Z clear = overlap (returned here as 1).
+/* orig $ED2, $00200A: do two boxes overlap?  The original returns it in the Z flag: Z clear = overlap (returned here as 1).
  * d0,d1 = left, top of the first, d2,d3 = right, bottom; d4,d5 = left, top of the second, d6,d7 = right, bottom. */
 uint16_t box_overlap(int16_t d0, int16_t d1, int16_t d2, int16_t d3, int16_t d4, int16_t d5, int16_t d6, int16_t d7)
 {
@@ -77,7 +77,7 @@ uint32_t swap_screens_192(void)
     return 0x7800;
 }
 
-/* orig $0022DA: scroll the starfield: each of the 48 stars moves by a step that grows with its index (d0.w = scroll speed);
+/* orig $EDE, $0022DA: scroll the starfield: each of the 48 stars moves by a step that grows with its index (d0.w = scroll speed);
  * the fractional line (z) wraps at 0x180 and moves the offset by one line (0xA0 bytes), the offset wraps at 0x7800. */
 void stars_scroll(uint16_t d0)
 {
@@ -115,22 +115,22 @@ void stars_draw(void)
     for (int g = 0; g < 4; g++) {
         for (int i = 0; i < 12; i++) {
             struct Star *s = &stars[g * 12 + i];
-            uint16_t *a2 = (uint16_t *)(screen + (int16_t)STAR_OFF(s));
+            uint8_t *a2 = screen + (int16_t)STAR_OFF(s);
             uint16_t mask = STAR_MASK(s);
-            uint16_t d4 = a2[0] | a2[0x14] | a2[0x28] | a2[0x3c];
+            uint16_t d4 = rd16(a2) | rd16(a2 + 0x28) | rd16(a2 + 0x50) | rd16(a2 + 0x78);
 
             if (d4 & mask)
                 continue;
             if (g == 1 || g == 3)
-                a2[0] |= mask;
+                wr16(a2, rd16(a2) | mask);
             if (g == 2 || g == 3)
-                a2[0x14] |= mask;
-            a2[0x28] |= mask;
+                wr16(a2 + 0x28, rd16(a2 + 0x28) | mask);
+            wr16(a2 + 0x50, rd16(a2 + 0x50) | mask);
         }
     }
 }
 
-/* orig $002418: take an object off the free list (free_obj) and clear its flag bytes; the result is in a0 (0 here when the list is
+/* orig $E54, $002418: take an object off the free list (free_obj) and clear its flag bytes; the result is in a0 (0 here when the list is
  * empty: the original then searches the lists from $2436, goes on at $2436). */
 Object *obj_free_pop(void)
 {
@@ -213,7 +213,7 @@ static void apply_palette(void)
     const uint32_t *pal = level_palette;
 
     for (int i = 0; i < 8; i++) {
-        uint32_t v = pal[i];
+        uint32_t v = rd32(&pal[i]);
 
         if (v_0c90)
             v = (v >> 1) & 0x07770777u;
@@ -324,13 +324,17 @@ static int key_command(uint8_t key)
 static void wait_vbl_and_show(void)
 {
     uint16_t t = vbl_count;
+    uint16_t colors[16];
+    int i;
 
     while (t == vbl_count)
         HOST_IDLE();
     draw_background();
     stars_draw();
     swap_screens_192();
-    palette_fade_in((const uint16_t *)level_palette);
+    for (i = 0; i < 16; i++)
+        colors[i] = rd16((const uint16_t *)level_palette + i);
+    palette_fade_in(colors);
 }
 
 /* orig $0078CE-$007D9A: the main loop, one pass for each frame.  Returns when the restart key was pressed or a player's game

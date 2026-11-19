@@ -24,7 +24,7 @@ extern void fn_056278(Object *a0); extern void fn_0561da(Object *a0);
 void weapon94_update(Object *a0); void weapon98_update(Object *a0); void weapon44_update(Object *a0);
 void weapon9c_update(Object *a0); void weaponA0_update(Object *a0);
 void enemy_killed(Object *a0, Object *a1);
-void level1_hook(uint16_t d0);
+void level1_hook(uint16_t d0, const uint8_t *a1, uint16_t d2);
 
 /* the object lists: $AD8, $B3A and $B9C are sentinels in obj_list */
 #define LIST_A ((Object *)&obj_list[1])
@@ -62,11 +62,12 @@ int point_in_player_box(int16_t d0, int16_t d1);
 void animate_only(Object *a0); void follow_target(Object *a0);
 void shot_fixed_update(Object *a0); void shot_update(Object *a0);
 void hit_part(Object *a0, Object *a1, uint16_t d0); void hit_flash(Object *a0, Object *a1, uint16_t d0);
+void hit_kill_shooter(Object *a0, Object *a1, uint16_t d0);
 void hit_flash_kill_shooter(Object *a0, Object *a1, uint16_t d0); void hit_enemy(Object *a0, Object *a1, uint16_t d0);
 void hit_explode(Object *a0, Object *a1, uint16_t d0); void hit_tile(Object *a0, Object *a1, uint16_t d0);
 void tile_draw(Object *a0);
 void kill_with_slot(Object *a1); void free_with_slot(Object *a1); void free_chain(Object *a1, int16_t d7);
 void player_dies(Object *a0); void player_damage(Object *a0, uint16_t d0); void player_move(Object *a0); void player_update(Object *a0);
-int level1_collision_hook(void); void level1_event(uint16_t d0); void level1_scroll(void);
+int level1_collision_hook(void); void level1_event(uint16_t d0, const uint8_t *a1); void level1_scroll(void);
 void level1_boss_update(Object *a0); void level1_boss_draw(Object *a0); void level1_init(void);
 #endif

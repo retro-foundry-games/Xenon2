@@ -11,7 +11,7 @@ var v_0432 0x432 uint16_t
 var v_0434 0x434 uint16_t
 var v_0436 0x436 uint32_t
 var v_043a 0x43a uint16_t
-arr v_043c 0x43c uint32_t 8
+arr v_043c 0x43c uint16_t 16
 arr v_046c 0x46c uint16_t 8
 arr v_047c 0x47c uint16_t 51
 var v_04e2 0x4e2 uint16_t
@@ -80,11 +80,11 @@ arr shots 0x42d5c Shot 80
 arr row_offset 0x4321c uint16_t 200
 arr screen_a 0x44000 uint8_t 30720
 arr screen_b 0x4c700 uint8_t 30720
-arr panel_a 0x4b800 uint32_t 320                   ; the status panel (score) of screen_a
-arr panel_b 0x53f00 uint32_t 320                   ; and of screen_b
+arr panel_a 0x4b800 uint8_t 1280                   ; the status panel (score) of screen_a
+arr panel_b 0x53f00 uint8_t 1280                   ; and of screen_b
 var level_init_src 0x54e04 uint8_t *
 var level_palette 0x54e1c uint32_t *
-tab ship_records 0x6cc2 uint16_t 48
+tab ship_records 0x6cc2 uint8_t 96
 tab v_6894 0x6894 int16_t 14                       ; offsets of the options from the player
 arr palette_shadow 0x7012 uint16_t 16
 tab v_796e 0x796e uint16_t 1

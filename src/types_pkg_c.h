@@ -20,7 +20,7 @@ struct SpawnDef {
     void (*update)(void);       /* 4 */
     void (*draw)(void);         /* 8 */
     void (*hit)(void);          /* c */
-    const uint16_t *anim;       /* 10: animation header: picture (long), delay, script */
+    const uint8_t *anim;        /* 10: animation header: picture (long), delay, script */
     uint16_t pad14;
     uint8_t to_flag35;          /* 16: becomes byte $35 of the object */
     uint8_t to_flag34;          /* 17: becomes byte $34 of the object */
