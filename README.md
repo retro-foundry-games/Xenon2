@@ -62,8 +62,8 @@ Code that never ran in the recorded run has no C: the port logs `the original's 
 
 ## Lockstep (dev build)
 
-`dev/` is the dev build of the port (`make -C dev` -> `dev/build/xenon2-sdl-dev`): the same game C and SDL machine, run as a coroutine and driven over a
-control socket (`--control PATH`, or `--control -` for stdin/stdout; commands in `dev/src/dev.c`, a client in `dev/ctl.py`: step, run to a function by its original
+`dev/` is the dev build of the port (`make -C dev` -> `dev/build/xenon2-sdl-dev`): the same game C and SDL machine, run as a coroutine and driven by Lua
+(`--lua SCRIPT`, global `port`) and over a control socket (`--control PATH`, or `--control -` for stdin/stdout; commands and the Lua API in `dev/src/dev.c`, a client in `dev/ctl.py`, `lua CODE` runs Lua over the socket: step, run to a function by its original
 address, memory in the original's byte order, the picture, joystick and keys).  `host/lockstep.lua` runs the original in the emulator with the dev build as its peer;
 at every entry of `swap_screens` (once a frame) the named members of the memory and the picture are compared.
 
