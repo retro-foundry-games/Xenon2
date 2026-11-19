@@ -10,6 +10,7 @@
 --     auto=1        the autoplayer (host/autoplay.lua) plays, headless or in the window: finds differences in a run no one has to play
 --     record=FILE   where the input of play=1 / auto=1 is written (default captures/input/play-latest.txt, overwritten each run)
 --     snap=ADDR:NAME the first time the original reaches ADDR (hex) its state is saved as local/save/NAME.state and its memory as captures/NAME.ram
+--     live=0|1      the port's panel live: the port is stepped one frame for each emulator frame and waits at a sync point for the original (default on with play=1 / auto=1)
 --     hold=1        stop at the first difference and stay there, both sides standing: with `ami9000_host --control PATH` a client (ami9000/host/ctl.py PATH 'LS.port_call("print(port.peek16(0x41c))")')
 --                   asks the port and the original: LS.port_call(LUA) runs a line in the port's Lua shell, LS.port_binary(LUA) a call that answers BIN, LS.snap the original's ram at the point (LS.snap.ram), LS.ram16(addr) the original's live memory
 --     calls=1       also compare the number of calls of every function between two sync points (finds where a difference starts)
@@ -45,6 +46,7 @@ local STRICT = args:match("strict=1") ~= nil
 local REPORT = args:match("report=(%S+)")
 local PLAY = args:match("play=1") ~= nil   -- you play: arrows = stick, Ctrl / Space / Return = fire, in the emulator's window (without --headless); implies hold=1, no sync limit
 local AUTO = args:match("auto=1") ~= nil   -- the autoplayer (host/autoplay.lua) plays: the stick from the original's memory at each sync point; the input is written to captures/input/play-latest.txt as when played
+local LIVE = (PLAY or AUTO or args:match("live=1") ~= nil) and args:match("live=0") == nil   -- the port is stepped a frame at a time beside the emulator, its panel shows it live (it waits at each sync point for the original); off for headless regression runs
 local HOLD = PLAY or args:match("hold=1") ~= nil   -- (a replay=FILE of a run is shown in the window with the three views too)   -- at the first difference stay paused (with --control PATH: LS.port_call(LUA) runs Lua in the port, LS.snap is the original's memory and frame at the point)
 local CALLS = args:match("calls=1") ~= nil   -- also compare how often each function of the game was called between two sync points (the code table of the port)
 local RESYNC = args:match("resync=(%d+)")   -- resync=N: after a gap of more than N emulator frames between two sync points (a disk load: the original takes its real time, the port none) the port takes the original's memory and the comparison starts again from there (default with startfn=: 120)
@@ -139,8 +141,12 @@ for _, line in ipairs{
     'function key(raw, down) port.key(raw, down == 1) end',
     'function ram_in(n) port.load_ram(io.read(n)) end',
     -- run until the function with the original address `addr` has been entered once: "synced FRAME COUNT", or "unsynced FRAME" after 20000 frames
-    'function sync(addr) local count, ok = 0, false; port.hook(addr, function() count = count + 1 end); port.stop_on(addr); for _ = 1, 20000 do if port.step() == "hook" and count >= 1 then ok = true; break end end; port.stop_on(nil); port.unhook(addr); print(ok and ("synced %d %d"):format(port.frame(), count) or ("unsynced %d"):format(port.frame())) end',
+    -- the entries of the sync function are counted by one hook; sync(addr) runs to the next one ("synced FRAME N"), live() one frame, or to the entry ("entry" / "frame")
+    'entries = 0; function count_entries(addr) port.hook(addr, function() entries = entries + 1 end) end',
+    'function sync(addr) local start = entries; port.stop_on(addr); local ok = false; for _ = 1, 20000 do if port.step() == "hook" and entries > start then ok = true; break end end; port.stop_on(nil); print(ok and ("synced %d %d"):format(port.frame(), entries - start) or ("unsynced %d"):format(port.frame())) end',
+    'function live(addr) local start = entries; port.stop_on(addr); local what = port.step(); port.stop_on(nil); print((what == "hook" and entries > start) and "entry" or "frame") end',
 } do port_call(line) end
+port_call(("count_entries(0x%x)"):format(PORT_ADDR))
 local members = load(ami.file_read("dev/members.lua", 0, ami.file_size("dev/members.lua")))()
 
 local log_lines = {}
@@ -158,6 +164,7 @@ end
 local start_ram
 local fire_until = 0
 local RESYNC_GAP = tonumber(RESYNC) or (args:match("startfn=") and 120 or nil)
+local port_entries = 0   -- the entries of the sync function the port has reached (live stepping parks it at one until the original compares it)
 local last_snap_frame = nil
 local pending, n = {}, 0
 local FRAME_W, FRAME_H = 720, 287      -- the emulator's frame
@@ -520,7 +527,15 @@ while not done do
     -- two frames after the point: the emulator's frame after it is in the ring
     while #pending > 0 and ami.frame() >= pending[1].frame + 2 do
         local snap = table.remove(pending, 1)
-        local reply = port_call(("sync(0x%x)"):format(PORT_ADDR))
+        local reply
+        if port_entries >= snap.n then
+            reply = ("synced %d 1"):format(0)   -- (the live stepping has parked it at this entry)
+            local frame = port_call("print(port.frame())")
+            reply = "synced " .. frame .. " 1"
+        else
+            reply = port_call(("sync(0x%x)"):format(PORT_ADDR))
+            port_entries = snap.n
+        end
         if not reply or not reply:match("^synced") then say("lockstep: the port did not reach sync point %d (%s)", snap.n, tostring(reply)); done = true; break end
         for _, k in ipairs(snap.keys or {}) do port_call(("key(%d, %d)"):format(k[1], k[2])) end
         if snap.joy then
@@ -625,6 +640,10 @@ while not done do
         if COMPARE_PIC then
             ring[ami.frame()] = ami.frame_rgb(0, 0, FRAME_W, FRAME_H, 1)
             ring[ami.frame() - 16] = nil
+        end
+        if LIVE and started and port_entries == compared and not done then   -- the port is not parked ahead: one frame, and its picture on the panel
+            if port_call(("live(0x%x)"):format(PORT_ADDR)) == "entry" then port_entries = port_entries + 1 end
+            ami.panel(1, port_binary("image_out()"), 320, 256, 2, 1, 0)
         end
         ami.wait(1)
     end
