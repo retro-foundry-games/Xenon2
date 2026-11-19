@@ -20,6 +20,7 @@
  *   port.load_ram(str)           the memory of the original (0x80000 bytes, its byte order) into the port, before the game has started
  *   port.save_state(PATH)        the whole state of the port (memory block, chips, sound, disk, input, the game's stack and context); port.load_state(PATH) puts it back,
  *                                also into a new process of the same build (the game stands where it stood: at a frame's end, or inside the function of a stop)
+ *   port.run_function(ADDR)      the game starts again at the C function with the original address ADDR, on the memory as it is (the old stack is dropped)
  *   port.disk(n)                 put disk 1 or 2 in the drive;  port.quit()
  *   port.listen(PATH)            a unix socket server (fd);  port.accept(fd, ms)  a client (fd) or nil on timeout (ms nil: wait)
  *   port.readline(fd, ms)        a line without its newline; nil, "timeout" or "eof";  port.read(fd, n): n bytes (nil at eof);  port.write(fd, str);  port.close(fd)
@@ -60,9 +61,14 @@ static uint32_t stop_address, stopped_address;
 static int stopped_at_hook, suspended_at_hook;   /* the game stands inside a hooked function, not at the end of a frame */
 
 /* ---- the game's context --------------------------------------------------------------------------------------------------------------------------------------- */
+static void (*entry_function)(void);   /* port.run_function: the game runs this instead of its own entry */
+
 static void game_main(void)
 {
-    host_game_start();
+    if (entry_function)
+        entry_function();
+    else
+        host_game_start();
     for (;;)
         host_idle();
 }
@@ -534,6 +540,25 @@ static int l_load_state(lua_State *s)
     return 0;
 }
 
+/* port.run_function(ADDR): the game starts again on a stack of its own at the C function that has the original address ADDR (shop_run, $8FF2: the original's state is in
+ * the memory, the port runs the function the original was running), and goes on to the first frame's end; the old stack is dropped */
+static int l_run_function(lua_State *s)
+{
+    uint32_t address = (uint32_t)luaL_checkinteger(s, 1);
+    void *function = guest_code(address);
+
+    if (!function)
+        return luaL_error(s, "no C function has the original address $%x", address);
+    if (in_game)
+        return luaL_error(s, "run_function from a hook: the game is running");
+    entry_function = (void (*)(void))function;
+    stopped_at_hook = 0;
+    suspended_at_hook = 0;
+    cache_valid = 0;
+    start_game();
+    return 0;
+}
+
 static int l_disk(lua_State *s) { files_insert((int)luaL_checkinteger(s, 1)); return 0; }
 static int l_quit(lua_State *s) { (void)s; exit(0); }
 
@@ -698,7 +723,7 @@ static int l_close(lua_State *s)
 static const luaL_Reg port_functions[] = {
     { "step", l_step }, { "run", l_run }, { "run_until", l_run_until }, { "hook", l_hook }, { "unhook", l_unhook }, { "stop_on", l_stop_on },
     { "frame", l_frame }, { "trace", l_trace }, { "joy", l_joy }, { "key", l_key }, { "ram", l_ram }, { "peek8", l_peek8 }, { "peek16", l_peek16 }, { "peek32", l_peek32 },
-    { "load_ram", l_load_ram }, { "picture", l_picture }, { "picture_hash", l_picture_hash }, { "disk", l_disk }, { "save_state", l_save_state }, { "load_state", l_load_state }, { "quit", l_quit }, { "listen", l_listen }, { "accept", l_accept }, { "readline", l_readline }, { "read", l_read }, { "write", l_write }, { "close", l_close }, { 0, 0 }
+    { "load_ram", l_load_ram }, { "picture", l_picture }, { "picture_hash", l_picture_hash }, { "disk", l_disk }, { "run_function", l_run_function }, { "save_state", l_save_state }, { "load_state", l_load_state }, { "quit", l_quit }, { "listen", l_listen }, { "accept", l_accept }, { "readline", l_readline }, { "read", l_read }, { "write", l_write }, { "close", l_close }, { 0, 0 }
 };
 
 int main(int argc, char **argv)

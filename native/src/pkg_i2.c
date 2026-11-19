@@ -238,7 +238,7 @@ void shop_sound_tick(void)
             channel_step(&custom->aud[i], SND_CH + 0x24u * i, SND_MIRROR + 0xcu * i, (uint16_t)(1 << i));
 }
 
-/* shop $6477C: the interrupt's call of the player (the handler keeps the registers) */
+/* orig $6477C: the interrupt's call of the player (the handler keeps the registers) */
 void shop_irq_tick(void)
 {
     shop_sound_tick();
@@ -291,7 +291,7 @@ static void start_sampled(uint16_t d0)
     }
 }
 
-/* shop $649C6 ($647A6): start the effect of the command (d0 = (channel << 8) | effect) on the channel; the music's hold on the channel is marked */
+/* orig $649C6, $647A6: start the effect of the command (d0 = (channel << 8) | effect) on the channel; the music's hold on the channel is marked */
 void shop_sound_cmd(uint16_t d0)
 {
     uint32_t a0, a1, a2;

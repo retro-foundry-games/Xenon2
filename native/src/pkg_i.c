@@ -1169,10 +1169,15 @@ void shop_pillars_b(void) { pillars_draw(0x6d, v_04ee); }
 /* shop $5504E */
 void shop_delay(void)
 {
+#ifdef GAME_SDL
+    for (int i = 0; i < 26; i++)   /* (0x30D40 passes of a 18-cycle loop: half a second of frames, the interrupts running) */
+        HOST_IDLE();
+#else
     volatile uint32_t n;
 
     for (n = 0x30d40; n != 0; n--)
         ;
+#endif
 }
 
 /* shop $55264: the doorway opens: the pillars slide, a sound, until both are home; then the text board is cleared */

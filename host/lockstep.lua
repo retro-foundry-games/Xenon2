@@ -13,6 +13,8 @@
 --     hold=1        stop at the first difference and stay there, both sides standing: with `ami9000_host --control PATH` a client (ami9000/host/ctl.py PATH 'LS.port_call("print(port.peek16(0x41c))")')
 --                   asks the port and the original: LS.port_call(LUA) runs a line in the port's Lua shell, LS.port_binary(LUA) a call that answers BIN, LS.snap the original's ram at the point (LS.snap.ram), LS.ram16(addr) the original's live memory
 --     calls=1       also compare the number of calls of every function between two sync points (finds where a difference starts)
+--     startfn=HEX   (with state=) the original's state is inside a function that has no sync point for a long time (the shop: state=shop-before-512k startfn=8ff2): the port is given the memory at once and runs that function
+--     resync=N      after more than N frames between two sync points (a disk load) the port takes the original's memory and the baseline starts again (with startfn=: 120)
 --     syncs=N       how many synchronisation points to compare (default 300)
 --     tolerant=1    also leave out what depends on how many interrupts the original took while its (slow) code ran: the music player, the sound requests and the joystick bytes (the interrupt fills them), the hardware mirror, the random generator
 --     continue=1    go on after a difference
@@ -45,6 +47,8 @@ local PLAY = args:match("play=1") ~= nil   -- you play: arrows = stick, Ctrl / S
 local AUTO = args:match("auto=1") ~= nil   -- the autoplayer (host/autoplay.lua) plays: the stick from the original's memory at each sync point; the input is written to captures/input/play-latest.txt as when played
 local HOLD = PLAY or args:match("hold=1") ~= nil   -- (a replay=FILE of a run is shown in the window with the three views too)   -- at the first difference stay paused (with --control PATH: LS.port_call(LUA) runs Lua in the port, LS.snap is the original's memory and frame at the point)
 local CALLS = args:match("calls=1") ~= nil   -- also compare how often each function of the game was called between two sync points (the code table of the port)
+local RESYNC = args:match("resync=(%d+)")   -- resync=N: after a gap of more than N emulator frames between two sync points (a disk load: the original takes its real time, the port none) the port takes the original's memory and the comparison starts again from there (default with startfn=: 120)
+local STARTFN = args:match("startfn=(%x+)")   -- with state=: the port runs the function with this original address (8ff2: shop_run) on the original's memory as it is at the start, instead of taking it at the first sync point
 local STATE = args:match("state=(%S+)")   -- the original starts from local/save/NAME.state (a level running); the port plays itself to the level and takes the original's memory at the first sync point
 local ROOT = ami.script_dir .. "/.."
 
@@ -153,6 +157,8 @@ end
 -- ---- the emulator's side: a snapshot at every sync point, from the first instruction of the game on ---------------------------------------------------------------------
 local start_ram
 local fire_until = 0
+local RESYNC_GAP = tonumber(RESYNC) or (args:match("startfn=") and 120 or nil)
+local last_snap_frame = nil
 local pending, n = {}, 0
 local FRAME_W, FRAME_H = 720, 287      -- the emulator's frame
 local ring = {}                        -- ring[frame] = the emulator's whole frame at that frame (the last 16)
@@ -265,6 +271,13 @@ if STATE then
     -- the port plays to the level by itself: the fire button on a schedule until the level's per-frame update has run a few times
     port_call('function to_level() local n, f = 0, 0; port.hook(0x35d4, function() n = n + 1 end); while n < 5 and f < 6000 do f = f + 1; local k = f % 150; if k == 100 then port.joy{ fire = true } elseif k == 110 then port.joy{} end; port.step() end; port.unhook(0x35d4); port.joy{}; print(n, port.frame()) end')
     say("the original starts from the state %s (emulator frame %d); the port plays to the level: %s", STATE, ami.frame(), port_call("to_level()"))
+    if STARTFN then
+        peer:send("ram_in(524288)\n")
+        peer:send(ami.read(0, 0x80000))
+        wait_ready()
+        port_call(("port.run_function(0x%s)"):format(STARTFN))
+        say("the port runs the function $%s on the original's memory", STARTFN)
+    end
 else
     -- up to the start of the game: the fire presses that pass the intro, then nothing; the memory at the very first instruction of the game goes to the port
     ami.hook(0x7032, function() started = true; start_ram = ami.read(0, 0x80000) end)
@@ -515,7 +528,16 @@ while not done do
             port_call(("joy(%d, %d, %d, %d, %d)"):format(st.up, st.down, st.left, st.right, st.fire))
         end
         if STATE and snap.n == 1 and args:match("dumpram=(%S+)") then ami.save_file(args:match("dumpram=(%S+)"), snap.ram) end
-        if STATE and snap.n == 1 then   -- the port is in the level, at the same program point: the original's memory in
+        local gap = last_snap_frame and snap.frame - last_snap_frame or 0
+        last_snap_frame = snap.frame
+        if RESYNC_GAP and gap > RESYNC_GAP and snap.ram then
+            peer:send("ram_in(524288)\n")
+            peer:send(snap.ram)
+            wait_ready()
+            baseline = nil
+            say("sync point %d came %d frames after the one before (a disk load): the port takes the original's memory, the comparison starts again here", snap.n, gap)
+        end
+        if STATE and snap.n == 1 and not STARTFN then   -- the port is in the level, at the same program point: the original's memory in
             peer:send("ram_in(524288)\n")
             peer:send(snap.ram)
             wait_ready()
