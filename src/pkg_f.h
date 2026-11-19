@@ -27,13 +27,6 @@ void stars_init_dots(void);
 void title_credits(void);
 
 /* callees without C yet (registers as the original takes them) */
-extern void fn_002026(void);
-extern void fn_006fe8(void);
-extern void fn_0095f4(void);
-extern void fn_009618(void);
-extern void fn_0089dc(void);
-extern void fn_019f9e(register uint32_t d0 REG("d0"));
-extern void fn_019fba(void);
 extern void fn_008092(register const uint16_t *gfx REG("a0"), register int16_t d0 REG("d0"), register int16_t d1 REG("d1"),
                       register int16_t d2 REG("d2"), register int16_t d3 REG("d3"));
 #endif

@@ -32,5 +32,6 @@ void sound_mix(int16_t *stereo, int frames);        /* 44100 Hz, interleaved lef
 /* input.c / main.c */
 void host_input(int fire, int up, int down, int left, int right);
 void host_quit(void);
+void host_unimplemented(uint32_t original_address);   /* a call of original code that has no C (it never ran when the C was made) */
 
 #endif

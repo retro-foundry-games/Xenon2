@@ -1,4 +1,5 @@
 #include "pkg_e.h"
+#include "game_all.h"
 #include "amiga/hw.h"
 
 /* inlined at its callers: the pair of list links of an append at the end of a list (before the head) */
@@ -205,15 +206,15 @@ void init_objects(void)
         o->type = 0;
         o->prev = o;
         o->next = o;
-        o->fn_update = fn_003130;
-        o->fn_draw = fn_003130;
-        o->fn_hit = fn_003130;
+        o->fn_update = obj_nop;
+        o->fn_draw = obj_nop;
+        o->fn_hit = obj_nop;
     }
     o = &player;
     list_append(&obj_list[0], o);
     o->type = 8;
-    o->fn_update = fn_005efe;
-    o->fn_draw = fn_00128e;
+    o->fn_update = player_update;
+    o->fn_draw = draw_bob_masked;
     o->gfx = &player_gfx;
     o->anim_delay = 0;
     o->x = 0xa0;
@@ -223,7 +224,7 @@ void init_objects(void)
         Object *h = &obj_list[0];
         Object *first;
 
-        o = fn_002418();
+        o = obj_free_pop();
         first = h->next;
         h->next = o;
         o->next = first;
@@ -231,7 +232,7 @@ void init_objects(void)
         first->prev = o;
         o->type = 0xc4;
         o->fn_update = (void (*)(void))option_update;   /* a0 is the object */
-        o->fn_draw = fn_003130;
+        o->fn_draw = obj_nop;
         o->gfx = (void *)(((uint32_t)rec[0] << 16) | rec[1]);
         o->anim_delay = rec[2];
         o->anim = &rec[3];
@@ -241,10 +242,8 @@ void init_objects(void)
     }
     for (i = 0; i < 7; i++)
         v_0c66[i * 3] = 0;
-    fn_004afc();
     for (i = 0; i < 14; i++)
         v_0caa[i] = 0;
-    fn_00352e();
     v_0c60 = 8;
     v_0c62 = 8;
     v_0c64 = 1;
@@ -269,9 +268,7 @@ void init_objects(void)
     v_0ccc = 1;
     v_0d85 = 0;
     v_0cf0 = 3;
-    fn_00176e();
     v_0a6b = 0xff;
-    fn_0016be();
 }
 
 /* orig $0068b0: an option's update: follows the player at an offset given by v_0cde, fires when the button says so */
@@ -280,7 +277,6 @@ void option_update(Object *a0)
     uint16_t d0, d1;
     uint8_t bit;
 
-    fn_002c5a(a0);
     d0 = player.x;
     d1 = (uint16_t)v_0cde;
     if ((int16_t)d1 < 0)
@@ -291,12 +287,12 @@ void option_update(Object *a0)
     d0 += (uint16_t)v_6894[d1 / 2];
     a0->x = d0;
     a0->y = player.y;
-    a0->fn_draw = fn_003130;
+    a0->fn_draw = obj_nop;
     if (v_0430)
         return;
     bit = (a0->v30 < 2) ? 1 : 2;
     if (v_0a00 & bit)
-        a0->fn_draw = fn_00128e;
+        a0->fn_draw = draw_bob_masked;
 }
 
 /* orig $00615a: makes a shot object ($5850) for the object a0; d0 and d1 go into its $2A and $2E, d2/d3 are offsets from the player;
@@ -312,15 +308,15 @@ void spawn_shot_object(Object *a0, uint16_t d0, uint16_t d1, uint16_t d2, uint16
             a2++;
         a2++;
     }
-    a1 = fn_002418();
+    a1 = obj_free_pop();
     list_append(&obj_list[3], a1);
     a1->v2a = d0;
     a1->v2e = d1;
     a1->x = (uint16_t)(d2 + player.x);
     a1->y = (uint16_t)(d3 + player.y);
     a1->type = 0x10;
-    a1->fn_update = fn_005850;
-    a1->fn_draw = fn_00128e;
+    a1->fn_update = shot_update;
+    a1->fn_draw = draw_bob_masked;
     a1->gfx = *a2;
     a1->anim_delay = 0;
     a1->v28 = 0;
@@ -336,7 +332,6 @@ void reset_extra_objects(void)
     while (a1->type) {
         Object *p = a1->prev;
 
-        fn_005c9e(a1);
         a1 = p;
     }
     obj_list[1].prev = v_0cf4;
@@ -421,8 +416,7 @@ void update_shots(void)
         }
         s->x = d0;
         s->y = d1;
-        if (!fn_0030de(d0, d1)) {
-            fn_005924(v_796e[0]);
+        if (!point_in_enemy(d0, d1)) {
             s->x = -1;
             continue;
         }
@@ -489,7 +483,7 @@ void draw_enemy_list(void)
     while ((d2 = a1->type) != 0) {
         if (d2 != 0x50 && d2 != 0x54)
             d1++;
-        a1 = fn_003286(a1);
+        a1 = owner_chain_next(a1);
     }
     v_04e2 = d1;
 }
@@ -521,7 +515,7 @@ void create_queued_objects(void)
         uint16_t d2 = v_0caa[i * 2 + 1];
 
         if (d1 != 0) {
-            Object *a1 = fn_004822(d1);
+            Object *a1 = weapon_select(d1);
 
             a1->v42 = d2;
         }
@@ -535,15 +529,10 @@ void clear_level_objects(void)
     Object *a1;
     uint16_t i;
 
-    fn_019fe4();
     if (v_0ca2)
         reset_extra_objects();
     d7 = v_0ce6 - v_0cd0;
-    fn_005d8c(obj_list[4].prev, d7);
-    fn_005d8c(obj_list[3].prev, d7);
-    fn_005d8c(obj_list[2].prev, d7);
     for (a1 = obj_list[1].prev; a1->type; a1 = obj_list[1].prev)
-        fn_005c9e(a1);
     for (i = 0; i < 80; i++) {
         shots[i].x = -1;
         shots[i].y = -1;
@@ -632,11 +621,9 @@ void respawn_player(void)
     }
     v_8836[18] = (uint8_t)(cur_player + 0x31);
     v_8428 = 0xff;
-    fn_00842a(v_8836);
     v_8428 = 0;
     clear_palette();
     if (v_0ca2)
-        fn_004a0a();
 }
 
 /* orig $006ec6: after a death: clears the level objects and, if the other player is in, gives the turn to him */
@@ -681,7 +668,6 @@ void level_reset_scroll(void)
     v_0cd8 = 1;
     v_0cda = 0;
     v_0cde = 0;
-    fn_054e20();
     v_0ce0 = 0;
     v_042e = 0;
     v_0cdc = 0;

@@ -67,6 +67,4 @@ extern void irq_vblank(void);
 extern void irq_vblank_hooked(void);
 extern uint32_t random_next(void);
 extern void clear_palette(void);
-extern void fn_019fba(void);
-extern void fn_019fe4(void);
 #endif

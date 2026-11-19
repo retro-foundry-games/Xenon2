@@ -1,4 +1,5 @@
 #include "pkg_a.h"
+#include "game_all.h"
 
 typedef uint16_t u16a __attribute__((may_alias));
 
