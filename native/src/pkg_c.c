@@ -1,11 +1,12 @@
 #include "pkg_c.h"
+#include "game_all.h"
 
 /* ---- helpers ---- */
 
 /* the object from the free list, put at the head of list i (the code after each call of $2418 that does this) */
 static Object *list_insert(int list)
 {
-    Object *a0 = fn_002418();
+    Object *a0 = obj_free_pop();
     Object *old = LIST_HEAD(list);
 
     LIST_HEAD(list) = a0;
@@ -27,7 +28,7 @@ static void set_ptr4a(Object *o, const uint16_t *p)
 static void kill_object(Object *o)
 {
     o->type = 4;
-    o->fn_update = (obj_fn)fn_000fee;
+    o->fn_update = (obj_fn)free_object;
     o->fn_draw = (obj_fn)obj_nop;
     o->fn_hit = (void *)obj_nop;
     o->flag34 = 0;
@@ -208,7 +209,7 @@ Object *collide_enemies(Object *o)
     a1 = scan_boxes(LIST_HEAD(LIST_ENEMY), x0, y0, x1, y1);
     if (a1->type != 0)
         return a1;
-    return fn_054e0c(x0, y0, x1, y1) ? a1 : 0;
+    return level1_collision_hook() ? a1 : 0;
 }
 
 /* orig $0030DE: the enemy whose box holds the point (x, y) (in a1 in the original), or 0 when none does and the level blob has
@@ -230,7 +231,7 @@ Object *point_in_enemy(int16_t x, int16_t y)
         }
         a1 = OBJ_FWD(a1);
     }
-    return fn_054e0c(x, y, x, y) ? a1 : 0;
+    return level1_collision_hook() ? a1 : 0;
 }
 
 /* orig $003132: the direction (0 to 7) of (dx, dy) */
@@ -381,7 +382,7 @@ Object *spawn_formation(Object *a0, Object *rec_obj, const struct SpawnDef *a2)
                 Object *a6 = a0;
                 Object *nxt;
 
-                a0 = fn_002418();
+                a0 = obj_free_pop();
                 a6->chain = a0;
                 nxt = OBJ_FWD(a6);
                 OBJ_FWD(a6) = a0;
@@ -443,7 +444,7 @@ void spawn_effect(int16_t x, int16_t y, const uint16_t *a2, ObjFn a3)
     v_0418 = (a2 == anim_270e) ? 0x85 : 0x83;
     a0 = list_insert(LIST_EFFECT);
     a0->type = 0xc;
-    a0->fn_update = (obj_fn)fn_0057b6;
+    a0->fn_update = (obj_fn)animate_only;
     a0->fn_draw = (obj_fn)a3;
     a0->x = x;
     a0->y = y;
@@ -494,7 +495,6 @@ void scroll_events(void)
         if (d2 < 0)
             break;
         if (d0 > d2 && d1 <= d2) {
-            fn_054e10(a1->w2, a1);
             d0 = (int16_t)v_0cd2;
             d1 = (int16_t)v_0cd0;
         }
@@ -511,7 +511,6 @@ void scroll_events(void)
         if (d2 < 0)
             break;
         if (d0 > d2 && d1 <= d2) {
-            fn_054e18(a1->w2, a1);
             d0 = (int16_t)v_0cd4;
             d1 = (int16_t)v_0cd0;
         }
@@ -590,8 +589,8 @@ void spawn_debris(Object *a1)
     k = (const struct SpawnKind *)((const uint8_t *)spawn_kinds + (int16_t)(uint16_t)(6 * (uint16_t)a1->v30));
     a0->type = k->kind;
     v_0414 = 0x11;
-    a0->fn_update = (obj_fn)fn_004634;
-    a0->fn_draw = (obj_fn)fn_00128e;
+    a0->fn_update = (obj_fn)pickup_update;
+    a0->fn_draw = (obj_fn)draw_bob_masked;
     a0->x = a1->x;
     a0->y = a1->y;
     a2 = k->anim;
@@ -645,24 +644,3 @@ Object *spawn_marker_front(uint16_t d0, const struct SpawnRec *a1, void (*a2)(vo
 {
     return marker_tail(list_insert(LIST_FRONT), d0, a1, a2);
 }
-
-/* ---- link stand-ins (weak: the owner's C replaces them) ---- */
-
-/* $2418: the first object of the free list (the pool-empty case, which takes one from the effects, is not here) */
-__attribute__((weak)) Object *fn_002418(void)
-{
-    Object *a0 = free_obj;
-
-    if (a0 == 0)
-        return 0;
-    free_obj = a0->next;
-    a0->flag34 = 0;
-    a0->flag60 = 0;
-    a0->flag61 = 0;
-    return a0;
-}
-
-/* the level blob's entries: not decompiled with the blob */
-__attribute__((weak)) uint16_t fn_054e0c(int16_t d0, int16_t d1, int16_t d2, int16_t d3) { return 0; }
-__attribute__((weak)) void fn_054e10(uint16_t d0, const struct SpawnRec *a1) { }
-__attribute__((weak)) void fn_054e18(uint16_t d0, const struct SpawnRec *a1) { }

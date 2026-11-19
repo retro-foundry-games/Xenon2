@@ -12,22 +12,9 @@ extern void fn_000e60(const uint16_t *a2);                                 /* a2
 extern void fn_000e8a(const void *a1, uint16_t d0, uint16_t d1, uint16_t d2, uint16_t d3);
 extern void fn_000e90(const void *a0, uint16_t d0, uint16_t d1);
 extern void fn_000f56(uint16_t d0, const uint16_t *a2);
-extern void fn_000fee(void);                                               /* a dying object's update routine */
-extern void fn_00128e(void);                                               /* draw routine (stored as a pointer) */
-extern void fn_001368(void);
 extern void fn_001438(void);
 extern void fn_001bd0(uint16_t d0, uint16_t d1, uint16_t d2, uint16_t d3, const void *a1);
-extern Object *fn_002418(Object *a0);                                      /* a0 from the free list; the argument if there is none */
-extern void fn_002c5a(Object *a0);                                         /* steps an animation */
-extern void fn_003130(void);                                               /* idle routine (stored as a pointer) */
 extern uint16_t fn_003132(int16_t d0, int16_t d1);                         /* direction 0..7 from a vector */
-extern void fn_0031ec(int16_t d0, int16_t d1, const uint16_t *a2, void (*a3)(void));   /* an explosion */
-extern Object *fn_003286(Object *a1);                                      /* a2: the next object of the list */
-extern void fn_0034ea(Object *a0);                                         /* the hit box from the picture */
-extern Object *fn_003052(Object *a0);                                      /* the object of a list a0 hits: a1, or 0 (Z) */
-extern int fn_00300a(Object *a0);                                          /* 1: not Z */
-extern Object *fn_0030de(int16_t d0, int16_t d1);                          /* the object at a point: a1, or 0 */
-extern void fn_00615a(Object *a0, int16_t d0, int16_t d1, int16_t d2, int16_t d3, const uint32_t *a2);   /* spawns a shot */
 extern void fn_006912(Object *a0);
 extern void fn_003868(void); extern void fn_0039a2(void); extern void fn_003b4a(void); extern void fn_003b94(void);
 extern void fn_003c7a(void); extern void fn_003cdc(void); extern void fn_003e2c(void); extern void fn_003f3a(void);

@@ -12,11 +12,20 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 HOST = Path(os.environ.get('AMI_HOST', ROOT.parent / 'amiga_porting' / 'ami9000' / 'build' / 'ami9000_host'))
+def joystick_script(frames, first_fire=20):
+    """Fire for 10 frames every 150 frames (the game waits for it at the start of a level and ends its screens with it), and between the
+    fires the stick moves in a cycle of directions, so that the player moves and shoots."""
+    moves = ['right', 'left+fire', 'up', 'down+fire', 'right+up', 'left', 'right+fire', 'down']
+    out = []
+    for i, k in enumerate(range(0, frames, 150)):
+        out += [f'{k + first_fire}:fire', f'{k + first_fire + 10}:none', f'{k + 60}:{moves[i % len(moves)]}', f'{k + 110}:none']
+    return ','.join(sorted(out, key=lambda e: int(e.split(':')[0])))
+
 SCENARIOS = {
-    # the menu with the attract mode running, then the fire button: the game asks for its disk, disk 2 goes in, the level loads and runs
-    'load': ('xenon2-menu.state', 2300, '40:fire,50:none', True),
-    # level 1 running (the player is not controlled: nothing pressed, then some stick and fire)
-    'level': ('xenon2-level.state', 900, '100:right,160:none,200:left+fire,260:none,300:up,340:down,380:fire,420:none', False),
+    # the menu with the attract mode running, then the fire button: the game asks for its disk, disk 2 goes in, the level loads and is played
+    'load': ('xenon2-menu.state', 4200, joystick_script(4200, 40), True),
+    # level 1 as it stands (loaded, waiting for fire), then played
+    'level': ('xenon2-level.state', 3000, joystick_script(3000), False),
 }
 
 def run(names, scenario, samples, build):

@@ -104,6 +104,19 @@ void host_input(int fire, int up, int down, int left, int right)
 
 void host_quit(void) { quitting = 1; }
 
+void host_unimplemented(uint32_t address)
+{
+    static uint32_t seen[64];
+    static int n;
+
+    for (int i = 0; i < n; i++)
+        if (seen[i] == address)
+            return;
+    if (n < 64)
+        seen[n++] = address;
+    fprintf(stderr, "xenon2-sdl: the original's code at $%06x has no C (it never ran when the C was made)\n", address);
+}
+
 static void poll_events(void)
 {
     SDL_Event e;

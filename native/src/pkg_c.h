@@ -4,15 +4,8 @@
 
 /* Object routines are called with the object in a0 (the original's convention); the Amiga build says so with regparm.  The
  * routines of the other modules that are called through the object's pointers take the same. */
-#ifdef __mc68000__
-#define REGARG1 __attribute__((regparm(1)))
-#define REGARG2 __attribute__((regparm(2)))
-#else
-#define REGARG1
-#define REGARG2
-#endif
-typedef void (*ObjFn)(Object *) REGARG1;
-typedef void (*AnimOp)(Object *, const uint16_t *) REGARG2;
+typedef void (*ObjFn)(Object *);
+typedef void (*AnimOp)(Object *, const uint16_t *);
 
 /* The lists of objects at $A76: the head pointer of list i is the forward link ($12, `prev` of struct Object) of obj_list[i]; the
  * links of the objects: forward $12 (`prev`), backward $E (`next`). */
@@ -24,16 +17,7 @@ enum { LIST_PLAYER = 0, LIST_MISC = 1, LIST_ENEMY = 2, LIST_EFFECT = 3, LIST_FRO
 
 /* other modules, no C yet */
 extern uint32_t random_next(void);                    /* $1F50 */
-extern Object *fn_002418(void);                       /* the object from the free list (in a0) */
-extern void fn_000fee(Object *o);
-extern void fn_0057b6(Object *o);
-extern void fn_004634(Object *o);
-extern void fn_00128e(Object *o);
-extern void fn_005924(void);
 /* the level blob's entries ($54E0C: a shot or a point meets nothing else: a flag; $54E10/$54E18: a scroll event fires) */
-extern uint16_t fn_054e0c(int16_t d0, int16_t d1, int16_t d2, int16_t d3);
-extern void fn_054e10(uint16_t d0, const struct SpawnRec *a1);
-extern void fn_054e18(uint16_t d0, const struct SpawnRec *a1);
 
 void anim_step(Object *o);
 void anim_op_jump(Object *o, const uint16_t *a1);

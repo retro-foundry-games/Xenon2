@@ -3,7 +3,7 @@
 #include <stdint.h>
 
 typedef struct Object Object;
-typedef void (*obj_fn)(void);
+typedef void (*obj_fn)(Object *);
 
 /* an object of the lists at $A76 and of the pool at $3F07E (0x62 bytes); the fields at $2A..$2E are a word, a long or a pointer by kind */
 struct Object {

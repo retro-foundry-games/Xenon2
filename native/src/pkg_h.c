@@ -22,6 +22,7 @@
  *   Global: music_playing, music_enabled, music_paused, music_volume (word: music_flag_1a584 : music_volume_lo), music_rate,
  *   music_transpose, music_fade_speed, music_tempo_mul. */
 #include "pkg_h.h"
+#include "game_all.h"
 #include "amiga/hw.h"
 
 static uint8_t *at(int32_t off)
