@@ -57,3 +57,5 @@ Checking against the original (one emulator at a time):
 
 Routines that wait for the vertical blank or the disk cannot be called by the oracle (a watchdog reports them as HUNG); interrupt handlers neither.
 Code that never ran in the recorded run has no C: the port logs `the original's code at $XXXXXX has no C` when it is reached.
+
+    tools/verify_port.sh                                   headless acceptance: menu -> first level selected -> loaded -> running (exit 0 = verified)
