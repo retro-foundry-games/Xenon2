@@ -35,4 +35,5 @@ Then: the SDL machine layer (`native/src/sdl/`: guest memory, files, irq, HLE di
   functions the two scenarios never reach (many weapon, boss and turret routines: written carefully from the disassembly, unchecked).
 - Port: `tools/verify_port.sh` runs the port headless from the title through the menu, the first level selected, loaded (disk 2 asked for and
   inserted) and running, and checks each stage.  Enemies move, shots kill them, the score rises.  Not looked at in the window by the author.
-- No C: `fn_054e00`, the shop program loaded from disk at $54E00 (not in the captures).
+- The shop (`shop_main`, pkg_i.c and pkg_i2.c): ported and checked by the oracle in the `shop` scenario, see DECOMPILING.md.  The shop's end-of-broadcast path (`v_8fec`) and the
+  weapon-less corners listed in the commit messages are written from the dump.

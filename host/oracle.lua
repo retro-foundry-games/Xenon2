@@ -50,6 +50,10 @@ for _, entry in ipairs(ami.dir("host/cases") or {}) do   -- one file for each mo
     end
 end
 
+-- case.input = true: the routines that wait for the vertical blank do not just return, the one that flips the screens also gives the program a random player's stick and fire button
+-- ($A00: a nibble of up/down/left/right, $A01: fire three frames in eight), from a generator in $E8080, so that the loops of the menus end (the same on both sides: the generator is part of the state)
+local INPUT = "\x20\x39\x00\x0E\x80\x80\x22\x00\xD0\x80\xD0\x80\xD0\x81\x52\x80\x23\xC0\x00\x0E\x80\x80\xE0\x88\x22\x00\x02\x41\x00\x07\x0C\x41\x00\x03"
+    .. "\x64\x08\x11\xFC\x00\xFF\x0A\x01\x60\x04\x42\x38\x0A\x01\xE6\x88\x02\x40\x00\x0F\x11\xC0\x0A\x00\x4E\x75"
 local BLITWAIT = 0xE7000   -- a small routine the oracle puts here: wait for the blitter
 local SCRATCH = 0xE8000   -- a stack for the test, above the memory that is compared
 local CHIP = 0x100000     -- all of the machine's 1 MB chip RAM
@@ -87,7 +91,7 @@ local function check(case)
     if case.refire then case.refire = false; return end   -- and once more as the program goes on after a comparison
     if case.where and not case.where(ami) then return end
     case.calls = (case.calls or 0) + 1
-    if case.done >= SAMPLES or (case.calls - 1) % STRIDE ~= 0 then return end
+    if case.done >= (case.samples or SAMPLES) or (case.calls - 1) % STRIDE ~= 0 then return end
     busy = true
     -- the blitter may still be running the previous frame's blit: let it finish, or its writes land in the original's run only
     ami.write(BLITWAIT, "\x08\x39\x00\x06\x00\xdf\xf0\x02\x66\xf6\x4e\x75")   -- btst #6,$dff002 / bne.b -10 / rts
@@ -107,6 +111,7 @@ local function check(case)
     -- the routines that wait for the vertical blank return at once (a call made here cannot get across a frame): in the original, and below in the C
     local function patch_original()
         for _, a in ipairs(waits.orig) do if a ~= case.orig then ami.write(a, "\x4e\x75") end end
+        if case.input then ami.write(0x2034, INPUT) end   -- (swap_screens: the player's stick and fire for the frame)
     end
     patch_original()
     local r1 = ami.call(case.orig, fresh())
@@ -125,6 +130,7 @@ local function check(case)
     ami.write(syms.base, blob)   -- the program may have used the memory the C code sits in
     patch_original()             -- (the same bytes of the original are patched in both runs, so that the memory compares)
     for _, n in ipairs(waits.c) do if syms[n] and n ~= (case.c or case.name) then ami.write(syms[n], "\x4e\x75") end end
+    if case.input then ami.write(syms.swap_screens, INPUT) end
     local r2 = ami.call(syms[case.c or case.name], fresh())
     settle()
     local after_c = ami.read(0, CHIP)
@@ -219,11 +225,16 @@ ami.hook(0x921a, function() last_read = ami.frame(); nreads = nreads + 1 end)
 ami.wait(1)
 assert(STATE and ami.snapshot_load(STATE), "cannot load the state " .. tostring(STATE))
 ami.write(syms.base, blob)
+-- poke=ADDR:SIZE:VALUE,... (hex address, size b/w/l, value): variables set after the state is loaded (e.g. the cash in the shop)
+for addr, size, value in (args:match("poke=(%S+)") or ""):gmatch("(%x+):([bwl]):(%d+)") do
+    local a, v = tonumber(addr, 16), tonumber(value)
+    if size == "b" then ami.poke8(a, v) elseif size == "w" then ami.poke16(a, v) else ami.poke32(a, v) end
+end
 local start = ami.frame()
 while ami.frame() - start < UNTIL do
     ami.wait(1)
     local f = ami.frame() - start
-    if in_call and ami.frame() - in_call.frame > 60 then
+    if in_call and ami.frame() - in_call.frame > (in_call.case.frames or 60) then
         -- the call has not come back (a routine that waits for something the call cannot get: an interrupt, the beam): put the machine back as it was at the hook
         local c = in_call
         ami.write(0, c.before)
@@ -233,7 +244,7 @@ while ami.frame() - start < UNTIL do
         c.case.hung = true
         c.case.done = SAMPLES
         c.case.refire = true
-        say("HUNG %s: the call did not return in 60 frames (not compared; it waits for something)", c.case.name)
+        say("HUNG %s: the call did not return in %d frames (not compared; it waits for something)", c.case.name, c.case.frames or 60)
     end
     if joys[f] then ami.joystick(joys[f]) end
     if DEBUG and f % 20 == 0 then say("f%d pc=%06x busy=%s", f, ami.reg("pc"), tostring(busy)) end

@@ -1,6 +1,6 @@
 -- Exact executed-instruction trace of the shop: from the original's state before the shop (local/save/shop-before.state, made by host/lockstep.lua snap=8ff2:shop-before),
 -- single-stepped for FRAMES frames while a seeded random player (the stick and fire, a press every few frames) works the shop's menus.
---   ami9000_host host/trace_shop.lua --headless --script-args "frames=6000 out=captures/trace-shop [seed=N] [state=shop-before] [ramat=F,..]"
+--   ami9000_host host/trace_shop.lua --headless --script-args "frames=6000 out=captures/trace-shop [seed=N] [state=shop-before] [ramat=F,..] [poke=ADDR:SIZE:VALUE,..]"
 -- Writes OUT.pcs (`pc count first_frame last_frame successor,...`, as host/trace_steps.lua) and OUT-F.bin memory dumps at the frames of ramat (frames counted from the state).
 local args = ami.args or ""
 local FRAMES = tonumber(args:match("frames=(%d+)") or "6000")
@@ -18,6 +18,11 @@ ami.boot()
 ami.wait(1)
 assert(ami.snapshot_load(state .. ".state"), "cannot load " .. state)
 local base = ami.frame()
+-- poke=ADDR:SIZE:VALUE,... (hex address, size b/w/l, decimal value): variables set before the run (the cash, the setting: e04 = 5 and 8fec = 255 reach the other paths)
+for addr, size, value in (args:match("poke=(%S+)") or ""):gmatch("(%x+):([bwl]):(%d+)") do
+    local a, v = tonumber(addr, 16), tonumber(value)
+    if size == "b" then ami.poke8(a, v) elseif size == "w" then ami.poke16(a, v) else ami.poke32(a, v) end
+end
 
 local function random(n) seed = (seed * 1103515245 + 12345) % 2147483648; return (seed // 65536) % n end
 local hold_until, held = 0, nil

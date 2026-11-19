@@ -44,11 +44,15 @@ SCENARIOS = {
 
 def run(names, scenario, samples, build):
     state, until, joy, swap = SCENARIOS[scenario]
+    if scenario == 'shop' and 'ORACLE_SEED' in os.environ:   # another random player and length for the shop: ORACLE_SEED=N ORACLE_FRAMES=N
+        until = int(os.environ.get('ORACLE_FRAMES', until)); joy = monkey_script(until, int(os.environ['ORACLE_SEED'])) if int(os.environ['ORACLE_SEED']) else '0:none'   # (seed 0: no stick, for the runs that give the program its input)
     out = ROOT / 'captures' / f'oracle-{build.replace("/", "-")}-{scenario}.txt'
     out.unlink(missing_ok=True)
-    args = f'state={state} until={until} joy={joy} samples={samples} stride=3 build={build} out={out} scenario={scenario}'
+    args = f'state={state} until={until} samples={samples} stride=3 build={build} out={out} scenario={scenario}'
     if names: args += ' only=' + ','.join(names)
     if swap: args += ' swap=1'
+    args += ' ' + os.environ.get('ORACLE_ARGS', '')   # e.g. show=ADDR:LEN debug=1
+    args += f' joy={joy}'   # (last: the arguments are cut off at some length)
     r = subprocess.run([str(HOST), str(ROOT / 'host' / 'oracle.lua'), '--headless', '--script-args', args], capture_output=True, text=True, cwd=ROOT)
     if not out.exists():
         print(f'[{scenario}] the run wrote no result\n' + (r.stdout + r.stderr)[-800:])
