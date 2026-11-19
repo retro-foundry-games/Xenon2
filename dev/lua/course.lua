@@ -7,6 +7,10 @@
 local count = tonumber(args:match("syncs=(%d+)") or "3000")
 local horizon = tonumber(args:match("horizon=(%d+)") or "5")
 local out_path = args:match("out=(%S+)") or "captures/input/level1-course.txt"
+local W_ENERGY = tonumber(args:match("ew=([%d.]+)") or "40")   -- value of an energy cell lost
+local W_SCORE = tonumber(args:match("sw=([%d.]+)") or "0.2")     -- of a point of score
+local W_ALIGN = tonumber(args:match("aw=([%d.]+)") or "3")       -- of an enemy the ship is under (three at most)
+local W_PROGRESS = tonumber(args:match("pw=([%d.]+)") or "8")    -- of a unit of scroll (the level only scrolls on while the ship is high on the screen)
 local STATE_FILE = "/dev/shm/x2-course.state"
 local SWAP = 0x2034
 
@@ -27,15 +31,33 @@ fh:close()
 local function stick(dx, dy, fire) return { left = dx < 0 and 1 or 0, right = dx > 0 and 1 or 0, up = dy < 0 and 1 or 0, down = dy > 0 and 1 or 0, fire = fire } end
 local function interval(st) port.joy{ up = st.up == 1, down = st.down == 1, left = st.left == 1, right = st.right == 1, fire = st.fire == 1 }; port.run_until(SWAP, 20) end
 
-local function measure() return { scroll = port.peek16(0xcd0), energy = port.peek16(0xcc6), score = score(), x = s16(0x3f01c + 0x20), y = s16(0x3f01c + 0x24) } end
+-- enemies (list 2, drawn, on screen, above the ship) that the ship is under: its shots go straight up
+local function aligned_enemies(px, py)
+    local sentinel, count = 0xa76 + 2 * 98, 0
+    local o, guard = port.peek32(sentinel + 0x12), 0
+    while o ~= 0 and o ~= sentinel and o >= 0x400 and o < 0x7ff00 and guard < 200 do
+        local draw = port.peek32(o + 6)
+        if draw ~= 0xe48 and draw ~= 0x3130 then
+            local x, y = s16(o + 0x20), s16(o + 0x24)
+            if y > -16 and y < py and x > -8 and x < 328 and math.abs(x - px) < 12 then count = count + 1 end
+        end
+        o = port.peek32(o + 0x12); guard = guard + 1
+    end
+    return count
+end
+
+local function measure()
+    local x, y = s16(0x3f01c + 0x20), s16(0x3f01c + 0x24)
+    return { scroll = port.peek16(0xcd0), energy = port.peek16(0xcc6), score = score(), x = x, y = y, aligned = aligned_enemies(x, y) }
+end
 
 -- how good the horizon was: scroll progress and score up, energy lost very bad, and not hugging the bottom or the sides (where it cannot dodge)
 local function value(before, after)
-    local v = 40 * math.min(0, after.energy - before.energy)
+    local v = W_ENERGY * math.min(0, after.energy - before.energy)
     local progress = before.scroll - after.scroll
     if progress < 0 or progress > 1000 then progress = 0 end
-    v = v + 8 * progress
-    v = v + 0.05 * (after.score - before.score)
+    v = v + W_PROGRESS * progress
+    v = v + W_SCORE * (after.score - before.score) + W_ALIGN * math.min(after.aligned, 3)
     if after.y > 150 then v = v - 0.3 * (after.y - 150) elseif after.y < 70 then v = v - 0.3 * (70 - after.y) end   -- (neither the bottom nor the top: no room to dodge)
     v = v - 0.05 * math.abs(after.x - 160)        -- the middle: room to dodge, and the scroll can stop at the sides
     return v
