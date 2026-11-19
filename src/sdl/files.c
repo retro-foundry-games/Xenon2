@@ -54,5 +54,10 @@ int files_read_sectors(int disk, uint32_t first, uint32_t count, void *dest)
     return 0;
 }
 
+void files_state(host_state_visit visit, void *arg)
+{
+    visit(&current, sizeof current, arg);
+}
+
 int files_current_disk(void) { return current; }
 void files_insert(int disk) { current = disk; }

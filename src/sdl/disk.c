@@ -16,6 +16,12 @@ extern void host_idle(void);
 int host_manual_disk;
 static int asked_for_sector_0;
 
+void disk_state(host_state_visit visit, void *arg)
+{
+    visit(&host_manual_disk, sizeof host_manual_disk, arg);
+    visit(&asked_for_sector_0, sizeof asked_for_sector_0, arg);
+}
+
 int disk_read_sectors(uint16_t first_sector, uint16_t count, void *dest)
 {
     uint8_t *tmp;
@@ -32,9 +38,9 @@ int disk_read_sectors(uint16_t first_sector, uint16_t count, void *dest)
         memcpy(dest, tmp, (size_t)count * 512);
         guest_load_range(guest_address(dest), tmp, (uint32_t)count * 512);
     }
+    free(tmp);   /* (before the waiting: no heap object is live in the game's stack while a state can be taken) */
     /* the real drive takes time (about a second for one sector: the motor, the head, the rotation): the game's own retry loops count frames */
     for (int i = 0, frames = count == 1 ? 51 : 20 + count / 2; i < frames; i++)
         host_idle();
-    free(tmp);
     return r;
 }
