@@ -335,9 +335,17 @@ uint16_t direction8(int16_t dx, int16_t dy)
 
 /* ---- objects ---- */
 
-/* orig $E48, $003130: a routine that does nothing (the "no update", "no draw" of a dead object) */
+/* orig $003130: a routine that does nothing (the "no update", "no draw" of a dead object).  The code that makes an object a nop stores this address, and the
+ * code that asks compares with it. */
 void obj_nop(Object *o)
 {
+}
+
+/* orig $E48: the jump-table entry of obj_nop (`jmp $3130`), the address the level's data tables give the objects they spawn.  It is a different value from obj_nop's:
+ * an object that has it is not "nop" to the code that compares with $3130 (group_box_update counts its box). */
+void obj_nop_thunk(Object *o)
+{
+    obj_nop(o);
 }
 
 /* orig $EC6, $003286: the object after a1 in its list, or, for a part of a group (flag $34), the first one after the group's other
