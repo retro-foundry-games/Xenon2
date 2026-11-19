@@ -1,0 +1,46 @@
+; pkg_d: $4000-$5FFF (objects, weapons, pickups) and level 1's blob ($54E00 on)
+type Object 98                                    ; an object (struct Object in types_pkg_d.h; pkg_e's Obj is the same record, less detailed)
+type Slot 6                                       ; a weapon slot: type word, the object
+var v_04e4 0x4e4 uint16_t                         ; the player's x, one frame old
+var v_04e6 0x4e6 uint16_t
+var v_04e8 0x4e8 int16_t
+var v_0a6a 0xa6a uint8_t
+var v_0d5a 0xd5a uint16_t
+arr v_0d26 0xd26 uint32_t 13                      ; level 1 boss state, cleared by the level's init
+arr v_0d86 0xd86 uint8_t 5
+var v_0d8b 0xd8b uint8_t
+var v_0d8c 0xd8c uint8_t
+var v_0424 0x424 uint16_t
+var v_0426 0x426 uint16_t
+tab v_2404 0x2404 int16_t 8                       ; x/y offsets of the four weapon slots
+tab v_476c 0x476c int16_t 16                      ; x/y steps of a pickup's eight-step circle
+tab v_60d0 0x60d0 uint32_t 13                     ; the player's pictures by v_0cde + 6
+tab v_614a 0x614a uint32_t 4                      ; the player's pictures while v_0430 is 1..4
+tab v_7970 0x7970 uint16_t 2                      ; score added when a shot kills ($7972: when the pod shot does)
+tab v_27c2 0x27c2 uint32_t 12                     ; pictures of the player's shots (three each)
+tab anim_2540 0x2540 uint16_t 3                   ; animation headers: picture (long), delay, then the script
+tab anim_25a0 0x25a0 uint16_t 3
+tab anim_25be 0x25be uint16_t 3
+tab anim_25e2 0x25e2 uint16_t 3
+tab anim_2612 0x2612 uint16_t 3
+tab anim_264e 0x264e uint16_t 3
+tab anim_26ae 0x26ae uint16_t 3
+tab anim_270e 0x270e uint16_t 3
+tab anim_273a 0x273a uint16_t 3
+tab anim_2760 0x2760 uint16_t 3
+tab anim_280a 0x280a uint16_t 3
+tab anim_283a 0x283a uint16_t 3
+tab anim_28b2 0x28b2 uint16_t 3
+tab anim_28d0 0x28d0 uint16_t 3
+tab anim_28ee 0x28ee uint16_t 3
+tab anim_2912 0x2912 uint16_t 3
+tab anim_2930 0x2930 uint16_t 3
+tab anim_294e 0x294e uint16_t 3
+tab anim_296c 0x296c uint16_t 3
+tab anim_298a 0x298a uint16_t 3
+tab anim_29a8 0x29a8 uint16_t 3
+tab anim_29c6 0x29c6 uint16_t 3
+tab anim_29e4 0x29e4 uint16_t 3
+tab anim_2a02 0x2a02 uint16_t 3
+tab anim_2c24 0x2c24 uint16_t 3
+tab level_54e58 0x54e58 uint16_t 2                ; level 1: energy of the boss ($54E58) and of a second object ($54E5A)

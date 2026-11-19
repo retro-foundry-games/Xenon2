@@ -73,8 +73,8 @@ void host_setclr_write(unsigned register_offset, uint16_t value);
 #endif
 
 /* A function that programs a chip (the blitter, the disk DMA, ...) and is replaced in the SDL port by a high-level one with the same
- * signature in native/src/sdl/ is declared `HLE_WEAK void blit_xxx(...)` (and has the comment `/* HLE: blitter */`): the C stays faithful for
- * the Amiga build and the oracle, and the port's strong definition wins at link time. */
+ * signature in native/src/sdl/ is declared `HLE_WEAK void blit_xxx(...)` (and its comment says HLE: blitter): the C stays faithful for
+ * the Amiga build and the oracle, and the port strong definition wins at link time. */
 #ifdef GAME_SDL
 #define HLE_WEAK __attribute__((weak))
 #else
