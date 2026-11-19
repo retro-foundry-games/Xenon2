@@ -49,6 +49,7 @@ local IGNORE = { vbl_count = true, v_0404 = true, exc_vectors_lo = true, exc_vec
 if args:match("tolerant=1") then
     for _, name in ipairs{ "music_accum", "music_channels", "hw_mirror", "random_a", "random_b", "sfx_channels", "sfx_request", "sfx_samples", "sfx_samples_ready", "v_0414", "v_0418" } do IGNORE[name] = true end
 end
+if args:match("play=1") then IGNORE.key_table = true; IGNORE.key_code = true end   -- (the keys reach the original's keyboard when they are pressed, the port's at the next sync point)
 for name in (args:match("ignore=(%S+)") or ""):gmatch("[%w_]+") do IGNORE[name] = true end
 local SHOW = {}
 for name in (args:match("show=(%S+)") or ""):gmatch("[%w_]+") do SHOW[#SHOW + 1] = name end
@@ -111,6 +112,7 @@ for _, line in ipairs{
     'function bin(s) io.write(("BIN %d\\n"):format(#s)); io.write(s) end',
     'function ram_out() bin(port.ram()) end',
     'function image_out() bin(port.picture()) end',
+    'function key(raw, down) port.key(raw, down == 1) end',
     'function ram_in(n) port.load_ram(io.read(n)) end',
     -- run until the function with the original address `addr` has been entered once: "synced FRAME COUNT", or "unsynced FRAME" after 20000 frames
     'function sync(addr) local count, ok = 0, false; port.hook(addr, function() count = count + 1 end); port.stop_on(addr); for _ = 1, 20000 do if port.step() == "hook" and count >= 1 then ok = true; break end end; port.stop_on(nil); port.unhook(addr); print(ok and ("synced %d %d"):format(port.frame(), count) or ("unsynced %d"):format(port.frame())) end',
@@ -138,8 +140,18 @@ local ring = {}                        -- ring[frame] = the emulator's whole fra
 local stick, applied_stick = { up = 0, down = 0, left = 0, right = 0, fire = 0 }, { up = 0, down = 0, left = 0, right = 0, fire = 0 }
 local KEY_STICK = { [273] = "up", [274] = "down", [275] = "right", [276] = "left", [305] = "fire", [306] = "fire", [32] = "fire", [13] = "fire" }   -- libretro key codes
 local fire_keys = {}
+-- libretro key code -> Amiga raw key code: the keys of the window go to the original's keyboard as they are, and to the port as the same raw codes (at the next sync point)
+local RAW = { [273] = 0x4c, [274] = 0x4d, [275] = 0x4e, [276] = 0x4f, [305] = 0x63, [306] = 0x63, [32] = 0x40, [13] = 0x44, [27] = 0x45, [9] = 0x42, [8] = 0x41, [127] = 0x46, [303] = 0x61, [304] = 0x60 }
+for i, c in ipairs{ "q", "w", "e", "r", "t", "y", "u", "i", "o", "p" } do RAW[c:byte()] = 0x10 + i - 1 end
+for i, c in ipairs{ "a", "s", "d", "f", "g", "h", "j", "k", "l" } do RAW[c:byte()] = 0x20 + i - 1 end
+for i, c in ipairs{ "z", "x", "c", "v", "b", "n", "m" } do RAW[c:byte()] = 0x31 + i - 1 end
+for d = 1, 9 do RAW[48 + d] = d end
+RAW[48] = 0x0a
+for f = 1, 10 do RAW[281 + f] = 0x4f + f end
+local key_queue = {}   -- {raw, down} since the last sync point
 local function read_keys()   -- what was pressed since the last call: the stick that is held now
     for _, e in ipairs(ami.input()) do
+        if e[1] == "k" and RAW[e[2]] then key_queue[#key_queue + 1] = { RAW[e[2]], e[3] } end
         if e[1] == "k" and KEY_STICK[e[2]] then
             local what = KEY_STICK[e[2]]
             if what == "fire" then fire_keys[e[2]] = e[3] == 1 and true or nil; stick.fire = next(fire_keys) and 1 or 0 else stick[what] = e[3] end
@@ -164,6 +176,7 @@ local function sync_point()
             for k, v in pairs(stick) do applied_stick[k] = v end
         end
     end
+    if PLAY and #key_queue > 0 then pending[#pending].keys = key_queue; key_queue = {} end
     if st then
         ami.joystick{ up = st.up == 1, down = st.down == 1, left = st.left == 1, right = st.right == 1, fire = st.fire == 1 }
         pending[#pending].joy = st   -- the port gets it after it has reached this point (it is behind the original): the next interval on both sides
@@ -361,16 +374,26 @@ local function compare_picture(snap, port_pic)
     if not frame then return 0 end
     local original = cut(frame, win)
     local diffs, first, diff_image = ami.rgb_diff(original, port_pic)
-    if PLAY then
+    if diffs > 0 then
+        -- the flip takes effect at a vertical blank: whether the original's frame is the one at the usual lag or the one next to it depends on where the interrupt fell
+        for _, d in ipairs{ 1, -1 } do
+            local f = ring[snap.frame + win.lag + d]
+            if f then
+                local near = cut(f, win)
+                if ami.rgb_diff(near, port_pic) == 0 then
+                    shifted_pictures = shifted_pictures + 1
+                    shifted_by[d] = shifted_by[d] + 1
+                    original, diffs, diff_image = near, 0, nil
+                    break
+                end
+            end
+        end
+    end
+    if PLAY then   -- the three views: the original (the window), the port, the differences
         ami.panel(1, port_pic, 320, 256, 2, 1, 0)
-        if diff_image then ami.panel(2, diff_image, 320, 256, 2, 1, 0) end
+        ami.panel(2, diff_image or ("\0"):rep(320 * 256 * 3), 320, 256, 2, 1, 0)
     end
     if diffs == 0 then return 0 end
-    -- the flip takes effect at a vertical blank: whether the original's frame is the one at the usual lag or the one next to it depends on where the interrupt fell
-    for _, d in ipairs{ 1, -1 } do
-        local f = ring[snap.frame + win.lag + d]
-        if f and ami.rgb_diff(cut(f, win), port_pic) == 0 then shifted_pictures = shifted_pictures + 1; shifted_by[d] = shifted_by[d] + 1; return 0 end
-    end
     say("   picture: %d pixels differ, the first at %d,%d", diffs, (first - 1) % 320, (first - 1) // 320)
     do   -- against the emulator's frames around it: is the original a frame ahead or behind?
         local near = {}
@@ -406,6 +429,7 @@ while not done do
         local snap = table.remove(pending, 1)
         local reply = port_call(("sync(0x%x)"):format(PORT_ADDR))
         if not reply or not reply:match("^synced") then say("lockstep: the port did not reach sync point %d (%s)", snap.n, tostring(reply)); done = true; break end
+        for _, k in ipairs(snap.keys or {}) do port_call(("key(%d, %d)"):format(k[1], k[2])) end
         if snap.joy then
             local st = snap.joy
             port_call(("joy(%d, %d, %d, %d, %d)"):format(st.up, st.down, st.left, st.right, st.fire))
