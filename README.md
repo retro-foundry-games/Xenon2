@@ -62,13 +62,16 @@ Code that never ran in the recorded run has no C: the port logs `the original's 
 
 ## Lockstep (dev build)
 
-`dev/` is the dev build of the port (`make -C dev` -> `dev/build/xenon2-sdl-dev`): the same game C and SDL machine, run as a coroutine and driven by Lua
-(`--lua SCRIPT`, global `port`) and over a control socket (`--control PATH`, or `--control -` for stdin/stdout; commands and the Lua API in `dev/src/dev.c`, a client in `dev/ctl.py`, `lua CODE` runs Lua over the socket: step, run to a function by its original
-address, memory in the original's byte order, the picture, joystick and keys).  `host/lockstep.lua` runs the original in the emulator with the dev build as its peer;
-at every entry of `swap_screens` (once a frame) the named members of the memory and the picture are compared.
+`dev/` is the dev build of the port (`make -C dev` -> `dev/build/xenon2-sdl-dev`): the same game C and SDL machine, run as a coroutine, with Lua 5.4
+(`third_party/lua`) embedded.  The dev build only hosts Lua: the global `port` (API at the top of `dev/src/dev.c`) steps the game, runs to or hooks a function by its
+original address, reads the memory in the original's byte order and the picture, gives keys and the stick, and has raw sockets.  Interactivity is Lua's: `dev/lua/shell.lua`
+serves an interactive Lua shell on a unix socket.
 
-    dev/build/xenon2-sdl-dev --control /tmp/x2.sock --disks local &
-    dev/ctl.py /tmp/x2.sock "sync 0x2034 10" "peek16 0x41c" "quit"
+    dev/build/xenon2-sdl-dev --lua dev/lua/shell.lua --lua-args /tmp/x2.sock --disks local &
+    rlwrap nc -U /tmp/x2.sock                  > port.run(30)   > port.peek16(0x41c)   > port.run_until(0x2034, 20)
+
+`host/lockstep.lua` runs the original in the emulator with the dev build as its peer (`dev/lua/peer.lua`, a line protocol on stdin/stdout); at every entry of
+`swap_screens` (once a frame) the named members of the memory and the picture are compared.  The emulator's own `--control PATH` is the Lua shell of that script.
 
     python3 ../amiga_porting/ami9000/pidrun.py -- $AMI host/lockstep.lua --headless --script-args "syncs=150 tolerant=1 continue=1"
 
