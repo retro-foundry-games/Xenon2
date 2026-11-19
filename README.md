@@ -62,9 +62,13 @@ Code that never ran in the recorded run has no C: the port logs `the original's 
 
 ## Lockstep (dev build)
 
-`dev/` is the dev build of the port (`make -C dev` -> `dev/build/xenon2-sdl-dev`): the same game C and SDL machine, plus Lua 5.4 (`third_party/lua`) to control it
-(`--lua SCRIPT`, API in `dev/src/dev.c`: step, run_until, hook by original address, ram/peek, picture, joy). `host/lockstep.lua` runs the original in the
-emulator and the dev build as its peer; at every entry of `swap_screens` (once a frame) the named members of the memory and the picture are compared.
+`dev/` is the dev build of the port (`make -C dev` -> `dev/build/xenon2-sdl-dev`): the same game C and SDL machine, run as a coroutine and driven over a
+control socket (`--control PATH`, or `--control -` for stdin/stdout; commands in `dev/src/dev.c`, a client in `dev/ctl.py`: step, run to a function by its original
+address, memory in the original's byte order, the picture, joystick and keys).  `host/lockstep.lua` runs the original in the emulator with the dev build as its peer;
+at every entry of `swap_screens` (once a frame) the named members of the memory and the picture are compared.
+
+    dev/build/xenon2-sdl-dev --control /tmp/x2.sock --disks local &
+    dev/ctl.py /tmp/x2.sock "sync 0x2034 10" "peek16 0x41c" "quit"
 
     python3 ../amiga_porting/ami9000/pidrun.py -- $AMI host/lockstep.lua --headless --script-args "syncs=150 tolerant=1 continue=1"
 

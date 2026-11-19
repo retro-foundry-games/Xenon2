@@ -1,5 +1,5 @@
 # The dev build of the port (xenon2-sdl-dev): the port's own sources (native/src, built with -finstrument-functions so that a script can hook the
-# game's functions by their original addresses), the dev layer (src/dev.c: the game as a coroutine, Lua) and the vendored Lua (../third_party/lua).
+# game's functions by their original addresses), the dev layer (src/dev.c: the game as a coroutine and the control socket).
 #
 #   make -C dev                  build dev/build/xenon2-sdl-dev
 #   make -C dev lockstep         run the lockstep with the original (needs the disks and the Kickstart in local/; see host/lockstep.lua)
@@ -10,7 +10,6 @@ HERE   := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
 ROOT   := $(abspath $(HERE)/..)
 NATIVE := $(ROOT)/native
 SRC    := $(NATIVE)/src
-LUA    := $(ROOT)/third_party/lua
 BUILD  := $(HERE)/build
 PYTHON ?= python3
 
@@ -27,7 +26,6 @@ GAME_MODULES := $(filter-out runtime data,$(notdir $(basename $(wildcard $(SRC)/
 GAME_OBJS  := $(GAME_MODULES:%=$(BUILD)/g_%.o)
 HOST_SOURCES := $(filter-out $(SRC)/sdl/main.c,$(sort $(wildcard $(SRC)/sdl/*.c)))
 HOST_OBJS  := $(patsubst $(SRC)/sdl/%.c,$(BUILD)/h_%.o,$(HOST_SOURCES))
-LUA_OBJS   := $(patsubst $(LUA)/%.c,$(BUILD)/lua_%.o,$(wildcard $(LUA)/*.c))
 
 all: $(BUILD)/xenon2-sdl-dev
 
@@ -48,11 +46,9 @@ $(BUILD)/h_%.o: $(SRC)/sdl/%.c $(SRC)/game_state.h $(wildcard $(SRC)/*.h $(SRC)/
 $(BUILD)/h_main.o: $(SRC)/sdl/main.c $(wildcard $(SRC)/sdl/*.h $(SRC)/amiga/*.h) | $(BUILD)
 	gcc $(filter-out -fpack-struct=2,$(GAME_CFLAGS)) -c $< -o $@
 $(BUILD)/dev.o: $(HERE)/src/dev.c $(wildcard $(SRC)/sdl/*.h) | $(BUILD)
-	gcc -m32 -std=gnu11 -O1 -g -Wall -I$(SRC)/sdl -I$(LUA) -c $< -o $@
-$(BUILD)/lua_%.o: $(LUA)/%.c | $(BUILD)
-	gcc -m32 -std=gnu11 -O2 -DLUA_USE_POSIX -I$(LUA) -c $< -o $@
+	gcc -m32 -std=gnu11 -O1 -g -Wall -I$(SRC)/sdl -c $< -o $@
 
-$(BUILD)/xenon2-sdl-dev: $(GAME_OBJS) $(HOST_OBJS) $(BUILD)/h_main.o $(BUILD)/dev.o $(LUA_OBJS)
+$(BUILD)/xenon2-sdl-dev: $(GAME_OBJS) $(HOST_OBJS) $(BUILD)/h_main.o $(BUILD)/dev.o
 	gcc -m32 -o $@ $^ $(shell pkg-config --libs sdl3) -lm -ldl -Wl,--gc-sections
 
 clean:
