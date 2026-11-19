@@ -20,6 +20,8 @@ void level1_hit_piece_a(Object *a0, Object *a1, uint16_t d0); void level1_hit_pi
 void level1_debris_update(Object *a0); void level1_boss_flash(Object *a0);
 void level1_boss_hit(Object *a0, Object *a1, uint16_t d0); void level1_boss_part_update(Object *a0);
 void level1_swap_hook(void);
+void level1_turret_a_update(Object *a0); void level1_turret_b_update(Object *a0); void level1_turret_c_update(Object *a0);
+void level1_launcher_update(Object *a0);
 void weapon94_update(Object *a0); void weapon98_update(Object *a0); void weapon44_update(Object *a0);
 void weapon9c_update(Object *a0); void weaponA0_update(Object *a0);
 void enemy_killed(Object *a0, Object *a1);
