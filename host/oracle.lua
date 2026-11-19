@@ -210,7 +210,7 @@ local function guarded(case)
 end
 local active = {}
 for _, case in ipairs(cases) do
-    if (next(only) == nil or only[case.name]) and syms[case.c or case.name] then
+    if (next(only) == nil and not case.explicit or only[case.name]) and syms[case.c or case.name] then   -- (case.explicit: only when named: the cases that run the whole shop use up the scenario)
         case.done = 0
         active[#active + 1] = case
         ami.hook(case.hook or case.orig, guarded(case))   -- (case.hook: another address, one that the program passes often, at which the function is called with state the case sets up)

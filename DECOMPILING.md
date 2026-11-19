@@ -113,7 +113,11 @@ over the base game's C (`item_grant`).  The shop has its own sound player (`$647
   the blob at `$C0000` alias the game's memory) and a seeded random player; `ORACLE_SEED=N ORACLE_FRAMES=N ORACLE_ARGS="poke=c9a:l:50000"` vary it (seed 0: no stick).  The shop cases
   (`host/cases/pkg_i.lua`) run only while the shop's code is in memory (`where = in_shop`): the level's code that replaces it sits at the same addresses.
 - `case.input = true` makes the oracle give the program a random player's stick and fire at every frame flip (the routine that flips the screens does not just return): that is how `shop_stick`, `shop_sell`,
-  `shop_buy` and the whole `shop_main` are called by the oracle although they wait for the fire button.  `frames = N` (the watchdog) and `samples = N` of a case suit the long ones.
+  `shop_buy` and the whole `shop_main` are called by the oracle although they wait for the fire button (`ORACLE_SEED=0 ORACLE_FRAMES=150000 ORACLE_ARGS="poke=e04:w:5,8fec:b:255,e8080:l:N"`
+  runs the whole shop under another setting or another sequence of inputs).  `frames = N` (the watchdog) and `samples = N` of a case suit the long ones.
+- Fuzz cases (`*_fuzz` in `host/cases/pkg_i.lua`): `hook = ADDR` hooks the case at an address of a function the shop passes every frame, `setup(ami, n)` sets the variables the function reads to random values
+  for the call (and returns the function that puts them back), `mutate(regs, n)` changes the registers: that is how the functions a run reaches rarely (`shop_can_buy` for every item and ship, the stock
+  pages, the sound channels in every state) are compared at many states.  `cover=ADDR,...` (oracle argument) lists which addresses of the original the run executed.
 
 ## Lessons
 

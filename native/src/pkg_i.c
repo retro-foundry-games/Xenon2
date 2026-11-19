@@ -1457,7 +1457,13 @@ void shop_main(void)
     shop_room_update();
     swap_screens_200();
     shop_room_update();
-    palette_fade_in((const uint16_t *)GPTR(SH_PALETTE));
+    {
+        uint16_t colors[16];
+
+        for (d0 = 0; d0 < 16; d0++)
+            colors[d0] = sh_r16(SH_PALETTE + 2u * (uint16_t)d0);
+        palette_fade_in(colors);
+    }
     v_0414 = 8;
     shop_delay();
     v_0414 = 0x16;

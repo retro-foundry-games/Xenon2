@@ -58,10 +58,10 @@ local cases = {
     { name = "shop_sound_reset",     orig = 0x064828, args = {}, scenario = S },
     { name = "shop_sound_tables",    orig = 0x06492a, args = {}, mutate = function(r) r.a3 = 0x6476e end, scenario = S },   -- (a3 = the player's base: the caller sets it)
     { name = "shop_sound_tables2",   orig = 0x064972, args = {}, mutate = function(r) r.a3 = 0x6476e end, scenario = S },
-    { name = "shop_stick",           orig = 0x055f60, args = {}, input = true, frames = 3000, samples = 3, scenario = S },
-    { name = "shop_sell",            orig = 0x055b48, args = {}, input = true, frames = 20000, samples = 1, scenario = S },
-    { name = "shop_buy",             orig = 0x055594, args = {}, input = true, frames = 20000, samples = 1, scenario = S },
-    { name = "shop_main",            orig = 0x054e00, args = {}, input = true, frames = 60000, samples = 1, scenario = S },
+    { name = "shop_stick",           orig = 0x055f60, args = {}, input = true, explicit = true, frames = 3000, samples = 3, scenario = S },
+    { name = "shop_sell",            orig = 0x055b48, args = {}, input = true, explicit = true, frames = 20000, samples = 1, scenario = S },
+    { name = "shop_buy",             orig = 0x055594, args = {}, input = true, explicit = true, frames = 20000, samples = 1, scenario = S },
+    { name = "shop_main",            orig = 0x054e00, args = {}, input = true, explicit = true, frames = 60000, samples = 1, scenario = S },
     { name = "shop_sound_delay",     orig = 0x064bb2, args = {}, scenario = S },
 }
 
