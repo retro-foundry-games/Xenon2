@@ -158,7 +158,9 @@ def main():
     tab += ['extern void %s();' % n for n in sorted(set(funcs.values()))]
     tab += ['', 'static const struct { uint32_t address; void *function; } code_table[] = {']
     tab += ['    { 0x%x, (void *)%s },' % (a, funcs[a]) for a in sorted(funcs)]
-    tab += ['};', '', 'uint32_t guest_code_address(const void *function)', '{', '    for (unsigned i = 0; i < sizeof code_table / sizeof code_table[0]; i++)', '        if (code_table[i].function == function)', '            return code_table[i].address;', '    return 0;', '}', '', 'void *guest_code(uint32_t address)', '{', '    unsigned lo = 0, hi = sizeof code_table / sizeof code_table[0];', '    while (lo < hi) {', '        unsigned mid = (lo + hi) / 2;',
+    tab += ['};', '', '/* every address of the original\'s code the C function stands for (the dev build hooks functions by those addresses); returns how many */',
+            'unsigned guest_code_entries(const void *function, uint32_t *out, unsigned max)', '{', '    unsigned n = 0;', '    for (unsigned i = 0; i < sizeof code_table / sizeof code_table[0] && n < max; i++)',
+            '        if (code_table[i].function == function)', '            out[n++] = code_table[i].address;', '    return n;', '}', '', 'uint32_t guest_code_address(const void *function)', '{', '    for (unsigned i = 0; i < sizeof code_table / sizeof code_table[0]; i++)', '        if (code_table[i].function == function)', '            return code_table[i].address;', '    return 0;', '}', '', 'void *guest_code(uint32_t address)', '{', '    unsigned lo = 0, hi = sizeof code_table / sizeof code_table[0];', '    while (lo < hi) {', '        unsigned mid = (lo + hi) / 2;',
             '        if (code_table[mid].address < address) lo = mid + 1; else hi = mid;', '    }',
             '    return lo < sizeof code_table / sizeof code_table[0] && code_table[lo].address == address ? code_table[lo].function : 0;', '}']
     # (in both builds; a call of code with no C: in the 68000 build the original's code at that address, in the port nothing)

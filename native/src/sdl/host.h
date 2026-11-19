@@ -13,6 +13,8 @@ uint32_t guest_address(const void *p);              /* the reverse */
 void guest_load_range(uint32_t address, const uint8_t *bytes, uint32_t length);   /* bytes of the original's memory (big endian) into the members that cover them */
 void host_irq_dispatch(int level);                  /* call the handler in the vector table for interrupt level 1..7 (nothing if there is none) */
 unsigned host_vbl_count(void);                      /* the game's own frame counter ($41C) */
+void host_export_ram_buf(uint8_t *ram_0x80000);     /* the same into a buffer of 0x80000 bytes */
+void host_import_ram_buf(const uint8_t *ram_0x80000);   /* and back: the memory of the original into the block (before the game starts) */
 int host_export_ram(const char *path);              /* the memory in the original's byte order, for tools/compare_state.py */
 void host_game_status(void);                        /* print a few variables of the game (tests) */
 void host_game_start(void);                         /* call the game's entry (nothing if the C has none yet) */
