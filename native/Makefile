@@ -57,7 +57,7 @@ SDL_BUILD ?= build/sdl
 SDL_CFLAGS := -m32 -fpack-struct=2 -std=gnu11 -O1 -g -fno-strict-aliasing -DGAME_SDL -DMATCH_MEMORY_LAYOUT -I$(SRC) -I$(SRC)/sdl -Wall -Wno-unused-function $(shell pkg-config --cflags sdl3)
 # (the tables are struct members in the SDL build, loaded from the disk image: no data.c)
 SDL_GAME_MODULES := $(filter-out runtime data,$(GAME_MODULES))
-SDL_HOST_SOURCES := $(sort $(wildcard $(SRC)/sdl/*.c) $(SRC)/sdl/records.c $(SRC)/sdl/code_table.c)
+SDL_HOST_SOURCES := $(sort $(wildcard $(SRC)/sdl/*.c) $(SRC)/sdl/records.c)
 SDL_OBJS := $(SDL_GAME_MODULES:%=$(SDL_BUILD)/g_%.o) $(patsubst $(SRC)/sdl/%.c,$(SDL_BUILD)/h_%.o,$(SDL_HOST_SOURCES))
 $(SDL_BUILD)/g_%.o: $(SRC)/%.c $(SRC)/game_state.h $(wildcard $(SRC)/*.h) | $(SDL_BUILD)
 	gcc $(SDL_CFLAGS) -c $< -o $@
@@ -69,7 +69,7 @@ $(SDL_BUILD)/h_%.o: $(SRC)/sdl/%.c $(SRC)/game_state.h $(wildcard $(SRC)/*.h $(S
 $(SDL_BUILD):
 	mkdir -p $@
 # the loader tables of the port: how records of the disk image become records of the host, and the C function of each address of the original's code
-$(SRC)/sdl/records.c $(SRC)/sdl/code_table.c: $(wildcard $(SRC)/types_*.h $(SRC)/*.c) ../tools/gen_records.py
+$(SRC)/sdl/records.c $(SRC)/code_table.c: $(wildcard $(SRC)/types_*.h $(SRC)/pkg_*.c) ../tools/gen_records.py
 	$(PYTHON) ../tools/gen_records.py
 sdl: $(SDL_BUILD)/xenon2-sdl
 $(SDL_BUILD)/xenon2-sdl: $(SDL_OBJS)

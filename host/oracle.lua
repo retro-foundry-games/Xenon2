@@ -162,6 +162,13 @@ local function check(case)
         local inputs = {}
         for _, spec in ipairs(case.args) do inputs[#inputs + 1] = string.format("%s=%x", spec, reg_value(spec, regs)) end
         say("DIFF %s (call %d, frame %d) %s: %s", case.name, case.calls, ami.frame(), table.concat(inputs, " "), table.concat(problems, "; "))
+        local show_a, show_n = args:match("show=(%x+):(%d+)")
+        if show_a and not case.shown then
+            case.shown = true
+            local a, n = tonumber(show_a, 16), tonumber(show_n)
+            local function hex(img) return (img:sub(a + 1, a + n):gsub(".", function(c) return string.format("%02x", c:byte()) end)) end
+            say("  at $%x: before %s", a, hex(before)); say("  at $%x: orig   %s", a, hex(after_orig)); say("  at $%x: C      %s", a, hex(after_c))
+        end
     end
 end
 

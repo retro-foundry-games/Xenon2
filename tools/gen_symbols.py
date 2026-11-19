@@ -156,4 +156,6 @@ def main():
     types, syms = parse()
     write_state(types, syms); write_ld(syms); write_members(syms); write_data(syms, ram)
     print(len(syms), 'symbols')
+    import subprocess
+    subprocess.run([sys.executable, os.path.join(ROOT, 'tools', 'gen_records.py')], check=True)
 main()

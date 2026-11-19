@@ -1320,6 +1320,7 @@ void player_update(Object *a0)
     if (v_0430 == 0) {
         a1 = 0;
         if (v_0c90 == 0) {
+            bbox_from_frame(a0);   /* $5F42: the box of the player's picture, then the test */
             a1 = collide_enemies(a0);
             if (a1 == 0)
                 goto after_hit;
