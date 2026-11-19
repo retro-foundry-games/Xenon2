@@ -213,7 +213,7 @@ static void dismiss_slot5(void)
 /* orig $005540: the basic weapon comes back when slot 0 is empty */
 Object *refill_slot0(Object *a0, Object *a1)
 {
-    if (v_0c66[0] == 0)
+    if (v_0c66[0].type == 0)
         weapon_94(a0, a1);
     return a1;
 }
@@ -1073,9 +1073,10 @@ void init_weapons(Object *a0)
 
     v_0cf4 = LIST_A->prev;
     v_0cf8 = LIST_A->next;
-    for (i = 0; i < 21; i++) {
+    for (i = 0; i < 7; i++) {
         v_0cfc[i] = v_0c66[i];
-        v_0c66[i] = 0;
+        v_0c66[i].type = 0;
+        v_0c66[i].obj = 0;
     }
     LIST_A->type = 0;
     LIST_A->prev = LIST_A;

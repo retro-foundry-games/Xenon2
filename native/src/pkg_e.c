@@ -243,7 +243,7 @@ void init_objects(void)
         o->v30 = 3 - i;
     }
     for (i = 0; i < 7; i++)
-        v_0c66[i * 3] = 0;
+        v_0c66[i].type = 0;
     weapon_94(0, 0);
     for (i = 0; i < 14; i++)
         v_0caa[i] = 0;
@@ -344,7 +344,7 @@ void reset_extra_objects(void)
     }
     obj_list[1].prev = v_0cf4;
     obj_list[1].next = v_0cf8;
-    for (i = 0; i < 21; i++)
+    for (i = 0; i < 7; i++)
         v_0c66[i] = v_0cfc[i];
 }
 

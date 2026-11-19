@@ -53,7 +53,7 @@ static uint8_t cache[0x80000];
 static int cache_valid;
 
 struct hook { void *function; uint32_t address; int ref; };
-static struct hook hooks[64];
+static struct hook hooks[1024];
 static int hook_count;
 static void *stop_function;
 static uint32_t stop_address, stopped_address;
@@ -341,7 +341,7 @@ static int l_hook(lua_State *s)
     if (!add_function(address, &function))
         return luaL_error(s, "no C function has the original address %d (decimal)", address);
     if (i < 0) {
-        if (hook_count >= 64)
+        if (hook_count >= 1024)
             return luaL_error(s, "too many hooks");
         i = hook_count++;
     } else if (hooks[i].ref != LUA_NOREF) {

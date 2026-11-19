@@ -27,7 +27,7 @@ arr obj_list 0xa76 Object 5                   ; list heads (sentinel objects)
 var v_0c60 0xc60 uint16_t
 var v_0c62 0xc62 uint16_t
 var v_0c64 0xc64 uint16_t
-arr v_0c66 0xc66 uint16_t 21
+arr v_0c66 0xc66 Slot 7
 var v_0c90 0xc90 uint16_t
 var v_0c92 0xc92 uint32_t
 var v_0c96 0xc96 uint32_t
@@ -62,7 +62,7 @@ var v_0cf0 0xcf0 uint16_t
 var v_0cf2 0xcf2 uint16_t
 var v_0cf4 0xcf4 Object *
 var v_0cf8 0xcf8 Object *
-arr v_0cfc 0xcfc uint16_t 21
+arr v_0cfc 0xcfc Slot 7
 arr v_0d7c 0xd7c uint8_t 7                        ; score digits
 var v_0d83 0xd83 uint8_t
 var v_0d84 0xd84 uint8_t

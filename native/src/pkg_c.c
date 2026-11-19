@@ -569,7 +569,7 @@ void note_spawn_record(const uint8_t *a1, uint16_t d2)
  * (d2 is what an empty slot gets after the first one that was not: the caller's register) */
 void latch_slots(uint16_t d2)
 {
-    const Slot *s = (const Slot *)v_0c66;
+    const Slot *s = v_0c66;
     uint16_t *out = v_0caa;
     int i;
 
