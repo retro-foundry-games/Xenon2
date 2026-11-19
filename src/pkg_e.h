@@ -2,10 +2,8 @@
 #define PKG_E_H
 #include "game.h"
 
-/* callees without C yet (arguments in the registers named in the comment; the results as noted) */
-extern void fn_054e2c(void);                       /* in the level's blob */
-extern Object *owner_chain_next(Object *a1);                    /* draws an object; returns a2, the next one */
-extern void fn_00635e(uint16_t d0, uint16_t d1, uint16_t d2, uint16_t d3);
+void draw_gauge(uint16_t x, uint16_t y, uint16_t fill, uint16_t max);
+void switch_player_after_clear(void);
 
 void clear_screens_large(void);
 void clear_screens_small(void);

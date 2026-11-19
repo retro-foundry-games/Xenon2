@@ -267,7 +267,7 @@ Object *weapon_c0(Object *a0, Object *a1)
     n = alloc_a(a0);
     s->obj = n;
     n->type = 0xc0;
-    n->fn_update = fn_003b4a;
+    n->fn_update = weaponc0_update;
     n->fn_draw = draw_bob_masked;
     n->fn_hit = s;
     n->gfx = v_192ba;
@@ -381,7 +381,7 @@ Object *weapon_b0(Object *a0, Object *a1)
     n = alloc_a(a0);
     s->obj = n;
     n->type = 0xb0;
-    n->fn_update = fn_003b94;
+    n->fn_update = weaponb0_update;
     n->fn_draw = draw_bob_masked;
     n->fn_hit = s;
     set_anim(n, anim_2540);
@@ -425,7 +425,7 @@ Object *weapon_2c(Object *a0, Object *a1)
     if (SLOT(5)->type == 0x2c)
         return grow_weapon(SLOT(5));
     dismiss_slot5();
-    return weapon_slot5(a0, 0x2c, fn_003cdc, anim_25be, 2, 0, 0x13, 0x19);
+    return weapon_slot5(a0, 0x2c, weapon2c_update, anim_25be, 2, 0, 0x13, 0x19);
 }
 
 /* orig $005014: weapon $4C (slot 5) */
@@ -434,7 +434,7 @@ Object *weapon_4c(Object *a0, Object *a1)
     if (SLOT(5)->type == 0x4c)
         return grow_weapon(SLOT(5));
     dismiss_slot5();
-    return weapon_slot5(a0, 0x4c, fn_003e2c, anim_2a02, 0, 0, 0xb, 0x19);
+    return weapon_slot5(a0, 0x4c, weapon4c_update, anim_2a02, 0, 0, 0xb, 0x19);
 }
 
 /* orig $0050AC: weapon $38 (slot 5) */
@@ -445,7 +445,7 @@ Object *weapon_38(Object *a0, Object *a1)
     if (SLOT(5)->type == 0x38 || SLOT(5)->type == 0x3c)
         return grow_weapon(SLOT(5));
     dismiss_slot5();
-    n = weapon_slot5(a0, 0x38, fn_004340, anim_28b2, 1, 0, 9, 0x19);
+    n = weapon_slot5(a0, 0x38, weapon38_update, anim_28b2, 1, 0, 9, 0x19);
     v_04e8 = -100;
     return n;
 }
@@ -458,7 +458,7 @@ Object *weapon_3c(Object *a0, Object *a1)
     if (SLOT(5)->type == 0x38 || SLOT(5)->type == 0x3c)
         return grow_weapon(SLOT(5));
     dismiss_slot5();
-    n = weapon_slot5(a0, 0x3c, fn_004340, anim_28d0, 1, 1, 0xd, 0x19);
+    n = weapon_slot5(a0, 0x3c, weapon38_update, anim_28d0, 1, 1, 0xd, 0x19);
     v_04e8 = -100;
     return n;
 }
@@ -511,7 +511,7 @@ static Object *weapon_side(Object *a0, uint16_t type, obj_fn update, const uint8
 /* orig $0052E0 */
 Object *weapon_90(Object *a0, Object *a1)
 {
-    Object *n = weapon_side(a0, 0x90, fn_00415a, anim_2c24, 0, 0x11, 1);
+    Object *n = weapon_side(a0, 0x90, weapon90_update, anim_2c24, 0, 0x11, 1);
 
     return refill_slot0(a0, n ? n : a1);
 }
@@ -519,7 +519,7 @@ Object *weapon_90(Object *a0, Object *a1)
 /* orig $00538C */
 Object *weapon_20(Object *a0, Object *a1)
 {
-    Object *n = weapon_side(a0, 0x20, fn_003f3a, anim_2612, 2, 0x12, 1);
+    Object *n = weapon_side(a0, 0x20, weapon20_update, anim_2612, 2, 0x12, 1);
 
     return refill_slot0(a0, n ? n : a1);
 }
@@ -527,14 +527,14 @@ Object *weapon_20(Object *a0, Object *a1)
 /* orig $00543A */
 Object *weapon_34(Object *a0, Object *a1)
 {
-    Object *n = weapon_side(a0, 0x34, fn_004094, anim_280a, 0, 0xf, 0), *d;
+    Object *n = weapon_side(a0, 0x34, weapon34_update, anim_280a, 0, 0xf, 0), *d;
 
     if (n == 0)
         return refill_slot0(a0, a1);
     if (n->v3e != 0) {
         d = alloc_b_front(a0);
         d->type = 0x40;
-        d->fn_update = fn_003c7a;
+        d->fn_update = pod_decoration_update;
         d->fn_draw = draw_bob_masked;
         d->flag60 = -1;
         set_anim(d, anim_28ee);
@@ -594,7 +594,7 @@ void weapon44_update(Object *a0)
     a0->x = PLAYER->x;
     a0->y = PLAYER->y;
     if (v_0e06) {
-        fn_006912(a0);
+        weapon_shield_draw(a0);
         return;
     }
     a0->fn_draw = draw_bob_masked;
@@ -622,7 +622,7 @@ void weapon9c_update(Object *a0)
     a0->v5e = 0xf;
     n = alloc_b(a0);
     n->type = 0x28;
-    n->fn_update = fn_0042a6;
+    n->fn_update = shell_update;
     n->fn_draw = draw_bob_masked;
     n->flag60 = -1;
     set_anim(n, anim_25e2);
@@ -657,7 +657,7 @@ void weaponA0_update(Object *a0)
     for (cnt = 7; cnt >= 0; cnt -= 2) {
         cur = alloc_b(cur);
         cur->type = 0x48;
-        cur->fn_update = fn_0039a2;
+        cur->fn_update = drill_update;
         cur->fn_draw = draw_bob_masked;
         cur->flag60 = -1;
         set_anim(cur, drill_anim[cnt]);
@@ -877,7 +877,7 @@ void hit_explode(Object *a0, Object *a1, uint16_t d0)
 void tile_draw(Object *a0)
 {
     a0->fn_draw = obj_nop;
-    fn_001bd0(a0->v3e, a0->v40, a0->y - v_0cd0, (uint16_t)a0->x >> 1, a0->gfx);
+    draw_tile_grid_flash((const uint8_t *)a0->gfx, (uint16_t)a0->v3e, (uint16_t)a0->v40, (int16_t)(a0->y - v_0cd0), (uint16_t)a0->x >> 1);
 }
 
 /* orig $F20, $005B72: hit routine of a destructible tile block: when it breaks the background is restored */
@@ -1054,7 +1054,7 @@ void pickup_spinner(Object *a0)
     if (v_0cc8 == 0) {
         a1 = alloc_b(a0);
         a1->type = 0x5c;
-        a1->fn_update = fn_003868;
+        a1->fn_update = spinner_update;
         a1->fn_draw = draw_bob_masked;
         a1->x = PLAYER->x;
         a1->y = PLAYER->y;
@@ -1414,7 +1414,7 @@ move:
     }
     if (v_0430 == 4) {
         if (v_0432 == 0)
-            a0->fn_draw = fn_001438;
+            a0->fn_draw = draw_bob_behind_map;
         v_0432 = 0;
     }
 }
@@ -1469,7 +1469,7 @@ void level1_scroll(void)
     if ((int16_t)v_0cd0 >= 0xa40 && (int16_t)v_0cd0 <= 0xd10) {
         if ((int16_t)v_0cea < 0xd10)
             v_0cea = 0xd10;
-        fn_055e2c();
+        level1_spawn_units();
         for (d7 = 15; d7 >= 0; d7--) {
             if (*a4 != 0) {
                 uint8_t *a2 = level_init_src + (int16_t)a1[0];
@@ -1518,7 +1518,7 @@ void level1_boss_update(Object *a0)
             a1->type = 0xfc;
             if (d7 == 0)
                 a1->type = 0x100;
-            a1->fn_update = fn_056278;
+            a1->fn_update = level1_boss_part_update;
             a1->fn_draw = draw_bob_masked;
             a1->fn_hit = (void *)hit_kill_shooter;
             a1->gfx = level_59e28;
@@ -1629,7 +1629,7 @@ void level1_boss_draw(Object *a0)
 
     if ((int16_t)v_0cd0 >= 0x280)
         return;
-    fn_000e8a(level_567bc, 5, 6, (uint16_t)(a0->y - v_0cd0), 0x38);
+    draw_tile_grid(level_567bc, 5, 6, (uint16_t)(a0->y - v_0cd0), 0x38);
     d7 = (v_0d5a >> 4) & 0xc;
     draw_bob_masked_at(0x98, (uint16_t)(a0->y - v_0cd0 + 0x42), eyes[d7 >> 2]);
 }
@@ -1657,7 +1657,7 @@ void level1_init(void)
     a0->type = 0x50;
     a0->fn_update = FN(level1_boss_update);
     a0->fn_draw = FN(level1_boss_draw);
-    a0->fn_hit = (void *)fn_0561da;
+    a0->fn_hit = (void *)level1_boss_hit;
     a0->v5e = 0;
     a0->flag60 = -1;
     a0->flag61 = -1;
@@ -1678,4 +1678,1147 @@ void level1_init(void)
     v_0d26[24] = 0x28e5; v_0d26[25] = 0x1aec;
     v_0424 = (uint16_t)(v_0e02 * 1);
     v_0426 = (uint16_t)(v_0e02 * 2);
+}
+
+/* ---- weapons and level 1 routines the recorded run never reached (from the listing) ---- */
+
+/* the object from the free list put first in the list of enemies (list C, head $B4C) */
+static Object *alloc_c(void)
+{
+    Object *o = obj_free_pop(), *tail = LIST_C->prev;
+
+    LIST_C->prev = o;
+    o->prev = tail;
+    o->next = LIST_C;
+    tail->next = o;
+    return o;
+}
+
+/* the pointer in the words $30 and $32 (the drill's target) */
+static Object *get_ptr_30(const Object *o)
+{
+    return (Object *)(uintptr_t)(((uint32_t)(uint16_t)o->v30 << 16) | (uint16_t)o->energy);
+}
+
+static void set_ptr_30(Object *o, Object *p)
+{
+    uint32_t v = (uint32_t)(uintptr_t)p;
+
+    o->v30 = (int16_t)(v >> 16);
+    o->energy = (int16_t)v;
+}
+
+/* orig $006912: the draw of a weapon object while v_0e06 is not 0 (after a respawn: 8 down to 0; at $10 nothing is drawn): the position
+ * becomes the player's centre plus the difference of the centres times v_0e06 (the centre of the picture, not its corner) */
+void weapon_shield_draw(Object *a0)
+{
+    const uint8_t *g;
+    int16_t d0, d1, d2, d3;
+
+    if (v_0e06 == 0x10) {
+        a0->fn_draw = obj_nop;
+        return;
+    }
+    a0->fn_draw = draw_bob_masked;
+    g = (const uint8_t *)a0->gfx;
+    d0 = (int16_t)(a0->x - (int16_t)rd16(g));
+    d1 = (int16_t)(a0->y - (int16_t)rd16(g + 2));
+    d0 = (int16_t)(d0 + d0);
+    d1 = (int16_t)(d1 + d1);
+    d0 = (int16_t)(d0 + (int16_t)rd16(g + 4));
+    d1 = (int16_t)(d1 + (int16_t)rd16(g + 6));
+    d2 = (int16_t)(d0 >> 1);
+    d3 = (int16_t)(d1 >> 1);
+    g = (const uint8_t *)PLAYER->gfx;
+    d0 = (int16_t)(PLAYER->x - (int16_t)rd16(g));
+    d1 = (int16_t)(PLAYER->y - (int16_t)rd16(g + 2));
+    d0 = (int16_t)(d0 + d0);
+    d1 = (int16_t)(d1 + d1);
+    d0 = (int16_t)(d0 + (int16_t)rd16(g + 4));
+    d1 = (int16_t)(d1 + (int16_t)rd16(g + 6));
+    d0 = (int16_t)(d0 >> 1);
+    d1 = (int16_t)(d1 >> 1);
+    d2 = (int16_t)(d2 - d0);
+    d3 = (int16_t)(d3 - d1);
+    d0 = (int16_t)(d0 + (int16_t)((int32_t)d2 * (int16_t)v_0e06));
+    d1 = (int16_t)(d1 + (int16_t)((int32_t)d3 * (int16_t)v_0e06));
+    a0->x = d0;
+    a0->y = d1;
+}
+
+/* orig $00249C: a random enemy on the screen (a1 in the original; the end of the list when there is none): the (random below v_04e2)th
+ * one that is on the screen, groups ($B8) skipped, at most five passes over the list */
+static Object *pick_target(void)
+{
+    uint16_t d0 = v_04e2, d1;
+    Object *a1;
+
+    if (d0 == 0)
+        d0 = 1;
+    d0 = random_below(d0);
+    for (d1 = 4; (int16_t)d1 >= 0; d1--) {
+        a1 = LIST_HEAD(LIST_ENEMY);
+        while (a1->type != 0) {
+            if (a1->type != 0xb8 && !(a1->hit[2] < 0 || a1->hit[0] >= 0x140 || a1->hit[3] < 0 || a1->hit[1] >= 0xc0)) {
+                if ((uint16_t)d0-- == 0)
+                    return a1;
+            }
+            a1 = owner_chain_next(a1);
+        }
+    }
+    return LIST_C;
+}
+
+/* orig $003096: every enemy whose box meets (x0, y0)-(x1, y1) takes dmg from the shooter a0; it ends when the shooter dies or v_0ca4 is
+ * set.  The level's own test at the end (level 1: none) is $54E0C. */
+void area_damage(Object *a0, int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_t dmg)
+{
+    Object *a1 = LIST_HEAD(LIST_ENEMY);
+
+    v_30dc = dmg;
+    hit_box[0] = (uint16_t)x0;
+    hit_box[1] = (uint16_t)y0;
+    hit_box[2] = (uint16_t)x1;
+    hit_box[3] = (uint16_t)y1;
+    for (;;) {
+        Object *a2;
+
+        a1 = scan_boxes(a1, x0, y0, x1, y1);
+        if (a1->type == 0) {
+            if (level1_collision_hook())
+                apply_damage(a0, a1, (uint16_t)x0);   /* d0 as the hook leaves it; level 1's returns 0 */
+            return;
+        }
+        a2 = owner_chain_next(a1);
+        apply_damage(a0, a1, v_30dc);
+        a1 = a2;
+        if (a0->type == 4 || v_0ca4 != 0)
+            return;
+    }
+}
+
+/* orig $E72, $00422A: d7 + 1 pieces (type $C, only animating) at random places in the box (x, y, w, h), animation a2; the sound $83 */
+void debris_burst(Object *a0, int16_t d7, uint16_t x, uint16_t y, uint16_t w, uint16_t h, const uint8_t *a2)
+{
+    do {
+        Object *n = alloc_b(a0);
+
+        n->type = 0xc;
+        n->fn_update = FN(animate_only);
+        n->fn_draw = draw_bob_masked;
+        n->x = (int16_t)(random_below(w) + x);
+        n->y = (int16_t)(random_below(h) + y);
+        set_anim(n, a2);
+    } while (--d7 != -1);
+    v_0414 = 0x83;
+    v_0418 = 0x83;
+    sfx_play(0x83);
+}
+
+/* orig $E6C, $0021B6: d7 + 1 times two bonuses (types $60 and $18) fall in at random places at the front of list B */
+void spawn_bonuses(int16_t d7)
+{
+    do {
+        Object *n = alloc_b_front(0);
+
+        n->type = 0x60;
+        n->fn_update = FN(pickup_update);
+        n->fn_draw = draw_bob_masked;
+        set_anim(n, anim_26ae);
+        n->x = (int16_t)(random_below(0x12c) + 0xa);
+        n->y = (int16_t)(random_below(0xb4) + 6);
+        n->v28 = 7;
+        v_0ca4++;
+        n = alloc_b_front(0);
+        n->type = 0x18;
+        n->fn_update = FN(pickup_update);
+        n->fn_draw = draw_bob_masked;
+        set_anim(n, anim_264e);
+        n->x = (int16_t)(random_below(0x12c) + 0xa);
+        n->y = (int16_t)(random_below(0xb4) + 6);
+        n->v28 = 7;
+        v_0ca4++;
+    } while (--d7 != -1);
+}
+
+/* orig $003868: update of the spinning shield (type $5C): follows the player for v_0cc8 frames, drawing the gauge */
+void spinner_update(Object *a0)
+{
+    anim_step(a0);
+    a0->x = PLAYER->x;
+    a0->y = PLAYER->y;
+    if (v_0e06) {
+        weapon_shield_draw(a0);
+        return;
+    }
+    a0->fn_draw = draw_bob_masked;
+    v_0cc8--;
+    draw_gauge(4, 0xa0, v_0cc8, 0xaa);
+    if (v_0cc8 == 0)
+        kill_object(a0);
+}
+
+/* orig $0039A2: update of a drill bit (type $48): it turns (v2a, eight directions) towards an enemy it keeps in $30 and flies; it hits
+ * the first enemy it meets and explodes when there is none or it leaves the screen */
+void drill_update(Object *a0)
+{
+    static const uint8_t *const heads[8] = { anim_2918, anim_2936, anim_2954, anim_2972, anim_2990, anim_29ae, anim_29cc, anim_29ea };
+    Object *a1;
+    int16_t d0, d1;
+
+    if (v_0d84) {
+        kill_object(a0);
+        return;
+    }
+    anim_step(a0);
+    if (a0->v28 > 0) {
+        a0->v28--;
+        if (a0->v28 >= 8)
+            goto fly;
+        d0 = a0->x;
+        d1 = a0->y;
+        goto test;
+    }
+    a1 = get_ptr_30(a0);
+    if (a1 == 0)
+        goto find;
+    if ((int16_t)a1->type < 0xc8 || a1->hit[2] < 0 || a1->hit[0] >= 0x140 || a1->hit[3] < 0 || a1->hit[1] >= 0xc0)
+        goto find;
+    goto have;
+find:
+    a1 = pick_target();
+    if (a1->type == 0) {
+        spawn_effect(a0->x, a0->y, anim_270e, draw_bob_masked);
+        kill_object(a0);
+        return;
+    }
+    set_ptr_30(a0, a1);
+have:
+    if (a0->v28 != 0) {
+        a0->v28++;
+        if (a0->v28 != 0)
+            goto fly;
+    }
+    d0 = (int16_t)(a1->hit[0] + 2 - a0->x);
+    d1 = (int16_t)(a1->hit[1] + 2 - a0->y);
+    d0 = (int16_t)(direction8(d0, d1) - a0->v2a);
+    if (d0 != 0) {
+        if (d0 < 0)
+            d0 = (int16_t)(d0 + 8);
+        if (d0 < 4)
+            a0->v2a++;
+        else
+            a0->v2a--;
+        a0->v2a &= 7;
+        a0->v28 = -3;
+        set_anim(a0, heads[a0->v2a]);
+    }
+fly:
+    d1 = (int16_t)(drill_dy[a0->v2a] + a0->y);
+    if ((uint16_t)d1 >= 0xc0) {
+        kill_object(a0);
+        return;
+    }
+    a0->y = d1;
+    d0 = (int16_t)(drill_dx[a0->v2a] + a0->x);
+    if ((uint16_t)d0 >= 0x140) {
+        kill_object(a0);
+        return;
+    }
+    a0->x = d0;
+test:
+    a1 = point_in_enemy(d0, d1);
+    if (a1) {
+        kill_object(a0);
+        apply_damage(a0, a1, weapon_damage[0]);
+    }
+}
+
+/* orig $003B4A: update of weapon $C0 (slot 0): two shots a frame while fire is held */
+void weaponc0_update(Object *a0)
+{
+    a0->x = PLAYER->x;
+    a0->y = PLAYER->y;
+    if (v_0e06) {
+        weapon_shield_draw(a0);
+        return;
+    }
+    a0->fn_draw = draw_bob_masked;
+    if (v_0a6a) {
+        spawn_shot_object(a0, 0, (uint16_t)-9, (uint16_t)-5, (uint16_t)-12, (void *const *)&v_27c2[3]);
+        spawn_shot_object(a0, 0, (uint16_t)-9, 6, (uint16_t)-12, (void *const *)&v_27c2[3]);
+    }
+}
+
+/* orig $003B94: update of weapon $B0 (slot 0): while fire is held two shots (type $B4) of random spread each frame and the sound */
+void weaponb0_update(Object *a0)
+{
+    int16_t d7;
+
+    anim_step(a0);
+    a0->x = PLAYER->x;
+    a0->y = PLAYER->y;
+    if (v_0e06) {
+        weapon_shield_draw(a0);
+        return;
+    }
+    a0->fn_draw = draw_bob_masked;
+    if (!(v_0a00 & 0x80)) {
+        if (a0->v28 != 0) {
+            sfx_stop_all();
+            a0->v28 = 0;
+        }
+        return;
+    }
+    if (a0->v28 == 0 || sfx_channels[2].active == 0) {
+        v_0414 = 1;
+        a0->v28 = 1;
+    }
+    for (d7 = 1; d7 >= 0; d7--) {
+        Object *a1 = alloc_b(a0);
+        int16_t d0;
+
+        a1->type = 0xb4;
+        a1->fn_update = FN(shot_fixed_update);
+        a1->fn_draw = draw_bob_masked;
+        a1->x = a0->x;
+        a1->x_frac = 0x8000;
+        d0 = (int16_t)((random_next() & 3) + a0->y - 0x10);
+        if (d7 == 0)
+            d0 = (int16_t)(d0 - 6);
+        a1->y = d0;
+        set_anim(a1, anim_2796);
+        a1->v42 = a0->v42;
+        a1->v30 = d7;
+        a1->v2a = (int8_t)random_next();
+    }
+}
+
+/* orig $003C7A: update of the decoration (type $40) of a pod: it follows the pod ($2A) while that is there */
+void pod_decoration_update(Object *a0)
+{
+    Object *a1;
+
+    anim_step(a0);
+    a1 = get_ptr_2a(a0);
+    if (a1->type == 0x34) {
+        a0->x = (int16_t)(PLAYER->x + a1->v3e);
+        a0->y = (int16_t)(PLAYER->y + a1->v40);
+        if (v_0e06) {
+            weapon_shield_draw(a0);
+            return;
+        }
+        a0->fn_draw = draw_bob_masked;
+        return;
+    }
+    kill_object(a0);
+}
+
+/* orig $003CDC: update of weapon $2C (slot 5): while fire is held every 6 frames a fan of dots (the table by the weapon's level) goes into
+ * the free places of the shots' table */
+void weapon2c_update(Object *a0)
+{
+    static const int16_t *const pat[3] = { &v_3d66[0], &v_3d66[17], &v_3d66[50] };
+    const int16_t *a1;
+    Shot *a2;
+    int16_t d7, d6;
+
+    anim_step(a0);
+    a0->x = (int16_t)v_046c[0];
+    a0->y = (int16_t)(v_046c[1] + 0x19);
+    if (v_0e06) {
+        weapon_shield_draw(a0);
+        return;
+    }
+    a0->fn_draw = draw_bob_masked;
+    if (a0->v28)
+        a0->v28--;
+    if (!(v_0a00 & 0x80) || a0->v28 != 0)
+        return;
+    a0->v28 = 6;
+    a1 = pat[(uint16_t)a0->v42];
+    d7 = *a1++;
+    a2 = shots;
+    for (d6 = 0x4f; d6 >= 0; d6--, a2++) {
+        if (a2->x >= 0)
+            continue;
+        a2->x = (int16_t)(a0->x + *a1++);
+        a2->y = (int16_t)(a0->y + *a1++);
+        a2->dx = *a1++;
+        a2->dy = *a1++;
+        if (--d7 < 0)
+            return;
+    }
+}
+
+/* orig $003E2C: update of weapon $4C (slot 5): a beam that flies out while fire is held (v28 = 1), moved by the stick, hurting what it
+ * meets, and comes back to the ship when fire is let go (v28 negative) */
+void weapon4c_update(Object *a0)
+{
+    int16_t d0;
+    Object *a1;
+
+    anim_step(a0);
+    if (v_0e06) {
+        weapon_shield_draw(a0);
+        return;
+    }
+    a0->fn_draw = draw_bob_masked;
+    if (a0->v28 == 0) {
+        if (!(v_0a00 & 0x80)) {
+            a0->x = (int16_t)v_046c[0];
+            a0->y = (int16_t)(v_046c[1] + 0x19);
+            return;
+        }
+        a0->v28 = 1;
+    } else if (a0->v28 > 0) {
+        if (!(v_0a00 & 0x80)) {
+            a0->v28 = -1;
+            return;
+        }
+        d0 = (int16_t)(((PLAYER->x - v_04e4) * 4) + a0->x);
+        if (d0 < 0)
+            d0 = 0;
+        if (d0 > 0x13f)
+            d0 = 0x13f;
+        a0->x = d0;
+        d0 = (int16_t)(((PLAYER->y - v_04e6) * 4) + a0->y);
+        if (d0 < 0)
+            d0 = 0;
+        if (d0 > 0xbf)
+            d0 = 0xbf;
+        a0->y = d0;
+    } else {
+        d0 = (int16_t)(v_046c[0] - a0->x);
+        if (d0 > 8)
+            d0 = 8;
+        if (d0 < -8)
+            d0 = -8;
+        a0->x = (int16_t)(a0->x + d0);
+        d0 = (int16_t)(v_046c[1] + 0x19 - a0->y);
+        if (d0 > 8)
+            d0 = 8;
+        if (d0 < -8)
+            d0 = -8;
+        a0->y = (int16_t)(a0->y + d0);
+        if ((int16_t)v_046c[0] == a0->x && (int16_t)(v_046c[1] + 0x19) == a0->y)
+            a0->v28 = 0;
+        return;
+    }
+    bbox_from_frame(a0);
+    a1 = collide_enemies(a0);
+    if (a1) {
+        v_0414 = 0x15;
+        apply_damage(a0, a1, weapon_damage[1]);
+    }
+}
+
+/* orig $003F3A: update of weapon $20 (side slot): every 7 frames while fire is held a beam (type $24) goes up from it */
+void weapon20_update(Object *a0)
+{
+    Object *a1;
+
+    anim_step(a0);
+    a0->x = (int16_t)(PLAYER->x + a0->v3e);
+    a0->y = (int16_t)(PLAYER->y + a0->v40);
+    if (v_0e06) {
+        weapon_shield_draw(a0);
+        return;
+    }
+    a0->fn_draw = draw_bob_masked;
+    if (a0->v5e >= 0)
+        a0->v5e--;
+    if (v_0a6a && a0->v5e < 0) {
+        v_0414 = 6;
+        a1 = alloc_b(a0);
+        a1->type = 0x24;
+        a1->fn_draw = FN(beam_draw);
+        a1->fn_update = FN(beam_update);
+        a1->v28 = -0x20;
+        a1->target = a0;
+        a1->v42 = a0->v42;
+        a0->v5e = 6;
+    }
+}
+
+/* orig $003FDA: update of the beam of weapon $20: it grows (v28 -$20 to $60), then climbs; hurts what it covers */
+void beam_update(Object *a0)
+{
+    int16_t d0, d1, d2, d3;
+    uint16_t d7;
+
+    if (v_0d84) {
+        kill_object(a0);
+        return;
+    }
+    if (a0->v28 != 0x41) {
+        Object *a1 = a0->target;
+
+        a0->x = (int16_t)(a1->x - 7);
+        a0->y = (int16_t)(a1->y - 0x18);
+        a0->v28 = (int16_t)(a0->v28 + 0x20);
+        if (a0->v28 != 0x60)
+            goto hurt;
+        a0->v28 = 0x41;
+    }
+    a0->y = (int16_t)(a0->y - 0x20);
+    if (a0->y < 0) {
+        kill_object(a0);
+        return;
+    }
+hurt:
+    d0 = a0->x;
+    d1 = (int16_t)(a0->y - a0->v28);
+    d2 = a0->v42;
+    d0 = (int16_t)(d0 + 4);
+    d2 = (int16_t)(d2 + d2);
+    d0 = (int16_t)(d0 - d2);
+    d2 = (int16_t)(d2 + d2);
+    d2 = (int16_t)(d2 + 7);
+    d2 = (int16_t)(d2 + d0);
+    d3 = (int16_t)(d1 + 0x20);
+    if (d3 < 0)
+        return;
+    if (d1 < 0)
+        d1 = 0;
+    d7 = (uint16_t)((uint16_t)(a0->v42 + 1) * blast_damage[0]);
+    area_damage(a0, d0, d1, d2, d3, d7);
+}
+
+/* orig $004094: update of weapon $34 (side slot, the pod): with the first picture ($17336) the pod makes its little trail object
+ * (type $30); with the picture $171D6 and fire held it plays the sound $80 and changes to the animation $27F2 */
+void weapon34_update(Object *a0)
+{
+    Object *a1;
+
+    anim_step(a0);
+    a0->x = (int16_t)(PLAYER->x + a0->v3e);
+    a0->y = (int16_t)(PLAYER->y + a0->v40);
+    if (v_0e06) {
+        weapon_shield_draw(a0);
+        return;
+    }
+    a0->fn_draw = draw_bob_masked;
+    if (a0->gfx == (const void *)pic_17336) {
+        a1 = alloc_b(a0);
+        a1->type = 0x30;
+        a1->fn_draw = draw_bob_masked;
+        a1->fn_update = FN(pod_trail_update);
+        set_anim(a1, anim_288e);
+        a1->x = a0->x;
+        a1->y = (int16_t)(a0->y - 0xb);
+        a1->v28 = 0;
+        return;
+    }
+    if (v_0a6a && a0->gfx == (const void *)pic_171d6) {
+        v_0414 = 0x80;
+        set_anim(a0, anim_27f2);
+    }
+}
+
+/* orig $0045E4: update of the pod's shot (type $30): flies up and hurts the first enemy it meets */
+void pod_trail_update(Object *a0)
+{
+    Object *a1;
+
+    if (v_0d84) {
+        kill_object(a0);
+        return;
+    }
+    anim_step(a0);
+    a0->y = (int16_t)(a0->y - 0xa);
+    if (a0->y < 0) {
+        kill_object(a0);
+        return;
+    }
+    bbox_from_frame(a0);
+    a1 = collide_enemies(a0);
+    if (a1)
+        apply_damage(a0, a1, weapon_damage[2]);
+}
+
+/* orig $00415A: update of weapon $90 (side slot, twin gun): with the picture $1838C it fires two shots (type $10); with $182DC
+ * and fire held it changes its delay */
+void weapon90_update(Object *a0)
+{
+    int16_t d6, d7;
+
+    anim_step(a0);
+    a0->x = (int16_t)(PLAYER->x + a0->v3e);
+    a0->y = (int16_t)(PLAYER->y + a0->v40);
+    if (v_0e06) {
+        weapon_shield_draw(a0);
+        return;
+    }
+    a0->fn_draw = draw_bob_masked;
+    if (a0->gfx == (const void *)pic_1838c) {
+        d6 = -3;
+        for (d7 = 1; d7 >= 0; d7--) {
+            Object *a1 = alloc_b(a0);
+
+            a1->v2a = 0;
+            a1->v2e = -9;
+            d6 = (int16_t)(d6 + a0->x);
+            a1->x = d6;
+            a1->y = (int16_t)(a0->y - 0x10);
+            a1->type = 0x10;
+            a1->fn_update = FN(shot_update);
+            a1->fn_draw = draw_bob_masked;
+            set_anim(a1, anim_2918);
+            a1->v42 = a0->v42;
+            d6 = 5;
+        }
+        return;
+    }
+    if (v_0a6a && a0->gfx == (const void *)pic_182dc)
+        a0->anim_delay = 1;
+}
+
+/* orig $0042A6: update of the shell of weapon $28 (type $28): flies up while v28 < 0, waits, then explodes after 3 frames and hurts
+ * what is near */
+void shell_update(Object *a0)
+{
+    if (v_0d84) {
+        kill_object(a0);
+        return;
+    }
+    anim_step(a0);
+    if (a0->v28 < 0) {
+        a0->v28++;
+        a0->y = (int16_t)(a0->y - 6);
+        return;
+    }
+    if (a0->v28 == 0) {
+        a0->v28 = 3;
+        return;
+    }
+    a0->v28--;
+    if (a0->v28 != 0)
+        return;
+    v_0414 = 0x82;
+    debris_burst(a0, 3, (uint16_t)(a0->x - 0x14), (uint16_t)(a0->y - 0x14), 0x28, 0x28, anim_273a);
+    kill_object(a0);
+    area_damage(a0, (int16_t)(a0->x - 0x20), (int16_t)(a0->y - 0x20), (int16_t)(a0->x - 0x20 + 0x3f), (int16_t)(a0->y - 0x20 + 0x3f), blast_damage[1]);
+}
+
+/* orig $004340: update of weapon $38 and $3C (slot 5): the shell follows the ship until fire is held (v28 = 1), flies up to the top
+ * (v28 = 2), is steered by the stick, leaves a trail of copies of itself (v28 negative, they explode when fire is let go), comes back
+ * (v28 = 3) when fire is let go */
+void weapon38_update(Object *a0)
+{
+    int16_t d0;
+
+    anim_step(a0);
+    if (a0->v28 < 0) {
+        int16_t d1, d2;
+        uint16_t w, h;
+        const uint8_t *a2;
+
+        if (v_0d84) {
+            kill_object(a0);
+            return;
+        }
+        if (v_0a00 & 0x80)
+            return;
+        a0->v28++;
+        if (a0->v28 != 0)
+            return;
+        d1 = (int16_t)(a0->x - 8);
+        d2 = (int16_t)(a0->y - 8);
+        w = h = 0x10;
+        a2 = anim_270e;
+        if (a0->v42 != 0) {
+            d1 = (int16_t)(d1 - 0xa);
+            d2 = (int16_t)(d2 - 0xa);
+            w = h = 0x14;
+            a2 = anim_273a;
+        }
+        debris_burst(a0, 2, (uint16_t)d1, (uint16_t)d2, w, h, a2);
+        if (a0->v42 == 0) {
+            d1 = (int16_t)(a0->x - 0x10);
+            d2 = (int16_t)(a0->y - 0x10);
+            area_damage(a0, d1, d2, (int16_t)(d1 + 0x20), (int16_t)(d2 + 0x20), (uint16_t)(blast_damage[2]));
+        } else {
+            d1 = (int16_t)(a0->x - 0x18);
+            d2 = (int16_t)(a0->y - 0x18);
+            area_damage(a0, d1, d2, (int16_t)(d1 + 0x2f), (int16_t)(d2 + 0x2f), (uint16_t)(a0->v42 * 2 + blast_damage[2]));
+        }
+        kill_object(a0);
+        return;
+    }
+    if (v_0e06) {
+        weapon_shield_draw(a0);
+        return;
+    }
+    a0->fn_draw = draw_bob_masked;
+    if (a0->v28 == 0) {
+        a0->x = PLAYER->x;
+        a0->y = (int16_t)(PLAYER->y + 0x19);
+        if (v_0a00 & 0x80)
+            a0->v28 = 1;
+        return;
+    }
+    if (a0->v28 == 1) {
+        if (v_0a00 & 0x80) {
+            if (a0->y > 0x10)
+                a0->y = (int16_t)(a0->y - 0xc);
+            else
+                a0->v28 = 2;
+        } else {
+            a0->v28 = 3;
+        }
+        return;
+    }
+    if (a0->v28 == 2) {
+        if (!(v_0a00 & 0x80)) {
+            a0->v28 = 3;
+            return;
+        }
+        d0 = a0->x;
+        if (v_0a00 & 4) {
+            d0 = (int16_t)(d0 - 8);
+            if (d0 < 0)
+                d0 = 0;
+        }
+        if (v_0a00 & 8) {
+            d0 = (int16_t)(d0 + 8);
+            if (d0 > 0x13f)
+                d0 = 0x13f;
+        }
+        a0->x = d0;
+        d0 = a0->y;
+        if (v_0a00 & 1) {
+            d0 = (int16_t)(d0 - 8);
+            if (d0 < 0)
+                d0 = 0;
+        }
+        if (v_0a00 & 2) {
+            d0 = (int16_t)(d0 + 8);
+            if (d0 > 0xbf)
+                d0 = 0xbf;
+        }
+        a0->y = d0;
+        if (v_043a == 10)
+            return;
+        d0 = (int16_t)(v_04e8 - a0->x);
+        if (d0 < 0)
+            d0 = (int16_t)-d0;
+        if (d0 < 0x20) {
+            d0 = (int16_t)(v_04ea - a0->y);
+            if (d0 < 0)
+                d0 = (int16_t)-d0;
+            if (d0 < 0x20)
+                return;
+        }
+        v_04e8 = a0->x;
+        v_04ea = a0->y;
+        {
+            Object *a1 = alloc_b(a0);
+
+            a1->type = a0->type;
+            a1->fn_update = a0->fn_update;
+            a1->fn_draw = draw_bob_masked;
+            set_anim(a1, a0->anim - 6);
+            a1->x = a0->x;
+            a1->y = a0->y;
+            a1->v42 = a0->v42;
+            v_043a++;
+            a1->v28 = (int16_t)(-(int16_t)(v_043a * 4));
+        }
+        return;
+    }
+    d0 = (int16_t)(PLAYER->x - a0->x);
+    if (d0 > 8)
+        d0 = 8;
+    if (d0 < -8)
+        d0 = -8;
+    a0->x = (int16_t)(a0->x + d0);
+    d0 = (int16_t)(PLAYER->y + 0x19 - a0->y);
+    if (d0 > 8)
+        d0 = 8;
+    if (d0 < -8)
+        d0 = -8;
+    a0->y = (int16_t)(a0->y + d0);
+    if (PLAYER->x == a0->x && (int16_t)(PLAYER->y + 0x19) == a0->y)
+        a0->v28 = 0;
+}
+
+/* orig $0064A0: draw routine of the beam of weapon $20, by CPU: a slice 32 pixels wide of the level's pattern (mask and four planes,
+ * shifted by x & 15) for each of the length + 1 lines going up from y, and the head pictures with the blitter-less bob routine; the
+ * left and right edges are clipped to one word */
+void beam_draw(Object *a0)
+{
+    uint16_t level = (uint16_t)a0->v42;
+    int16_t d0 = (int16_t)(a0->x + 4 - level - level);
+    int16_t d1 = a0->y;
+    uint32_t r[5];
+    uint8_t *dst;
+    uint16_t cnt;
+    int lt, i;
+
+    beam_state[0] = (uint16_t)d0;
+    beam_state[1] = (uint16_t)d1;
+    beam_state[3] = level;
+    beam_state[2] = (uint16_t)a0->v28;
+    if (d0 <= -16 || d0 >= 0x140)
+        return;
+    if ((int16_t)beam_state[2] >= 0x41) {
+        draw_bob_masked_at((uint16_t)d0, (uint16_t)(d1 + 1), beam_heads[level]);
+        d0 = (int16_t)beam_state[0];
+        d1 = (int16_t)beam_state[1];
+    }
+    d1 = (int16_t)(d1 - (int16_t)beam_state[2]);
+    draw_bob_masked_at((uint16_t)d0, (uint16_t)d1, beam_bodies[beam_state[3]]);
+    d0 = (int16_t)beam_state[0];
+    d1 = (int16_t)beam_state[1];
+    if (d1 < 0)
+        return;
+    dst = draw_screen + (int16_t)row_offset[(uint16_t)d1];
+    {
+        const uint32_t *p = &beam_pattern[beam_state[3] * 5];
+        uint16_t sh = (uint16_t)d0 & 0xf;
+
+        for (i = 0; i < 5; i++)
+            r[i] = sh ? (p[i] >> sh) | (p[i] << (32 - sh)) : p[i];
+    }
+    dst += (int16_t)((uint16_t)((int16_t)d0 >> 3) & 0xfffe);
+    cnt = beam_state[2];
+    lt = 0;
+    if ((int16_t)beam_state[0] < 0) {
+        dst += 2;
+        while (!lt) {
+            if (--cnt == 0xffff)
+                break;
+            for (i = 0; i < 4; i++) {
+                uint8_t *w = dst + 0x28 * (i);
+                wr16(w, (uint16_t)((rd16(w) & (uint16_t)r[0]) | (uint16_t)r[1 + i]));
+            }
+            dst -= 0xa0;
+            lt = (int32_t)ADDR(dst) < (int32_t)ADDR(draw_screen);
+        }
+    } else if ((int16_t)beam_state[0] > 0x130) {
+        while (!lt) {
+            if (--cnt == 0xffff)
+                break;
+            for (i = 0; i < 4; i++) {
+                uint8_t *w = dst + 0x28 * (i);
+                wr16(w, (uint16_t)((rd16(w) & (uint16_t)(r[0] >> 16)) | (uint16_t)(r[1 + i] >> 16)));
+            }
+            dst -= 0xa0;
+            lt = (int32_t)ADDR(dst) < (int32_t)ADDR(draw_screen);
+        }
+    } else {
+        while (!lt) {
+            if (--cnt == 0xffff)
+                break;
+            for (i = 0; i < 4; i++) {
+                uint8_t *w = dst + 0x28 * (i);
+                wr16(w, (uint16_t)((rd16(w) & (uint16_t)(r[0] >> 16)) | (uint16_t)(r[1 + i] >> 16)));
+                wr16(w + 2, (uint16_t)((rd16(w + 2) & (uint16_t)r[0]) | (uint16_t)r[1 + i]));
+            }
+            dst -= 0xa0;
+            lt = (int32_t)ADDR(dst) < (int32_t)ADDR(draw_screen);
+        }
+    }
+}
+
+/* orig $0055E2C: level 1: starts every unit (a chain of enemies on a path) that is not on the screen; v_0d86 flags the live ones */
+void level1_spawn_units(void)
+{
+    uint16_t d6;
+
+    for (d6 = 0; d6 < 5; d6++) {
+        if (v_0d86[d6] == 0) {
+            v_0d86[d6] = 0xff;
+            level1_spawn_unit(d6);
+        }
+    }
+}
+
+/* orig $055E50: unit d6 starts: a place of the table is picked from the random state of the unit (the five longs at $D46 rotate right by
+ * 5), then objects are made: the first one and a marker pair around the unit's pieces (type $BC after the last piece, $B8 first), the
+ * head (type $10C, it follows the path) and the pieces (level_segs, each follows the object before it) */
+void level1_spawn_unit(uint16_t d6)
+{
+    uint16_t *state = &v_0d26[16 + 2 * d6];
+    uint32_t r = ((uint32_t)state[0] << 16) | state[1];
+    const struct LevelSpawn *s;
+    Object *first, *a0;
+    int16_t x, y, d2, d3, n, i;
+
+    r = (r >> 5) | (r << 27);
+    state[0] = (uint16_t)(r >> 16);
+    state[1] = (uint16_t)r;
+    s = &level_spawns[r & 0xf];
+    x = s->x;
+    y = (int16_t)(s->y - v_0cda - v_0cd0);
+    if (v_0d26[(uint16_t)s->index] == 0)
+        v_0d26[(uint16_t)s->index] = 0x14;
+    d3 = s->flag;
+    d2 = 0;
+    n = (int16_t)level_55ce6[0];
+    first = alloc_c();
+    a0 = alloc_c();
+    a0->type = 0x10c;
+    a0->fn_update = FN(level1_head_update);
+    a0->fn_draw = obj_nop;
+    a0->fn_hit = (void *)level1_hit_free;
+    a0->v2e = d3;
+    a0->v5e = 0;
+    a0->v46 = s->path;
+    ((ObjMove *)a0)->cursor = s->path;
+    a0->x = x;
+    a0->y = y;
+    a0->v28 = d2;
+    a0->v54 = (int16_t)level_54e62[0];
+    a0->v30 = (int16_t)d6;
+    a0->hit[0] = 0x3e8;
+    a0->hit[2] = 0x3e8;
+    a0->v42 = 0;
+    for (i = 0; i <= n; i++) {
+        const struct LevelSeg *seg = &level_segs[i];
+
+        a0 = alloc_c();
+        a0->type = seg->type;
+        a0->fn_update = FN(level1_segment_update);
+        a0->fn_draw = obj_nop;
+        a0->fn_hit = (void *)seg->hit;
+        a0->gfx = seg->gfx;
+        a0->v42 = (int16_t)seg->score;
+        a0->v2e = d3;
+        a0->energy = 1;
+        a0->flag35 = 0;
+        a0->v5e = 0;
+        a0->anim_delay = 0;
+        a0->v46 = s->path;
+        ((ObjMove *)a0)->cursor = s->path;
+        a0->x = x;
+        a0->y = y;
+        a0->v44 = 0;
+        a0->v28 = d2;
+        a0->v54 = 4;
+        a0->v30 = (int16_t)d6;
+        d2 = (int16_t)(d2 - 7);
+        bbox_from_frame(a0);
+    }
+    a0 = alloc_c();
+    a0->type = 0xb8;
+    a0->fn_update = obj_nop;
+    a0->fn_draw = obj_nop;
+    a0->fn_hit = (void *)obj_nop;
+    a0->hit[0] = 0x3e8;
+    a0->hit[2] = 0x3e8;
+    a0->chain = first;
+    first->type = 0xbc;
+    first->fn_update = FN(group_box_update);
+    first->fn_draw = obj_nop;
+    first->fn_hit = (void *)obj_nop;
+    first->hit[0] = 0x3e8;
+    first->hit[2] = 0x3e8;
+    first->target = a0;
+}
+
+/* orig $0561B4: update of the head of a unit (type $10C): it follows its path (scrolled by v_0cd8), keeps the unit marked live */
+void level1_head_update(Object *a0)
+{
+    a0->y = (int16_t)(a0->y + v_0cd8);
+    v_0d86[(uint16_t)a0->v30] = 0xff;
+    obj_script_step(a0);
+    if (a0->type == 4)
+        a0->fn_update(a0);
+}
+
+/* orig $056034: hit routine of the head: the object hit (a1) is freed */
+void level1_hit_free(Object *a0, Object *a1, uint16_t d0)
+{
+    kill_object(a1);
+}
+
+/* orig $0560C2: update of a piece of a unit (types $110, $114): it takes the place and the direction of the object before it in the list;
+ * the last piece (the next is the marker $BC) keeps the unit's counter alive and goes */
+void level1_segment_update(Object *a0)
+{
+    Object *a1;
+    uint16_t d2;
+    uint8_t **tab;
+
+    v_0d86[(uint16_t)a0->v30] = 0xff;
+    a1 = OBJ_FWD(a0);
+    if (a1->type == 0xbc) {
+        if (v_0d26[(uint16_t)a0->v2e] == 0)
+            v_0d26[(uint16_t)a0->v2e] = 0x14;
+        kill_object(a0);
+        a0->fn_update(a0);
+        return;
+    }
+    a0->x = a1->x;
+    a0->y = (int16_t)(a1->y + v_0cd8);
+    a0->v2a = a1->v2a;
+    a0->v2c = a1->v2c;
+    a0->v28 = a1->v28;
+    if (a0->fn_draw == obj_nop && a0->v28 >= 0)
+        a0->fn_draw = draw_bob_masked;
+    d2 = (uint16_t)(((uint16_t)(a0->v2c + 0x10) >> 3) & 0x1c);
+    tab = &level_56174[a0->type == 0x110 ? 8 : 0];
+    a0->gfx = tab[d2 / 4];
+    bbox_from_frame(a0);
+}
+
+/* the end of $055C2E and $055C46: the piece a1 bursts into a piece that flies away (animation a2), its score is added, the object goes */
+static void level1_piece_burst(Object *a1, const uint8_t *a2)
+{
+    Object *n = alloc_b(0);
+
+    n->type = a1->type;
+    n->fn_update = FN(level1_debris_update);
+    n->fn_draw = draw_bob_masked;
+    n->x = a1->x;
+    n->y = a1->y;
+    set_anim(n, a2);
+    n->v2a = 0;
+    n->v2c = (int16_t)(random_next() & 0xff);
+    v_0c92 += (uint16_t)a1->v42;
+    kill_object(a1);
+}
+
+/* orig $055C2E: hit routine of a piece: it flashes; with no energy left it bursts (anim $55250) */
+void level1_hit_piece_a(Object *a0, Object *a1, uint16_t d0)
+{
+    uint16_t old = (uint16_t)a1->energy;
+
+    a1->fn_draw = draw_bob_or_first;
+    a1->energy = (int16_t)(old - d0);
+    if (old > d0)
+        return;
+    level1_piece_burst(a1, anim_55250);
+}
+
+/* orig $055C46: the same with the animation $55274 */
+void level1_hit_piece_b(Object *a0, Object *a1, uint16_t d0)
+{
+    uint16_t old = (uint16_t)a1->energy;
+
+    a1->fn_draw = draw_bob_or_first;
+    a1->energy = (int16_t)(old - d0);
+    if (old > d0)
+        return;
+    level1_piece_burst(a1, anim_55274);
+}
+
+/* orig $05605A: update of a burst piece: it moves by a fixed step from the table at v_0f60 picked by its random byte ($2D) and goes when it
+ * leaves the screen */
+void level1_debris_update(Object *a0)
+{
+    uint16_t d2;
+    int16_t d0, d1;
+
+    anim_step(a0);
+    d2 = (uint16_t)a0->v2c;
+    d1 = (int16_t)(v_0f60[d2] >> 2);
+    d0 = (int16_t)(v_0f60[(uint16_t)(d2 + 0x40)] >> 2);
+    d0 = (int16_t)(d0 + a0->x);
+    d1 = (int16_t)(d1 + a0->y);
+    if ((uint16_t)d0 >= 0x140 || (uint16_t)d1 >= 0xc0) {
+        kill_object(a0);
+        return;
+    }
+    a0->x = d0;
+    a0->y = d1;
+    a0->fn_draw = draw_bob_masked;
+}
+
+/* orig $056676: the draw of the boss after a hit: back to the normal draw ($5661A) and the picture drawn as a flash */
+void level1_boss_flash(Object *a0)
+{
+    a0->fn_draw = FN(level1_boss_draw);
+    if ((int16_t)v_0cd0 >= 0x280)
+        return;
+    draw_tile_grid_flash(level_567bc, 5, 6, (int16_t)(a0->y - v_0cd0), 0x38);
+}
+
+/* orig $0561DA: hit routine of the level 1 boss: when the shooter's box meets the part of the boss that can be hurt the boss flashes
+ * and loses energy; at no energy it goes: bonuses fall, the screen is full of explosions, the enemies are freed and the level is done */
+void level1_boss_hit(Object *a0, Object *a1, uint16_t d0)
+{
+    uint16_t old;
+    int16_t y;
+
+    if (v_0d8b == 0)
+        return;
+    y = (int16_t)(a1->y - v_0cd0 + 0x44);
+    if (!box_overlap((int16_t)hit_box[0], (int16_t)hit_box[1], (int16_t)hit_box[2], (int16_t)hit_box[3], 0x98, y, 0xa7, (int16_t)(y + 0xe)))
+        return;
+    a1->fn_draw = FN(level1_boss_flash);
+    old = (uint16_t)a1->energy;
+    a1->energy = (int16_t)(old - d0);
+    if (old > d0)
+        return;
+    v_0d8b = 0;
+    kill_object(a1);
+    spawn_bonuses(8);
+    debris_burst(a0, 0x13, 0, 0, 0x140, 0xc0, v_0f64);
+    free_object_chain(LIST_HEAD(LIST_ENEMY));
+    v_0a07 = 0xff;
+}
+
+/* orig $056278: update of a part of the level 1 boss ($FC, the last $100): it takes the place and the numbers of the part before it
+ * ($1C), the first one the boss's; the last part turns towards the player and shoots */
+void level1_boss_part_update(Object *a0)
+{
+    ObjMove *m = (ObjMove *)a0;
+    Object *a1;
+
+    if (v_0d8b == 0) {
+        kill_object(a0);
+        return;
+    }
+    a1 = (Object *)a0->anim;
+    a0->x = a1->x;
+    a0->x_frac = a1->x_frac;
+    a0->y = a1->y;
+    a0->y_frac = a1->y_frac;
+    a0->v2a = a1->v2a;
+    a0->v2c = a1->v2c;
+    a0->pad4a[2] = a1->pad4a[2];
+    a0->pad4a[3] = a1->pad4a[3];
+    a0->pad4a[4] = a1->pad4a[4];
+    a0->v54 = a1->v54;
+    if (a1->type == 0x50) {
+        a0->x = 0xa0;
+        a0->x_frac = 0;
+        a0->y = (int16_t)(a0->y + 0x60);
+        a0->y_frac = 0;
+        a0->y = (int16_t)(a0->y - v_0cd0);
+    }
+    a0->v28 = 0x64;
+    enemy_update_no_anim(a0);
+    if (a0->v54 == 0) {
+        a0->hit[0] = 0x3e8;
+        a0->hit[2] = 0x3e8;
+        return;
+    }
+    if (a0->type == 0x100) {
+        uint16_t dir = direction8((int16_t)(PLAYER->x - a0->x), (int16_t)(PLAYER->y - a0->y));
+
+        a0->v2a = (int16_t)dir;
+        a0->gfx = level_5638a[dir];
+        if (a0->v54 >= 0xb) {
+            uint16_t sum = (uint16_t)(m->shot_count + 0xf);
+
+            m->shot_count = (uint8_t)sum;
+            if (sum & 0x100) {
+                Object *shot;
+
+                m->shot_count = (uint8_t)(random_next() & 0x3f);
+                shot = spawn_enemy_shot((uint16_t)a0->x, (uint16_t)a0->y, (uint16_t)a0->v2a, 4, 0);
+                set_anim(shot, anim_552b0);
+            }
+        }
+    }
+    bbox_from_frame(a0);
+}
+
+/* orig $054E2C: the level's hook for a change of players: none in level 1 */
+void level1_swap_hook(void)
+{
 }

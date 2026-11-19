@@ -17,8 +17,5 @@ Object *obj_free_pop(void);
 
 extern uint32_t random_next(void);
 
-/* callees without C yet (other packages); a result "in Z" is returned as 1 when Z is set */
-extern void fn_005540(void);
-extern void fn_006eca(void);
-extern void fn_000fac(void);               /* level 2 interrupt handler */
+void irq_keyboard(void);
 #endif

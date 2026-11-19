@@ -272,13 +272,99 @@ void stars_erase(void)
     }
 }
 
+/* orig $008092: draws the logo (gfx, rows + 1 rows of width + 1 pixels, 4 planes interleaved per 16 pixels) scaled by title_scale / 16
+ * around the screen centre: squeeze_masks[title_scale] picks the rows and the columns kept (one bit per row, one per column, rotated left).
+ * Each register of the original holds the output word under construction in its high half and a marker bit that leaves by the carry of
+ * add.l when 16 pixels are in; a dropped column shifts only the low half (add.w). */
+void draw_logo_scaled(const uint16_t *gfx, int16_t x, int16_t y, int16_t width, int16_t rows)
+{
+    const uint16_t *a0 = gfx;
+    uint8_t *a1 = draw_screen;
+    uint16_t px = (uint16_t)((int16_t)(uint16_t)(int32_t)((int32_t)x * (int16_t)title_scale) >> 4) + 0xa0;
+    uint16_t py = (uint16_t)((int16_t)(uint16_t)(int32_t)((int32_t)y * (int16_t)title_scale) >> 4) + 0x64;
+    uint16_t sh = px & 0xf;
+    uint16_t cnt = (uint16_t)rows;
+    uint16_t mask = squeeze_masks[(int16_t)title_scale];
+    uint16_t rowpat = mask, colpat = mask;
+    uint32_t marker;
+
+    a1 += (int16_t)(uint16_t)((int32_t)(int16_t)py * 0xa0);
+    a1 += (int16_t)(uint16_t)((uint16_t)(px - sh) >> 3);
+    marker = 0x10000u << sh;
+    do {
+        uint32_t r0 = marker, r1 = marker, r2 = marker, r3 = marker;
+        uint16_t d7 = (uint16_t)width;
+        uint16_t bit = rowpat >> 15;
+
+        rowpat = (uint16_t)((rowpat << 1) | bit);
+        if (bit == 0) {
+            a0 += (8 + ((uint16_t)width & 0xfff0) / 2) / 2;
+        } else {
+            uint8_t *a2 = a1;
+            uint16_t d6 = 0;
+            uint8_t carry;
+
+            for (;;) {
+                d6--;
+                if (d6 == 0xffff) {
+                    r0 = (r0 & 0xffff0000u) | *a0++;
+                    r1 = (r1 & 0xffff0000u) | *a0++;
+                    r2 = (r2 & 0xffff0000u) | *a0++;
+                    r3 = (r3 & 0xffff0000u) | *a0++;
+                    d6 = 0xf;
+                }
+                bit = colpat >> 15;
+                colpat = (uint16_t)((colpat << 1) | bit);
+                if (bit == 0) {
+                    r0 = (r0 & 0xffff0000u) | (uint16_t)(r0 << 1);
+                    r1 = (r1 & 0xffff0000u) | (uint16_t)(r1 << 1);
+                    r2 = (r2 & 0xffff0000u) | (uint16_t)(r2 << 1);
+                    r3 = (r3 & 0xffff0000u) | (uint16_t)(r3 << 1);
+                    if (--d7 != 0xffff)
+                        continue;
+                    break;
+                }
+                carry = (uint8_t)(r3 >> 31);
+                r0 <<= 1; r1 <<= 1; r2 <<= 1; r3 <<= 1;
+                if (!carry) {
+                    if (--d7 != 0xffff)
+                        continue;
+                    break;
+                }
+                wr16(a2 + 0x28, (uint16_t)(r1 >> 16));
+                wr16(a2 + 0x50, (uint16_t)(r2 >> 16));
+                wr16(a2 + 0x78, (uint16_t)(r3 >> 16));
+                wr16(a2, (uint16_t)(r0 >> 16));
+                a2 += 2;
+                r0 = 0x10000u | (r0 & 0xffff);
+                r1 = 0x10000u | (r1 & 0xffff);
+                r2 = 0x10000u | (r2 & 0xffff);
+                r3 = 0x10000u | (r3 & 0xffff);
+                if (--d7 != 0xffff)
+                    continue;
+                break;
+            }
+            do {
+                carry = (uint8_t)(r3 >> 31);
+                r0 <<= 1; r1 <<= 1; r2 <<= 1; r3 <<= 1;
+            } while (!carry);
+            wr16(a2 + 0x28, (uint16_t)(r1 >> 16));
+            wr16(a2 + 0x50, (uint16_t)(r2 >> 16));
+            wr16(a2 + 0x78, (uint16_t)(r3 >> 16));
+            wr16(a2, (uint16_t)(r0 >> 16));
+            a1 += 0xa0;
+        }
+        cnt--;
+    } while ((int16_t)cnt >= 0);
+}
+
 /* orig $0081EA: the text squeezes back out (scale 16 down to 1) over the logo and stars until a key ends it */
 void title_fade_out(void)
 {
     title_scale = 0x10;
     while (!v_0a01) {
         clear_screen();
-        fn_008092(title_gfx, -0x70, -0x50, 0xcf, 0x35);
+        draw_logo_scaled(title_gfx, -0x70, -0x50, 0xcf, 0x35);
         stars_update();
         swap_screens_200();
         title_scale--;
@@ -304,7 +390,7 @@ void title_fade_in(void)
         if (v_0a01)
             return;
         clear_screen();
-        fn_008092(title_gfx, -0x70, -0x50, 0xcf, 0x35);
+        draw_logo_scaled(title_gfx, -0x70, -0x50, 0xcf, 0x35);
         stars_update();
         swap_screens_200();
         title_scale++;

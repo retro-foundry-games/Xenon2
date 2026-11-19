@@ -982,11 +982,17 @@ void obj_script_run(Object *o)
  * else in a random direction) */
 void enemy_update(Object *obj)
 {
+    anim_step(obj);
+    enemy_update_no_anim(obj);
+}
+
+/* orig $E78, $96BA: enemy_update without the animation step */
+void enemy_update_no_anim(Object *obj)
+{
     ObjMove *o = (ObjMove *)obj;
     uint8_t rate;
     uint16_t sum, dir;
 
-    anim_step(obj);
     obj_script_run(obj);
     if (o->type == 4)
         return;

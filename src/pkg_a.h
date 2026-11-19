@@ -23,6 +23,9 @@ static inline void anim_header_set(Object *o, const uint8_t *h)
 
 void free_object(Object *obj);
 HLE_WEAK void draw_background(void);
+HLE_WEAK void draw_tile_grid(const uint8_t *cells, uint16_t cols, uint16_t rows, int16_t y, uint16_t x);
+HLE_WEAK void draw_tile_grid_flash(const uint8_t *cells, uint16_t cols, uint16_t rows, int16_t y, uint16_t x);
+HLE_WEAK void draw_bob_behind_map(Object *obj);
 void redraw_energy_bar(void);
 void draw_status_digit(void);
 HLE_WEAK void draw_text(const uint8_t *text, uint8_t *dest);
