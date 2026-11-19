@@ -21,6 +21,7 @@ static SDL_Renderer *renderer;
 static SDL_Texture *texture;
 static SDL_AudioStream *audio;
 static int probe_render_at = -1;
+static const char *renderer_name;   /* --renderer NAME: software, opengl, vulkan, ... (default: SDL chooses) */
 static int headless, max_frames = -1, scale = 3, want_hash, dump_every, status_at = -1, status_every;
 static const char *dump_folder, *export_path;
 static unsigned export_vbl;
@@ -324,6 +325,7 @@ int main(int argc, char **argv)
         else if (!strcmp(argv[i], "--headless")) headless = 1;
         else if (!strcmp(argv[i], "--frames") && i + 1 < argc) max_frames = atoi(argv[++i]);
         else if (!strcmp(argv[i], "--hash")) want_hash = 1;
+        else if (!strcmp(argv[i], "--renderer") && i + 1 < argc) renderer_name = argv[++i];
         else if (!strcmp(argv[i], "--probe-render") && i + 1 < argc) probe_render_at = atoi(argv[++i]);
         else if (!strcmp(argv[i], "--status-every") && i + 1 < argc) status_every = atoi(argv[++i]);
         else if (!strcmp(argv[i], "--export-ram") && i + 1 < argc) { export_path = argv[++i]; export_vbl = (unsigned)strtoul(strchr(export_path, ':') ? strchr(export_path, ':') + 1 : "0", 0, 0); if (strchr(export_path, ':')) *strchr(export_path, ':') = 0; }
@@ -348,7 +350,9 @@ int main(int argc, char **argv)
             return 1;
         }
         window = SDL_CreateWindow("Xenon 2", DISPLAY_W * scale, DISPLAY_H * scale, 0);
-        renderer = window ? SDL_CreateRenderer(window, 0) : 0;
+        renderer = window ? SDL_CreateRenderer(window, renderer_name) : 0;
+        if (renderer)
+            fprintf(stderr, "xenon2-sdl: renderer %s, video driver %s\n", SDL_GetRendererName(renderer), SDL_GetCurrentVideoDriver());
         if (!renderer) {
             fprintf(stderr, "xenon2-sdl: window: %s\n", SDL_GetError());
             return 1;
