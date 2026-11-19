@@ -240,8 +240,15 @@ if CALLS then
     port_call(('count_calls("%s")'):format(table.concat(list, ",")))
 end
 
+local panels_shown, warned_window, picture_synced = false, false, false
 local shifted_pictures, shifted_by = 0, { [1] = 0, [-1] = 0 }   -- pictures that equal the original's frame next to the usual one
+-- where the port's 320 x 256 picture sits in the emulator's frame: given (window=X,Y,SX,LAG; level 1 from a state: 40,18,2,1), else found from the first pictures that have few enough lit pixels to match
 local win
+do
+    local x, y, sx, lag = args:match("window=(%d+),(%d+),(%d+),(%-?%d+)")
+    if x then win = { x = tonumber(x), y = tonumber(y), sx = tonumber(sx), lag = tonumber(lag) }
+    elseif STATE then win = { x = 40, y = 18, sx = 2, lag = 1 } end
+end
 local function calibrate(port_pic, snap)
     local lit = {}
     for i = 0, 320 * 256 - 1 do if port_pic:sub(i * 3 + 1, i * 3 + 3) ~= "\0\0\0" then lit[#lit + 1] = { i % 320, i // 320 } end end
@@ -369,7 +376,10 @@ end
 
 local function compare_picture(snap, port_pic)
     if not win then calibrate(port_pic, snap) end
-    if not win then return 0 end
+    if not win then
+        if PLAY and not warned_window then warned_window = true; say("play: the port's picture window in the emulator's frame is not known yet (the picture has to show something to be matched)") end
+        return 0
+    end
     local frame = ring[snap.frame + win.lag] or ring[snap.frame + 1]
     if not frame then return 0 end
     local original = cut(frame, win)
@@ -390,10 +400,15 @@ local function compare_picture(snap, port_pic)
         end
     end
     if PLAY then   -- the three views: the original (the window), the port, the differences
+        if not panels_shown then panels_shown = true; say("the three views: the original (the window), the port (first panel to its right), the differences (second panel)") end
         ami.panel(1, port_pic, 320, 256, 2, 1, 0)
         ami.panel(2, diff_image or ("\0"):rep(320 * 256 * 3), 320, 256, 2, 1, 0)
     end
-    if diffs == 0 then return 0 end
+    if diffs == 0 then
+        if STATE and not picture_synced then picture_synced = true; say("the pictures agree from sync point %d on (until then the port's registers, which come from its own run, differ from the state's)", snap.n) end
+        return 0
+    end
+    if STATE and not picture_synced and snap.n <= 60 then return 0 end   -- not yet: the colours and the scroll come from registers the game rewrites within a few frames
     say("   picture: %d pixels differ, the first at %d,%d", diffs, (first - 1) % 320, (first - 1) // 320)
     do   -- against the emulator's frames around it: is the original a frame ahead or behind?
         local near = {}
