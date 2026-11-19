@@ -2,8 +2,7 @@
 #define PKG_C_H
 #include "game.h"
 
-/* Object routines are called with the object in a0 (the original's convention); the Amiga build says so with regparm.  The
- * routines of the other modules that are called through the object's pointers take the same. */
+/* Object routines take the object as their parameter (the original passes it in a0). */
 typedef void (*ObjFn)(Object *);
 typedef void (*AnimOp)(Object *, const uint16_t *);
 

@@ -6,9 +6,9 @@
 typedef struct ObjMove ObjMove;
 struct ObjMove {
     uint16_t type;              /* 0: 4 = dying */
-    void (*fn_update)(void);    /* 2 */
-    void (*fn_draw)(void);      /* 6 */
-    void (*fn_hit)(void);       /* a */
+    void (*fn_update)(Object *); /* 2 */
+    void (*fn_draw)(Object *); /* 6 */
+    void *fn_hit;              /* a */
     uint8_t pad0e[0x12];        /* e */
     uint32_t x;                 /* 20: 16.16 */
     uint32_t y;                 /* 24 */
