@@ -44,6 +44,7 @@ for _, entry in ipairs(ami.dir("host/cases") or {}) do   -- one file for each mo
     end
 end
 
+local BLITWAIT = 0xE7000   -- a small routine the oracle puts here: wait for the blitter
 local SCRATCH = 0xE8000   -- a stack for the test, above the memory that is compared
 local CHIP = 0x100000     -- all of the machine's 1 MB chip RAM
 local DATA_REGS = { "d0", "d1", "d2", "d3", "d4", "d5", "d6", "d7", "a0", "a1", "a2", "a3", "a4", "a5", "a6" }
@@ -82,6 +83,9 @@ local function check(case)
     case.calls = (case.calls or 0) + 1
     if case.done >= SAMPLES or (case.calls - 1) % STRIDE ~= 0 then return end
     busy = true
+    -- the blitter may still be running the previous frame's blit: let it finish, or its writes land in the original's run only
+    ami.write(BLITWAIT, "\x08\x39\x00\x06\x00\xdf\xf0\x02\x66\xf6\x4e\x75")   -- btst #6,$dff002 / bne.b -10 / rts
+    ami.call(BLITWAIT, { a7 = SCRATCH, sr = 0x2700 })
     local regs = {}
     for _, r in ipairs(DATA_REGS) do regs[r] = ami.reg(r) end
     regs.a7, regs.sr, regs.pc = ami.reg("a7"), ami.reg("sr"), ami.reg("pc")
