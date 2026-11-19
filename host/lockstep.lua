@@ -140,6 +140,7 @@ local ring = {}                        -- ring[frame] = the emulator's whole fra
 local stick, applied_stick = { up = 0, down = 0, left = 0, right = 0, fire = 0 }, { up = 0, down = 0, left = 0, right = 0, fire = 0 }
 local KEY_STICK = { [273] = "up", [274] = "down", [275] = "right", [276] = "left", [305] = "fire", [306] = "fire", [32] = "fire", [13] = "fire" }   -- libretro key codes
 local fire_keys = {}
+local OPPOSITE = { up = "down", down = "up", left = "right", right = "left" }
 -- libretro key code -> Amiga raw key code: the keys of the window go to the original's keyboard as they are, and to the port as the same raw codes (at the next sync point)
 local RAW = { [273] = 0x4c, [274] = 0x4d, [275] = 0x4e, [276] = 0x4f, [305] = 0x63, [306] = 0x63, [32] = 0x40, [13] = 0x44, [27] = 0x45, [9] = 0x42, [8] = 0x41, [127] = 0x46, [303] = 0x61, [304] = 0x60 }
 for i, c in ipairs{ "q", "w", "e", "r", "t", "y", "u", "i", "o", "p" } do RAW[c:byte()] = 0x10 + i - 1 end
@@ -154,7 +155,12 @@ local function read_keys()   -- what was pressed since the last call: the stick 
         if e[1] == "k" and RAW[e[2]] then key_queue[#key_queue + 1] = { RAW[e[2]], e[3] } end
         if e[1] == "k" and KEY_STICK[e[2]] then
             local what = KEY_STICK[e[2]]
-            if what == "fire" then fire_keys[e[2]] = e[3] == 1 and true or nil; stick.fire = next(fire_keys) and 1 or 0 else stick[what] = e[3] end
+            if what == "fire" then fire_keys[e[2]] = e[3] == 1 and true or nil; stick.fire = next(fire_keys) and 1 or 0
+            else
+                stick[what] = e[3]
+                -- opposite directions exclude each other (a stick cannot have both; the emulator would drop one, the port would take both): the last one pressed wins
+                if e[3] == 1 then stick[OPPOSITE[what]] = 0 end
+            end
         end
     end
 end
