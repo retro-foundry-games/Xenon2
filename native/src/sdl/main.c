@@ -20,7 +20,7 @@ static SDL_Window *window;
 static SDL_Renderer *renderer;
 static SDL_Texture *texture;
 static SDL_AudioStream *audio;
-static int headless, max_frames = -1, scale = 3, want_hash, dump_every, status_at = -1;
+static int headless, max_frames = -1, scale = 3, want_hash, dump_every, status_at = -1, status_every;
 static const char *dump_folder, *export_path;
 static unsigned export_vbl;
 static long frames;
@@ -173,6 +173,8 @@ static void end_of_frame(void)
         export_path = 0;
         quitting = 1;
     }
+    if (status_every && frames % status_every == 0)
+        host_game_status();
     if (frames == status_at) {
         display_status();
         host_game_status();
@@ -253,6 +255,7 @@ int main(int argc, char **argv)
         else if (!strcmp(argv[i], "--headless")) headless = 1;
         else if (!strcmp(argv[i], "--frames") && i + 1 < argc) max_frames = atoi(argv[++i]);
         else if (!strcmp(argv[i], "--hash")) want_hash = 1;
+        else if (!strcmp(argv[i], "--status-every") && i + 1 < argc) status_every = atoi(argv[++i]);
         else if (!strcmp(argv[i], "--export-ram") && i + 1 < argc) { export_path = argv[++i]; export_vbl = (unsigned)strtoul(strchr(export_path, ':') ? strchr(export_path, ':') + 1 : "0", 0, 0); if (strchr(export_path, ':')) *strchr(export_path, ':') = 0; }
         else if (!strcmp(argv[i], "--joy") && i + 1 < argc) joy_script = argv[++i];
         else if (!strcmp(argv[i], "--status") && i + 1 < argc) status_at = atoi(argv[++i]);
