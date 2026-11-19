@@ -210,7 +210,8 @@ static void dump_picture(long n)
     fclose(f);
 }
 
-static void end_of_frame(void)
+/* the end of a video frame of emulated time: the picture, the sound, the keys, the clock (the dev build calls this and host_vblank itself) */
+void host_frame_end(void)
 {
     static Uint64 next;
     int16_t samples[2 * 882];
@@ -302,20 +303,43 @@ static void end_of_frame(void)
     }
 }
 
-void host_idle(void)
+/* the vertical blank: level 3, bit 5 of INTREQ; the handler is the C function in the vector table */
+void host_vblank(void)
 {
     volatile struct Custom *c = custom;
 
-    end_of_frame();
-    /* the vertical blank: level 3, bit 5 of INTREQ; the handler is the C function in the vector table */
     intreq_state |= 0x20;
     c->intreqr = intreq_state;
     if ((intena_state & 0x4000) && (intena_state & 0x20))
         host_irq_dispatch(3);
 }
 
+/* what the game's C calls where the original waits for an interrupt (hw.h HOST_IDLE).  Weak: the dev build replaces it. */
+__attribute__((weak)) void host_idle(void)
+{
+    host_frame_end();
+    host_vblank();
+}
+
+const uint32_t *host_picture(void)
+{
+    display_render(picture);
+    for (int i = 0; i < DISPLAY_W * DISPLAY_H; i++)
+        picture[i] |= 0xff000000u;
+    return picture;
+}
+
+long host_frame_count(void) { return frames; }
+
+void host_key_event(int raw, int down)
+{
+    if (key_queue_n < 32)
+        key_queue[key_queue_n++] = raw | (down ? 0 : 0x80);
+}
+
 /* ---- start ------------------------------------------------------------------------------------------------------------------------------------------------------------ */
-int main(int argc, char **argv)
+/* the options, the machine and the window; 0 when the game can start, else the exit code */
+int host_init(int argc, char **argv)
 {
     const char *disks = ".";
 
@@ -366,6 +390,15 @@ int main(int argc, char **argv)
         if (audio)
             SDL_ResumeAudioStreamDevice(audio);
     }
+    return 0;
+}
+
+__attribute__((weak)) int main(int argc, char **argv)
+{
+    int r = host_init(argc, argv);
+
+    if (r)
+        return r == -1 ? 1 : r;
     host_game_start();
     for (;;)
         host_idle();   /* the program came back: keep the machine running */

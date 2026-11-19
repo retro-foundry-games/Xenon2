@@ -38,6 +38,12 @@ void sound_mix(int16_t *stereo, int frames);        /* 44100 Hz, interleaved lef
 /* input.c / main.c */
 void host_input(int fire, int up, int down, int left, int right);
 void host_quit(void);
+int host_init(int argc, char **argv);               /* the options, the machine, the window: 0 = ready to start the game */
+void host_frame_end(void);                          /* the end of a video frame: picture, sound, clock, keys */
+void host_vblank(void);                             /* raise the vertical blank interrupt (calls the game's handler if it enabled it) */
+const uint32_t *host_picture(void);                 /* the picture of the registers as they are now: DISPLAY_W x DISPLAY_H pixels, 0xAARRGGBB */
+long host_frame_count(void);
+void host_key_event(int amiga_raw_code, int down);  /* a key as the keyboard would send it */
 void host_unimplemented(uint32_t original_address);   /* a call of original code that has no C (it never ran when the C was made) */
 
 #endif
