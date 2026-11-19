@@ -3,10 +3,6 @@
 #include "game.h"
 #include "amiga/hw.h"
 
-#ifndef REG
-#define REG(r) __asm(r)
-#endif
-
 /* the menu, the high-score table, the disk check and loader, the level load, the enemy path script */
 void menu(void);                                            /* orig $8CB6 */
 uint16_t continue_screen(void);                             /* orig $8E88 */
@@ -50,8 +46,7 @@ void obj_script_step(Object *o);                            /* orig $9740 */
 
 /* callees without C yet (registers as the original takes them) */
 extern void fn_00847e(void);                                /* the palette back, the dot stars again (end of title_message) */
-extern void fn_00318c(register uint16_t x REG("d0"), register uint16_t y REG("d1"), register uint16_t angle REG("d2"),
-                      register uint16_t steps REG("d3"), register const void *gfx REG("a2"));
+extern void fn_00318c(uint16_t x, uint16_t y, uint16_t angle, uint16_t steps, const void *gfx);
 extern void fn_054e00(void);                                /* the level's code: the three pointers at its start run as harmless ori.b */
 
 /* C of other modules this one calls (prototypes as theirs) */

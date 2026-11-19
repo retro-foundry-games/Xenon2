@@ -231,7 +231,7 @@ void init_objects(void)
         o->prev = h;
         first->prev = o;
         o->type = 0xc4;
-        o->fn_update = (void (*)(void))option_update;   /* a0 is the object */
+        o->fn_update = option_update;
         o->fn_draw = obj_nop;
         o->gfx = (void *)(((uint32_t)rec[0] << 16) | rec[1]);
         o->anim_delay = rec[2];
@@ -242,10 +242,10 @@ void init_objects(void)
     }
     for (i = 0; i < 7; i++)
         v_0c66[i * 3] = 0;
-    fn_004afc();
+    weapon_94(0, 0);
     for (i = 0; i < 14; i++)
         v_0caa[i] = 0;
-    fn_00352e();
+    latch_slots(0);
     v_0c60 = 8;
     v_0c62 = 8;
     v_0c64 = 1;
@@ -270,9 +270,9 @@ void init_objects(void)
     v_0ccc = 1;
     v_0d85 = 0;
     v_0cf0 = 3;
-    fn_00176e();
+    draw_status_digit();
     v_0a6b = 0xff;
-    fn_0016be();
+    redraw_energy_bar();
 }
 
 /* orig $0068b0: an option's update: follows the player at an offset given by v_0cde, fires when the button says so */
@@ -281,7 +281,7 @@ void option_update(Object *a0)
     uint16_t d0, d1;
     uint8_t bit;
 
-    fn_002c5a(a0);
+    anim_step(a0);
     d0 = player.x;
     d1 = (uint16_t)v_0cde;
     if ((int16_t)d1 < 0)
@@ -337,7 +337,7 @@ void reset_extra_objects(void)
     while (a1->type) {
         Object *p = a1->prev;
 
-        fn_005c9e(a1);
+        free_with_slot(a1);
         a1 = p;
     }
     obj_list[1].prev = v_0cf4;
@@ -521,7 +521,7 @@ void create_queued_objects(void)
         uint16_t d2 = v_0caa[i * 2 + 1];
 
         if (d1 != 0) {
-            Object *a1 = weapon_select(d1);
+            Object *a1 = weapon_select(d1, 0, 0);
 
             a1->v42 = d2;
         }
@@ -535,15 +535,15 @@ void clear_level_objects(void)
     Object *a1;
     uint16_t i;
 
-    fn_019fe4();
+    sfx_stop_all();
     if (v_0ca2)
         reset_extra_objects();
     d7 = v_0ce6 - v_0cd0;
-    fn_005d8c(obj_list[4].prev, d7);
-    fn_005d8c(obj_list[3].prev, d7);
-    fn_005d8c(obj_list[2].prev, d7);
+    free_chain(obj_list[4].prev, d7);
+    free_chain(obj_list[3].prev, d7);
+    free_chain(obj_list[2].prev, d7);
     for (a1 = obj_list[1].prev; a1->type; a1 = obj_list[1].prev)
-        fn_005c9e(a1);
+        free_with_slot(a1);
     for (i = 0; i < 80; i++) {
         shots[i].x = -1;
         shots[i].y = -1;
@@ -632,11 +632,11 @@ void respawn_player(void)
     }
     v_8836[18] = (uint8_t)(cur_player + 0x31);
     v_8428 = 0xff;
-    fn_00842a(v_8836);
+    title_message(v_8836);
     v_8428 = 0;
     clear_palette();
     if (v_0ca2)
-        fn_004a0a();
+        init_weapons(0);
 }
 
 /* orig $006ec6: after a death: clears the level objects and, if the other player is in, gives the turn to him */
@@ -681,7 +681,7 @@ void level_reset_scroll(void)
     v_0cd8 = 1;
     v_0cda = 0;
     v_0cde = 0;
-    fn_054e20();
+    level1_init();
     v_0ce0 = 0;
     v_042e = 0;
     v_0cdc = 0;

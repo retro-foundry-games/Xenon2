@@ -211,7 +211,7 @@ HLE_WEAK void draw_bob_masked_at(uint16_t x, uint16_t y, const uint8_t *gfx)
         custom->bltbpt = ADDR(a0);
         custom->bltcpt = ADDR(a1);
         custom->bltdpt = ADDR(a1);
-        custom->bltsize = c.size;
+        BLTSIZE_WRITE(c.size);
         a0 += c.stride;
         a1 += 0x28;
         BLIT_WAIT();
@@ -248,7 +248,7 @@ HLE_WEAK void draw_bob_or_at(uint16_t x, uint16_t y, const uint8_t *gfx)
         custom->bltapt = ADDR(c.mask);
         custom->bltcpt = ADDR(a1);
         custom->bltdpt = ADDR(a1);
-        custom->bltsize = c.size;
+        BLTSIZE_WRITE(c.size);
         a1 += 0x28;
         BLIT_WAIT();
     }
@@ -295,7 +295,7 @@ HLE_WEAK void draw_text(const uint8_t *text, uint8_t *dest)
             custom->bltalwm = 0xffff;
             custom->bltapt = ADDR(glyph);
             custom->bltdpt = ADDR(dest);
-            custom->bltsize = 0x1001;
+            BLTSIZE_WRITE(0x1001);
             BLIT_WAIT();
         }
         dest += 2;
@@ -438,7 +438,7 @@ static void put_tile(const uint8_t *tiles, uint16_t cell, uint8_t *dest, uint16_
         custom->bltalwm = 0xffff;
         custom->bltapt = ADDR(a3);
         custom->bltdpt = ADDR(dest);
-        custom->bltsize = partial ? (uint16_t)((uint16_t)(rows_size << 2) - 3) : 0x1001;
+        BLTSIZE_WRITE(partial ? (uint16_t)((uint16_t)(rows_size << 2) - 3) : 0x1001);
         BLIT_WAIT();
         return;
     }
@@ -457,7 +457,7 @@ static void put_tile(const uint8_t *tiles, uint16_t cell, uint8_t *dest, uint16_
             custom->bltbpt = ADDR(a6);
             custom->bltcpt = ADDR(dest);
             custom->bltdpt = ADDR(dest);
-            custom->bltsize = partial ? rows_size : 0x0401;
+            BLTSIZE_WRITE(partial ? rows_size : 0x0401);
             dest += 0x28;
             a6 += 2;
             BLIT_WAIT();
@@ -484,19 +484,19 @@ HLE_WEAK void draw_background(void)
     custom->bltalwm = 0xffff;
     custom->bltcon0 = 0x09f0;
     custom->bltcon1 = 0;
-    custom->bltsize = (uint16_t)((uint16_t)(d1 << 6) + 0x28);
+    BLTSIZE_WRITE((uint16_t)((uint16_t)(d1 << 6) + 0x28));
     BLIT_WAIT();
     d1 = scroll;
     if (d1) {
         custom->bltapt = ADDR(map_image);
-        custom->bltsize = (uint16_t)((uint16_t)(d1 << 6) + 0x28);
+        BLTSIZE_WRITE((uint16_t)((uint16_t)(d1 << 6) + 0x28));
         BLIT_WAIT();
     }
     a1 += 0x50;
     custom->bltdpt = ADDR(a1);
     custom->bltcon0 = 0x01f0;
     custom->bltadat = 0;
-    custom->bltsize = 0x3028;
+    BLTSIZE_WRITE(0x3028);
     BLIT_WAIT();
     if (v_0d85)
         return;

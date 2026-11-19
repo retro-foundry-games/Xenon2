@@ -426,8 +426,8 @@ void shop_run(void)
     uint16_t i;
 
     palette_fade_out(2);
-    fn_019fe4();
-    fn_019fba();
+    sfx_stop_all();
+    music_silence();
     saved_level_init = level_init_src;
     for (;;) {
         title_in_shop();
@@ -805,7 +805,7 @@ void irq_disk_block(void)
 void work_area_save(void)
 {
     if (work_area_users == 0) {
-        const uint32_t *saved = (const uint32_t *)&screen_b[0x7800];   /* $53F00 */
+        const uint32_t *saved = panel_b;
         int i;
 
         for (i = 0; i < 320; i++)
@@ -818,8 +818,8 @@ void work_area_save(void)
 void work_area_restore(void)
 {
     if (--work_area_users == 0) {
-        uint32_t *c = (uint32_t *)&screen_a[0x7800];   /* $4B800 */
-        uint32_t *saved = (uint32_t *)&screen_b[0x7800];   /* $53F00 */
+        uint32_t *c = panel_a;
+        uint32_t *saved = panel_b;
         int i;
 
         for (i = 0; i < 320; i++) {

@@ -118,16 +118,16 @@ int point_in_player_box(int16_t d0, int16_t d1)
 /* orig $0057B6: an object that only animates */
 void animate_only(Object *a0)
 {
-    fn_002c5a(a0);
+    anim_step(a0);
 }
 
 /* orig $005908: an object that follows its target */
 void follow_target(Object *a0)
 {
-    fn_002c5a(a0);
+    anim_step(a0);
     a0->x = a0->target->x;
     a0->y = a0->target->y;
-    fn_0034ea(a0);
+    bbox_from_frame(a0);
 }
 
 /* orig $005C22: the object of list B (type $40) that belongs to a1, or the sentinel */
@@ -203,7 +203,7 @@ static void dismiss_slot5(void)
 }
 
 /* orig $005540: the basic weapon comes back when slot 0 is empty */
-static Object *refill_slot0(Object *a0, Object *a1)
+Object *refill_slot0(Object *a0, Object *a1)
 {
     if (v_0c66[0] == 0)
         weapon_94(a0, a1);
@@ -567,7 +567,7 @@ void weapon94_update(Object *a0)
     if (v_0430)
         return;
     if (v_0a6a)
-        fn_00615a(a0, 0, -9, 0, -6, &v_27c2[3]);
+        spawn_shot_object(a0, 0, -9, 0, -6, (void *const *)&v_27c2[3]);
 }
 
 /* orig $0055B2: update of weapon $98 */
@@ -576,15 +576,15 @@ void weapon98_update(Object *a0)
     if (v_0430)
         return;
     if (v_0a6a) {
-        fn_00615a(a0, -9, 0, -2, -3, &v_27c2[0]);
-        fn_00615a(a0, 9, 0, 2, -3, &v_27c2[6]);
+        spawn_shot_object(a0, -9, 0, -2, -3, (void *const *)&v_27c2[0]);
+        spawn_shot_object(a0, 9, 0, 2, -3, (void *const *)&v_27c2[6]);
     }
 }
 
 /* orig $0055E2: update of weapon $44 */
 void weapon44_update(Object *a0)
 {
-    fn_002c5a(a0);
+    anim_step(a0);
     a0->x = PLAYER->x;
     a0->y = PLAYER->y;
     if (v_0e06) {
@@ -594,7 +594,7 @@ void weapon44_update(Object *a0)
     a0->fn_draw = draw_bob_masked;
     if (v_0a6a) {
         a0->anim_delay = 1;
-        fn_00615a(a0, 0, 9, 0, 0x12, &v_27c2[9]);
+        spawn_shot_object(a0, 0, 9, 0, 0x12, (void *const *)&v_27c2[9]);
     }
 }
 
@@ -682,7 +682,7 @@ void shot_fixed_update(Object *a0)
         shot_gone(a0);
         return;
     }
-    fn_002c5a(a0);
+    anim_step(a0);
     if (a0->type == 4)
         return;
     d0 = (int32_t)(((uint32_t)(uint16_t)a0->v2a << 16) | (uint16_t)a0->v2c) >> 6;
@@ -719,7 +719,7 @@ void shot_update(Object *a0)
         shot_gone(a0);
         return;
     }
-    fn_002c5a(a0);
+    anim_step(a0);
     a0->x += a0->v2a;
     if ((uint16_t)a0->x >= 0x138) {
         shot_gone(a0);
@@ -772,7 +772,7 @@ void hit_part(Object *a0, Object *a1, uint16_t d0)
             int16_t x, y;
 
             centre(a2, &x, &y);
-            fn_0031ec(x, y, a1->flag35 ? anim_273a : anim_270e, fn_00128e);
+            spawn_effect(x, y, a1->flag35 ? anim_273a : anim_270e, draw_bob_masked);
         }
         kill_object(a2);
     }
@@ -811,7 +811,7 @@ static void explosion_at(Object *a1, const uint16_t *anim)
     int16_t x, y;
 
     centre(a1, &x, &y);
-    fn_0031ec(x, y, anim, fn_00128e);
+    spawn_effect(x, y, anim, draw_bob_masked);
 }
 
 /* orig $005A1A: an enemy a1 dies: explosion, maybe a bonus, its score */
@@ -884,7 +884,7 @@ void hit_tile(Object *a0, Object *a1, uint16_t d0)
     v_0c92 += (uint16_t)a1->v42;
     x = (int16_t)(((a1->v3e + 1) << 3) + a1->x);
     y = (int16_t)(((a1->v40 + 1) << 3) + a1->y - v_0cd0);
-    fn_0031ec(x, y, anim_273a, fn_00128e);
+    spawn_effect(x, y, anim_273a, draw_bob_masked);
     dst = a1->v46;
     src = a1->anim;
     for (rows = a1->v40; rows >= 0; rows--) {
@@ -1117,7 +1117,7 @@ void pickup_update(Object *a0)
     uint16_t d7;
     int idx;
 
-    fn_002c5a(a0);
+    anim_step(a0);
     if (a0->v28 == 0) {
         a0->y += 8;
         if (a0->y >= 0xc8) {
@@ -1133,7 +1133,7 @@ void pickup_update(Object *a0)
         if (a0->v28 > 0) {
             a0->v28 &= 7;
             if (a0->v28 == 0)
-                a0->v2a = (int16_t)fn_003132((int16_t)(0xa0 - a0->x), (int16_t)(0x64 - a0->y));
+                a0->v2a = (int16_t)direction8((int16_t)(0xa0 - a0->x), (int16_t)(0x64 - a0->y));
             a0->v28++;
             d0 = (int16_t)(0xa0 - a0->x);
             d1 = (int16_t)(0x64 - a0->y);
@@ -1150,7 +1150,7 @@ void pickup_update(Object *a0)
         a0->x += v_476c[idx >> 1];
         a0->y += v_476c[(idx >> 1) + 1];
     }
-    fn_0034ea(a0);
+    bbox_from_frame(a0);
     if (!player_hits(a0))
         return;
     d0 = a0->type;
@@ -1296,7 +1296,7 @@ void player_update(Object *a0)
     a0->fn_draw = draw_bob_masked;
     if (v_0d84) {
         v_0cda = 0;
-        fn_002c5a(a0);
+        anim_step(a0);
         if (a0->anim_delay == 0) {
             a0->fn_draw = obj_nop;
             if ((int16_t)v_0e06 >= 0x10)
@@ -1320,7 +1320,7 @@ void player_update(Object *a0)
             a1 = collide_enemies(a0);
             if (a1 != 0)
                 apply_damage(a0, a1, 0x7f);
-            fn_0034ea(a0);
+            bbox_from_frame(a0);
             goto after_hit;
         }
         if (v_0cc8 == 0) {

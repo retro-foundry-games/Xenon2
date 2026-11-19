@@ -12,11 +12,9 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "amiga/hw.h"
-#include "game.h"
+#include "amiga/hw.h"   /* (this file is built without -fpack-struct: SDL's headers need that; the game's memory is in guest.c) */
 #include "host.h"
 
-extern void game_start(void) __attribute__((weak));   /* the program's entry: the start-up flow of the original ($7032) */
 
 static SDL_Window *window;
 static SDL_Renderer *renderer;
@@ -206,8 +204,8 @@ void host_idle(void)
     /* the vertical blank: level 3, bit 5 of INTREQ; the handler is the C function in the vector table */
     intreq_state |= 0x20;
     c->intreqr = intreq_state;
-    if ((intena_state & 0x4000) && (intena_state & 0x20) && irq_vectors[2])
-        irq_vectors[2]();
+    if ((intena_state & 0x4000) && (intena_state & 0x20))
+        host_irq_dispatch(3);
 }
 
 /* ---- start ------------------------------------------------------------------------------------------------------------------------------------------------------------ */
@@ -253,12 +251,7 @@ int main(int argc, char **argv)
         if (audio)
             SDL_ResumeAudioStreamDevice(audio);
     }
-    if (!game_start) {
-        fprintf(stderr, "xenon2-sdl: the game's entry (game_start) is not there yet\n");
-        for (;;)
-            host_idle();
-    }
-    game_start();
+    host_game_start();
     for (;;)
         host_idle();   /* the program came back: keep the machine running */
 }
