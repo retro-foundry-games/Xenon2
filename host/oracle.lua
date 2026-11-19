@@ -28,6 +28,12 @@ ami.boot()
 local function read_file(name) return ami.file_read(name, 0, ami.file_size(name)) end
 local syms = load(read_file("native/" .. BUILD .. "/game_syms.lua"))()
 local blob = read_file("native/" .. BUILD .. "/game.blob")
+local origs = load(read_file("native/" .. BUILD .. "/game_origs.lua"))()
+-- a stored pointer to a C function is the original's address in the original: blob address -> the original addresses it stands for
+local blob_to_orig = {}
+for name, list in pairs(origs) do
+    if syms[name] then for _, a in ipairs(list) do blob_to_orig[syms[name]] = blob_to_orig[syms[name]] or {}; blob_to_orig[syms[name]][a] = true end end
+end
 local cases = {}
 for _, entry in ipairs(ami.dir("host/cases") or {}) do   -- one file for each module: host/cases/NAME.lua returns a list of cases
     if entry.name:match("%.lua$") then
@@ -80,7 +86,7 @@ local function check(case)
         run.a7, run.sr = SCRATCH, case.sr or 0x2700
         return run
     end
-    local function settle() if case.blitter then ami.call(syms.blitter_wait or 0, { a7 = SCRATCH, sr = 0x2700 }) end end
+    local function settle() if case.blitter and syms.blitter_wait then ami.call(syms.blitter_wait, { a7 = SCRATCH, sr = 0x2700 }) end end   -- (the blitter code waits for itself when there is no blitter_wait in the C)
     local r1 = ami.call(case.orig, fresh())
     settle()
     local after_orig = ami.read(0, CHIP)
@@ -113,11 +119,24 @@ local function check(case)
         local positions, shown = {}, 0
         for pos in pairs(differences(after_orig, after_c, 64)) do positions[#positions + 1] = pos end
         table.sort(positions)
+        -- bytes that are part of a pointer: the C stored its function where the original stored the original's address
+        local ok_bytes = {}
         for _, pos in ipairs(positions) do
+            for w = pos - 3, pos do
+                if w >= 0 and w % 2 == 0 and w + 4 <= CHIP then
+                    local c = string.unpack(">I4", after_c, w + 1)
+                    local o = string.unpack(">I4", after_orig, w + 1)
+                    if blob_to_orig[c] and blob_to_orig[c][o] then for k = w, w + 3 do ok_bytes[k] = true end end
+                end
+            end
+        end
+        for _, pos in ipairs(positions) do
+            if ok_bytes[pos] then goto continue end
             if pos >= 8 and not (pos >= syms.base and pos < syms.base + #blob) and not (pos >= SCRATCH - 0x1000 and pos < SCRATCH + 0x100) and not noise[pos] and shown < 12 then
                 shown = shown + 1
                 problems[#problems + 1] = string.format("memory $%05x orig %02x C %02x", pos, after_orig:byte(pos + 1), after_c:byte(pos + 1))
             end
+            ::continue::
         end
     end
     if #problems == 0 then
@@ -130,12 +149,22 @@ local function check(case)
     end
 end
 
+local function guarded(case)
+    return function()
+        local ok, err = pcall(check, case)
+        if not ok then
+            busy = false
+            case.refire = false
+            say("ERROR %s: %s", case.name, tostring(err))
+        end
+    end
+end
 local active = {}
 for _, case in ipairs(cases) do
     if (next(only) == nil or only[case.name]) and syms[case.c or case.name] then
         case.done = 0
         active[#active + 1] = case
-        ami.hook(case.orig, function() check(case) end)
+        ami.hook(case.orig, guarded(case))
     elseif not syms[case.c or case.name] then
         say("missing in the blob's game_syms.lua: %s", case.c or case.name)
     end

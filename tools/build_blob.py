@@ -42,3 +42,14 @@ funcs = {m.group(3).lstrip('_'): int(m.group(1), 16) + base
 (build / 'game_syms.lua').write_text('return {\n  base = 0x%x,\n  size = %d,\n%s}\n' % (
     base, len(code), ''.join('  %s = 0x%x,\n' % (k, v) for k, v in sorted(funcs.items()))))
 print('game: %d bytes at $%x, %d functions' % (len(code), base, len(funcs)))
+
+# which C function is which function of the original (the `orig $ADDR` comments): for the oracle, which accepts a stored pointer to the C function where the original
+# stores the original's address
+import glob
+origs = {}
+for f in sorted(glob.glob('src/*.c')):
+    text = open(f).read()
+    for m in re.finditer(r'orig\s+((?:\$[0-9A-Fa-f]+(?:\s*(?:,|and)\s*)?)+)(?:(?!\*/).)*?\*/\s*\n(?:HLE_WEAK\s+)?(?:static\s+)?(?:inline\s+)?[\w\s\*]+?\b(\w+)\s*\(', text, re.S):
+        for a in re.findall(r'\$([0-9A-Fa-f]+)', m.group(1)):
+            origs.setdefault(m.group(2), []).append(int(a, 16))
+(build / 'game_origs.lua').write_text('return {\n%s}\n' % ''.join('  %s = { %s },\n' % (k, ', '.join('0x%x' % a for a in v)) for k, v in sorted(origs.items())))
