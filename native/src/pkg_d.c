@@ -5,6 +5,8 @@
 
 #define FN(f) ((obj_fn)(f))
 
+static Object *alloc_c(void);
+
 /* the pattern `move.w #4,(a); move.l #$fee,2(a); move.l #$3130,6(a); move.l #$3130,$a(a); sf.b $34(a); sf.b $60(a)` */
 static void kill_object(Object *o)
 {
@@ -1441,14 +1443,266 @@ void level1_event(uint16_t d0, const uint8_t *a1)
         spawn_formation(0, a1, tabs[d0 - 1]);   /* $E60 */
 }
 
-/* orig $054E18 (-> $055942): level hooks by d0 (a1 = the record that fired, d2 its scroll value) */
-void level1_hook(uint16_t d0, const uint8_t *a1, uint16_t d2)
+/* ---- level 1's turrets: markers that draw themselves into the map ---- */
+
+/* the picture of an enemy shot: the table at $68F40 has addresses of longs, the long is the picture */
+static const void *level1_shot_gfx(uint16_t idx)
 {
-    if (d0 == 0) {
-        note_spawn_record(a1, d2);   /* $EA2 */
+    return GPTR(rd32(level_68f40[idx]));
+}
+
+static void copy4(uint8_t *dst, const uint8_t *src)
+{
+    dst[0] = src[0];
+    dst[1] = src[1];
+    dst[2] = src[2];
+    dst[3] = src[3];
+}
+
+/* the turret has left the screen: it dies */
+static int level1_turret_gone(Object *a0)
+{
+    if ((int16_t)(v_0cea + 0xd0) < a0->y) {
+        kill_object(a0);
+        return 1;
+    }
+    return 0;
+}
+
+/* orig $0552CE: update of the turret $E0 / $E4: its box, the map cells it shows (four steps), and now and then a shot */
+void level1_turret_a_update(Object *a0)
+{
+    const uint8_t *a2;
+    uint8_t *a1;
+    uint16_t d0, sum;
+    int16_t x, y, d2;
+
+    if (level1_turret_gone(a0))
+        return;
+    a0->hit[0] = (int16_t)(a0->x + 4);
+    a0->hit[2] = (int16_t)(a0->x + 4 + 0x18);
+    y = (int16_t)(a0->y - v_0cd0 + 4);
+    a0->hit[1] = y;
+    a0->hit[3] = (int16_t)(y + 0x18);
+    d0 = (uint16_t)(a0->v28 << 3);
+    a2 = a0->type == 0xe0 ? level_553b2 : level_553d2;
+    a1 = a0->v46;
+    copy4(a1, a2 + d0);
+    copy4(a1 + 0x28, a2 + d0 + 4);
+    a0->v28 = (int16_t)((a0->v28 + 1) & 3);
+    sum = (uint16_t)(((ObjMove *)a0)->shot_count + level_54e40[3]);
+    ((ObjMove *)a0)->shot_count = (uint8_t)sum;
+    if (!(sum & 0x100))
+        return;
+    ((ObjMove *)a0)->shot_count = (uint8_t)(random_next() & 0x3f);
+    x = (int16_t)(a0->x + 0x10);
+    y = (int16_t)(a0->y - v_0cd0 + 0xe);
+    d2 = 2;
+    if (a0->type != 0xe4) {
+        d2 = 6;
+        x = (int16_t)(x - 0x10);
+    }
+    spawn_enemy_shot((uint16_t)x, (uint16_t)y, (uint16_t)d2, rd16(level_54e40 + 6), level1_shot_gfx(rd16(level_54e40 + 4)));
+}
+
+/* orig $0555A2: update of the turret $E8 / $EC (sixteen steps of cells) */
+void level1_turret_b_update(Object *a0)
+{
+    const uint8_t *a2;
+    uint8_t *a1;
+    uint16_t d0, sum;
+    int16_t x, y, d2;
+
+    if (level1_turret_gone(a0))
+        return;
+    a0->hit[0] = (int16_t)(a0->x + 0xa);
+    a0->hit[2] = (int16_t)(a0->x + 0xa + 0x12);
+    y = (int16_t)(a0->y - v_0cd0 + 4);
+    a0->hit[1] = y;
+    a0->hit[3] = (int16_t)(y + 0x18);
+    d0 = (uint16_t)(((uint16_t)a0->v28 & 0xfffc) << 1);
+    a2 = a0->type == 0xe8 ? level_556ac : level_5568c;
+    a1 = a0->v46;
+    copy4(a1, a2 + d0);
+    copy4(a1 + 0x28, a2 + d0 + 4);
+    a0->v28 = (int16_t)((a0->v28 + 1) & 0xf);
+    sum = (uint16_t)(((ObjMove *)a0)->shot_count + level_54e40[0xf]);
+    ((ObjMove *)a0)->shot_count = (uint8_t)sum;
+    if (!(sum & 0x100))
+        return;
+    ((ObjMove *)a0)->shot_count = (uint8_t)(random_next() & 0x3f);
+    x = (int16_t)(a0->x + 0x20);
+    y = (int16_t)(a0->y - v_0cd0 + 0xe);
+    d2 = 2;
+    if (a0->type != 0xec) {
+        d2 = 6;
+        x = (int16_t)(x - 0x20);
+    }
+    spawn_enemy_shot((uint16_t)x, (uint16_t)y, (uint16_t)d2, rd16(level_54e40 + 0x12), level1_shot_gfx(rd16(level_54e40 + 0x10)));
+}
+
+/* orig $055402: update of the turret $D8 / $DC (twenty steps of cells, a shot every 40 steps) */
+void level1_turret_c_update(Object *a0)
+{
+    const uint8_t *a2;
+    uint16_t d0, sum;
+    int16_t x, y, d2;
+
+    if (level1_turret_gone(a0))
+        return;
+    a0->hit[0] = (int16_t)(a0->x + 8);
+    a0->hit[2] = (int16_t)(a0->x + 8 + 0x10);
+    y = (int16_t)(a0->y - v_0cd0 + 8);
+    a0->hit[1] = y;
+    a0->hit[3] = (int16_t)(y + 0x10);
+    d0 = (uint16_t)(((uint16_t)a0->v28 & 0xfffe) << 1);
+    a2 = a0->type == 0xd8 ? level_5554a : level_554fa;
+    copy4(a0->v46, a2 + d0);
+    if (a0->v28 == 0) {
+        sum = (uint16_t)(((ObjMove *)a0)->shot_count + level_54e40[9]);
+        ((ObjMove *)a0)->shot_count = (uint8_t)sum;
+        if (!(sum & 0x100))
+            return;
+        ((ObjMove *)a0)->shot_count = (uint8_t)(random_next() & 0x3f);
+    }
+    a0->v28++;
+    if (a0->v28 == 0x28) {
+        a0->v28 = 0;
         return;
     }
-    /* goes on at $5594C + 4 * d0: $559EC, $55960, $55A64, $55AE4 */
+    if (a0->v28 != 0x18)
+        return;
+    x = (int16_t)(a0->x + 0x1a);
+    y = (int16_t)(a0->y - v_0cd0 + 2);
+    d2 = 2;
+    if (a0->type != 0xdc) {
+        d2 = 6;
+        x = (int16_t)(x - 0x1a);
+    }
+    spawn_enemy_shot((uint16_t)x, (uint16_t)y, (uint16_t)d2, rd16(level_54e40 + 0xc), level1_shot_gfx(rd16(level_54e40 + 0xa)));
+}
+
+/* orig $0556DC: update of the launcher $D0 / $D4: it moves up and down (v28 is its step, v30 its place between 0 and v2a); when the
+ * player is level with it (now and then) it goes into list B and fires three shots */
+void level1_launcher_update(Object *a0)
+{
+    int16_t d0;
+    int d7;
+
+    if ((int16_t)(v_0cea + 0xd0 - v_0cd0) < a0->y) {
+        kill_object(a0);
+        return;
+    }
+    anim_step(a0);
+    a0->y = (int16_t)(a0->y + v_0cd8);
+    if (a0->v28 == 0)
+        return;
+    d0 = (int16_t)(a0->y - PLAYER->y);
+    if (d0 <= 0xa && d0 >= -0x1e && (uint8_t)random_next() < 0x32) {
+        Object *tail;
+        const uint8_t *a2;
+
+        a0->v28 = 0;
+        a0->next->prev = a0->prev;
+        a0->prev->next = a0->next;
+        tail = LIST_B->prev;
+        LIST_B->prev = a0;
+        a0->prev = tail;
+        a0->next = LIST_B;
+        tail->next = a0;
+        a2 = a0->type == 0xd4 ? anim_55236 : anim_551f8;
+        set_anim(a0, a2);
+        for (d7 = 2; d7 >= 0; d7--) {
+            int16_t d2 = a0->type == 0xd4 ? 5 : 1;
+
+            spawn_enemy_shot((uint16_t)a0->x, (uint16_t)(a0->y + 7), (uint16_t)(d2 + d7), rd16(level_54e40 + 0x16),
+                             level1_shot_gfx(rd16(level_54e40 + 0x14)));
+        }
+        return;
+    }
+    d0 = a0->v28;
+    a0->y = (int16_t)(a0->y + d0);
+    a0->v30 = (int16_t)(a0->v30 + d0);
+    if (a0->v30 == 0 || a0->v30 == a0->v2a)
+        a0->v28 = (int16_t)-a0->v28;
+    bbox_from_frame(a0);
+}
+
+/* a turret marker (spawn_marker_enemy with the update routine), hit by hit_tile, energy, no box yet */
+static Object *level1_turret(uint16_t type, const uint8_t *a1, void (*update)(void), uint16_t energy)
+{
+    Object *a0 = spawn_marker_enemy(type, a1, update);
+
+    a0->fn_hit = (void *)hit_tile;
+    a0->energy = (int16_t)energy;
+    a0->hit[0] = 0x3e8;
+    a0->hit[2] = 0x3e8;
+    return a0;
+}
+
+/* the end of the turrets' set-up: the first cells are written into the map ($46), the object hides them again when it is shot */
+static void level1_turret_cells(Object *a0, const uint8_t *a2, const uint8_t *a4)
+{
+    uint8_t *a3 = a0->v46;
+
+    a0->gfx = a2;
+    a0->anim = a4;
+    copy4(a3, a2);
+    copy4(a3 + 0x28, a2 + 4);
+    a0->v42 = 0x64;
+    a0->v3e = 1;
+    a0->v40 = 1;
+}
+
+/* orig $054E18 (-> $055942): level hooks by d0 (a1 = the record that fired, d2 its scroll value): 0 remembers the record, 1 to 3 put
+ * a turret (type $E8/$EC, $E0/$E4, $D8/$DC; w0c of the record says which side) into the map, 4 a launcher ($D0/$D4) */
+void level1_hook(uint16_t d0, const uint8_t *a1, uint16_t d2)
+{
+    int flag = rd16(a1 + 0xc) != 0;
+    Object *a0;
+
+    switch (d0) {
+    case 0:
+        note_spawn_record(a1, d2);   /* $EA2 */
+        return;
+    case 1:
+        a0 = level1_turret(flag ? 0xe8 : 0xec, a1, (void (*)(void))level1_turret_b_update, level_54e5c[0]);
+        level1_turret_cells(a0, flag ? level_556ac : level_5568c, flag ? level_556cc : level_556d4);
+        return;
+    case 2:
+        a0 = level1_turret(flag ? 0xe0 : 0xe4, a1, (void (*)(void))level1_turret_a_update, level_54e58[1]);
+        if (flag) {
+            a0->v46 += 2;
+            a0->x = (int16_t)(a0->x + 0x10);
+        }
+        a0->v46 -= 2;
+        a0->x = (int16_t)(a0->x - 0x10);
+        level1_turret_cells(a0, flag ? level_553b2 : level_553d2, flag ? level_553f2 : level_553fa);
+        return;
+    case 3:
+        a0 = level1_turret(flag ? 0xd8 : 0xdc, a1, (void (*)(void))level1_turret_c_update, level_54e5c[1]);
+        level1_turret_cells(a0, flag ? level_55adc : level_55ad4, level_5559a);
+        return;
+    case 4:
+        a0 = alloc_c();
+        a0->type = flag ? 0xd4 : 0xd0;
+        set_anim(a0, flag ? anim_55212 : anim_551d4);
+        a0->fn_update = FN(level1_launcher_update);
+        a0->fn_draw = draw_bob_masked;
+        a0->fn_hit = (void *)hit_enemy;
+        a0->energy = (int16_t)level_54e5c[2];
+        a0->flag35 = -1;
+        a0->v42 = 0xfa;
+        a0->v5e = 0;
+        a0->x = (int16_t)(rd16(a1 + 8) - 8 + (flag ? 0x10 : 0));
+        a0->y = (int16_t)(rd16(a1 + 10) - 8 - v_0cd0);
+        a0->v28 = -1;
+        a0->v2a = (int16_t)(rd16(a1 + 6) << 4);
+        a0->v30 = a0->v2a;
+        a0->v44 = 0;
+        bbox_from_frame(a0);
+        return;
+    }
 }
 
 /* orig $054E24 (-> $055806): the level's scroll events */

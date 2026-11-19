@@ -93,4 +93,8 @@ return {
     { name = "level1_boss_hit",       orig = 0x0561da, args = { "a0", "a1", "d0.w" } },
     { name = "level1_boss_part_update", orig = 0x056278, args = { "a0" } },
     { name = "level1_swap_hook",      orig = 0x054e2c, args = {} },
+    { name = "level1_turret_a_update", orig = 0x0552ce, args = { "a0" } },
+    { name = "level1_turret_b_update", orig = 0x0555a2, args = { "a0" } },
+    { name = "level1_turret_c_update", orig = 0x055402, args = { "a0" } },
+    { name = "level1_launcher_update", orig = 0x0556dc, args = { "a0" } },
 }
