@@ -82,7 +82,7 @@ uint32_t swap_screens_192(void)
  * the fractional line (z) wraps at 0x180 and moves the offset by one line (0xA0 bytes), the offset wraps at 0x7800. */
 void stars_scroll(uint16_t d0)
 {
-    uint16_t d5 = *(const uint16_t *)((const uint8_t *)(star_speed + 1) + (int16_t)(uint16_t)(d0 * 2));
+    uint16_t d5 = *(const uint16_t *)((const uint8_t *)(star_speed + 16) + (int16_t)(uint16_t)(d0 * 2));
     uint16_t step = (uint16_t)(d0 << 3);
 
     for (int i = 0; i < 48; i++) {
