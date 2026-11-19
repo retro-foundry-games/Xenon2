@@ -93,6 +93,7 @@ local function check(case)
     case.calls = (case.calls or 0) + 1
     if case.done >= (case.samples or SAMPLES) or (case.calls - 1) % STRIDE ~= 0 then return end
     busy = true
+    local undo = case.setup and case.setup(ami, case.calls)   -- memory the case sets before the state is taken; what it returns puts it back after the comparison
     -- the blitter may still be running the previous frame's blit: let it finish, or its writes land in the original's run only
     ami.write(BLITWAIT, "\x08\x39\x00\x06\x00\xdf\xf0\x02\x66\xf6\x4e\x75")   -- btst #6,$dff002 / bne.b -10 / rts
     ami.call(BLITWAIT, { a7 = SCRATCH, sr = 0x2700 })
@@ -100,7 +101,10 @@ local function check(case)
     for _, r in ipairs(DATA_REGS) do regs[r] = ami.reg(r) end
     regs.a7, regs.sr, regs.pc = ami.reg("a7"), ami.reg("sr"), ami.reg("pc")
     local before = ami.read(0, CHIP)
-    in_call = { case = case, before = before, regs = regs, frame = ami.frame() }
+    local live = {}   -- the registers the program has (put back after a hung call); the call itself gets `regs`, which the case may change (on both sides)
+    for k, v in pairs(regs) do live[k] = v end
+    if case.mutate then case.mutate(regs, case.calls) end
+    in_call = { case = case, before = before, regs = live, frame = ami.frame() }
     local function fresh()
         local run = {}
         for k, v in pairs(regs) do run[k] = v end
@@ -114,7 +118,9 @@ local function check(case)
         if case.input then ami.write(0x2034, INPUT) end   -- (swap_screens: the player's stick and fire for the frame)
     end
     patch_original()
+    if DEBUG then say("%s: original run 1 at frame %d", case.name, ami.frame()) end
     local r1 = ami.call(case.orig, fresh())
+    if DEBUG then say("%s: original run 1 done at frame %d", case.name, ami.frame()) end
     settle()
     local after_orig = ami.read(0, CHIP)
     ami.write(0, before)
@@ -131,10 +137,12 @@ local function check(case)
     patch_original()             -- (the same bytes of the original are patched in both runs, so that the memory compares)
     for _, n in ipairs(waits.c) do if syms[n] and n ~= (case.c or case.name) then ami.write(syms[n], "\x4e\x75") end end
     if case.input then ami.write(syms.swap_screens, INPUT) end
+    if DEBUG then say("%s: C run at frame %d", case.name, ami.frame()) end
     local r2 = ami.call(syms[case.c or case.name], fresh())
     settle()
     local after_c = ami.read(0, CHIP)
     ami.write(0, before)
+    if undo then undo() end
     busy = false
     in_call = nil
     case.refire = true
@@ -205,10 +213,18 @@ for _, case in ipairs(cases) do
     if (next(only) == nil or only[case.name]) and syms[case.c or case.name] then
         case.done = 0
         active[#active + 1] = case
-        ami.hook(case.orig, guarded(case))
+        ami.hook(case.hook or case.orig, guarded(case))   -- (case.hook: another address, one that the program passes often, at which the function is called with state the case sets up)
     elseif not syms[case.c or case.name] then
         say("missing in the blob's game_syms.lua: %s", case.c or case.name)
     end
+end
+
+-- cover=ADDR,ADDR,... (hex): how often the original executes these addresses while it is run by the cases (reported at the end; an address that is a case's entry is not counted)
+local cover_hits, case_entries = {}, {}
+for _, case in ipairs(active) do case_entries[case.hook or case.orig] = true end
+for a in (args:match("cover=([%x,]+)") or ""):gmatch("%x+") do
+    local addr = tonumber(a, 16)
+    if not case_entries[addr] then cover_hits[addr] = 0; ami.hook(addr, function() cover_hits[addr] = cover_hits[addr] + 1 end) end
 end
 
 -- the joystick of --script-args joy=F:DIRS,... (frames from the start of the run)
@@ -244,7 +260,7 @@ while ami.frame() - start < UNTIL do
         c.case.hung = true
         c.case.done = SAMPLES
         c.case.refire = true
-        say("HUNG %s: the call did not return in %d frames (not compared; it waits for something)", c.case.name, c.case.frames or 60)
+        say("HUNG %s: the call did not return in %d frames (not compared; it waits for something; pc $%x)", c.case.name, c.case.frames or 60, ami.reg("pc"))
     end
     if joys[f] then ami.joystick(joys[f]) end
     if DEBUG and f % 20 == 0 then say("f%d pc=%06x busy=%s", f, ami.reg("pc"), tostring(busy)) end
@@ -256,6 +272,10 @@ while ami.frame() - start < UNTIL do
     end
 end
 say("--- %d frames; samples per function up to %d", UNTIL, SAMPLES)
+local reached, missed = {}, {}
+for addr, n in pairs(cover_hits) do if n > 0 then reached[#reached + 1] = string.format("%x", addr) else missed[#missed + 1] = string.format("%x", addr) end end
+table.sort(reached); table.sort(missed)
+if next(cover_hits) then say("cover: reached %s", table.concat(reached, " ")); say("cover: not reached %s", table.concat(missed, " ")) end
 for _, case in ipairs(active) do
     say("%-22s calls %5d  compared %3d  ok %3d  differ %3d", case.name, case.calls or 0, case.done, case.ok or 0, case.bad or 0)
 end
