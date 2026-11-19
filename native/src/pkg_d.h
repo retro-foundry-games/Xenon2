@@ -5,22 +5,21 @@
 /* a hit routine (an object's fn_hit): a0 = the shooter's object, a1 = the object that was hit, d0 = the damage */
 typedef void (*hit_fn)(Object *a0, Object *a1, uint16_t d0);
 
-/* callees without C yet (arguments in the registers named in the comment) */
 extern uint32_t random_next(void);                                         /* $1F50 */
-extern Object *fn_000e54(void);                                            /* the level's object allocator: a0 */
-extern void fn_000e60(const uint16_t *a2);                                 /* a2 = a table of the level */
-extern void fn_000e8a(const void *a1, uint16_t d0, uint16_t d1, uint16_t d2, uint16_t d3);
-extern void fn_000e90(const void *a0, uint16_t d0, uint16_t d1);
-extern void fn_000f56(uint16_t d0, const uint16_t *a2);
-extern void fn_001438(Object *a0);
-extern void fn_001bd0(uint16_t d0, uint16_t d1, uint16_t d2, uint16_t d3, const void *a1);
-extern void fn_006912(Object *a0);
-extern void fn_003868(Object *a0); extern void fn_0039a2(Object *a0); extern void fn_003b4a(Object *a0); extern void fn_003b94(Object *a0);
-extern void fn_003c7a(Object *a0); extern void fn_003cdc(Object *a0); extern void fn_003e2c(Object *a0); extern void fn_003f3a(Object *a0);
-extern void fn_004094(Object *a0); extern void fn_00415a(Object *a0); extern void fn_004340(Object *a0); extern void fn_0042a6(Object *a0);
-extern void fn_055e2c(void);
-extern void fn_000e5a(void); extern void fn_000ea2(void); extern void fn_000e12(Object *a0); extern void fn_000f2c(Object *a0);
-extern void fn_056278(Object *a0); extern void fn_0561da(Object *a0);
+void weapon_shield_draw(Object *a0);
+void area_damage(Object *a0, int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_t dmg);
+void debris_burst(Object *a0, int16_t d7, uint16_t x, uint16_t y, uint16_t w, uint16_t h, const uint8_t *a2);
+void spawn_bonuses(int16_t d7);
+void spinner_update(Object *a0); void drill_update(Object *a0); void weaponc0_update(Object *a0); void weaponb0_update(Object *a0);
+void pod_decoration_update(Object *a0); void weapon2c_update(Object *a0); void weapon4c_update(Object *a0); void weapon20_update(Object *a0);
+void beam_update(Object *a0); void beam_draw(Object *a0); void weapon34_update(Object *a0); void pod_trail_update(Object *a0);
+void weapon90_update(Object *a0); void shell_update(Object *a0); void weapon38_update(Object *a0);
+void level1_spawn_units(void); void level1_spawn_unit(uint16_t d6); void level1_head_update(Object *a0);
+void level1_hit_free(Object *a0, Object *a1, uint16_t d0); void level1_segment_update(Object *a0);
+void level1_hit_piece_a(Object *a0, Object *a1, uint16_t d0); void level1_hit_piece_b(Object *a0, Object *a1, uint16_t d0);
+void level1_debris_update(Object *a0); void level1_boss_flash(Object *a0);
+void level1_boss_hit(Object *a0, Object *a1, uint16_t d0); void level1_boss_part_update(Object *a0);
+void level1_swap_hook(void);
 void weapon94_update(Object *a0); void weapon98_update(Object *a0); void weapon44_update(Object *a0);
 void weapon9c_update(Object *a0); void weaponA0_update(Object *a0);
 void enemy_killed(Object *a0, Object *a1);

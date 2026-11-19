@@ -83,8 +83,56 @@ static void joystick_registers(void)
     CIAA_PRA = (uint8_t)(0xff & ~(joy_fire ? 0xc0 : 0));
 }
 
+/* ---- the keyboard: a key goes to the CIA A serial data register in the Amiga's encoding and raises the level 2 interrupt ($68) ----------------------------------------------------- */
+static int amiga_raw(SDL_Scancode s)
+{
+    static const char rows[3][11] = { "QWERTYUIOP", "ASDFGHJKL", "ZXCVBNM" };
+    static const int first[3] = { 0x10, 0x20, 0x31 };
+
+    if (s >= SDL_SCANCODE_A && s <= SDL_SCANCODE_Z) {
+        char letter = (char)('A' + (s - SDL_SCANCODE_A));
+
+        for (int r = 0; r < 3; r++)
+            for (int i = 0; rows[r][i]; i++)
+                if (rows[r][i] == letter)
+                    return first[r] + i;
+    }
+    if (s >= SDL_SCANCODE_1 && s <= SDL_SCANCODE_9) return 0x01 + (s - SDL_SCANCODE_1);
+    if (s == SDL_SCANCODE_0) return 0x0a;
+    if (s >= SDL_SCANCODE_F1 && s <= SDL_SCANCODE_F10) return 0x50 + (s - SDL_SCANCODE_F1);
+    switch (s) {
+    case SDL_SCANCODE_TAB: return 0x42;
+    case SDL_SCANCODE_BACKSPACE: return 0x41;
+    case SDL_SCANCODE_DELETE: return 0x46;
+    case SDL_SCANCODE_P: return 0x19;
+    default: return -1;   /* (the arrows, Ctrl, Space and Return are the joystick; Esc quits) */
+    }
+}
+
+static int key_queue[32], key_queue_n;
+
+static void deliver_keys(void)
+{
+    for (int i = 0; i < key_queue_n; i++) {
+        int code = key_queue[i];   /* bit 7: released */
+        uint8_t sdr = (uint8_t)~((code << 1) | (code >> 7));
+
+        CIA_BYTE(0xbfec01, 0) = sdr;
+        CIA_BYTE(0xbfed01, 0) |= 0x08;   /* CIA A interrupt control: the serial port (a key) is the source */
+        intreq_state |= 0x08;
+        custom->intreqr = intreq_state;
+        if ((intena_state & 0x4000) && (intena_state & 0x08))
+            host_irq_dispatch(2);
+    }
+    key_queue_n = 0;
+}
+
 static void key(SDL_Scancode s, int down)
 {
+    int raw = amiga_raw(s);
+
+    if (raw >= 0 && key_queue_n < 32)
+        key_queue[key_queue_n++] = raw | (down ? 0 : 0x80);
     switch (s) {
     case SDL_SCANCODE_UP: joy_up = down; break;
     case SDL_SCANCODE_DOWN: joy_down = down; break;
@@ -221,6 +269,7 @@ static void end_of_frame(void)
         }
     }
     joystick_registers();
+    deliver_keys();
     frames++;
     if (max_frames >= 0 && frames >= max_frames)
         quitting = 1;

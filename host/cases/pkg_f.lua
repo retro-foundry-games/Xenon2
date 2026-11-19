@@ -12,4 +12,6 @@ return {
     { name = "title_restore",      orig = 0x00847e, args = {} },
     { name = "stars_init_dots",    orig = 0x007d9e, args = {} },
     { name = "title_stars_start",  orig = 0x008442, args = {} },
+    -- never reached by the scenarios (calls 0): the stretched logo
+    { name = "draw_logo_scaled",      orig = 0x008092, args = { "a0", "d0.w", "d1.w", "d2.w", "d3.w" } },
 }

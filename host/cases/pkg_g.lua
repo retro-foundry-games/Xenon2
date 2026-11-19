@@ -40,4 +40,5 @@ return {
     { name = "enemy_update",           orig = 0x0096b6, args = { "a0" } },
     { name = "obj_script_run",         orig = 0x009734, args = { "a0" } },
     { name = "obj_script_step",        orig = 0x009740, args = { "a0" } },
+    { name = "enemy_update_no_anim",  orig = 0x0096ba, args = { "a0" } },
 }

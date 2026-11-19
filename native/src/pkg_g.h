@@ -41,6 +41,7 @@ void work_area_restore(void);                               /* orig $9618 */
 void enemy_update_keep_seed(Object *o);                     /* orig $9670 */
 void enemy_update_seeded(Object *o);                        /* orig $9682 */
 void enemy_update(Object *o);                               /* orig $96B6 */
+void enemy_update_no_anim(Object *o);                       /* orig $96BA */
 void obj_script_run(Object *o);                             /* orig $9734 */
 void obj_script_step(Object *o);                            /* orig $9740 */
 

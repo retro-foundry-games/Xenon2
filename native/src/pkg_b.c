@@ -5,6 +5,7 @@
 
 #define CIAA_CRA CIA_BYTE(0xbfe001, 0xe)    /* bit 7: the mains frequency (50 Hz) */
 #define CIAA_ICR CIA_BYTE(0xbfe001, 0xd)
+#define CIAA_SDR CIA_BYTE(0xbfe001, 0xc)    /* the serial data register: the keyboard's key code */
 #define CIAB_ICR CIA_BYTE(0xbfd000, 0xd)
 
 /* The starfield of the game keeps in each record of `stars` (struct Star of pkg_f): x = offset in the screen, y = bit mask, z = fractional line. */
@@ -135,15 +136,45 @@ void stars_draw(void)
 Object *obj_free_pop(void)
 {
     Object *a0 = free_obj;
+    Object *next, *prev;
 
     if (a0 != 0) {
         free_obj = a0->next;
-        a0->flag34 = 0;
-        a0->flag60 = 0;
-        a0->flag61 = 0;
-        return a0;
+        goto clear;
     }
-    /* goes on at $2436 */
+    /* $2436: the pool is empty: take an object away from the lists, the effects first (obj_list[3], obj_list[4] is the front list, obj_list[2] the enemies) */
+    a0 = &obj_list[3];
+    for (;;) {
+        a0 = a0->prev;
+        if (a0->type == 4 || a0->type == 0xc || a0->type == 0x10)
+            goto steal;
+        if (a0->type == 0)
+            break;
+    }
+    a0 = obj_list[3].prev;
+    if (a0->type != 0)
+        goto steal;
+    a0 = obj_list[4].prev;
+    if (a0->type != 0)
+        goto steal;
+    a0 = obj_list[2].prev;   /* $247E: from the enemies' list head on, the first dead one or one far enough down */
+    for (;;) {
+        if ((int16_t)a0->type >= 0xc8 || a0->type == 4)
+            goto steal;
+        a0 = a0->prev;
+        if (a0->type == 0)
+            break;
+    }
+    a0 = obj_list[2].prev;
+steal:
+    next = a0->next;   /* $2464: take it out of its list */
+    prev = a0->prev;
+    next->prev = prev;
+    prev->next = next;
+clear:
+    a0->flag34 = 0;
+    a0->flag60 = 0;
+    a0->flag61 = 0;
     return a0;
 }
 
@@ -188,6 +219,26 @@ void irq_vblank(void)
         music_tick_fn();
     }
     SETCLR_WRITE(intreq, 0x70);
+}
+
+/* orig $000FAC: the level 2 interrupt (the keyboard through CIA A's serial port): when the port's flag is set the key code, inverted and
+ * rotated right so that bit 7 is the release flag, is kept in key_code unless it is a release; the handshake is a pulse of 85 us
+ * with the port in output mode.  Ends with rte. */
+void irq_keyboard(void)
+{
+    if (CIAA_ICR & 0x08) {
+        uint8_t d0 = (uint8_t)~CIAA_SDR;
+        volatile uint16_t n = 0x36;
+
+        d0 = (uint8_t)((d0 >> 1) | (d0 << 7));
+        if (!(d0 & 0x80))
+            key_code = d0;
+        CIAA_CRA |= 0x40;
+        do {
+        } while (n--);
+        CIAA_CRA &= (uint8_t)~0x40;
+    }
+    SETCLR_WRITE(intreq, 0x0008);
 }
 
 /* orig $002098: the level 3 interrupt of the title and menu: every third vertical blank first runs two routines of the title on the
@@ -469,7 +520,7 @@ static void main_loop(void)
                 free_object_chain(obj_list[2].prev);
                 free_object_chain(obj_list[4].prev);
                 free_object_chain(obj_list[3].prev);
-                fn_006eca();
+                switch_player_after_clear();
                 music_restart_if_enabled();
                 continue;
             }
@@ -542,7 +593,7 @@ static void hardware_init(void)
     uint8_t sink;
 
     irq_vectors[0] = irq_disk_block;
-    irq_vectors[1] = fn_000fac;
+    irq_vectors[1] = irq_keyboard;
     irq_vectors[2] = irq_vblank;
     CIAB_PRB = 0xff;
     CIAB_PRB = 0x87;

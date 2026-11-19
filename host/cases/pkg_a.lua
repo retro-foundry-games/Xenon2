@@ -11,4 +11,8 @@ return {
     { name = "redraw_energy_bar",  orig = 0x0016be, args = {} },
     { name = "draw_status_digit",  orig = 0x00176e, args = {} },
     { name = "draw_background",    orig = 0x0017d6, args = {} },
+    -- never reached by the scenarios (calls 0)
+    { name = "draw_tile_grid",        orig = 0x0018b6, args = { "a1", "d0.w", "d1.w", "d2.w", "d3.w" }, blitter = true },
+    { name = "draw_tile_grid_flash",  orig = 0x001bd0, args = { "a1", "d0.w", "d1.w", "d2.w", "d3.w" }, blitter = true },
+    { name = "draw_bob_behind_map",   orig = 0x001438, args = { "a0" }, blitter = true },
 }

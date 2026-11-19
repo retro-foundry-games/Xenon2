@@ -22,4 +22,7 @@ return {
     { name = "reset_extra_objects",   orig = 0x00644e, args = {} },
     { name = "swap_player_state",     orig = 0x006e70, args = {} },
     { name = "free_object_chain",     orig = 0x006862, args = { "a1" } },
+    -- never reached by the scenarios (calls 0)
+    { name = "draw_gauge",            orig = 0x00635e, args = { "d0.w", "d1.w", "d2.w", "d3.w" }, blitter = true },
+    { name = "switch_player_after_clear", orig = 0x006eca, args = {} },
 }

@@ -22,6 +22,7 @@ void anim_step(Object *o);
 void anim_op_jump(Object *o, const uint8_t *a1);
 void anim_op_free(Object *o, const uint8_t *a1);
 void map_tile_mask(uint16_t x, uint16_t y, uint16_t rows);
+void map_tile_mask2(uint16_t x, uint16_t y, uint16_t rows);
 uint16_t player_tile_hit(Object *o);
 Object *collide_enemies(Object *o);
 Object *scan_boxes(Object *a1, int16_t x0, int16_t y0, int16_t x1, int16_t y1);
@@ -38,12 +39,13 @@ void scroll_events(void);
 void run_updates(Object *a0);
 void run_draws(Object *a0);
 void update_all(void);
-void spawn_debris(Object *a1);
+void spawn_debris(Object *a0, Object *a1, uint16_t d0);
+void group_box_update(Object *a0);
 Object *spawn_wave_326c(Object *a0, const uint8_t *a1);
 Object *spawn_marker_enemy(uint16_t d0, const uint8_t *a1, void (*a2)(void));
 Object *spawn_marker_front(uint16_t d0, const uint8_t *a1, void (*a2)(void));
 
 void enemy_shot_update(Object *a0);
-void spawn_enemy_shot(uint16_t x, uint16_t y, uint16_t angle, uint16_t steps, const void *gfx);
+Object *spawn_enemy_shot(uint16_t x, uint16_t y, uint16_t angle, uint16_t steps, const void *gfx);
 
 #endif

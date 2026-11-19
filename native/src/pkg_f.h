@@ -23,6 +23,5 @@ void stars_init_dots(void);
 void title_restore(void);
 void title_credits(void);
 
-/* callees without C yet (registers as the original takes them) */
-extern void fn_008092(const uint16_t *gfx, int16_t d0, int16_t d1, int16_t d2, int16_t d3);
+void draw_logo_scaled(const uint16_t *gfx, int16_t x, int16_t y, int16_t width, int16_t rows);
 #endif

@@ -42,7 +42,7 @@ static uint16_t lsr_w(uint16_t v, int16_t count)
 
 /* inlined: $107E, $1084, $1096, $109A, $10A8, $10B4, $10C4, $10C8, $10CE, $10D6, $10DA, $10E0, $10E8, $10F2
  * (the clip; returns 0 where the original returns from its caller) */
-static int clip_bob(Clip *c, int16_t x, int16_t y)
+static int clip_bob(Clip *c, int16_t x, int16_t y, int with_map)
 {
     const uint8_t *a0 = c->src;
     int16_t d0 = x, d1 = y, d3, d4, d5, d6, d7;
@@ -52,6 +52,8 @@ static int clip_bob(Clip *c, int16_t x, int16_t y)
     if (d0 >= 0x140)
         return 0;
     d1 = (int16_t)(d1 - (int16_t)rd16(a0)); a0 += 2;
+    if (with_map)   /* $105C: the masks of the map under the bob first (inlined: $2F66) */
+        map_tile_mask2((uint16_t)d0, (uint16_t)d1, rd16(a0 + 2));
     d5 = (int16_t)(clip_bottom - d1);
     if (d5 < 0)
         return 0;
@@ -196,7 +198,7 @@ HLE_WEAK void draw_bob_masked_at(uint16_t x, uint16_t y, const uint8_t *gfx)
     uint8_t *a1;
 
     c.src = gfx;
-    if (!clip_bob(&c, (int16_t)x, (int16_t)y))
+    if (!clip_bob(&c, (int16_t)x, (int16_t)y, 0))
         return;
     blit_edges(&c);
     d0 = (uint16_t)c.shift;
@@ -232,7 +234,7 @@ HLE_WEAK void draw_bob_or_at(uint16_t x, uint16_t y, const uint8_t *gfx)
     uint8_t *a1;
 
     c.src = gfx;
-    if (!clip_bob(&c, (int16_t)x, (int16_t)y))
+    if (!clip_bob(&c, (int16_t)x, (int16_t)y, 0))
         return;
     blit_edges(&c);
     d0 = (uint16_t)c.shift;
@@ -470,10 +472,7 @@ HLE_WEAK void draw_background(void)
     uint16_t scroll = (uint16_t)(v_0436 >> 16);
     uint16_t d1 = (uint16_t)(0xc0 - scroll);
     uint8_t *a0 = map_image + (int16_t)(uint16_t)(scroll * 0x50u);
-    uint8_t *a1 = draw_screen, *a4, *a5;
-    const uint8_t *cells;
-    const uint8_t *tiles;
-    int16_t d2, rows;
+    uint8_t *a1 = draw_screen;
 
     custom->bltapt = ADDR(a0);
     custom->bltdpt = ADDR(a1);
@@ -500,17 +499,62 @@ HLE_WEAK void draw_background(void)
     if (v_0d85)
         return;
 
-    cells = level_init_src + (int16_t)v_0cce;
-    rows = 0xc;
-    d2 = (int16_t)-(int16_t)v_0cd6;
-    a0 = draw_screen;
-    a4 = a0 + 0x7800;
-    a5 = a0 + 0x6ea0;
-    tiles = tile_gfx;
+    draw_tile_grid(level_init_src + (int16_t)v_0cce, 0x13, 0xc, (int16_t)-(int16_t)v_0cd6, 0);
+}
+
+/* one tile as $1BD0 puts it: a plain cell is the fixed block at $1EA2, a cell with bit 15 is OR-ed into planes 0 to 2 by its mask and
+ * cleared in plane 3 (a flash) */
+static void put_tile_flash(const uint8_t *tiles, uint16_t cell, uint8_t *dest, uint16_t rows_size, int partial)
+{
+    const uint8_t *a3;
+
+    if (!(cell & 0x8000)) {
+        custom->bltcon0 = 0x09f0;
+        custom->bltcon1 = 0;
+        custom->bltamod = 0;
+        custom->bltdmod = 0x26;
+        custom->bltafwm = 0xffff;
+        custom->bltalwm = 0xffff;
+        custom->bltapt = ADDR(v_1ea2);
+        custom->bltdpt = ADDR(dest);
+        BLTSIZE_WRITE(partial ? (uint16_t)((uint16_t)(rows_size << 2) - 3) : 0x1001);
+        BLIT_WAIT();
+        return;
+    }
+    a3 = tiles + ((uint32_t)(cell & 0x7fff) << 4);
+    custom->bltcon0 = 0x0bfa;
+    custom->bltcon1 = 0;
+    custom->bltamod = 8;
+    custom->bltcmod = 0x9e;
+    custom->bltdmod = 0x9e;
+    for (int plane = 0; plane < 4; plane++) {
+        if (plane == 3)
+            custom->bltcon0 = 0x0b0a;
+        custom->bltapt = ADDR(a3);
+        custom->bltcpt = ADDR(dest);
+        custom->bltdpt = ADDR(dest);
+        BLTSIZE_WRITE(partial ? rows_size : 0x0401);
+        dest += 0x28;
+        BLIT_WAIT();
+    }
+}
+
+typedef void (*tile_fn)(const uint8_t *tiles, uint16_t cell, uint8_t *dest, uint16_t rows_size, int partial);
+
+/* rows of cells (words: 0 nothing, bit 15 a tile with a mask, else a plain tile) put on the screen at line y and byte x / 4; cols + 1
+ * cells a row, rows + 1 rows of 16 lines; from the row that reaches line $6EA0 / $A0 on, one blit a cell as far as the end of the screen */
+static void tile_grid(const uint8_t *cells, uint16_t cols, int16_t rows, int16_t d2, uint16_t x, tile_fn put)
+{
+    uint8_t *a0 = draw_screen;
+    uint8_t *a4 = a0 + 0x7800, *a5 = a0 + 0x6ea0;
+    const uint8_t *tiles = tile_gfx;
+    uint16_t xb = (uint16_t)(x >> 2);
+
+    a0 += (int16_t)xb;
     custom->bltafwm = 0xffff;
     custom->bltalwm = 0xffff;
     while (d2 <= -16) {
-        cells += 40;
+        cells += 2 * (int16_t)cols + 2;
         d2 = (int16_t)(d2 + 0x10);
         if (rows-- == 0)
             return;
@@ -524,17 +568,17 @@ HLE_WEAK void draw_background(void)
             uint16_t size;
             uint8_t *col = a0;
 
+            d7 = (d7 & 0xffff0000u) | (uint16_t)(d7 + xb);
             if (d7 / 0xa0 <= 0xffff)
                 d7 = ((d7 % 0xa0) << 16) | (d7 / 0xa0);
             size = (uint16_t)((uint16_t)((uint16_t)d7 << 6) + 1);
-            for (int n = 0; n < 20; n++, col += 2) {
+            for (int n = 0; n <= (int)cols; n++, col += 2) {
                 uint16_t cell = rd16(cells);
 
                 cells += 2;
-
                 if (cell == 0)
                     continue;
-                put_tile(tiles, cell, col, size, 1);
+                put(tiles, cell, col, size, 1);
                 if (!(cell & 0x8000))
                     size = (uint16_t)((uint16_t)(size << 2) >> 2);   /* lsl.w #2 .. lsr.w #2 */
             }
@@ -543,13 +587,12 @@ HLE_WEAK void draw_background(void)
         {
             uint8_t *col = a0;
 
-            for (int n = 0; n < 20; n++, col += 2) {
+            for (int n = 0; n <= (int)cols; n++, col += 2) {
                 uint16_t cell = rd16(cells);
 
                 cells += 2;
-
                 if (cell != 0)
-                    put_tile(tiles, cell, col, 0, 0);
+                    put(tiles, cell, col, 0, 0);
             }
         }
         a0 += 0xa00;
@@ -557,5 +600,67 @@ HLE_WEAK void draw_background(void)
             return;
         if (rows-- == 0)
             return;
+    }
+}
+
+/* orig $E8A, $18B6: draw a block of map cells (cols + 1 by rows + 1) at line y and byte x / 4 of the screen; HLE: blitter */
+HLE_WEAK void draw_tile_grid(const uint8_t *cells, uint16_t cols, uint16_t rows, int16_t y, uint16_t x)
+{
+    tile_grid(cells, cols, (int16_t)rows, y, x, put_tile);
+}
+
+/* orig $E96, $1BD0: the same with the cells drawn as flashes; HLE: blitter */
+HLE_WEAK void draw_tile_grid_flash(const uint8_t *cells, uint16_t cols, uint16_t rows, int16_t y, uint16_t x)
+{
+    tile_grid(cells, cols, (int16_t)rows, y, x, put_tile_flash);
+}
+
+/* orig $EBA, $1438: draw the bob of an object masked, and hidden where the map's tiles under it are solid; HLE: blitter */
+HLE_WEAK void draw_bob_behind_map(Object *obj)
+{
+    Clip c;
+    uint16_t d0, size;
+    const uint8_t *a0;
+    uint8_t *a1;
+
+    c.src = (const uint8_t *)obj->gfx;
+    if (!clip_bob(&c, obj->x, obj->y, 1))
+        return;
+    a0 = c.src;
+    a1 = c.dst;
+    size = c.size;
+    custom->bltapt = ADDR(a0 + 8);
+    custom->bltcpt = ADDR(tile_mask_buf);
+    custom->bltdpt = ADDR(tile_mask_buf);
+    custom->bltamod = 6;
+    custom->bltcmod = 0;
+    custom->bltdmod = 0;
+    custom->bltafwm = 0xffff;
+    custom->bltalwm = 0;
+    d0 = (uint16_t)c.shift;
+    custom->bltcon0 = (uint16_t)(((d0 >> 4) | (d0 << 12)) | 0x0b50);
+    custom->bltcon1 = 0;
+    BLTSIZE_WRITE((uint16_t)(size + 2));
+    BLIT_WAIT();
+    custom->bltafwm = 0xffff;
+    custom->bltalwm = 0xffff;
+    if (c.xend > 0x140)
+        custom->bltalwm = 0;
+    custom->bltamod = 0;
+    custom->bltbmod = 6;
+    custom->bltcmod = 0x9c;
+    custom->bltdmod = 0x9c;
+    d0 = (uint16_t)((d0 >> 4) | (d0 << 12));
+    custom->bltcon1 = d0;
+    custom->bltcon0 = 0x0fca;
+    for (int plane = 0; plane < 4; plane++) {
+        custom->bltapt = ADDR(tile_mask_buf);
+        custom->bltbpt = ADDR(a0);
+        custom->bltcpt = ADDR(a1);
+        custom->bltdpt = ADDR(a1);
+        BLTSIZE_WRITE((uint16_t)(size + 2));
+        a0 += 2;
+        a1 += 0x28;
+        BLIT_WAIT();
     }
 }

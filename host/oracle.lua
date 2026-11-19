@@ -135,6 +135,8 @@ local function check(case)
         local positions, shown = {}, 0
         for pos in pairs(differences(after_orig, after_c, 64)) do positions[#positions + 1] = pos end
         table.sort(positions)
+        local dskpt = (ami.custom(0x20) << 16) | ami.custom(0x22)
+        local dsklen = (ami.custom(0x24) & 0x3fff) * 2
         -- bytes that are part of a pointer: the C stored its function where the original stored the original's address
         local ok_bytes = {}
         for _, pos in ipairs(positions) do
@@ -147,7 +149,7 @@ local function check(case)
             end
         end
         for _, pos in ipairs(positions) do
-            if ok_bytes[pos] then goto continue end
+            if ok_bytes[pos] or (pos >= dskpt and pos < dskpt + dsklen) then goto continue end   -- (the disk DMA fills its buffer at its own pace)
             if pos >= 8 and not (pos >= syms.base and pos < syms.base + #blob) and not (pos >= SCRATCH - 0x1000 and pos < SCRATCH + 0x100) and not noise[pos] and shown < 12 then
                 shown = shown + 1
                 problems[#problems + 1] = string.format("memory $%05x orig %02x C %02x", pos, after_orig:byte(pos + 1), after_c:byte(pos + 1))

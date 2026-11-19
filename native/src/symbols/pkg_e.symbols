@@ -91,3 +91,4 @@ tab v_796e 0x796e uint16_t 1
 var v_8428 0x8428 uint8_t
 arr v_8836 0x8836 uint8_t 19
 var player_gfx 0xebe2 uint8_t
+arr gauge_pics 0x6336 uint8_t * 10                ; the pictures of the gauge, empty to full

@@ -376,7 +376,7 @@ void frame_update(void)
     }
     if (v_0434 != 0) {
         v_0434--;
-        fn_00635e(0x98, 8, v_0434, 0x88);
+        draw_gauge(0x98, 8, v_0434, 0x88);
         if (v_0434 == 0) {
             v_0432 = 0xffff;
             v_0414 = 0x10;
@@ -384,7 +384,7 @@ void frame_update(void)
     }
     if (v_0ca2 != 0) {
         v_0ca2--;
-        fn_00635e(0x98, 0xa0, v_0ca2, 0xaa);
+        draw_gauge(0x98, 0xa0, v_0ca2, 0xaa);
         if (v_0ca2 == 0)
             reset_extra_objects();
     }
@@ -586,7 +586,7 @@ void swap_player_state(void)
         lb[i] = t;
     }
     cur_player ^= 1;
-    fn_054e2c();
+    level1_swap_hook();
 }
 
 /* orig $006fe8: all 16 palette entries, the copy and the chip's, to black */
@@ -646,9 +646,15 @@ void respawn_player(void)
 /* orig $006ec6: after a death: clears the level objects and, if the other player is in, gives the turn to him */
 void switch_player(void)
 {
+    clear_level_objects();
+    switch_player_after_clear();
+}
+
+/* orig $006eca: switch_player after the level objects are cleared */
+void switch_player_after_clear(void)
+{
     uint16_t d0;
 
-    clear_level_objects();
     d0 = cur_player;
     if (v_0a03[d0]) {
         d0 ^= 1;
@@ -667,6 +673,19 @@ void switch_player(void)
     }
     respawn_player();
     v_0e06 = 8;
+}
+
+/* orig $00635E: a gauge of ten steps: the picture for fill / (max + 1) * 10 at (x, y); the original's table has no picture for a full
+ * gauge (it would draw code bytes), nothing is drawn then */
+void draw_gauge(uint16_t x, uint16_t y, uint16_t fill, uint16_t max)
+{
+    uint32_t dividend = (uint32_t)fill * 10;
+    uint16_t divisor = (uint16_t)(max + 1);
+    uint32_t q = dividend / divisor;
+    uint16_t d2 = q > 0xffff ? (uint16_t)dividend : (uint16_t)q;
+
+    if (d2 < 10)
+        draw_bob_masked_at(x, y, gauge_pics[d2]);
 }
 
 /* orig $006f1e: the scroll and timing variables at the start of a level */

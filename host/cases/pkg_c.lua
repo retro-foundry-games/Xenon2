@@ -25,5 +25,8 @@ return {
     { name = "run_updates",       orig = 0x003656, args = { "a0" } },
     { name = "run_draws",         orig = 0x00366a, args = { "a0" } },
     { name = "update_all",        orig = 0x0035d4, args = {} },
-    { name = "spawn_debris",      orig = 0x00367e, args = { "a1" } },
+    { name = "spawn_debris",      orig = 0x00367e, args = { "a0", "a1", "d0.w" } },
+    -- never reached by the scenarios (calls 0)
+    { name = "map_tile_mask2",        orig = 0x002f66, args = { "d0.w", "d1.w", "d2.w" } },
+    { name = "group_box_update",      orig = 0x0037b2, args = { "a0" } },
 }

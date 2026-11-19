@@ -165,6 +165,41 @@ void map_tile_mask(uint16_t x, uint16_t y, uint16_t rows)
     } while ((uint16_t)--rows != 0xffff);
 }
 
+/* orig $002F66: like map_tile_mask with two words a row (the masks of the cells at x and at x + 16), written as the blitter reads them
+ * (inlined: $2FC0, the two pointers of a row of cells in a4 and a5) */
+void map_tile_mask2(uint16_t x, uint16_t y, uint16_t rows)
+{
+    const uint8_t *a1 = level_init_src + (int16_t)v_0cce;
+    const uint8_t *a4, *a5;
+    uint16_t d3, d4;
+    uint8_t *out = (uint8_t *)tile_mask_buf;
+
+    y = (uint16_t)(y + v_0cd6);
+    d3 = y & 0xf;
+    d4 = d3;
+    d3 = (uint16_t)(d3 + d3);
+    d3 = (uint16_t)(d3 + d3);
+    d3 = (uint16_t)(d3 + d4);
+    d3 = (uint16_t)(d3 + d3);
+    a1 += (int16_t)(uint16_t)((uint32_t)(y >> 4) * 0x28);
+    a1 += (uint16_t)((x >> 3) & 0xfe);
+    a4 = tile_mask_ptr(rd16(a1));
+    a5 = tile_mask_ptr(rd16(a1 + 2));
+    a1 += 40;
+    do {
+        wr16(out, rd16(a4 + d3));
+        wr16(out + 2, rd16(a5 + d3));
+        out += 4;
+        d3 = (uint16_t)(d3 + 10);
+        if (d3 == 0xa0) {
+            a4 = tile_mask_ptr(rd16(a1));
+            a5 = tile_mask_ptr(rd16(a1 + 2));
+            a1 += 40;
+            d3 = 0;
+        }
+    } while ((uint16_t)--rows != 0xffff);
+}
+
 /* orig $00300A: does the 24-row sprite mask of the player's position meet a solid tile?  (the original returns the condition
  * codes: not equal = hit) */
 uint16_t player_tile_hit(Object *o)
@@ -459,6 +494,53 @@ void bbox_from_frame(Object *o)
     o->hit[3] = (int16_t)(y0 + (int16_t)rd16(f - 2) - 1);
 }
 
+/* orig $F32, $0037B2: the update of the marker that ends a group (type $BC, its $56 the marker that starts it, type $B8): the box of the
+ * start marker becomes the union of the boxes of the objects between them that are drawn (with none the box is moved off the screen);
+ * with no object between them the two markers go back to the free list */
+void group_box_update(Object *a0)
+{
+    Object *a1 = a0->target;
+    Object *a2 = OBJ_FWD(a1);
+    int16_t d0, d1, d2, d3;
+
+    if (a2 == a0) {
+        free_object(a0);
+        free_object(a1);
+        return;
+    }
+    while (a2->fn_draw == (obj_fn)obj_nop) {
+        a2 = OBJ_FWD(a2);
+        if (a2 == a0) {
+            a1->hit[0] = 0x3e8;
+            a1->hit[2] = 0x3e8;
+            return;
+        }
+    }
+    d0 = a2->hit[0];
+    d1 = a2->hit[1];
+    d2 = a2->hit[2];
+    d3 = a2->hit[3];
+    for (;;) {
+        a2 = OBJ_FWD(a2);
+        if (a2 == a0)
+            break;
+        if (a2->fn_draw == (obj_fn)obj_nop)
+            continue;
+        if (a2->hit[0] < d0)
+            d0 = a2->hit[0];
+        if (a2->hit[1] < d1)
+            d1 = a2->hit[1];
+        if (a2->hit[2] > d2)
+            d2 = a2->hit[2];
+        if (a2->hit[3] > d3)
+            d3 = a2->hit[3];
+    }
+    a1->hit[0] = d0;
+    a1->hit[1] = d1;
+    a1->hit[2] = d2;
+    a1->hit[3] = d3;
+}
+
 /* orig $EC0, $0031EC: an effect (list of effects) at (x, y) that plays the animation a2 (header: picture long, delay, script) and is
  * drawn by a3; it asks for the sound $85 when the animation is $270E, else $83 */
 void spawn_effect(int16_t x, int16_t y, const uint8_t *a2, ObjFn a3)
@@ -602,8 +684,9 @@ void update_all(void)
     }
 }
 
-/* orig $00367E (reached by a jump): the object a1 breaks up into the debris of kind a1->v30 and goes dead */
-void spawn_debris(Object *a1)
+/* orig $00367E: a hit routine (a0 the shooter, a1 the object hit, d0 the damage): the object a1 breaks up into the debris of kind
+ * a1->v30 and goes dead */
+void spawn_debris(Object *a0_unused, Object *a1, uint16_t d0_unused)
 {
     Object *a0 = list_insert(LIST_EFFECT);
     const uint8_t *k;
@@ -699,7 +782,7 @@ void enemy_shot_update(Object *a0)
 }
 
 /* orig $00318C: a shot of an enemy at (x, y), moving by steps in direction angle, drawn from gfx */
-void spawn_enemy_shot(uint16_t x, uint16_t y, uint16_t angle, uint16_t steps, const void *gfx)
+Object *spawn_enemy_shot(uint16_t x, uint16_t y, uint16_t angle, uint16_t steps, const void *gfx)
 {
     Object *a0 = list_insert(LIST_EFFECT);
 
@@ -714,4 +797,5 @@ void spawn_enemy_shot(uint16_t x, uint16_t y, uint16_t angle, uint16_t steps, co
     a0->v54 = (int16_t)steps;
     a0->hit[0] = 0x3e8;
     a0->hit[2] = 0x3e8;
+    return a0;
 }
