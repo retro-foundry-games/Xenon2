@@ -9,6 +9,7 @@
 --                   the keys are applied to both sides at the sync points; the port's picture and the difference are shown beside the original; the first difference pauses both
 --     auto=1        the autoplayer (host/autoplay.lua) plays, headless or in the window: finds differences in a run no one has to play
 --     record=FILE   where the input of play=1 / auto=1 is written (default captures/input/play-latest.txt, overwritten each run)
+--     snap=ADDR:NAME the first time the original reaches ADDR (hex) its state is saved as local/save/NAME.state and its memory as captures/NAME.ram
 --     hold=1        stop at the first difference and stay there, both sides standing: with `ami9000_host --control PATH` a client (ami9000/host/ctl.py PATH 'LS.port_call("print(port.peek16(0x41c))")')
 --                   asks the port and the original: LS.port_call(LUA) runs a line in the port's Lua shell, LS.port_binary(LUA) a call that answers BIN, LS.snap the original's ram at the point (LS.snap.ram), LS.ram16(addr) the original's live memory
 --     calls=1       also compare the number of calls of every function between two sync points (finds where a difference starts)
@@ -169,6 +170,10 @@ for i, c in ipairs{ "z", "x", "c", "v", "b", "n", "m" } do RAW[c:byte()] = 0x31 
 for d = 1, 9 do RAW[48 + d] = d end
 RAW[48] = 0x0a
 for f = 1, 10 do RAW[281 + f] = 0x4f + f end
+local LIBRETRO_OF = {}   -- Amiga raw code -> a libretro key code (for replaying keys into the original)
+for libretro, raw in pairs(RAW) do
+    if not LIBRETRO_OF[raw] or libretro < LIBRETRO_OF[raw] then LIBRETRO_OF[raw] = libretro end
+end
 local key_queue = {}   -- {raw, down} since the last sync point
 local function read_keys()   -- what was pressed since the last call: the stick that is held now
     for _, e in ipairs(ami.input()) do
@@ -182,6 +187,20 @@ local function read_keys()   -- what was pressed since the last call: the stick 
                 if e[3] == 1 then stick[OPPOSITE[what]] = 0 end
             end
         end
+    end
+end
+-- snap=HEXADDR:NAME: the first time the original reaches that address a savestate (local/save/NAME.state, one frame later) and its memory (captures/NAME.ram) are saved
+local snap_request
+do
+    local addr, name = args:match("snap=(%x+):(%S+)")
+    if addr then
+        local done_once = false
+        ami.hook(tonumber(addr, 16), function()
+            if done_once then return end
+            done_once = true
+            ami.save_file("captures/" .. name .. ".ram", ami.read(0, 0x80000))
+            snap_request = name
+        end)
     end
 end
 local call_names, call_counts = {}, {}   -- the functions of the code table: original address -> name; the calls since the last sync point on the original's side
@@ -209,7 +228,13 @@ local function sync_point()
         end
     end
     if PLAY and #key_queue > 0 then pending[#pending].keys = key_queue; key_queue = {} end
-    if replay_keys[n] then pending[#pending].keys = replay_keys[n] end
+    if replay_keys[n] then
+        pending[#pending].keys = replay_keys[n]
+        for _, k in ipairs(replay_keys[n]) do   -- the original gets the keys as they were typed (the keyboard is what enters the shop)
+            local code = LIBRETRO_OF[k[1]]
+            if code then ami.key(code, k[2] == 1) end
+        end
+    end
     if PLAY or AUTO then   -- what is applied is written down: the run can be played again (replay=)
         local lines = {}
         for _, k in ipairs(pending[#pending].keys or {}) do lines[#lines + 1] = ("%d key %d %d\n"):format(n, k[1], k[2]) end
@@ -567,6 +592,11 @@ while not done do
             end
             done = true
         end
+    end
+    if snap_request then
+        ami.snapshot_save(snap_request .. ".state")
+        say("saved the original's state local/save/%s.state and memory captures/%s.ram at emulator frame %d (pc $%06x)", snap_request, snap_request, ami.frame(), ami.reg("pc"))
+        snap_request = nil
     end
     if not done then
         if PLAY then read_keys() end
