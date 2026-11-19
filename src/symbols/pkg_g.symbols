@@ -1,0 +1,37 @@
+; pkg_g: the menu, the disk check, the loader (rabs), the level load, the high-score table, the enemy path script
+type ObjMove 98                                    ; struct ObjMove in types_pkg_g.h: an object as the path script sees it
+var disk_retries 0x0002 uint16_t                   ; tries left for reading a track
+arr hiscore_values 0x891e uint32_t 10              ; the ten best scores, best first
+arr hiscore_lines 0x8946 uint8_t 150               ; their lines of text, 15 characters: " 1. 0000600 AA:"
+tab decimal_powers 0x8bb6 uint32_t 8               ; 1000000 .. 1, 0
+tab wipe_in 0x8bd6 uint16_t 17                     ; squeeze steps of a title line that comes in (-1 ends)
+tab wipe_out 0x8bf8 uint16_t 18                    ; squeeze steps of a title line that goes out
+tab title_hiscore 0x8c1c uint8_t 20                ; "     HIGH SCORE     "
+arr loading_text 0x8c30 uint8_t 17                 ; "   LOADING LEVEL 1  " (bytes 1 and 2 become "RE" while reloading)
+tab shop_text 0x8c44 uint8_t 20                    ; "   ENTERING SHOP    "
+tab menu_text 0x8dd4 uint8_t 180                   ; nine lines of 20: title, 1 player (plain, selected), 2 players, music on (plain, selected), music off (plain, selected)
+arr continue_text 0x8f2e uint8_t 40                ; "   CONTINUE GAME    " and the line with the countdown digit at 9
+arr credits_text 0x8f76 uint8_t 10                 ; "CREDITS 3", 0
+tab insert_disk_text 0x8f80 uint8_t 20             ; "  INSERT GAME DISK  "
+var loaded_level 0x8f98 uint16_t                   ; the level whose code is loaded
+arr progress_text 0x8fea uint8_t 2                 ; the digit shown while a track is read
+var saved_level_init 0x8fee uint32_t *             ; level_init_src kept while the shop is loaded
+arr level_palette_copy 0x915e uint16_t 16          ; the level's palette, dimmed if v_0c90
+tab level_sectors 0x91ea uint16_t 12               ; first sector and count of the code of each level (and the shop)
+var disk_track 0x9202 int16_t                      ; the track the head is on (negative: unknown)
+var disk_want 0x9204 uint16_t                      ; the track being read
+var disk_done 0x9206 volatile uint8_t              ; set by the disk-block interrupt
+var disk_error 0x9207 volatile uint8_t
+arr disk_header 0x9208 uint8_t 4                   ; decoded sector header: format, track, sector, sectors to the gap
+var disk_total 0x920c uint16_t                     ; sectors asked for
+arr disk_seen 0x920e uint8_t 11                    ; bit 7: the sector of this track was read
+var disk_dest 0x92c0 uint8_t *
+var disk_sector 0x92c4 uint16_t                    ; first sector of the track still wanted
+var disk_count 0x92c6 uint16_t                     ; sectors still wanted
+tab mfm_sync_a 0x95a4 uint32_t 8                   ; the second and third words of the sector sync, as bit shifts of 0x5555 data show them
+tab mfm_sync_b 0x95c4 uint32_t 8
+var work_area_users 0x963e uint16_t                ; how many have the work area saved
+arr rand_saved 0x9660 uint32_t 4                   ; random state: [0..1] kept by the first script run, [2..3] the caller's
+tab sine_table 0x98f6 int8_t 320                   ; sine of a 256-step circle (the cosine is 64 on)
+arr work_area 0x4fa uint32_t 320                   ; 1280 bytes of the low RAM that the title page saves and restores
+var enemy_shot_gfx 0x54e28 uint8_t *               ; the level's picture of an enemy shot

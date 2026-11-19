@@ -1,11 +1,10 @@
 ; pkg_e: $6000-$6FFF (object lists, shots, panel, level init)
-type Obj 98
 type Shot 8
 var draw_screen 0x406 uint8_t *                   ; the screen being drawn into
 var v_0414 0x414 int16_t
 var players 0x422 uint16_t                        ; 2 = two players
 var cur_player 0x428 uint16_t
-var free_obj 0x42a Obj *                   ; head of the free list of objects
+var free_obj 0x42a Object *                   ; head of the free list of objects
 var v_042e 0x42e uint16_t
 var v_0430 0x430 uint16_t
 var v_0432 0x432 uint16_t
@@ -24,7 +23,7 @@ var v_0a07 0xa07 uint8_t
 arr v_0a08 0xa08 uint8_t 98
 var v_0a6b 0xa6b uint8_t
 var v_0a6c 0xa6c uint8_t
-arr obj_list 0xa76 Obj 5                   ; list heads (sentinel objects)
+arr obj_list 0xa76 Object 5                   ; list heads (sentinel objects)
 var v_0c60 0xc60 uint16_t
 var v_0c62 0xc62 uint16_t
 var v_0c64 0xc64 uint16_t
@@ -61,8 +60,8 @@ var v_0cec 0xcec uint16_t
 var v_0cee 0xcee uint16_t
 var v_0cf0 0xcf0 uint16_t
 var v_0cf2 0xcf2 uint16_t
-var v_0cf4 0xcf4 Obj *
-var v_0cf8 0xcf8 Obj *
+var v_0cf4 0xcf4 Object *
+var v_0cf8 0xcf8 Object *
 arr v_0cfc 0xcfc uint16_t 21
 arr v_0d7c 0xd7c uint8_t 7                        ; score digits
 var v_0d83 0xd83 uint8_t
@@ -75,12 +74,14 @@ tab digit_gfx 0x1981e uint8_t 640
 tab v_19a9e 0x19a9e uint16_t 640
 arr v_3bcac 0x3bcac uint32_t 3000
 arr v_3ecf4 0x3ecf4 uint32_t 202
-var player 0x3f01c Obj
-arr obj_pool 0x3f07e Obj 159
+var player 0x3f01c Object
+arr obj_pool 0x3f07e Object 159
 arr shots 0x42d5c Shot 80
 tab row_offset 0x4321c uint16_t 192
-arr screen_a 0x44000 uint8_t 34560
-arr screen_b 0x4c700 uint8_t 34560
+arr screen_a 0x44000 uint8_t 30720
+arr screen_b 0x4c700 uint8_t 30720
+arr panel_a 0x4b800 uint32_t 320                   ; the status panel (score) of screen_a
+arr panel_b 0x53f00 uint32_t 320                   ; and of screen_b
 var level_init_src 0x54e04 uint32_t *
 var level_palette 0x54e1c uint32_t *
 tab ship_records 0x6cc2 uint16_t 48

@@ -2,9 +2,9 @@
 #include "amiga/hw.h"
 
 /* inlined at its callers: the pair of list links of an append at the end of a list (before the head) */
-static void list_append(Obj *head, Obj *o)
+static void list_append(Object *head, Object *o)
 {
-    Obj *last = head->prev;
+    Object *last = head->prev;
 
     head->prev = o;
     o->prev = last;
@@ -20,8 +20,13 @@ static void clear_screens(uint16_t d0)
     uint32_t i;
 
     for (i = 0; i <= d0; i++) {
-        a[i] = 0;
-        b[i] = 0;
+        if (i < 0x1e00) {
+            a[i] = 0;
+            b[i] = 0;
+        } else {
+            panel_b[i - 0x1e00] = 0;
+            panel_a[i - 0x1e00] = 0;
+        }
     }
 }
 
@@ -41,9 +46,10 @@ void clear_screens_small(void)
 void panel_clear_score(void)
 {
     const uint8_t *a2 = digit_gfx;
-    uint32_t off = cur_player ? 0x781e : 0x7802;
+    uint32_t off = cur_player ? 0x1e : 2;   /* from the panel's start */
+    uint8_t *pb = (uint8_t *)panel_b;
+    uint8_t *pa = (uint8_t *)panel_a;
     uint16_t first = cur_player ? 0 : 1;
-    uint16_t n = cur_player ? 7 : 7;
     int row;
 
     for (row = 0; row < 8; row++) {
@@ -52,9 +58,9 @@ void panel_clear_score(void)
             uint8_t d1 = *a2++;
             uint16_t k;
 
-            for (k = first; k < first + n; k++) {
-                screen_b[off + d4 + k] = d1;
-                screen_a[off + d4 + k] = d1;
+            for (k = first; k < first + 7; k++) {
+                pb[off + d4 + k] = d1;
+                pa[off + d4 + k] = d1;
             }
             d4 += 0x28;
         } while ((int16_t)d4 <= 0x78);
@@ -76,7 +82,9 @@ void update_score_display(void)
 {
     int32_t d0 = (int32_t)(v_0c92 - v_0c96);
     uint8_t *digit;
-    uint32_t off;
+    uint32_t off;   /* from the panel's start */
+    uint8_t *pb = (uint8_t *)panel_b;
+    uint8_t *pa = (uint8_t *)panel_a;
 
     if (d0 == 0)
         return;
@@ -87,16 +95,16 @@ void update_score_display(void)
     if (d0 >= 0xc8) {
         if (d0 >= 0x7d0) {
             digit = &v_0d7c[3];
-            off = 0x7806;
+            off = 6;
             v_0c96 += 0x3e8;
         } else {
             digit = &v_0d7c[4];
-            off = 0x7807;
+            off = 7;
             v_0c96 += 0x64;
         }
     } else {
         digit = &v_0d7c[5];
-        off = 0x7808;
+        off = 8;
         v_0c96 += 0xa;
     }
     if (cur_player)
@@ -113,8 +121,8 @@ void update_score_display(void)
             for (k = 0; k < 4; k++) {
                 uint8_t b = *g++;
 
-                screen_b[off + row * 0xa0 + k * 0x28] = b;
-                screen_a[off + row * 0xa0 + k * 0x28] = b;
+                pb[off + row * 0xa0 + k * 0x28] = b;
+                pa[off + row * 0xa0 + k * 0x28] = b;
             }
         }
         if (*digit != 0)
@@ -132,7 +140,7 @@ void init_level_state(void)
     uint16_t *a0, *a1;
     const uint16_t *a2 = v_19a9e;
     uint16_t g, c, i;
-    Obj *o;
+    Object *o;
 
     v_0a02 = 0;
     v_0a03[0] = 0xff;
@@ -143,8 +151,8 @@ void init_level_state(void)
     v_0a03[2] = 0;
     v_0a03[3] = 0;
     clear_screens_small();
-    a0 = (uint16_t *)(screen_b + 0x7800);   /* what $6bce leaves in a0 and a1 */
-    a1 = (uint16_t *)(screen_a + 0x7800);
+    a0 = (uint16_t *)panel_b;   /* what $6bce leaves in a0 and a1: the panels */
+    a1 = (uint16_t *)panel_a;
     for (g = 0; g < 8; g++) {
         for (c = 0; c < 20; c++) {
             uint16_t d1;
@@ -163,7 +171,7 @@ void init_level_state(void)
     o = obj_pool;
     free_obj = o;
     for (i = 0; i < 158; i++) {
-        Obj *n = o + 1;
+        Object *n = o + 1;
 
         o->type = 0;
         o->next = n;
@@ -190,30 +198,30 @@ void init_level_state(void)
 void init_objects(void)
 {
     uint16_t i;
-    Obj *o;
+    Object *o;
 
     for (i = 0; i < 5; i++) {
         o = &obj_list[i];
         o->type = 0;
         o->prev = o;
         o->next = o;
-        o->fn_a = fn_003130;
-        o->fn_b = fn_003130;
-        o->fn_c = fn_003130;
+        o->fn_update = fn_003130;
+        o->fn_draw = fn_003130;
+        o->fn_hit = fn_003130;
     }
     o = &player;
     list_append(&obj_list[0], o);
     o->type = 8;
-    o->fn_a = fn_005efe;
-    o->fn_b = fn_00128e;
+    o->fn_update = fn_005efe;
+    o->fn_draw = fn_00128e;
     o->gfx = &player_gfx;
-    o->w1a = 0;
-    o->w20 = 0xa0;
-    o->w24 = 0xb0;
+    o->anim_delay = 0;
+    o->x = 0xa0;
+    o->y = 0xb0;
     for (i = 0; i < 4; i++) {
         const uint16_t *rec = &ship_records[i * 12];   /* the record the table at $6CB2 points to */
-        Obj *h = &obj_list[0];
-        Obj *first;
+        Object *h = &obj_list[0];
+        Object *first;
 
         o = fn_002418();
         first = h->next;
@@ -222,14 +230,14 @@ void init_objects(void)
         o->prev = h;
         first->prev = o;
         o->type = 0xc4;
-        o->fn_a = (void (*)(void))option_update;   /* a0 is the object */
-        o->fn_b = fn_003130;
+        o->fn_update = (void (*)(void))option_update;   /* a0 is the object */
+        o->fn_draw = fn_003130;
         o->gfx = (void *)(((uint32_t)rec[0] << 16) | rec[1]);
-        o->w1a = rec[2];
-        o->data = &rec[3];
-        o->w20 = 0xa0;
-        o->w24 = 0xb0;
-        o->w30 = 3 - i;
+        o->anim_delay = rec[2];
+        o->anim = &rec[3];
+        o->x = 0xa0;
+        o->y = 0xb0;
+        o->v30 = 3 - i;
     }
     for (i = 0; i < 7; i++)
         v_0c66[i * 3] = 0;
@@ -267,68 +275,66 @@ void init_objects(void)
 }
 
 /* orig $0068b0: an option's update: follows the player at an offset given by v_0cde, fires when the button says so */
-void option_update(Obj *a0)
+void option_update(Object *a0)
 {
     uint16_t d0, d1;
     uint8_t bit;
 
     fn_002c5a(a0);
-    d0 = player.w20;
+    d0 = player.x;
     d1 = (uint16_t)v_0cde;
     if ((int16_t)d1 < 0)
         d1 = (uint16_t)-(int16_t)d1;
     d1 += d1;
-    if (a0->w30 & 1)
+    if (a0->v30 & 1)
         d1 += 0xe;
     d0 += (uint16_t)v_6894[d1 / 2];
-    a0->w20 = d0;
-    a0->w24 = player.w24;
-    a0->fn_b = fn_003130;
+    a0->x = d0;
+    a0->y = player.y;
+    a0->fn_draw = fn_003130;
     if (v_0430)
         return;
-    bit = (a0->w30 < 2) ? 1 : 2;   /* signed compare */
-    if ((int16_t)a0->w30 >= 2)
-        bit = 2;
+    bit = (a0->v30 < 2) ? 1 : 2;
     if (v_0a00 & bit)
-        a0->fn_b = fn_00128e;
+        a0->fn_draw = fn_00128e;
 }
 
 /* orig $00615a: makes a shot object ($5850) for the object a0; d0 and d1 go into its $2A and $2E, d2/d3 are offsets from the player;
  * a2 points at its graphics pointer (the next ones when a0's $42 is 1 or more) */
-void spawn_shot_object(Obj *a0, uint16_t d0, uint16_t d1, uint16_t d2, uint16_t d3, void *const *a2)
+void spawn_shot_object(Object *a0, uint16_t d0, uint16_t d1, uint16_t d2, uint16_t d3, void *const *a2)
 {
-    Obj *a1;
+    Object *a1;
 
     if (v_0414 < 0)
         v_0414 = 0x89;
-    if (a0->w42 != 0) {
-        if (a0->w42 != 1)
+    if (a0->v42 != 0) {
+        if (a0->v42 != 1)
             a2++;
         a2++;
     }
     a1 = fn_002418();
     list_append(&obj_list[3], a1);
-    a1->w2a = d0;
-    a1->w2e = d1;
-    a1->w20 = (uint16_t)(d2 + player.w20);
-    a1->w24 = (uint16_t)(d3 + player.w24);
+    a1->v2a = d0;
+    a1->v2e = d1;
+    a1->x = (uint16_t)(d2 + player.x);
+    a1->y = (uint16_t)(d3 + player.y);
     a1->type = 0x10;
-    a1->fn_a = fn_005850;
-    a1->fn_b = fn_00128e;
+    a1->fn_update = fn_005850;
+    a1->fn_draw = fn_00128e;
     a1->gfx = *a2;
-    a1->w1a = 0;
-    a1->w28 = 0;
-    a1->w42 = a0->w42;
+    a1->anim_delay = 0;
+    a1->v28 = 0;
+    a1->v42 = a0->v42;
 }
 
 /* orig $00644e: empties list 1 of its objects and restores its ends and the block at $C66 from their saved copies */
 void reset_extra_objects(void)
 {
-    Obj *a1 = obj_list[1].prev;
+    Object *a1 = obj_list[1].prev;
     uint16_t i;
 
     while (a1->type) {
-        Obj *p = a1->prev;
+        Object *p = a1->prev;
 
         fn_005c9e(a1);
         a1 = p;
@@ -476,7 +482,7 @@ void update_shots(void)
 /* orig $00683c: draws the objects of list 2 and counts those that are not of type $50 or $54 */
 void draw_enemy_list(void)
 {
-    Obj *a1 = obj_list[2].prev;
+    Object *a1 = obj_list[2].prev;
     uint16_t d1 = 0;
     uint16_t d2;
 
@@ -489,12 +495,12 @@ void draw_enemy_list(void)
 }
 
 /* orig $006862: puts the objects of a chain (towards the previous ones) back on the free list */
-void free_object_chain(Obj *a1)
+void free_object_chain(Object *a1)
 {
     while (a1->type) {
-        Obj *a2 = a1->prev;
-        Obj *a4 = a1->next;
-        Obj *a5 = a1->prev;
+        Object *a2 = a1->prev;
+        Object *a4 = a1->next;
+        Object *a5 = a1->prev;
 
         a4->prev = a5;
         a5->next = a4;
@@ -515,9 +521,9 @@ void create_queued_objects(void)
         uint16_t d2 = v_0caa[i * 2 + 1];
 
         if (d1 != 0) {
-            Obj *a1 = fn_004822(d1);
+            Object *a1 = fn_004822(d1);
 
-            a1->w42 = d2;
+            a1->v42 = d2;
         }
     }
 }
@@ -526,7 +532,7 @@ void create_queued_objects(void)
 void clear_level_objects(void)
 {
     uint16_t d7;
-    Obj *a1;
+    Object *a1;
     uint16_t i;
 
     fn_019fe4();
@@ -596,8 +602,8 @@ void respawn_player(void)
     uint16_t d0, i;
 
     v_0d84 = 0;
-    player.w20 = v_0ce2;
-    player.w24 = 0xb0;
+    player.x = v_0ce2;
+    player.y = 0xb0;
     d0 = v_0ce6;
     v_0cd0 = d0;
     v_0cea = d0;
@@ -616,13 +622,13 @@ void respawn_player(void)
     v_0a6b = 0xff;
     v_0cde = 0;
     for (i = 0; i < 4; i++) {
-        v_046c[i * 2] = player.w20;
-        v_046c[i * 2 + 1] = player.w24;
+        v_046c[i * 2] = player.x;
+        v_046c[i * 2 + 1] = player.y;
     }
     for (i = 0; i < 17; i++) {
         v_047c[i * 3] = v_0cd0;
-        v_047c[i * 3 + 1] = player.w20;
-        v_047c[i * 3 + 2] = player.w24;
+        v_047c[i * 3 + 1] = player.x;
+        v_047c[i * 3 + 2] = player.y;
     }
     v_8836[18] = (uint8_t)(cur_player + 0x31);
     v_8428 = 0xff;
@@ -668,8 +674,8 @@ void level_reset_scroll(void)
     v_0cd2 = 0x7fee;
     v_0cd4 = 0x7fee;
     v_0cee = 0x10;
-    v_0ce2 = player.w20;
-    v_0ce4 = player.w24;
+    v_0ce2 = player.x;
+    v_0ce4 = player.y;
     v_0ce6 = v_0cd0;
     v_0ca6 = v_0c9a;
     v_0cd8 = 1;

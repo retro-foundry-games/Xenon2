@@ -13,7 +13,9 @@ void scroll_pos_update(uint16_t d0);
 void stars_scroll(uint16_t d0);
 void stars_draw(void);
 uint16_t box_overlap(int16_t d0, int16_t d1, int16_t d2, int16_t d3, int16_t d4, int16_t d5, int16_t d6, int16_t d7);
-Obj *obj_free_pop(Obj *a0);
+Object *obj_free_pop(void);
+
+extern uint32_t random_next(void);
 
 /* callees without C yet (other packages); a result "in Z" is returned as 1 when Z is set */
 extern void fn_006fe8(void);
@@ -24,10 +26,10 @@ extern void fn_008cb6(void);
 extern void fn_00917e(void);
 extern void fn_006bea(void);
 extern void fn_006f94(void);
-extern void fn_00842a(__reg("a0") const uint8_t *text);
-extern void fn_019f9e(__reg("d0") uint16_t d0);
+extern void fn_00842a(const uint8_t *a0);
+extern void fn_019f9e(uint16_t d0);
 extern void fn_0017d6(void);
-extern void fn_0088b6(__reg("a2") const uint32_t *palette);
+extern void fn_0088b6(const uint32_t *a2);
 extern void fn_006766(void);
 extern void fn_0016be(void);
 extern void fn_00683c(void);
@@ -44,11 +46,11 @@ extern void fn_006ec6(void);
 extern void fn_019fba(void);
 extern void fn_008ff2(void);
 extern void fn_004a0a(void);
-extern void fn_005c9e(__reg("a1") Obj *a1);
+extern void fn_005c9e(Object *a1);
 extern void fn_005540(void);
 extern void fn_00352e(void);
 extern void fn_006d22(void);
-extern void fn_006862(__reg("a1") Obj *a1);
+extern void fn_006862(Object *a1);
 extern void fn_006eca(void);
 extern void fn_006d74(void);
 extern void fn_000fac(void);               /* level 2 interrupt handler */
