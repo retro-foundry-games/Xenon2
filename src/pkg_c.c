@@ -16,12 +16,10 @@ static Object *list_insert(int list)
     return a0;
 }
 
-/* word $4A of an object (a pointer; struct Object has it among its padding) */
+/* long $4A of an object: a pointer */
 static void set_ptr4a(Object *o, const uint8_t *p)
 {
-    typedef const uint8_t *__attribute__((may_alias)) byte_ptr;
-
-    *(byte_ptr *)(void *)&o->pad4a[0] = p;
+    o->ptr4a = p;
 }
 
 /* the records of the level's data are raw bytes (big endian): read into a record of this machine */
@@ -422,9 +420,9 @@ Object *spawn_formation(Object *a0, const uint8_t *rec_raw, const uint8_t *a2)
             }
             set_ptr4a(a0, e);
             a0->v54 = (int16_t)a1->w0c;
-            a0->v5e = (int16_t)a1->y;
+            SET_V5E(a0, (int16_t)a1->y);
             d0 = (uint16_t)random_next();
-            a0->v5e = (int16_t)((a0->v5e & 0x00ff) | ((d0 & 0xff) << 8));
+            SET_V5E(a0, (int16_t)((V5E(a0) & 0x00ff) | ((d0 & 0xff) << 8)));
             a0->energy = (int16_t)v_0426;
             a0->v44 = (int16_t)v_045e;
             a0->flag35 = (int8_t)a4->to_flag35;
@@ -724,7 +722,7 @@ static Object *marker_tail(Object *a0, uint16_t d0, const uint8_t *a1, void (*a2
     a0->type = d0;
     a0->fn_update = (obj_fn)a2;
     a0->fn_draw = (obj_fn)obj_nop;
-    a0->v5e = 0;
+    SET_V5E(a0, 0);
     x = (uint16_t)(rd16(a1 + 8) - 8);
     a0->x = (int16_t)x;
     y = (uint16_t)(rd16(a1 + 10) - 8);
