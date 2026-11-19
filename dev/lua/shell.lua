@@ -1,7 +1,10 @@
 -- An interactive Lua shell on a unix socket, like the `lua` command's:
 --
 --   xenon2-sdl-dev --lua dev/lua/shell.lua --lua-args PATH --disks local
---   rlwrap socat - UNIX-CONNECT:PATH          (or: nc -U PATH)
+--   rlwrap nc -U PATH
+--
+-- With --lua-args - the shell is on stdin/stdout instead: that is how a program that starts the dev build as a process with pipes (the lockstep in the emulator,
+-- host/lockstep.lua) drives the port.  The prompts are the globals shell_prompt and shell_prompt2 (a program that reads the replies sets them to something it can wait for).
 --
 -- `> ` prompt, `>> ` while a statement is unfinished, an expression's values are printed, errors come with a traceback; print() and io.write() go to the client.
 -- The port is the global `port` (dev/src/dev.c); it moves only while a line runs, so it stands still between lines.  Globals and functions stay for the next lines.
@@ -13,8 +16,7 @@ local function handler(message)
 end
 
 -- one line (or the lines so far of a statement) at the Lua prompt; returns true if the statement is unfinished
-local function eval(client, chunk)
-    local say = function(text) port.write(client, text) end
+local function eval(say, chunk)
     local real_print, real_write = print, io.write
     print = function(...)
         local t = table.pack(...)
@@ -50,22 +52,33 @@ local function eval(client, chunk)
     return unfinished
 end
 
+shell_prompt, shell_prompt2 = "> ", ">> "
+
+-- the shell over a connection: line(), say(text) and the end of the connection
+local function shell(read_line, say)
+    local chunk = ""
+    say(shell_prompt)
+    while true do
+        local line = read_line()
+        if not line then break end
+        chunk = chunk == "" and line or chunk .. "\n" .. line
+        if eval(say, chunk) then
+            say(shell_prompt2)
+        else
+            chunk = ""
+            say(shell_prompt)
+        end
+    end
+end
+
+if path == "-" then
+    shell(function() return io.stdin:read("l") end, function(text) io.stdout:write(text); io.stdout:flush() end)
+    return
+end
 local server = port.listen(path)
 io.stderr:write("dev: Lua shell on ", path, "\n")
 while true do
     local client = port.accept(server)
-    local chunk = ""
-    port.write(client, "> ")
-    while true do
-        local line = port.readline(client)
-        if not line then break end
-        chunk = chunk == "" and line or chunk .. "\n" .. line
-        if eval(client, chunk) then
-            port.write(client, ">> ")
-        else
-            chunk = ""
-            port.write(client, "> ")
-        end
-    end
+    shell(function() return port.readline(client) end, function(text) port.write(client, text) end)
     port.close(client)
 end

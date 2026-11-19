@@ -70,7 +70,8 @@ serves an interactive Lua shell on a unix socket.
     dev/build/xenon2-sdl-dev --lua dev/lua/shell.lua --lua-args /tmp/x2.sock --disks local &
     rlwrap nc -U /tmp/x2.sock                  > port.run(30)   > port.peek16(0x41c)   > port.run_until(0x2034, 20)
 
-`host/lockstep.lua` runs the original in the emulator with the dev build as its peer (`dev/lua/peer.lua`, a line protocol on stdin/stdout); at every entry of
+`host/lockstep.lua` runs the original in the emulator with the dev build as its peer and drives the port through this same Lua shell (`--lua-args -`: the shell on the peer's
+stdin/stdout; lines of Lua in, the prompt as the end of a reply, `BIN LEN` and bytes for the memory and the picture); at every entry of
 `swap_screens` (once a frame) the named members of the memory and the picture are compared.  The emulator's own `--control PATH` is the Lua shell of that script.
 
     python3 ../amiga_porting/ami9000/pidrun.py -- $AMI host/lockstep.lua --headless --script-args "syncs=150 tolerant=1 continue=1"

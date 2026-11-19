@@ -1,4 +1,4 @@
--- Lockstep of the original (this emulator) and the dev build of the port (dev/build/xenon2-sdl-dev, its control protocol on stdin/stdout): both run the game from its start (the port from
+-- Lockstep of the original (this emulator) and the dev build of the port (dev/build/xenon2-sdl-dev, driven through its interactive Lua shell, dev/lua/shell.lua, on stdin/stdout): both run the game from its start (the port from
 -- the original's memory at that moment); at every entry of swap_screens (the game passes it once a frame) the named members of the memory and the picture are compared.
 -- The first difference pauses the emulator and the port is not stepped again, so both can be looked at (the emulator's --control socket); continue=1 goes on and lists them all.
 --
@@ -53,10 +53,51 @@ ami.machine{
     name = "Xenon2 lockstep", model = "A500", system = "../local/system", save = "../local/save", files = "..",
     content = "../local/xenon2.m3u", roms = { { "kick34005.A500", 0xc4f0f55f } },
     opt = { puae_joyport_order = "2143" },
-    peers = { port = { ROOT .. "/dev/build/xenon2-sdl-dev", "--lua", ROOT .. "/dev/lua/peer.lua", "--disks", ROOT .. "/local" } },
+    peers = { port = { ROOT .. "/dev/build/xenon2-sdl-dev", "--lua", ROOT .. "/dev/lua/shell.lua", "--lua-args", "-", "--disks", ROOT .. "/local" } },
 }
 ami.boot()
 local peer = ami.peer("port")
+
+-- The port is driven through its interactive Lua shell (dev/lua/shell.lua on the peer's stdin/stdout): a line of Lua goes in, what it prints comes back up to the prompt,
+-- which is set to a line this script can wait for.  Binary results (the memory, the picture) come as `BIN LEN` and LEN bytes.
+local READY = "<<READY>>"
+local function wait_ready()
+    local out = {}
+    while true do
+        local line = peer:readline()
+        assert(line, "the port ended")
+        if line:sub(-#READY) == READY then
+            local before = line:sub(1, -#READY - 1)
+            if before ~= "" and before ~= "> " then out[#out + 1] = before end
+            return table.concat(out, "\n")
+        end
+        out[#out + 1] = line
+    end
+end
+local function port_call(code)
+    peer:send(code .. "\n")
+    return wait_ready()
+end
+local function port_binary(code)
+    peer:send(code .. "\n")
+    local header = peer:readline()
+    local length = tonumber((header or ""):match("^BIN (%d+)$"))
+    assert(length, "the port answered " .. tostring(header))
+    local data = peer:read(length)
+    assert(data and #data == length, "the port ended")
+    wait_ready()
+    return data
+end
+port_call('shell_prompt, shell_prompt2 = "' .. READY .. '\\n", "' .. READY .. '\\n"')
+for _, line in ipairs{
+    'function joy(u, d, l, r, f) port.joy{ up = u == 1, down = d == 1, left = l == 1, right = r == 1, fire = f == 1 } end',
+    'function bin(s) io.write(("BIN %d\\n"):format(#s)); io.write(s) end',
+    'function ram_out() bin(port.ram()) end',
+    'function image_out() bin(port.picture()) end',
+    'function ram_in(n) port.load_ram(io.read(n)) end',
+    -- run until the function with the original address `addr` has been entered once: "synced FRAME COUNT", or "unsynced FRAME" after 20000 frames
+    'function sync(addr) local count, ok = 0, false; port.hook(addr, function() count = count + 1 end); port.stop_on(addr); for _ = 1, 20000 do if port.step() == "hook" and count >= 1 then ok = true; break end end; port.stop_on(nil); port.unhook(addr); print(ok and ("synced %d %d"):format(port.frame(), count) or ("unsynced %d"):format(port.frame())) end',
+} do port_call(line) end
 local members = load(ami.file_read("dev/members.lua", 0, ami.file_size("dev/members.lua")))()
 
 local log_lines = {}
@@ -85,7 +126,7 @@ local function sync_point()
     local st = joys[n]
     if st then
         ami.joystick{ up = st.up == 1, down = st.down == 1, left = st.left == 1, right = st.right == 1, fire = st.fire == 1 }
-        peer:send(("joy %d %d %d %d %d\n"):format(st.up, st.down, st.left, st.right, st.fire))
+        port_call(("joy(%d, %d, %d, %d, %d)"):format(st.up, st.down, st.left, st.right, st.fire))
     end
 end
 for _, a in ipairs(ADDRS) do ami.hook(a, sync_point) end
@@ -100,15 +141,9 @@ while not started do
 end
 ami.joystick()
 say("the game starts at emulator frame %d", ami.frame())
-peer:send("loadram 524288\n")
+peer:send("ram_in(524288)\n")
 peer:send(start_ram)
-assert(peer:readline() == "loaded", "the port did not take the memory")
-
-local function read_exact(count)
-    local data = peer:read(count)
-    assert(data and #data == count, "the peer ended")
-    return data
-end
+wait_ready()
 
 -- the window of the emulator's frame that is the port's picture (x, y of its first column and row, sx columns a pixel), x and y in the emulator's frame
 local function cut(shot, win)
@@ -217,13 +252,11 @@ while not done do
     -- two frames after the point: the emulator's frame after it is in the ring
     while #pending > 0 and ami.frame() >= pending[1].frame + 2 do
         local snap = table.remove(pending, 1)
-        peer:send(("sync 0x%x 1\n"):format(PORT_ADDR))
-        local reply = peer:readline()
+        local reply = port_call(("sync(0x%x)"):format(PORT_ADDR))
         if not reply or not reply:match("^synced") then say("lockstep: the port did not reach sync point %d (%s)", snap.n, tostring(reply)); done = true; break end
         local problems = {}
         if COMPARE_MEM then
-            peer:send("ram\n")
-            local port_ram = read_exact(tonumber(peer:readline():match("ram (%d+)")))
+            local port_ram = port_binary("ram_out()")
             if #SHOW > 0 and snap.n <= 8 then
                 for _, m in ipairs(members) do
                     for _, want in ipairs(SHOW) do
@@ -235,9 +268,7 @@ while not done do
             if bad > 0 then mem_bad = mem_bad + 1; problems[#problems + 1] = ("%d named members differ"):format(bad) end
         end
         if COMPARE_PIC then
-            peer:send("image\n")
-            peer:readline()
-            local d = compare_picture(snap, read_exact(320 * 256 * 3))
+            local d = compare_picture(snap, port_binary("image_out()"))
             if d > 0 then pic_bad = pic_bad + 1; problems[#problems + 1] = ("%d picture pixels differ"):format(d) end
         end
         compared = compared + 1
@@ -258,5 +289,5 @@ while not done do
     end
 end
 say("lockstep over: %d sync points compared, %d with differences (memory %d, picture %d)", compared, different, mem_bad, pic_bad)
-peer:send("quit\n")
+peer:send("port.quit()\n")
 ami.quit()
