@@ -1,5 +1,6 @@
 -- pkg_f: the title / credits screen.  Not checked here (they wait for the vertical blank in $2026, which the oracle cannot give):
 -- title_fade_in, title_fade_out, show_text_sequence, title_message, title_credits.
+-- Differences in the track buffer ($45000-$49FFF) while a disk loads are the disk DMA, not the C.
 return {
     { name = "clear_screen",       orig = 0x007eb6, args = {} },
     { name = "find_glyph",         orig = 0x007ef8, args = { "d1.b", "a2" }, ret = "d1" },

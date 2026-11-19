@@ -9,9 +9,9 @@ typedef uint16_t u16a __attribute__((may_alias));
 /* inlined: $E0C, $E12, $E18, $E2A, $E54, $E5A (jmp thunks of the table at $E0C: callers call the target) */
 
 /* orig $FEE, $FF2, $1002 and $100E: take an object out of its list and put it on the free list */
-void free_object(Obj *obj)
+void free_object(Object *obj)
 {
-    Obj *next = obj->next, *prev = obj->prev;
+    Object *next = obj->next, *prev = obj->prev;
 
     next->prev = prev;
     prev->next = next;
@@ -218,9 +218,9 @@ HLE_WEAK void draw_bob_masked_at(uint16_t x, uint16_t y, const uint8_t *gfx)
 }
 
 /* orig $128E, $133E, $1350, $135C and $1366: draw the bob of an object, masked; HLE: blitter */
-HLE_WEAK void draw_bob_masked(Obj *obj)
+HLE_WEAK void draw_bob_masked(Object *obj)
 {
-    draw_bob_masked_at(obj->w20, obj->w24, obj->gfx);
+    draw_bob_masked_at(obj->x, obj->y, (const uint8_t *)obj->gfx);
 }
 
 /* orig $137C, $1384, $139E, $13AA, $13B4, $13BE, $13D0, $13DA, $13EA, $1404, $1414, $142C and $1436: draw a bob by OR-ing its mask
@@ -254,15 +254,15 @@ HLE_WEAK void draw_bob_or_at(uint16_t x, uint16_t y, const uint8_t *gfx)
 }
 
 /* orig $1370 and $1378: draw the bob of an object as above */
-HLE_WEAK void draw_bob_or(Obj *obj)
+HLE_WEAK void draw_bob_or(Object *obj)
 {
-    draw_bob_or_at(obj->w20, obj->w24, obj->gfx);
+    draw_bob_or_at(obj->x, obj->y, (const uint8_t *)obj->gfx);
 }
 
 /* orig $1368: the object is drawn masked from now on, this time as above */
-HLE_WEAK void draw_bob_or_first(Obj *obj)
+HLE_WEAK void draw_bob_or_first(Object *obj)
 {
-    obj->fn_b = (void (*)(void))draw_bob_masked;
+    obj->fn_draw = (obj_fn)draw_bob_masked;
     draw_bob_or(obj);
 }
 
@@ -529,16 +529,12 @@ HLE_WEAK void draw_background(void)
             size = (uint16_t)((uint16_t)((uint16_t)d7 << 6) + 1);
             for (int n = 0; n < 20; n++, col += 2) {
                 uint16_t cell = *cells++;
-                uint16_t t;
 
                 if (cell == 0)
                     continue;
-                if (!(cell & 0x8000)) {
-                    t = (uint16_t)(size << 2);
-                    put_tile(tiles, cell, col, t, 1);
-                    size = (uint16_t)((uint16_t)(t - 3 + 3) >> 2);
-                } else
-                    put_tile(tiles, cell, col, size, 1);
+                put_tile(tiles, cell, col, size, 1);
+                if (!(cell & 0x8000))
+                    size = (uint16_t)((uint16_t)(size << 2) >> 2);   /* lsl.w #2 .. lsr.w #2 */
             }
             return;
         }

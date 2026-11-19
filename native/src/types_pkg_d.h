@@ -16,7 +16,6 @@ struct Object {
     const void *gfx;            /* 16 */
     int16_t anim_delay;         /* 1a */
     const uint16_t *anim;       /* 1c: the animation script */
-    uint16_t w1e;
     int16_t x;                  /* 20 */
     uint16_t x_frac;            /* 22 */
     int16_t y;                  /* 24 */
@@ -35,7 +34,7 @@ struct Object {
     int16_t v42;                /* 42: score of the object */
     int16_t v44;                /* 44: kind */
     uint16_t *v46;
-    uint16_t pad4a[5];
+    uint16_t pad4a[5];          /* 4a: a pointer (pkg_c); 4e: a long and 52: a word in the level 1 boss */
     int16_t v54;
     Object *target;             /* 56 */
     Object *chain;              /* 5a */

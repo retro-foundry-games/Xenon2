@@ -129,15 +129,17 @@ void stars_draw(void)
     }
 }
 
-/* orig $002418: take an object off the free list (free_obj) and clear its flag bytes; a0 = the caller's a0, returned unchanged
- * when the list is empty.  The result is in a0. */
-Obj *obj_free_pop(Obj *a0)
+/* orig $002418: take an object off the free list (free_obj) and clear its flag bytes; the result is in a0 (0 here when the list is
+ * empty: the original then searches the lists from $2436, goes on at $2436). */
+Object *obj_free_pop(void)
 {
-    if (free_obj != 0) {
-        a0 = free_obj;
+    Object *a0 = free_obj;
+
+    if (a0 != 0) {
         free_obj = a0->next;
-        a0->pad32[1] &= 0x00ff;     /* byte $34 */
-        a0->pad44[14] = 0;          /* bytes $60, $61 */
+        a0->flag34 = 0;
+        a0->flag60 = 0;
+        a0->flag61 = 0;
         return a0;
     }
     /* goes on at $2436 */
@@ -171,7 +173,7 @@ void irq_vblank(void)
             irq_joy_prev = joy;
         }
         if (v_0414 >= 0 || v_0418 >= 0) {
-            void (*cmd)(__reg("d0") uint16_t) = (void (*)(__reg("d0") uint16_t))music_cmd_fn;
+            void (*cmd)(uint16_t) = (void (*)(uint16_t))music_cmd_fn;   /* d0.w = command */
 
             if (v_0414 >= 0) {
                 cmd((uint16_t)v_0414 | 0x200);
@@ -444,7 +446,7 @@ static void main_loop(void)
         v_0a07 = 0;
         if (v_0e04 == 5) {
             for (;;) {
-                Obj *a1 = obj_list[1].prev;
+                Object *a1 = obj_list[1].prev;
 
                 if (a1->type == 0)
                     break;

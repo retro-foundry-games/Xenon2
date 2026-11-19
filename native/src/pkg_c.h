@@ -1,5 +1,63 @@
 #ifndef PKG_C_H
 #define PKG_C_H
 #include "game.h"
-extern void fn_002418(void);
+
+/* Object routines are called with the object in a0 (the original's convention); the Amiga build says so with regparm.  The
+ * routines of the other modules that are called through the object's pointers take the same. */
+#ifdef __mc68000__
+#define REGARG1 __attribute__((regparm(1)))
+#define REGARG2 __attribute__((regparm(2)))
+#else
+#define REGARG1
+#define REGARG2
+#endif
+typedef void (*ObjFn)(Object *) REGARG1;
+typedef void (*AnimOp)(Object *, const uint16_t *) REGARG2;
+
+/* The lists of objects at $A76: the head pointer of list i is the forward link ($12, `prev` of struct Object) of obj_list[i]; the
+ * links of the objects: forward $12 (`prev`), backward $E (`next`). */
+#define OBJ_FWD(o) ((o)->prev)
+#define OBJ_BACK(o) ((o)->next)
+#define LIST_SENTINEL(i) (&obj_list[i])
+#define LIST_HEAD(i) (LIST_SENTINEL(i)->prev)
+enum { LIST_PLAYER = 0, LIST_MISC = 1, LIST_ENEMY = 2, LIST_EFFECT = 3, LIST_FRONT = 4 };
+
+/* other modules, no C yet */
+extern uint32_t random_next(void);                    /* $1F50 */
+extern Object *fn_002418(void);                       /* the object from the free list (in a0) */
+extern void fn_000fee(Object *o);
+extern void fn_0057b6(Object *o);
+extern void fn_004634(Object *o);
+extern void fn_00128e(Object *o);
+extern void fn_005924(void);
+/* the level blob's entries ($54E0C: a shot or a point meets nothing else: a flag; $54E10/$54E18: a scroll event fires) */
+extern uint16_t fn_054e0c(int16_t d0, int16_t d1, int16_t d2, int16_t d3);
+extern void fn_054e10(uint16_t d0, const struct SpawnRec *a1);
+extern void fn_054e18(uint16_t d0, const struct SpawnRec *a1);
+
+void anim_step(Object *o);
+void anim_op_jump(Object *o, const uint16_t *a1);
+void anim_op_free(Object *o, const uint16_t *a1);
+void map_tile_mask(uint16_t x, uint16_t y, uint16_t rows);
+uint16_t player_tile_hit(Object *o);
+Object *collide_enemies(Object *o);
+Object *scan_boxes(Object *a1, int16_t x0, int16_t y0, int16_t x1, int16_t y1);
+Object *point_in_enemy(int16_t x, int16_t y);
+uint16_t direction8(int16_t dx, int16_t dy);
+void obj_nop(Object *o);
+Object *owner_chain_next(Object *a1);
+Object *spawn_formation(Object *a0, Object *a1, const struct SpawnDef *a2);
+void bbox_from_frame(Object *o);
+void spawn_effect(int16_t x, int16_t y, const uint16_t *a2, ObjFn a3);
+void note_spawn_record(const struct SpawnRec *a1, uint16_t d2);
+void latch_slots(uint16_t d2);
+void scroll_events(void);
+void run_updates(Object *a0);
+void run_draws(Object *a0);
+void update_all(void);
+void spawn_debris(Object *a1);
+Object *spawn_wave_326c(Object *a0, Object *a1);
+Object *spawn_marker_enemy(uint16_t d0, const struct SpawnRec *a1, void (*a2)(void));
+Object *spawn_marker_front(uint16_t d0, const struct SpawnRec *a1, void (*a2)(void));
+
 #endif
