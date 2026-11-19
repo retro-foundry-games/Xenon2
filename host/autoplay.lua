@@ -1,5 +1,5 @@
 -- An autoplayer for the lockstep: at each sync point it decides the stick from the original's memory (object lists, the player) and holds fire.
--- Loaded by host/lockstep.lua (auto=1) and run in the emulator's Lua state: `return function(n) -> {up=,down=,left=,right=,fire=}`.
+-- Loaded by host/lockstep.lua (auto=1; the emulator's peek16/peek32) or by dev/lua/course.lua (the port's): `factory(peek16, peek32)` returns `function(n) -> {up=,down=,left=,right=,fire=}`.
 --
 -- It stays in the lower part of the screen, goes under the nearest enemy that is on screen, and steps aside from an enemy shot that is about to hit it.
 -- Where there is nothing to shoot it wanders (a deterministic pseudo-random walk of n), so the run reaches more of the game than a fixed schedule.
@@ -9,14 +9,15 @@ local SENTINELS = 0xa76            -- obj_list[5]: the head of list i is the for
 local PLAYER = 0x3f01c
 local NOP = { [0xe48] = true, [0x3130] = true }       -- obj_nop (the jump-table thunk and the routine): an object that is not drawn is a marker
 
-local function s16(a) local v = ami.peek16(a); return v >= 0x8000 and v - 0x10000 or v end
+local peek16, peek32
+local function s16(a) local v = peek16(a); return v >= 0x8000 and v - 0x10000 or v end
 
 local function walk(list, visit)
     local sentinel = SENTINELS + list * OBJ_SIZE
-    local o, guard = ami.peek32(sentinel + 0x12), 0
+    local o, guard = peek32(sentinel + 0x12), 0
     while o ~= 0 and o ~= sentinel and o >= 0x400 and o < 0x7ff00 and guard < 200 do
         visit(o)
-        o = ami.peek32(o + 0x12)
+        o = peek32(o + 0x12)
         guard = guard + 1
     end
 end
@@ -28,27 +29,33 @@ local function random(n)   -- deterministic: the same run plays the same way
 end
 
 local wander_x, wander_until = 160, 0
+local last_scroll, stalled = -1, 0
+local last_x, last_y = 0, 0   -- the direction held at the last decision
 
-return function(n)
+local function decide(n)
     local px, py = s16(PLAYER + 0x20), s16(PLAYER + 0x24)
     local target, danger = nil, nil
 
     walk(LIST_ENEMY, function(o)
-        if o == PLAYER or NOP[ami.peek32(o + 6)] then return end
+        if o == PLAYER or NOP[peek32(o + 6)] then return end
         local x, y = s16(o + 0x20), s16(o + 0x24)
         if y > 0 and y < py and x > 8 and x < 312 then
             if not target or math.abs(x - px) + (py - y) // 4 < math.abs(target.x - px) + (py - target.y) // 4 then target = { x = x, y = y } end
         end
     end)
     walk(LIST_EFFECT, function(o)
-        if ami.peek16(o) ~= 0x14 then return end   -- an enemy shot (spawn_enemy_shot)
+        if peek16(o) ~= 0x14 then return end   -- an enemy shot (spawn_enemy_shot)
         local x, y = s16(o + 0x20), s16(o + 0x24)
         if y > py - 56 and y < py + 6 and math.abs(x - px) < 22 then
             if not danger or y > danger.y then danger = { x = x, y = y } end
         end
     end)
 
-    local st = { up = 0, down = 0, left = 0, right = 0, fire = 1 }
+    -- the level scrolls all the time; when it has stood still for a few decision points the player is dead and the game waits for a new press of fire (a held button is no press): pulse it
+    local scroll = peek16(0xcd0)
+    if scroll == last_scroll then stalled = stalled + 1 else stalled = 0 end
+    last_scroll = scroll
+    local st = { up = 0, down = 0, left = 0, right = 0, fire = (stalled >= 3 and n % 2 == 0) and 0 or 1 }
     local want_x
     if danger then
         want_x = danger.x <= px and px + 40 or px - 40       -- away from it
@@ -65,5 +72,16 @@ return function(n)
     local low, high = 150, 188
     if py > high then st.up = 1 elseif py < low then st.down = 1
     elseif random(12) == 0 then if random(2) == 0 then st.up = 1 else st.down = 1 end end
+    -- a reversal goes through neutral for one sync interval: the emulator's stick reads neither direction for a while when two directions change in one update
+    local x = st.left == 1 and -1 or st.right == 1 and 1 or 0
+    local y = st.up == 1 and -1 or st.down == 1 and 1 or 0
+    if x ~= 0 and x == -last_x then st.left, st.right, x = 0, 0, 0 end
+    if y ~= 0 and y == -last_y then st.up, st.down, y = 0, 0, 0 end
+    last_x, last_y = x, y
     return st
+end
+
+return function(p16, p32)
+    peek16, peek32 = p16, p32
+    return decide
 end

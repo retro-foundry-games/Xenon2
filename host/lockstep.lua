@@ -41,7 +41,7 @@ local STRICT = args:match("strict=1") ~= nil
 local REPORT = args:match("report=(%S+)")
 local PLAY = args:match("play=1") ~= nil   -- you play: arrows = stick, Ctrl / Space / Return = fire, in the emulator's window (without --headless); implies hold=1, no sync limit
 local AUTO = args:match("auto=1") ~= nil   -- the autoplayer (host/autoplay.lua) plays: the stick from the original's memory at each sync point; the input is written to captures/input/play-latest.txt as when played
-local HOLD = PLAY or args:match("hold=1") ~= nil   -- at the first difference stay paused (with --control PATH: LS.port_call(LUA) runs Lua in the port, LS.snap is the original's memory and frame at the point)
+local HOLD = PLAY or args:match("hold=1") ~= nil   -- (a replay=FILE of a run is shown in the window with the three views too)   -- at the first difference stay paused (with --control PATH: LS.port_call(LUA) runs Lua in the port, LS.snap is the original's memory and frame at the point)
 local CALLS = args:match("calls=1") ~= nil   -- also compare how often each function of the game was called between two sync points (the code table of the port)
 local STATE = args:match("state=(%S+)")   -- the original starts from local/save/NAME.state (a level running); the port plays itself to the level and takes the original's memory at the first sync point
 local ROOT = ami.script_dir .. "/.."
@@ -84,7 +84,7 @@ if REPLAY then
         end
     end
 end
-local autoplay = AUTO and load(ami.file_read("host/autoplay.lua", 0, ami.file_size("host/autoplay.lua")))() or nil
+local autoplay = AUTO and load(ami.file_read("host/autoplay.lua", 0, ami.file_size("host/autoplay.lua")))()(ami.peek16, ami.peek32) or nil
 local started = false
 if STATE then
     ami.wait(1)
@@ -434,7 +434,7 @@ local function compare_picture(snap, port_pic)
             end
         end
     end
-    if PLAY then   -- the three views: the original (the window), the port, the differences
+    if PLAY or AUTO or REPLAY then   -- the three views: the original (the window), the port, the differences
         if not panels_shown then panels_shown = true; say("the three views: the original (the window), the port (first panel to its right), the differences (second panel)") end
         ami.panel(1, port_pic, 320, 256, 2, 1, 0)
         ami.panel(2, diff_image or ("\0"):rep(320 * 256 * 3), 320, 256, 2, 1, 0)
