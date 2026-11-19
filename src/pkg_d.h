@@ -32,7 +32,7 @@ void level1_hook(uint16_t d0, const uint8_t *a1, uint16_t d2);
 #define LIST_C ((Object *)&obj_list[2])
 #define LIST_B ((Object *)&obj_list[3])
 #define PLAYER ((Object *)&player)
-#define SLOT(i) ((Slot *)&v_0c66[3 * (i)])
+#define SLOT(i) (&v_0c66[i])
 
 Object *weapon_select(uint16_t d1, Object *a0, Object *a1);               /* orig $004822 */
 Object *refill_slot0(Object *a0, Object *a1);                                /* orig $005540 */
