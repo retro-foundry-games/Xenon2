@@ -63,6 +63,13 @@ for at, dirs in (args:match("joy=(%S+)") or ""):gmatch("(%d+):([%a+]+)") do
     joys[tonumber(at)] = st
 end
 
+ami.machine{
+    name = "Xenon2 lockstep", model = "A500", system = "../local/system", save = "../local/save", files = "..",
+    content = "../local/xenon2.m3u", roms = { { "kick34005.A500", 0xc4f0f55f } },
+    opt = { puae_joyport_order = "2143" },
+    peers = { port = { ROOT .. "/dev/build/xenon2-sdl-dev", "--lua", ROOT .. "/dev/lua/shell.lua", "--lua-args", "-", "--disks", ROOT .. "/local" } },
+}
+ami.boot()
 if REPLAY then
     local text = ami.file_read(REPLAY, 0, ami.file_size(REPLAY))
     for line in text:gmatch("[^\n]+") do
@@ -75,13 +82,6 @@ if REPLAY then
         end
     end
 end
-ami.machine{
-    name = "Xenon2 lockstep", model = "A500", system = "../local/system", save = "../local/save", files = "..",
-    content = "../local/xenon2.m3u", roms = { { "kick34005.A500", 0xc4f0f55f } },
-    opt = { puae_joyport_order = "2143" },
-    peers = { port = { ROOT .. "/dev/build/xenon2-sdl-dev", "--lua", ROOT .. "/dev/lua/shell.lua", "--lua-args", "-", "--disks", ROOT .. "/local" } },
-}
-ami.boot()
 local started = false
 if STATE then
     ami.wait(1)
