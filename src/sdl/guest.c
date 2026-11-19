@@ -159,13 +159,8 @@ extern uint32_t guest_code_address(const void *function);
 
 unsigned host_vbl_count(void) { return xenon.vbl_count; }
 
-int host_export_ram(const char *path)
+void host_export_ram_buf(uint8_t *ram)   /* ram: 0x80000 bytes */
 {
-    uint8_t *ram = malloc(sizeof xenon);
-    FILE *f;
-
-    if (!ram)
-        return -1;
     memcpy(ram, &xenon, sizeof xenon);
     for (unsigned i = 0; i < sizeof guest_members / sizeof guest_members[0]; i++) {
         uint8_t *m = ram + guest_members[i].address;
@@ -204,6 +199,16 @@ int host_export_ram(const char *path)
             }
         }
     }
+}
+
+int host_export_ram(const char *path)
+{
+    uint8_t *ram = malloc(sizeof xenon);
+    FILE *f;
+
+    if (!ram)
+        return -1;
+    host_export_ram_buf(ram);
     f = fopen(path, "wb");
     if (!f) {
         free(ram);
@@ -213,4 +218,12 @@ int host_export_ram(const char *path)
     fclose(f);
     free(ram);
     return 0;
+}
+
+/* the memory as the original had it (big endian, 0x80000 bytes) into the block: the raw bytes, then the named members converted (the dev build starts the port from the
+ * original's state this way) */
+void host_import_ram_buf(const uint8_t *ram)
+{
+    memcpy(&xenon, ram, sizeof xenon);
+    guest_load_range(0, ram, 0x80000);
 }
