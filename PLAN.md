@@ -30,9 +30,9 @@ Then: the SDL machine layer (`native/src/sdl/`: guest memory, files, irq, HLE di
 
 - Decompiled: the executed code and the routines the recorded run never reached (the title logo scaler, the level-1 spawner, turrets, boss, weapons, the
   keyboard handler, the pool-exhaustion path): about 250 functions in eight modules, integrated (`make -C native blob`, `make -C native sdl`).
-- Oracle (`tools/check.py`): about 450 comparisons with no difference.  Left: `sfx_tick` twice (screen bytes the blitter was still writing in the
-  original), and functions that cannot be called by the oracle (they wait for the vertical blank or the disk, or are interrupt handlers) or that the two
-  scenarios never reach (many of the weapon and boss routines: written carefully from the disassembly, unchecked).
+- Oracle (`tools/check.py`): 456 comparisons over 129 functions, no difference (the oracle waits for the blitter before its snapshot and ignores
+  the disk DMA buffer).  Not compared: functions the oracle cannot call (they wait for the vertical blank or the disk, or are interrupt handlers) and
+  functions the two scenarios never reach (many weapon, boss and turret routines: written carefully from the disassembly, unchecked).
 - Port: `tools/verify_port.sh` runs the port headless from the title through the menu, the first level selected, loaded (disk 2 asked for and
   inserted) and running, and checks each stage.  Enemies move, shots kill them, the score rises.  Not looked at in the window by the author.
 - No C: `fn_054e00`, the shop program loaded from disk at $54E00 (not in the captures).
