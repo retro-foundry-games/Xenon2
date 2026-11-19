@@ -9,10 +9,31 @@
 
 #ifdef GAME_SDL
 void guest_blob_raw(int on);
+uint32_t guest_address(const void *p);
+#define GADDR(p) guest_address(p)
 #else
 #define guest_blob_raw(on) ((void)0)
+#define GADDR(p) ((uint32_t)(uintptr_t)(p))
 #endif
 
-void shop_main(void);   /* shop $54E00 */
+/* raw words, longs and bytes of the original's memory at an address of the blob */
+static inline uint8_t sh_r8(uint32_t a) { return *(const uint8_t *)GPTR(a); }
+static inline void sh_w8(uint32_t a, uint8_t v) { *(uint8_t *)GPTR(a) = v; }
+static inline uint16_t sh_r16(uint32_t a) { return rd16(GPTR(a)); }
+static inline void sh_w16(uint32_t a, uint16_t v) { wr16(GPTR(a), v); }
+static inline uint32_t sh_r32(uint32_t a) { return rd32(GPTR(a)); }
+static inline void sh_w32(uint32_t a, uint32_t v) { wr32(GPTR(a), v); }
+
+void shop_main(void);                                   /* shop $54E00 */
+
+/* the shop's sound (pkg_i2.c): $6477C, $647A6 and what they call */
+void shop_irq_tick(void);                               /* shop $6477C */
+void shop_sound_cmd(uint16_t d0);                       /* shop $647A6 */
+void shop_sound_stop(void);                             /* shop $6478A */
+void shop_sound_reset(void);                            /* shop $647B4 */
+void shop_sound_tick(void);                             /* shop $64BBC */
+void shop_sound_tables(void);                           /* shop $6492A */
+void shop_sound_tables2(void);                          /* shop $64972 */
+void shop_sound_delay(void);                            /* shop $64BB2 */
 
 #endif
