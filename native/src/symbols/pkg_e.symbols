@@ -5,7 +5,7 @@ var draw_screen 0x406 uint8_t *                   ; the screen being drawn into
 var v_0414 0x414 int16_t
 var players 0x422 uint16_t                        ; 2 = two players
 var cur_player 0x428 uint16_t
-var free_obj 0x42a struct Obj *                   ; head of the free list of objects
+var free_obj 0x42a Obj *                   ; head of the free list of objects
 var v_042e 0x42e uint16_t
 var v_0430 0x430 uint16_t
 var v_0432 0x432 uint16_t
@@ -19,15 +19,12 @@ var v_04e2 0x4e2 uint16_t
 var v_0a00 0xa00 uint8_t
 var v_0a01 0xa01 uint8_t
 var v_0a02 0xa02 uint8_t
-arr v_0a03 0xa03 uint8_t 2                        ; flag for each player
-var v_0a04 0xa04 uint8_t                          ; two players
-arr v_0a05 0xa05 uint8_t 2
-var v_0a06 0xa06 uint8_t
+arr v_0a03 0xa03 uint8_t 4                        ; [0..1] flag for each player, [2..3] another one
 var v_0a07 0xa07 uint8_t
 arr v_0a08 0xa08 uint8_t 98
 var v_0a6b 0xa6b uint8_t
 var v_0a6c 0xa6c uint8_t
-arr obj_list 0xa76 struct Obj 5                   ; list heads (sentinel objects)
+arr obj_list 0xa76 Obj 5                   ; list heads (sentinel objects)
 var v_0c60 0xc60 uint16_t
 var v_0c62 0xc62 uint16_t
 var v_0c64 0xc64 uint16_t
@@ -64,8 +61,8 @@ var v_0cec 0xcec uint16_t
 var v_0cee 0xcee uint16_t
 var v_0cf0 0xcf0 uint16_t
 var v_0cf2 0xcf2 uint16_t
-var v_0cf4 0xcf4 struct Obj *
-var v_0cf8 0xcf8 struct Obj *
+var v_0cf4 0xcf4 Obj *
+var v_0cf8 0xcf8 Obj *
 arr v_0cfc 0xcfc uint16_t 21
 arr v_0d7c 0xd7c uint8_t 7                        ; score digits
 var v_0d83 0xd83 uint8_t
@@ -78,15 +75,16 @@ tab digit_gfx 0x1981e uint8_t 640
 tab v_19a9e 0x19a9e uint16_t 640
 arr v_3bcac 0x3bcac uint32_t 3000
 arr v_3ecf4 0x3ecf4 uint32_t 202
-var player 0x3f01c struct Obj
-arr obj_pool 0x3f07e struct Obj 159
-arr shots 0x42d5c struct Shot 80
+var player 0x3f01c Obj
+arr obj_pool 0x3f07e Obj 159
+arr shots 0x42d5c Shot 80
 tab row_offset 0x4321c uint16_t 192
 arr screen_a 0x44000 uint8_t 34560
 arr screen_b 0x4c700 uint8_t 34560
 var level_init_src 0x54e04 uint32_t *
 var level_palette 0x54e1c uint32_t *
 tab ship_records 0x6cc2 uint16_t 48
+tab v_6894 0x6894 int16_t 14                       ; offsets of the options from the player
 arr palette_shadow 0x7012 uint16_t 16
 tab v_796e 0x796e uint16_t 1
 var v_8428 0x8428 uint8_t

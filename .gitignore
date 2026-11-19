@@ -8,3 +8,6 @@ native/src/game_state.h
 native/src/game.ld
 native/src/guest_members.h
 native/src/data.c
+native/src/sdl/records.c
+native/src/sdl/code_table.c
+native/build/

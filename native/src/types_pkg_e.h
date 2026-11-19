@@ -2,6 +2,8 @@
 #define TYPES_PKG_E_H
 #include <stdint.h>
 
+typedef struct Obj Obj;
+
 /* an object of the lists at $A76 and of the pool at $3F07E (0x62 bytes) */
 struct Obj {
     uint16_t type;              /* 0: 0 = free */
@@ -27,6 +29,8 @@ struct Obj {
     uint16_t w42;
     uint16_t pad44[15];
 };
+
+typedef struct Shot Shot;
 
 /* a shot dot at $42D5C: type < 0 = free */
 struct Shot {

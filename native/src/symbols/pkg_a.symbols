@@ -1,0 +1,9 @@
+; pkg_a: $0000-$17FF (blitter helpers, text, background)
+var clip_bottom 0x420 uint16_t                    ; first line below the clip window of the bobs
+var map_image 0x54e00 uint8_t *                   ; the background picture (the level's map drawn as one image)
+var tile_gfx 0x54e08 uint8_t *                    ; the tile graphics
+tab pow10 0x169e uint32_t 8                       ; 1000000 .. 1, 0
+tab text_chars 0x86fc uint8_t 39                  ; the characters of the text font, in glyph order, zero-terminated
+tab font_gfx 0xb666 uint8_t 4864                  ; the font: 128 bytes a glyph
+arr copper_list_a 0x1014 uint16_t 18              ; copper list: the bitplane pointers
+arr copper_list_b 0x1038 uint16_t 18
