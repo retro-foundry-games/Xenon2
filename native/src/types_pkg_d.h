@@ -34,14 +34,17 @@ struct Object {
     int16_t v42;                /* 42: score of the object */
     int16_t v44;                /* 44: kind */
     uint8_t *v46;
-    uint16_t pad4a[5];          /* 4a: a pointer (pkg_c); 4e: a long and 52: a word in the level 1 boss */
+    const uint8_t *ptr4a;       /* 4a: the next command of a path script (pkg_c, pkg_g: ObjMove cursor) */
+    uint16_t pad4e[3];          /* 4e: a long and 52: a word in the level 1 boss */
     int16_t v54;
     Object *target;             /* 56 */
     Object *chain;              /* 5a */
-    int16_t v5e;
+    uint8_t v5e_b[2];           /* 5e: a word (high byte first), and two bytes in ObjMove (shot_count, shot_rate): kept as bytes, V5E/SET_V5E for the word */
     int8_t flag60;
     int8_t flag61;
 };
+#define V5E(o) ((int16_t)(((o)->v5e_b[0] << 8) | (o)->v5e_b[1]))
+#define SET_V5E(o, v) ((o)->v5e_b[0] = (uint8_t)((uint16_t)(v) >> 8), (o)->v5e_b[1] = (uint8_t)(v))
 
 /* a weapon slot at $C66 (7 of them) */
 typedef struct Slot Slot;

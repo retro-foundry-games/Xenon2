@@ -3,6 +3,8 @@
 -- The first difference pauses the emulator and the port is not stepped again, so both can be looked at (the emulator's --control socket); continue=1 goes on and lists them all.
 --
 --   ami9000_host host/lockstep.lua --headless --script-args "[syncs=N] [tolerant=1] [continue=1] [mem=0] [pic=0] [ignore=NAME,NAME] [joy=SYNC:DIRS,...] [show=NAME,NAME] [strict=1] [report=FILE]"
+--     state=NAME    start from the emulator's savestate local/save/NAME.state (frame-8880: level 1 running) instead of the start of the game: the port plays to the level by itself
+--                   (the fire button on the schedule of tools/verify_port.sh) and takes the original's memory at the first sync point
 --     syncs=N       how many synchronisation points to compare (default 300)
 --     tolerant=1    also leave out what depends on how many interrupts the original took while its (slow) code ran: the music player, the hardware mirror, the random generator
 --     continue=1    go on after a difference
@@ -31,6 +33,7 @@ local COMPARE_MEM = args:match("mem=0") == nil
 local CONTINUE = args:match("continue=1") ~= nil
 local STRICT = args:match("strict=1") ~= nil
 local REPORT = args:match("report=(%S+)")
+local STATE = args:match("state=(%S+)")   -- the original starts from local/save/NAME.state (a level running); the port plays itself to the level and takes the original's memory at the first sync point
 local ROOT = ami.script_dir .. "/.."
 
 -- members whose values depend on when the interrupts fall relative to the code, not on what the code does
@@ -56,6 +59,12 @@ ami.machine{
     peers = { port = { ROOT .. "/dev/build/xenon2-sdl-dev", "--lua", ROOT .. "/dev/lua/shell.lua", "--lua-args", "-", "--disks", ROOT .. "/local" } },
 }
 ami.boot()
+local started = false
+if STATE then
+    ami.wait(1)
+    assert(ami.snapshot_load(STATE .. ".state"), "cannot load " .. STATE)
+    started = true
+end
 local peer = ami.peer("port")
 
 -- The port is driven through its interactive Lua shell (dev/lua/shell.lua on the peer's stdin/stdout): a line of Lua goes in, what it prints comes back up to the prompt,
@@ -112,7 +121,7 @@ local function hex(img, from, count)
 end
 
 -- ---- the emulator's side: a snapshot at every sync point, from the first instruction of the game on ---------------------------------------------------------------------
-local started, start_ram = false, nil
+local start_ram
 local fire_until = 0
 local pending, n = {}, 0
 local FRAME_W, FRAME_H = 720, 287      -- the emulator's frame
@@ -122,7 +131,7 @@ local function sync_point()
     if not started then return end
     n = n + 1
     if n > SYNCS then return end
-    pending[#pending + 1] = { n = n, frame = ami.frame(), ram = COMPARE_MEM and ami.read(0, 0x80000) or nil }
+    pending[#pending + 1] = { n = n, frame = ami.frame(), ram = (COMPARE_MEM or (STATE and n == 1)) and ami.read(0, 0x80000) or nil }
     local st = joys[n]
     if st then
         ami.joystick{ up = st.up == 1, down = st.down == 1, left = st.left == 1, right = st.right == 1, fire = st.fire == 1 }
@@ -131,19 +140,25 @@ local function sync_point()
 end
 for _, a in ipairs(ADDRS) do ami.hook(a, sync_point) end
 
--- up to the start of the game: the fire presses that pass the intro, then nothing; the memory at the very first instruction of the game goes to the port
-ami.hook(0x7032, function() started = true; start_ram = ami.read(0, 0x80000) end)
-while not started do
-    local f = ami.frame()
-    if f >= 5200 and f % 150 == 0 then ami.joystick{ fire = true }; fire_until = f + 10 end
-    if fire_until ~= 0 and f >= fire_until then ami.joystick(); fire_until = 0 end
-    ami.wait(1)
+if STATE then
+    -- the port plays to the level by itself: the fire button on a schedule until the level's per-frame update has run a few times
+    port_call('function to_level() local n, f = 0, 0; port.hook(0x35d4, function() n = n + 1 end); while n < 5 and f < 6000 do f = f + 1; local k = f % 150; if k == 100 then port.joy{ fire = true } elseif k == 110 then port.joy{} end; port.step() end; port.unhook(0x35d4); port.joy{}; print(n, port.frame()) end')
+    say("the original starts from the state %s (emulator frame %d); the port plays to the level: %s", STATE, ami.frame(), port_call("to_level()"))
+else
+    -- up to the start of the game: the fire presses that pass the intro, then nothing; the memory at the very first instruction of the game goes to the port
+    ami.hook(0x7032, function() started = true; start_ram = ami.read(0, 0x80000) end)
+    while not started do
+        local f = ami.frame()
+        if f >= 5200 and f % 150 == 0 then ami.joystick{ fire = true }; fire_until = f + 10 end
+        if fire_until ~= 0 and f >= fire_until then ami.joystick(); fire_until = 0 end
+        ami.wait(1)
+    end
+    ami.joystick()
+    say("the game starts at emulator frame %d", ami.frame())
+    peer:send("ram_in(524288)\n")
+    peer:send(start_ram)
+    wait_ready()
 end
-ami.joystick()
-say("the game starts at emulator frame %d", ami.frame())
-peer:send("ram_in(524288)\n")
-peer:send(start_ram)
-wait_ready()
 
 -- the window of the emulator's frame that is the port's picture (x, y of its first column and row, sx columns a pixel), x and y in the emulator's frame
 local function cut(shot, win)
@@ -189,7 +204,26 @@ local function calibrate(port_pic, snap)
     end
 end
 
-local baseline
+-- the bytes that differ in a member: a list of {first, last} runs, found by blocks of 64 bytes
+local function different_bytes(a, b)
+    local runs, size = {}, #a
+    for block = 1, size, 64 do
+        if a:sub(block, block + 63) ~= b:sub(block, block + 63) then
+            local last = math.min(block + 63, size)
+            for i = block, last do
+                if a:byte(i) ~= b:byte(i) then
+                    local run = runs[#runs]
+                    if run and run[2] == i - 1 then run[2] = i else runs[#runs + 1] = { i, i } end
+                end
+            end
+        end
+    end
+    return runs
+end
+
+-- Baseline: at the first sync point every byte that differs is junk (what the original's memory held before the game, stale bits of pointers the port cannot hold the same
+-- way); from then on a byte counts only if it did not differ at the first point.
+local baseline   -- baseline[name] = set of byte indexes (1-based within the member) that differed at the first sync point
 local function compare_memory(snap, port_ram)
     local first = baseline == nil
     if first then baseline = {} end
@@ -198,23 +232,35 @@ local function compare_memory(snap, port_ram)
         local addr, size, name = m[1], m[2], m[3]
         local a, b = snap.ram:sub(addr + 1, addr + size), port_ram:sub(addr + 1, addr + size)
         if not IGNORE[name] and a ~= b then
-            if first then baseline[name] = a .. b end
-            if STRICT or (not first and baseline[name] ~= a .. b) then
-                bad = bad + 1
-                if shown < 12 then
-                    shown = shown + 1
-                    local k = 1
-                    while a:byte(k) == b:byte(k) do k = k + 1 end
-                    say("   memory %-26s $%06x +%-5d (size %d): original %s port %s", name, addr, k - 1, size, hex(a, k, 8), hex(b, k, 8))
+            local runs = different_bytes(a, b)
+            if first and not STRICT then
+                local set = {}
+                for _, run in ipairs(runs) do for i = run[1], run[2] do set[i] = true end end
+                baseline[name] = set
+            else
+                local mask, k, count = baseline[name] or {}, nil, 0
+                for _, run in ipairs(runs) do
+                    for i = run[1], run[2] do
+                        if not mask[i] then count = count + 1; k = k or i end
+                    end
+                end
+                if count > 0 then
+                    bad = bad + 1
+                    if shown < 12 then
+                        shown = shown + 1
+                        say("   memory %-26s $%06x +%-5d (size %d, %d bytes differ): original %s port %s", name, addr, k - 1, size, count, hex(a, k, 8), hex(b, k, 8))
+                        local from = math.max(1, k - 14)
+                        say("      around it (from +%d): original %s  port %s", from - 1, hex(a, from, 28), hex(b, from, 28))
+                    end
                 end
             end
         end
     end
-    if first then
+    if first and not STRICT then
         local junk = 0
         for _ in pairs(baseline) do junk = junk + 1 end
-        say("baseline at the first sync point: %d members already differ (what the original's memory held before the game); only changes are reported from here", junk)
-        if not STRICT then return 0 end
+        say("baseline at the first sync point: %d members have bytes that differ (what the original's memory held before; stale bits); only other bytes are reported from here", junk)
+        return 0
     end
     return bad
 end
@@ -254,6 +300,12 @@ while not done do
         local snap = table.remove(pending, 1)
         local reply = port_call(("sync(0x%x)"):format(PORT_ADDR))
         if not reply or not reply:match("^synced") then say("lockstep: the port did not reach sync point %d (%s)", snap.n, tostring(reply)); done = true; break end
+        if STATE and snap.n == 1 and args:match("dumpram=(%S+)") then ami.save_file(args:match("dumpram=(%S+)"), snap.ram) end
+        if STATE and snap.n == 1 then   -- the port is in the level, at the same program point: the original's memory in
+            peer:send("ram_in(524288)\n")
+            peer:send(snap.ram)
+            wait_ready()
+        end
         local problems = {}
         if COMPARE_MEM then
             local port_ram = port_binary("ram_out()")

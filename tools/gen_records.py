@@ -67,7 +67,7 @@ def layout(name, structs, memo):
                     decls.append((dm.group(2), 'fn', 4, int(dm.group(3), 0) if dm.group(3) else 1)); continue
                 if base in TYPEDEFS and TYPEDEFS[base] in SCALARS: base = TYPEDEFS[base]
                 count = int(dm.group(3), 0) if dm.group(3) else 1
-                if ptr: decls.append((dm.group(2), 'ptr', 4, count))
+                if ptr: decls.append((dm.group(2), 'ptrv' if base == 'void' else 'ptr', 4, count))   # (a void pointer may be code or data)
                 elif base in SCALARS:
                     decls.append((dm.group(2), {1: '8', 2: '16', 4: '32'}[SCALARS[base]] if base != 'irq_fn' else 'fn', SCALARS[base], count))
                 elif base in structs:
@@ -108,6 +108,8 @@ def main():
            'static void u16(uint8_t *p) { uint16_t v; memcpy(&v, p, 2); p[0] = (uint8_t)(v >> 8); p[1] = (uint8_t)v; }',
            'static void u32(uint8_t *p) { uint32_t v; memcpy(&v, p, 4); p[0] = (uint8_t)(v >> 24); p[1] = (uint8_t)(v >> 16); p[2] = (uint8_t)(v >> 8); p[3] = (uint8_t)v; }',
            'static void uptr(uint8_t *p) { uint32_t v; memcpy(&v, p, 4); v = v ? guest_address((void *)(uintptr_t)v) : 0; p[0] = (uint8_t)(v >> 24); p[1] = (uint8_t)(v >> 16); p[2] = (uint8_t)(v >> 8); p[3] = (uint8_t)v; }',
+           'static void sptrv(uint8_t *p) { uint32_t v = (uint32_t)p[0] << 24 | (uint32_t)p[1] << 16 | (uint32_t)p[2] << 8 | p[3]; void *f = v ? guest_code(v) : 0; v = v ? (uint32_t)(uintptr_t)(f ? f : guest_ptr(v)) : 0; memcpy(p, &v, 4); }',
+           'static void uptrv(uint8_t *p) { uint32_t v; memcpy(&v, p, 4); if (v) { uint32_t base = (uint32_t)(uintptr_t)guest_ptr(0); v = v - base < 0x80000u ? v - base : guest_code_address((void *)(uintptr_t)v); } p[0] = (uint8_t)(v >> 24); p[1] = (uint8_t)(v >> 16); p[2] = (uint8_t)(v >> 8); p[3] = (uint8_t)v; }',
            'static void ufn(uint8_t *p) { uint32_t v; memcpy(&v, p, 4); v = v ? guest_code_address((void *)(uintptr_t)v) : 0; p[0] = (uint8_t)(v >> 24); p[1] = (uint8_t)(v >> 16); p[2] = (uint8_t)(v >> 8); p[3] = (uint8_t)v; }',
            'static void sfn(uint8_t *p) { uint32_t v = (uint32_t)p[0] << 24 | (uint32_t)p[1] << 16 | (uint32_t)p[2] << 8 | p[3]; v = v ? (uint32_t)(uintptr_t)guest_code(v) : 0; memcpy(p, &v, 4); }', '']
     names = sorted(structs)
@@ -126,6 +128,7 @@ def main():
                 if kind == '16': out.append('    s16(r + %d);' % o)
                 elif kind == '32': out.append('    s32(r + %d);' % o)
                 elif kind == 'ptr': out.append('    sptr(r + %d);' % o)
+                elif kind == 'ptrv': out.append('    sptrv(r + %d);' % o)
                 elif kind == 'fn': out.append('    sfn(r + %d);' % o)
                 else: out.append('    swap_%s(r + %d);' % (kind[4:], o))
         out.append('}\n')
@@ -137,6 +140,7 @@ def main():
                 if kind == '16': out.append('    u16(r + %d);' % o)
                 elif kind == '32': out.append('    u32(r + %d);' % o)
                 elif kind == 'ptr': out.append('    uptr(r + %d);' % o)
+                elif kind == 'ptrv': out.append('    uptrv(r + %d);' % o)
                 elif kind == 'fn': out.append('    ufn(r + %d);' % o)
                 else: out.append('    unswap_%s(r + %d);' % (kind[4:], o))
         out.append('}\n')

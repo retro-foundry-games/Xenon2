@@ -250,7 +250,7 @@ Object *weapon_94(Object *a0, Object *a1)
     n->v42 = 0;
     n->energy = 2;
     n->v44 = 1;
-    n->v5e = -1;
+    SET_V5E(n, -1);
     v_0c62 = 8;
     return n;
 }
@@ -279,7 +279,7 @@ Object *weapon_c0(Object *a0, Object *a1)
     n->v42 = 0;
     n->energy = 2;
     n->v44 = 0xe;
-    n->v5e = -1;
+    SET_V5E(n, -1);
     v_0c62 = 8;
     return n;
 }
@@ -308,7 +308,7 @@ Object *weapon_98(Object *a0, Object *a1)
     n->v42 = 0;
     n->energy = 2;
     n->v44 = 0xa;
-    n->v5e = -1;
+    SET_V5E(n, -1);
     v_0c62 = 8;
     return n;
 }
@@ -333,7 +333,7 @@ Object *weapon_28(Object *a0, Object *a1)
     n->v42 = 0;
     n->energy = 0;
     n->v44 = 0x15;
-    n->v5e = -1;
+    SET_V5E(n, -1);
     v_0c62 = 0xc;
     return n;
 }
@@ -364,7 +364,7 @@ Object *weapon_48(Object *a0, Object *a1)
     n->v42 = 0;
     n->energy = 0;
     n->v44 = 0x17;
-    n->v5e = -1;
+    SET_V5E(n, -1);
     v_0c62 = 0x1e;
     return n;
 }
@@ -392,7 +392,7 @@ Object *weapon_b0(Object *a0, Object *a1)
     n->v42 = 0;
     n->energy = 2;
     n->v44 = 0x14;
-    n->v5e = -1;
+    SET_V5E(n, -1);
     v_0c62 = 8;
     return n;
 }
@@ -417,7 +417,7 @@ static Object *weapon_slot5(Object *a0, uint16_t type, obj_fn update, const uint
     n->v42 = v42;
     n->energy = energy;
     n->v44 = kind;
-    n->v5e = -1;
+    SET_V5E(n, -1);
     return n;
 }
 
@@ -506,7 +506,7 @@ static Object *weapon_side(Object *a0, uint16_t type, obj_fn update, const uint8
     n->v42 = 0;
     n->energy = energy;
     n->v44 = kind;
-    n->v5e = -1;
+    SET_V5E(n, -1);
     return n;
 }
 
@@ -614,14 +614,14 @@ void weapon9c_update(Object *a0)
 
     if (v_0430)
         return;
-    if (a0->v5e >= 0)
-        a0->v5e--;
-    if (v_0a6a == 0 || a0->v5e >= 0)
+    if (V5E(a0) >= 0)
+        SET_V5E(a0, V5E(a0) - 1);
+    if (v_0a6a == 0 || V5E(a0) >= 0)
         return;
     for (a1 = LIST_B->prev; a1->type != 0; a1 = a1->prev)
         if (a1->type == 0x28)
             return;
-    a0->v5e = 0xf;
+    SET_V5E(a0, 0xf);
     n = alloc_b(a0);
     n->type = 0x28;
     n->fn_update = shell_update;
@@ -632,7 +632,7 @@ void weapon9c_update(Object *a0)
     d0 = PLAYER->y - 0xc;
     n->y = d0;
     n->v28 = -(int16_t)(((uint16_t)d0 >> 4) + 4);
-    n->v5e = 6;
+    SET_V5E(n, 6);
 }
 
 /* the eight pictures of the drill, by the loop counter */
@@ -646,14 +646,14 @@ void weaponA0_update(Object *a0)
 
     if (v_0430)
         return;
-    if (a0->v5e >= 0)
-        a0->v5e--;
-    if (v_0a6a == 0 || a0->v5e >= 0)
+    if (V5E(a0) >= 0)
+        SET_V5E(a0, V5E(a0) - 1);
+    if (v_0a6a == 0 || V5E(a0) >= 0)
         return;
     for (a1 = LIST_B->prev; a1->type != 0; a1 = a1->prev)
         if (a1->type == 0x48)
             return;
-    a0->v5e = 0x12;
+    SET_V5E(a0, 0x12);
     v_0414 = 9;
     cur = a0;
     for (cnt = 7; cnt >= 0; cnt -= 2) {
@@ -1693,7 +1693,7 @@ void level1_hook(uint16_t d0, const uint8_t *a1, uint16_t d2)
         a0->energy = (int16_t)level_54e5c[2];
         a0->flag35 = -1;
         a0->v42 = 0xfa;
-        a0->v5e = 0;
+        SET_V5E(a0, 0);
         a0->x = (int16_t)(rd16(a1 + 8) - 8 + (flag ? 0x10 : 0));
         a0->y = (int16_t)(rd16(a1 + 10) - 8 - v_0cd0);
         a0->v28 = -1;
@@ -1777,7 +1777,7 @@ void level1_boss_update(Object *a0)
             a1->fn_hit = (void *)hit_kill_shooter;
             a1->gfx = level_59e28;
             a1->anim_delay = 0;
-            a1->v5e = 0;
+            SET_V5E(a1, 0);
             a1->anim = (const uint8_t *)a2;
             a2 = a1;
             a1->flag35 = 0;
@@ -1788,9 +1788,9 @@ void level1_boss_update(Object *a0)
         }
         a0->v2a = 0;
         a0->v2c = 0;
-        a0->pad4a[2] = 0;
-        a0->pad4a[3] = 0;
-        a0->pad4a[4] = 0;
+        a0->pad4e[0] = 0;
+        a0->pad4e[1] = 0;
+        a0->pad4e[2] = 0;
     }
     if ((int16_t)v_0cea <= 0x1c0)
         v_0cea = 0x1c0;
@@ -1828,13 +1828,13 @@ void level1_boss_update(Object *a0)
     if (d0 & 0x80)
         d0 = (~d0) & 0xff;
     l = (int32_t)(int16_t)(d0 - 0x40) << 10;
-    a0->pad4a[2] = (uint16_t)(l >> 16);
-    a0->pad4a[3] = (uint16_t)l;
+    a0->pad4e[0] = (uint16_t)(l >> 16);
+    a0->pad4e[1] = (uint16_t)l;
     d0 = (int16_t)((v_0cdc + 0xa0) & 0x1ff);
     if (d0 & 0x100)
         d0 ^= 0x1ff;
     d0 -= 0x80;
-    a0->pad4a[4] = (uint16_t)(d0 << 5);
+    a0->pad4e[2] = (uint16_t)(d0 << 5);
     d0 = (int16_t)(a0->v2e + a0->y);
     if (d0 < 0x10) {
         d0 = 0x10;
@@ -1912,7 +1912,7 @@ void level1_init(void)
     a0->fn_update = FN(level1_boss_update);
     a0->fn_draw = FN(level1_boss_draw);
     a0->fn_hit = (void *)level1_boss_hit;
-    a0->v5e = 0;
+    SET_V5E(a0, 0);
     a0->flag60 = -1;
     a0->flag61 = -1;
     a0->y = 0x10;
@@ -2380,9 +2380,9 @@ void weapon20_update(Object *a0)
         return;
     }
     a0->fn_draw = draw_bob_masked;
-    if (a0->v5e >= 0)
-        a0->v5e--;
-    if (v_0a6a && a0->v5e < 0) {
+    if (V5E(a0) >= 0)
+        SET_V5E(a0, V5E(a0) - 1);
+    if (v_0a6a && V5E(a0) < 0) {
         v_0414 = 6;
         a1 = alloc_b(a0);
         a1->type = 0x24;
@@ -2391,7 +2391,7 @@ void weapon20_update(Object *a0)
         a1->v28 = -0x20;
         a1->target = a0;
         a1->v42 = a0->v42;
-        a0->v5e = 6;
+        SET_V5E(a0, 6);
     }
 }
 
@@ -2818,7 +2818,7 @@ void level1_spawn_unit(uint16_t d6)
     a0->fn_draw = obj_nop;
     a0->fn_hit = (void *)level1_hit_free;
     a0->v2e = d3;
-    a0->v5e = 0;
+    SET_V5E(a0, 0);
     a0->v46 = s->path;
     ((ObjMove *)a0)->cursor = s->path;
     a0->x = x;
@@ -2842,7 +2842,7 @@ void level1_spawn_unit(uint16_t d6)
         a0->v2e = d3;
         a0->energy = 1;
         a0->flag35 = 0;
-        a0->v5e = 0;
+        SET_V5E(a0, 0);
         a0->anim_delay = 0;
         a0->v46 = s->path;
         ((ObjMove *)a0)->cursor = s->path;
@@ -3033,9 +3033,9 @@ void level1_boss_part_update(Object *a0)
     a0->y_frac = a1->y_frac;
     a0->v2a = a1->v2a;
     a0->v2c = a1->v2c;
-    a0->pad4a[2] = a1->pad4a[2];
-    a0->pad4a[3] = a1->pad4a[3];
-    a0->pad4a[4] = a1->pad4a[4];
+    a0->pad4e[0] = a1->pad4e[0];
+    a0->pad4e[1] = a1->pad4e[1];
+    a0->pad4e[2] = a1->pad4e[2];
     a0->v54 = a1->v54;
     if (a1->type == 0x50) {
         a0->x = 0xa0;
