@@ -54,6 +54,8 @@ for name in (args:match("ignore=(%S+)") or ""):gmatch("[%w_]+") do IGNORE[name] 
 local SHOW = {}
 for name in (args:match("show=(%S+)") or ""):gmatch("[%w_]+") do SHOW[#SHOW + 1] = name end
 
+local REPLAY = args:match("replay=(%S+)")   -- the input of a played run (captures/input/play-latest.txt), as it was applied: the same run again, e.g. headless
+local replay_keys = {}   -- [sync] = { {raw, down}, ... }
 local joys = {}
 for at, dirs in (args:match("joy=(%S+)") or ""):gmatch("(%d+):([%a+]+)") do
     local st = { up = 0, down = 0, left = 0, right = 0, fire = 0 }
@@ -61,6 +63,18 @@ for at, dirs in (args:match("joy=(%S+)") or ""):gmatch("(%d+):([%a+]+)") do
     joys[tonumber(at)] = st
 end
 
+if REPLAY then
+    local text = ami.file_read(REPLAY, 0, ami.file_size(REPLAY))
+    for line in text:gmatch("[^\n]+") do
+        local at, u, d, l, r, f = line:match("^(%d+) joy (%d) (%d) (%d) (%d) (%d)$")
+        if at then joys[tonumber(at)] = { up = tonumber(u), down = tonumber(d), left = tonumber(l), right = tonumber(r), fire = tonumber(f) } end
+        local kat, raw, down = line:match("^(%d+) key (%d+) (%d)$")
+        if kat then
+            replay_keys[tonumber(kat)] = replay_keys[tonumber(kat)] or {}
+            table.insert(replay_keys[tonumber(kat)], { tonumber(raw), tonumber(down) })
+        end
+    end
+end
 ami.machine{
     name = "Xenon2 lockstep", model = "A500", system = "../local/system", save = "../local/save", files = "..",
     content = "../local/xenon2.m3u", roms = { { "kick34005.A500", 0xc4f0f55f } },
@@ -137,6 +151,7 @@ local pending, n = {}, 0
 local FRAME_W, FRAME_H = 720, 287      -- the emulator's frame
 local ring = {}                        -- ring[frame] = the emulator's whole frame at that frame (the last 16)
 
+local input_log = ""
 local stick, applied_stick = { up = 0, down = 0, left = 0, right = 0, fire = 0 }, { up = 0, down = 0, left = 0, right = 0, fire = 0 }
 local KEY_STICK = { [273] = "up", [274] = "down", [275] = "right", [276] = "left", [305] = "fire", [306] = "fire", [32] = "fire", [13] = "fire" }   -- libretro key codes
 local fire_keys = {}
@@ -183,6 +198,13 @@ local function sync_point()
         end
     end
     if PLAY and #key_queue > 0 then pending[#pending].keys = key_queue; key_queue = {} end
+    if replay_keys[n] then pending[#pending].keys = replay_keys[n] end
+    if PLAY then   -- what is applied is written down: the run can be played again (replay=)
+        local lines = {}
+        for _, k in ipairs(pending[#pending].keys or {}) do lines[#lines + 1] = ("%d key %d %d\n"):format(n, k[1], k[2]) end
+        if st then lines[#lines + 1] = ("%d joy %d %d %d %d %d\n"):format(n, st.up, st.down, st.left, st.right, st.fire) end
+        if #lines > 0 then input_log = input_log .. table.concat(lines); ami.save_file("captures/input/play-latest.txt", input_log) end
+    end
     if st then
         ami.joystick{ up = st.up == 1, down = st.down == 1, left = st.left == 1, right = st.right == 1, fire = st.fire == 1 }
         pending[#pending].joy = st   -- the port gets it after it has reached this point (it is behind the original): the next interval on both sides
