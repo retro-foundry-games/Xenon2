@@ -1,3 +1,4 @@
+#include "pkg_i.h"
 #include "pkg_g.h"
 #include "game_all.h"
 #include "pkg_f.h"
@@ -439,12 +440,14 @@ void shop_run(void)
             ;
         title_out_insert_disk();
     }
+    guest_blob_raw(1);   /* (the shop's blob overlays the level's) */
     irq_vectors[2] = irq_vblank_hooked;
     disk_read_sectors(level_sectors[10], level_sectors[11], &map_image);
     irq_vectors[2] = irq_vblank;
     title_out_shop();
     clear_palette();
-    fn_054e00();
+    shop_main();
+    guest_blob_raw(0);
     if (v_0a07 != 0) {
         uint16_t other = cur_player ^ 1;
 
