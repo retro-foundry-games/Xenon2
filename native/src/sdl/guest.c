@@ -55,10 +55,20 @@ extern unsigned guest_record_size(const char *type);
 
 /* put the bytes of the original's memory at ADDRESS (as they are in the image: big endian) into the members that cover them, in this machine's byte
  * order; pointers (addresses of the original's memory) become pointers into the block */
+static int blob_raw;   /* the shop's blob is in $54E00-$73E00 (it overlays the level's): the members of the level that lie there are not converted */
+#define BLOB_LO 0x54e00u
+#define BLOB_HI 0x74000u
+
+/* the shop (pkg_i) switches it on when its blob is loaded over the level's and off when the level's is loaded back */
+void guest_blob_raw(int on) { blob_raw = on; }
+
 void guest_load_range(uint32_t address, const uint8_t *image, uint32_t length)
 {
     for (unsigned i = 0; i < sizeof guest_members / sizeof guest_members[0]; i++) {
         uint32_t m = guest_members[i].address, size = guest_members[i].size, elem = guest_members[i].elem;
+
+        if (blob_raw && m >= BLOB_LO && m < BLOB_HI)
+            continue;
         uint32_t lo = m > address ? m : address, hi = m + size < address + length ? m + size : address + length;
 
         if (lo >= hi)
@@ -173,6 +183,8 @@ void host_export_ram_buf(uint8_t *ram)   /* ram: 0x80000 bytes */
         uint8_t *m = ram + guest_members[i].address;
         uint32_t size = guest_members[i].size, elem = guest_members[i].elem;
 
+        if (blob_raw && guest_members[i].address >= BLOB_LO && guest_members[i].address < BLOB_HI)
+            continue;
         if (guest_members[i].rec) {
             unsigned rsize = guest_record_size(guest_members[i].rec);
 

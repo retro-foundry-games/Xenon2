@@ -12,6 +12,7 @@ extern volatile uint8_t host_cia_raw[0x2000];      /* the CIAs, $BFD000 on */
 void *guest_ptr(uint32_t address);                  /* an address of the original's memory, or an address of the struct, as a pointer */
 uint32_t guest_address(const void *p);              /* the reverse */
 void guest_load_range(uint32_t address, const uint8_t *bytes, uint32_t length);   /* bytes of the original's memory (big endian) into the members that cover them */
+void guest_blob_raw(int on);                        /* the shop's blob overlays the level's at $54E00: the members there are not converted while it is */
 void host_irq_dispatch(int level);                  /* call the handler in the vector table for interrupt level 1..7 (nothing if there is none) */
 unsigned host_vbl_count(void);                      /* the game's own frame counter ($41C) */
 void host_export_ram_buf(uint8_t *ram_0x80000);     /* the same into a buffer of 0x80000 bytes */

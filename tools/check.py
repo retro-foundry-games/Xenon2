@@ -21,18 +21,32 @@ def joystick_script(frames, first_fire=20):
         out += [f'{k + first_fire}:fire', f'{k + first_fire + 10}:none', f'{k + 60}:{moves[i % len(moves)]}', f'{k + 110}:none']
     return ','.join(sorted(out, key=lambda e: int(e.split(':')[0])))
 
+def monkey_script(frames, seed=1):
+    """A seeded random player for menus: a direction or the fire button (the commonest) for a few frames at a time."""
+    import random
+    rnd = random.Random(seed)
+    out, f = [], 0
+    while f < frames:
+        k = rnd.randrange(10)
+        what = ['up', 'down', 'left', 'right'][k] if k < 4 else ('fire' if k <= 6 else 'none')
+        out.append(f'{f}:{what}')
+        f += 3 + rnd.randrange(10)
+    return ','.join(out)
+
 SCENARIOS = {
     # the menu with the attract mode running, then the fire button: the game asks for its disk, disk 2 goes in, the level loads and is played
     'load': ('xenon2-menu.state', 4200, joystick_script(4200, 40), True),
     # level 1 as it stands (loaded, waiting for fire), then played
     'level': ('xenon2-level.state', 1800, joystick_script(1800), False),
+    # the shop (local/save/shop-before.state: host/lockstep.lua snap=8ff2:shop-before), worked by a seeded random player
+    'shop': ('shop-before.state', 3500, monkey_script(3500), False),
 }
 
 def run(names, scenario, samples, build):
     state, until, joy, swap = SCENARIOS[scenario]
     out = ROOT / 'captures' / f'oracle-{build.replace("/", "-")}-{scenario}.txt'
     out.unlink(missing_ok=True)
-    args = f'state={state} until={until} joy={joy} samples={samples} stride=3 build={build} out={out}'
+    args = f'state={state} until={until} joy={joy} samples={samples} stride=3 build={build} out={out} scenario={scenario}'
     if names: args += ' only=' + ','.join(names)
     if swap: args += ' swap=1'
     r = subprocess.run([str(HOST), str(ROOT / 'host' / 'oracle.lua'), '--headless', '--script-args', args], capture_output=True, text=True, cwd=ROOT)

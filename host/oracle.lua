@@ -16,6 +16,7 @@ local STRIDE = tonumber(args:match("stride=(%d+)")) or 1   -- compare every STRI
 local STATE = args:match("state=(%S+)")
 local OUT = args:match("out=(%S+)") or "captures/oracle.txt"
 local DEBUG = args:match("debug=1")
+local SCENARIO = args:match("scenario=(%S+)") or ""   -- the shop's blob ($54E00-$73E00) is loaded where the level's code is: the cases of one are not the other's
 local BUILD = args:match("build=(%S+)") or "build"   -- native/BUILD: where `make blob BUILD=...` left game.blob and game_syms.lua
 
 ami.machine{
@@ -40,7 +41,12 @@ local case_names = {}
 local cases = {}
 for _, entry in ipairs(ami.dir("host/cases") or {}) do   -- one file for each module: host/cases/NAME.lua returns a list of cases
     if entry.name:match("%.lua$") then
-        for _, case in ipairs(load(read_file("host/cases/" .. entry.name))()) do cases[#cases + 1] = case end
+        for _, case in ipairs(load(read_file("host/cases/" .. entry.name))()) do
+            local in_blob = case.orig >= 0x54e00 and case.orig < 0x74000
+            local wanted
+            if SCENARIO == "shop" then wanted = (not in_blob) or case.scenario == "shop" else wanted = case.scenario ~= "shop" end
+            if wanted then cases[#cases + 1] = case end
+        end
     end
 end
 

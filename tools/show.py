@@ -11,10 +11,11 @@ native/src/symbols/*.symbols.
 """
 import glob, os, re, sys
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+ANALYSIS = os.environ.get('ANALYSIS_DIR', 'analysis')   # analysis-shop: the shop's code (its blob overlays the level's)
 
 def blocks():
     out, cur = {}, None
-    for line in open(os.path.join(ROOT, 'analysis', 'listing.txt')):
+    for line in open(os.path.join(ROOT, ANALYSIS, 'listing.txt')):
         if line.startswith('; ----'):
             cur = int(line.split()[2], 16); out[cur] = []
         elif line.strip() and cur is not None:
@@ -23,7 +24,7 @@ def blocks():
 
 def functions():
     out = {}
-    for line in open(os.path.join(ROOT, 'analysis', 'functions.txt')):
+    for line in open(os.path.join(ROOT, ANALYSIS, 'functions.txt')):
         p = line.split()
         out[int(p[0], 16)] = (p[1], int(p[2]), p[3:])
     return out
@@ -51,7 +52,7 @@ def c_functions():
     done = {}
     for f in glob.glob(os.path.join(ROOT, 'native/src/*.c')) + glob.glob(os.path.join(ROOT, 'native/src/**/*.c'), recursive=True):
         text = open(f).read()
-        for m in re.finditer(r'orig\s+((?:\$[0-9A-Fa-f]+(?:\s*(?:,|and)\s*)?)+)', text):
+        for m in re.finditer(r'(?:orig|shop)\s+((?:\$[0-9A-Fa-f]+(?:\s*(?:,|and)\s*)?)+)', text):
             for a in re.findall(r'\$([0-9A-Fa-f]+)', m.group(1)):
                 done[int(a, 16)] = os.path.relpath(f, ROOT)
         for m in re.finditer(r'/\*\s*inlined:?\s*((?:\$[0-9A-Fa-f]+[ ,]*)+)', text):
@@ -62,7 +63,7 @@ def c_names():
     names = {}
     for f in glob.glob(os.path.join(ROOT, 'native/src/*.c')):
         text = open(f).read()
-        for m in re.finditer(r'orig\s+\$([0-9A-Fa-f]+)(?:(?!\*/).)*?\*/\s*\n(?:static\s+)?[\w\s\*]+?\b(\w+)\s*\(', text, re.S):
+        for m in re.finditer(r'(?:orig|shop)\s+\$([0-9A-Fa-f]+)(?:(?!\*/).)*?\*/\s*\n(?:static\s+)?[\w\s\*]+?\b(\w+)\s*\(', text, re.S):
             names[int(m.group(1), 16)] = m.group(2)
     return names
 

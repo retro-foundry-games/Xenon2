@@ -1,0 +1,46 @@
+054e00 start      11  
+054e3c indirect   75  
+05504e call        4  054f38
+055200 call       12  054e96
+055264 call       24  054f42
+05530c call       18  0552a0
+055324 call        5  0552a4
+055360 call        7  0552b4 056ca0
+05537a indirect   30  
+0553f2 call        2  055368 055374 0568fc
+0553f8 call        9  055342 055350
+055afc call       21  054f54
+055b48 call       48  054fae
+055c9a call       77  055bcc
+055de8 call       28  055bc6
+055f60 call       55  055b68
+056040 call       23  055b58 056018
+0560a6 call       23  054f12 055f90
+05648c call        8  055cca 055d74 0564c4 0564f8 05654c
+0564b2 call       10  055ce0 055cf0 055d00 055d10 055d20 055d30
+0564ce call       31  054f5c
+056568 call       25  054f58
+05661c call        4  054f1a 054f22 05529c
+05662a call      147  055cbe 055d68 05601c 0564c0 0564f4 056548
+056848 call       37  056682
+0568e6 call       12  056624
+056912 call       33  05663a 05664e 05667a 0566b8 0566dc 05690c
+056988 call       15  055cc2 055d6c 056020 0564b8 0564ec 056540
+0569bc call       68  055cc6 055d70 056024 0564bc 0564f0 056544
+056c02 call       56  0569d4 056a1e
+056ca0 call        4  054f60 055c16 055dec
+056cb2 call        3  054f16 055c00
+056cc0 call       50  054faa 055c20 055d8e 055e00 055e4a
+056d8c call       57  056d1c 056d72
+056e44 call        3  056cfe 056d14
+056e8e call       18  05667e
+06477c start       4  
+06478a call        4  056520
+0647a6 call        4  05527a 056cd4
+0647ce call       17  06478e
+064850 call       26  064780
+06492a call       21  064a12
+064972 call       24  064aee
+0649c6 call       99  0647aa
+064bb2 call        3  064a66 064a70 064aa4 064b2c 064b84
+064c1e call       63  064bd2 064bea 064c02
