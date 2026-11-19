@@ -7,6 +7,7 @@
 --                   (the fire button on the schedule of tools/verify_port.sh) and takes the original's memory at the first sync point
 --     play=1        play it: ami9000_host host/lockstep.lua --script-args "play=1 state=frame-8880 tolerant=1"  (a window, not --headless): arrows = stick, Ctrl / Space / Return = fire;
 --                   the keys are applied to both sides at the sync points; the port's picture and the difference are shown beside the original; the first difference pauses both
+--     auto=1        the autoplayer (host/autoplay.lua) plays, headless or in the window: finds differences in a run no one has to play
 --     hold=1        stop at the first difference and stay there, both sides standing: with `ami9000_host --control PATH` a client (ami9000/host/ctl.py PATH 'LS.port_call("print(port.peek16(0x41c))")')
 --                   asks the port and the original: LS.port_call(LUA) runs a line in the port's Lua shell, LS.port_binary(LUA) a call that answers BIN, LS.snap the original's ram at the point (LS.snap.ram), LS.ram16(addr) the original's live memory
 --     calls=1       also compare the number of calls of every function between two sync points (finds where a difference starts)
@@ -39,6 +40,7 @@ local CONTINUE = args:match("continue=1") ~= nil
 local STRICT = args:match("strict=1") ~= nil
 local REPORT = args:match("report=(%S+)")
 local PLAY = args:match("play=1") ~= nil   -- you play: arrows = stick, Ctrl / Space / Return = fire, in the emulator's window (without --headless); implies hold=1, no sync limit
+local AUTO = args:match("auto=1") ~= nil   -- the autoplayer (host/autoplay.lua) plays: the stick from the original's memory at each sync point; the input is written to captures/input/play-latest.txt as when played
 local HOLD = PLAY or args:match("hold=1") ~= nil   -- at the first difference stay paused (with --control PATH: LS.port_call(LUA) runs Lua in the port, LS.snap is the original's memory and frame at the point)
 local CALLS = args:match("calls=1") ~= nil   -- also compare how often each function of the game was called between two sync points (the code table of the port)
 local STATE = args:match("state=(%S+)")   -- the original starts from local/save/NAME.state (a level running); the port plays itself to the level and takes the original's memory at the first sync point
@@ -82,6 +84,7 @@ if REPLAY then
         end
     end
 end
+local autoplay = AUTO and load(ami.file_read("host/autoplay.lua", 0, ami.file_size("host/autoplay.lua")))() or nil
 local started = false
 if STATE then
     ami.wait(1)
@@ -188,8 +191,12 @@ local function sync_point()
     call_counts = {}
     pending[#pending + 1] = { n = n, frame = ami.frame(), calls = calls, ram = (COMPARE_MEM or (STATE and n == 1)) and ami.read(0, 0x80000) or nil }
     local st = joys[n]
-    if PLAY then   -- the stick as it is held now, on both sides from here on
-        read_keys()
+    if AUTO then   -- the autoplayer decides from the original's memory as it is now
+        local want = autoplay(n)
+        for k, v in pairs(want) do stick[k] = v end
+    end
+    if PLAY or AUTO then   -- the stick as it is held now, on both sides from here on
+        if PLAY then read_keys() end
         local changed = false
         for k, v in pairs(stick) do if applied_stick[k] ~= v then changed = true end end
         if changed then
@@ -199,7 +206,7 @@ local function sync_point()
     end
     if PLAY and #key_queue > 0 then pending[#pending].keys = key_queue; key_queue = {} end
     if replay_keys[n] then pending[#pending].keys = replay_keys[n] end
-    if PLAY then   -- what is applied is written down: the run can be played again (replay=)
+    if PLAY or AUTO then   -- what is applied is written down: the run can be played again (replay=)
         local lines = {}
         for _, k in ipairs(pending[#pending].keys or {}) do lines[#lines + 1] = ("%d key %d %d\n"):format(n, k[1], k[2]) end
         if st then lines[#lines + 1] = ("%d joy %d %d %d %d %d\n"):format(n, st.up, st.down, st.left, st.right, st.fire) end
