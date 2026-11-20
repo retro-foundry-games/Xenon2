@@ -558,6 +558,31 @@ local function service_gate()   -- the port waits inside its loader: it goes on 
     baseline = nil
     say("a disk load (emulator frame %d): the port took the original's memory at the end of its load and went on from there; the comparison starts again", ami.frame())
 end
+local desired_joy, port_joy   -- the stick the original has been given, and the one the port has
+-- The original's interrupt decodes the stick into v_0a00 in the middle of a slow frame: the routines that read it before see the old stick, the ones after
+-- the new.  The routines that read it are hooked on the original and the byte each saw is recorded in order, by the sync point before the interval;
+-- the port is told the list and sets v_0a00 to each value as it enters the same routine.
+local STICK_READERS = { 0x5de6, 0x68b0, 0x3b94, 0x3cdc, 0x3e2c, 0x4340, 0x6372 }
+local reads = {}
+for _, a in ipairs(STICK_READERS) do ami.hook(a, function() local r = reads[n]; if not r then r = {}; reads[n] = r end; r[#r + 1] = ("{0x%x,%d}"):format(a, ami.peek8(0xa00)) end) end
+port_call("rseq, ridx = nil, 1; function rhook(a) local e = rseq and rseq[ridx]; if e and e[1] == a then port.poke_stick(e[2]); ridx = ridx + 1 end end")
+for _, a in ipairs(STICK_READERS) do port_call(("port.hook(0x%x, rhook)"):format(a)) end
+local function stick_bits(st) return (st.up == 1 and 1 or 0) | (st.down == 1 and 2 or 0) | (st.left == 1 and 4 or 0) | (st.right == 1 and 8 or 0) | (st.fire == 1 and 0x80 or 0) end
+local function apply_joy(snap)
+    local r = reads[snap.n - 1]
+    reads[snap.n - 1] = nil
+    port_call(("rseq, ridx = {%s}, 1"):format(r and table.concat(r, ",") or ""))
+    local d = desired_joy
+    if not d then return end
+    if not r and port_joy and INLAG ~= "0" and (INLAG == "1" or snap.shop) and held_joy ~= d then   -- no steering call: the shop's stick check runs late
+        held_joy = d
+        return
+    end
+    held_joy = d
+    if port_joy and stick_bits(port_joy) == stick_bits(d) then return end
+    port_joy = d
+    port_call(("joy(%d, %d, %d, %d, %d)"):format(d.up, d.down, d.left, d.right, d.fire))
+end
 local prev_orig_ram, prev_port_ram, last_orig_ram, last_port_ram
 local different, compared, mem_bad, pic_bad = 0, 0, 0, 0
 local done = false
@@ -565,6 +590,7 @@ while not done do
     -- two frames after the point: the emulator's frame after it is in the ring
     while #pending > 0 and ami.frame() >= pending[1].frame + 2 do
         local snap = table.remove(pending, 1)
+        apply_joy(snap)
         local reply
         if port_entries >= snap.n then
             reply = ("synced %d 1"):format(0)   -- (the live stepping has parked it at this entry)
@@ -580,14 +606,7 @@ while not done do
         end
         if not reply or not reply:match("^synced") then say("lockstep: the port did not reach sync point %d (%s)", snap.n, tostring(reply)); done = true; break end
         for _, k in ipairs(snap.keys or {}) do port_call(("key(%d, %d)"):format(k[1], k[2])) end
-        do
-            local st = snap.joy
-            local lag = INLAG == "1" or (INLAG == "auto" and snap.shop)   -- the shop's stick check runs before the interrupt has decoded the stick on the original's slow frames, after it on the port's (they wait for a vertical blank)
-            local previous = held_joy
-            held_joy = snap.joy
-            if lag then st = previous end
-            if st then port_call(("joy(%d, %d, %d, %d, %d)"):format(st.up, st.down, st.left, st.right, st.fire)) end
-        end
+        if snap.joy then desired_joy = snap.joy end
         if STATE and snap.n == 1 and args:match("dumpram=(%S+)") then ami.save_file(args:match("dumpram=(%S+)"), snap.ram) end
         local gap = last_snap_frame and snap.frame - last_snap_frame or 0
         last_snap_frame = snap.frame

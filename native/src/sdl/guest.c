@@ -211,6 +211,8 @@ extern uint32_t guest_code_address(const void *function);
 
 unsigned host_vbl_count(void) { return xenon.vbl_count; }
 
+void guest_set_stick(uint8_t value) { xenon.v_0a00 = value; }
+
 void host_export_ram_buf(uint8_t *ram)   /* ram: 0x80000 bytes */
 {
     memcpy(ram, &xenon, sizeof xenon);

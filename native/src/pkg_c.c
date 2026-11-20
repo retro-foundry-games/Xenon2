@@ -165,6 +165,8 @@ void map_tile_mask(uint16_t x, uint16_t y, uint16_t rows)
 
 /* orig $002F66: like map_tile_mask with two words a row (the masks of the cells at x and at x + 16), written as the blitter reads them
  * (inlined: $2FC0, the two pointers of a row of cells in a4 and a5) */
+uint16_t tile_mask2_words;   /* the words of tile_mask_buf the last map_tile_mask2 wrote (as the blitter reads them) */
+
 void map_tile_mask2(uint16_t x, uint16_t y, uint16_t rows)
 {
     const uint8_t *a1 = level_init_src + (int16_t)v_0cce;
@@ -172,6 +174,7 @@ void map_tile_mask2(uint16_t x, uint16_t y, uint16_t rows)
     uint16_t d3, d4;
     uint8_t *out = (uint8_t *)tile_mask_buf;
 
+    tile_mask2_words = (uint16_t)((rows + 1) * 2);
     y = (uint16_t)(y + v_0cd6);
     d3 = y & 0xf;
     d4 = d3;
