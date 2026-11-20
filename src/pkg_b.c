@@ -292,6 +292,18 @@ static void music_restart_if_enabled(void)
     }
 }
 
+void camera_limit(uint16_t d7, uint16_t d3) __attribute__((noinline));
+
+/* orig $007A56: the scroll limit follows the camera unless the camera stands at it with the stick down (the lockstep hooks it to give the port the
+ * stick byte the original read) */
+void camera_limit(uint16_t d7, uint16_t d3)
+{
+    if (d7 != v_0cea || (v_0a00 & 2) == 0)
+        d3 += v_0cee;
+    if (!((int16_t)d3 > (int16_t)v_0cea))
+        v_0cea = d3;
+}
+
 /* the camera / scroll speed step of the main loop ($79D6-$7A72) */
 static void camera_step(void)
 {
@@ -333,10 +345,7 @@ static void camera_step(void)
     v_0cd6 = d1;
     v_0cce = d2;
     v_0cd0 = d3;
-    if (d7 != v_0cea || (v_0a00 & 2) == 0)
-        d3 += v_0cee;
-    if (!((int16_t)d3 > (int16_t)v_0cea))
-        v_0cea = d3;
+    camera_limit(d7, d3);
 }
 
 /* The target of a key in key_table: the addresses inside the original's main loop */
