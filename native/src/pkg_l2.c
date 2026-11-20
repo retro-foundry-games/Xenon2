@@ -177,12 +177,12 @@ void l2_hook(uint16_t d0, const uint8_t *a1, uint16_t d2)
         bbox_from_frame(a0);
         return;
     case 4:
-        a0 = spawn_marker_front(0xfc, a1, (void (*)(void))GFN(0x5550e));
+        a0 = spawn_marker_front(0xfc, a1, (void (*)(void))l2_marker_fc_update);
         a0->v30 = 1;
         copy2(a0->v46, (const uint8_t *)GPTR(0x5567a));
         return;
     case 5:
-        a0 = spawn_marker_front(0xf8, a1, (void (*)(void))GFN(0x5533e));
+        a0 = spawn_marker_front(0xf8, a1, (void (*)(void))l2_marker_f8_update);
         a0->v30 = 1;
         return;
     }
@@ -361,6 +361,161 @@ void l2_front_piece_update(Object *a0)
         spawn_effect(ex, ey, anim_270e, draw_bob_masked);
     }
     kill_thunk(a0);
+}
+
+/* level2 $056144: the flying enemy $E0 / $E4: it comes down the screen to y $32, drifts towards the player's x and, within 10 of it,
+ * dives (v28 1) and rises again; the offsets are from a table indexed by the frame and the object's address */
+void l2_flyer_update(Object *a0)
+{
+    static const int16_t wobble[8] = { 0, -2, -4, -2, 0, 2, 4, 2 };
+    uint16_t phase = (uint16_t)(v_0cdc + (uint16_t)GADDR(a0));
+    int16_t d0;
+
+    anim_step(a0);
+    if (a0->v28 == 0) {
+        if (a0->y > 0x32) {
+            a0->y -= 5;
+            a0->x = (int16_t)(a0->x + wobble[(phase >> 2) & 7]);
+            bbox_from_frame(a0);
+            return;
+        }
+        d0 = (int16_t)(a0->x - PLAYER_X);
+        if (d0 < 0)
+            d0 = (int16_t)-d0;
+        if (d0 < 10) {
+            a0->v28 = 1;
+            set_anim(a0, a0->type == 0xe0 ? 0x55032 : 0x55050);
+            bbox_from_frame(a0);
+            return;
+        }
+        a0->x = (int16_t)(a0->x - (a0->x >= PLAYER_X ? 4 : -4));
+        d0 = (int16_t)(wobble[(phase & 0xe) >> 1] + a0->y);
+        if (d0 > 0x32)
+            d0 = 0x32;
+        a0->y = d0;
+        bbox_from_frame(a0);
+        return;
+    }
+    a0->y += 0xc;
+    if (a0->y >= 0xa0) {
+        a0->v28 = 0;
+        set_anim(a0, a0->type == 0xe0 ? 0x5501a : 0x5504a);
+    }
+    bbox_from_frame(a0);
+}
+
+/* level2 $05533E: the marker $F8: as $05550E, but its picture blinks (v28 0 / 1) until the scroll is near, its steps use a table of
+ * two longs, and at step 4 it launches the flyer $E0 */
+void l2_marker_f8_update(Object *a0)
+{
+    int16_t d0;
+    const uint8_t *a2;
+
+    if ((int16_t)((int16_t)v_0cea + 0xd0) <= a0->y) {
+        kill_thunk(a0);
+        return;
+    }
+    d0 = (int16_t)(a0->y - v_0cd0);
+    if (d0 >= 0xb4)
+        return;
+    if (a0->v28 >= 5) {
+        if (a0->v30 == 0) {
+            kill_thunk(a0);
+            return;
+        }
+        if (a0->v28 >= 9) {
+            a0->v28 = 0;
+            a0->v30--;
+        }
+    }
+    if ((uint16_t)a0->v28 <= 1) {
+        if (d0 >= 0x64)
+            a0->v28 = 2;
+        else if ((v_0cdc & 3) == 0)
+            a0->v28 ^= 1;
+    }
+    a2 = (const uint8_t *)GPTR(0x554c6 + ((uint16_t)a0->v28 << 3));
+    copy4(a0->v46, a2);
+    copy4(a0->v46 + 0x28, a2 + 4);
+    if ((uint16_t)a0->v28 < 2)
+        return;
+    if (v_0cdc & 3)
+        return;
+    a0->v28++;
+    if (a0->v28 != 4)
+        return;
+    {
+        Object *s = alloc_in(LIST_C);
+
+        s->type = 0xe0;
+        s->fn_update = (obj_fn)l2_flyer_update;
+        s->fn_draw = draw_bob_masked;
+        s->fn_hit = (void *)hit_enemy;
+        set_anim(s, 0x5501a);
+        SET_V5E(s, 0);
+        s->x = (int16_t)(a0->x + 0x10);
+        s->y = (int16_t)(a0->y - v_0cd0 + 0x10);
+        s->energy = (int16_t)W(0x54e42);
+        s->flag35 = (int8_t)0xff;
+        s->v42 = 0x12c;
+        s->v28 = 0;
+        s->v44 = 0;
+        bbox_from_frame(s);
+    }
+}
+
+/* level2 $05550E: the marker $FC: gone when the scroll has passed it; its picture steps (v28) and at step 4 it launches the flyer $E4;
+ * v30 counts the launches left */
+void l2_marker_fc_update(Object *a0)
+{
+    int16_t d0;
+
+    if ((int16_t)((int16_t)v_0cea + 0xd0) <= a0->y) {
+        kill_thunk(a0);
+        return;
+    }
+    d0 = (int16_t)(a0->y - v_0cd0);
+    if (d0 >= 0xb4)
+        return;
+    if (a0->v28 >= 5) {
+        if (a0->v30 == 0) {
+            kill_thunk(a0);
+            return;
+        }
+        if (a0->v28 >= 9) {
+            a0->v28 = 0;
+            a0->v30--;
+        }
+    }
+    if ((uint16_t)a0->v28 <= 1) {
+        if (d0 < 0x64)
+            return;
+        a0->v28 = 2;
+    }
+    copy2(a0->v46, (const uint8_t *)GPTR(0x5567a + ((uint16_t)a0->v28 << 1)));
+    if (v_0cdc & 3)
+        return;
+    a0->v28++;
+    if (a0->v28 != 4)
+        return;
+    {
+        Object *s = alloc_in(LIST_C);
+
+        s->type = 0xe4;
+        s->fn_update = (obj_fn)l2_flyer_update;
+        s->fn_draw = draw_bob_masked;
+        s->fn_hit = (void *)hit_enemy;
+        set_anim(s, 0x5504a);
+        SET_V5E(s, 0);
+        s->x = a0->x;
+        s->y = (int16_t)(a0->y - v_0cd0);
+        s->energy = (int16_t)W(0x54e44);
+        s->flag35 = 0;
+        s->v42 = 0x96;
+        s->v28 = 0;
+        s->v44 = 0;
+        bbox_from_frame(s);
+    }
 }
 
 /* level2 $05568C: the marker $F0 / $F4: waits for the scroll, then its picture takes 20 steps (v28) from a table, and it bursts into
