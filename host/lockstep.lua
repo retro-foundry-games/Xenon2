@@ -42,6 +42,7 @@ for a in (args:match("addr=(%S+)") or "2026,202e"):gmatch("%x+") do ADDRS[#ADDRS
 local PORT_ADDR = tonumber(args:match("%f[%w]port=(%x+)") or "2034", 16)
 local COMPARE_PIC = args:match("pic=0") == nil
 local COMPARE_MEM = args:match("mem=0") == nil
+local NOSPR = args:match("nospr=1") ~= nil   -- debug: sprite DMA off in the original at every frame
 local CONTINUE = args:match("continue=1") ~= nil
 local STRICT = args:match("strict=1") ~= nil
 local REPORT = args:match("report=(%S+)")
@@ -670,6 +671,7 @@ while not done do
     if not done then
         if PLAY then read_keys() end
         if COMPARE_PIC then
+            if NOSPR then ami.poke16(0xdff096, 0x0020) end
             ring[ami.frame()] = ami.frame_rgb(0, 0, FRAME_W, FRAME_H, 1)
             ring[ami.frame() - 16] = nil
         end

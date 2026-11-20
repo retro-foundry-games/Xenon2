@@ -11,7 +11,6 @@
 extern void host_idle(void);
 
 #include "game.h"
-#include "pkg_f.h"
 #include "host.h"
 
 int host_manual_disk;
@@ -46,27 +45,6 @@ int disk_read_sectors(uint16_t first_sector, uint16_t count, void *dest)
         host_disk_waiting = 1;
         while (host_disk_waiting)
             host_idle();
-        return r;
-    }
-    /* the real drive takes time (about a second for one sector: the motor, the head, the rotation; 248 sectors took 810 frames): the game's own retry loops count
-     * frames, and its loader counts a digit down on the screen as the sectors come in */
-    {
-        int frames = count == 1 ? 51 : 20 + (int)((count * 13u) / 4u);
-        int shown = -1;
-
-        for (int i = 0; i < frames; i++) {
-            if (count > 1) {
-                unsigned remaining = (unsigned)count - (unsigned)count * (unsigned)i / (unsigned)frames;
-                int digit = remaining ? (int)((remaining - 1) * 10u / count) : 0;
-
-                if (digit != shown) {   /* (draw_text_row_at: the text of the loader at the foot of the picture) */
-                    shown = digit;
-                    progress_text[0] = (uint8_t)(digit + 0x30);
-                    draw_text_row_at(show_screen + 0x3854, progress_text, 0);
-                }
-            }
-            host_idle();
-        }
     }
     return r;
 }
