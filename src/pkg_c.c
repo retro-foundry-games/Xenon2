@@ -164,12 +164,12 @@ void map_tile_mask(uint16_t x, uint16_t y, uint16_t rows)
     } while ((uint16_t)--rows != 0xffff);
 }
 
-/* A row of cells above the screen can lie past the end of the memory ($FC0000 and up is the Kickstart on the Amiga): an empty mask here. */
+/* A row of cells can lie past the end of the memory the port has (the original has the rest, level 2's map goes on there): taken as a solid cell. */
 static const uint8_t *tile_mask_ptr_at(const uint8_t *cell)
 {
 #ifdef GAME_SDL
     if (GADDR(cell) + 2 > 0x80000)
-        return mask_empty;
+        return mask_full;
 #endif
     return tile_mask_ptr(rd16(cell));
 }
