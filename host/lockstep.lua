@@ -713,10 +713,12 @@ while not done do
                 ami.pause()
                 if HOLD then
                     LS = { loads = loads, prev = function() return prev_orig_ram, prev_port_ram end, peer = peer, wait_ready = wait_ready, orig_picture = function(d) d = d or 0; return cut(ring[snap.frame + win.lag + d] or ring[snap.frame + 1], win) end, port_call = port_call, port_binary = port_binary, snap = snap, hex = hex, ram16 = function(a) return ami.peek16(a) end, ram32 = function(a) return ami.peek32(a) end }
-                    say("holding at sync %d: both sides stand (the emulator is paused, the port is stopped in swap_screens)", snap.n)
-                    while true do ami.wait(1) end
+                    say("holding at sync %d: both sides stand (the emulator is paused, the port is stopped in swap_screens); ctl.py SOCK 'set_continue(true)' goes on", snap.n)
+                    while not CONTINUE do ami.wait(1) end
+                    ami.resume()
+                else
+                    done = true; break
                 end
-                done = true; break
             end
         end
         if compared % 100 == 0 then say("%d sync points compared, %d with differences (memory %d, picture %d)", compared, different, mem_bad, pic_bad) end
