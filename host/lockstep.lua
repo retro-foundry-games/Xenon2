@@ -17,6 +17,7 @@
 --     startfn=HEX   (with state=) the original's state is inside a function that has no sync point for a long time (the shop: state=shop-before-512k startfn=8ff2): the port is given the memory at once and runs that function
 --     resync=N      after more than N frames between two sync points (a disk load) the port takes the original's memory and the baseline starts again (with startfn=: 120)
 --     gate=0        (default on) a disk load of the port waits for the original's: the port takes the original's memory at the instant its load returns and goes on from there, the comparison starts again
+--     health=full   (with state=) the player's energy is set to full in the state before the run
 --     syncs=N       how many synchronisation points to compare (default 300)
 --     tolerant=1    also leave out what depends on how many interrupts the original took while its (slow) code ran: the music player, the sound requests and the joystick bytes (the interrupt fills them), the hardware mirror, the random generator
 --     continue=1    go on after a difference
@@ -105,6 +106,7 @@ local started = false
 if STATE then
     ami.wait(1)
     assert(ami.snapshot_load(STATE .. ".state"), "cannot load " .. STATE)
+    if args:match("health=full") then ami.poke16(0xcc6, 0x27); ami.poke8(0xa6b, 0xff) end   -- the player's energy ($CC6, 39 bar cells) and the flag that redraws the bar; the port takes the original's memory at the first sync point
     started = true
 end
 local peer = ami.peer("port")
