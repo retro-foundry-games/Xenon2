@@ -42,6 +42,8 @@ for a in (args:match("addr=(%S+)") or "2026,202e"):gmatch("%x+") do ADDRS[#ADDRS
 local PORT_ADDR = tonumber(args:match("%f[%w]port=(%x+)") or "2034", 16)
 local COMPARE_PIC = args:match("pic=0") == nil
 local COMPARE_MEM = args:match("mem=0") == nil
+local INLAG = args:match("inlag=(%w+)") or "auto"   -- inlag=auto (default): at the sync points reached from the shop's code the port gets the stick one sync point later than the original (1: everywhere, 0: nowhere)
+local held_joy
 local NOSPR = args:match("nospr=1") ~= nil   -- debug: sprite DMA off in the original at every frame
 local CONTINUE = args:match("continue=1") ~= nil
 local STRICT = args:match("strict=1") ~= nil
@@ -243,6 +245,7 @@ local function sync_point()
             for k, v in pairs(stick) do applied_stick[k] = v end
         end
     end
+    pending[#pending].shop = ami.peek32(ami.reg("a7")) >= 0x54e00   -- called from the shop's code (loaded at $54E00)
     if PLAY and #key_queue > 0 then pending[#pending].keys = key_queue; key_queue = {} end
     if replay_keys[n] then
         pending[#pending].keys = replay_keys[n]
@@ -570,9 +573,13 @@ while not done do
         end
         if not reply or not reply:match("^synced") then say("lockstep: the port did not reach sync point %d (%s)", snap.n, tostring(reply)); done = true; break end
         for _, k in ipairs(snap.keys or {}) do port_call(("key(%d, %d)"):format(k[1], k[2])) end
-        if snap.joy then
+        do
             local st = snap.joy
-            port_call(("joy(%d, %d, %d, %d, %d)"):format(st.up, st.down, st.left, st.right, st.fire))
+            local lag = INLAG == "1" or (INLAG == "auto" and snap.shop)   -- the shop's stick check runs before the interrupt has decoded the stick on the original's slow frames, after it on the port's (they wait for a vertical blank)
+            local previous = held_joy
+            held_joy = snap.joy
+            if lag then st = previous end
+            if st then port_call(("joy(%d, %d, %d, %d, %d)"):format(st.up, st.down, st.left, st.right, st.fire)) end
         end
         if STATE and snap.n == 1 and args:match("dumpram=(%S+)") then ami.save_file(args:match("dumpram=(%S+)"), snap.ram) end
         local gap = last_snap_frame and snap.frame - last_snap_frame or 0
@@ -638,7 +645,7 @@ while not done do
             if not CONTINUE then
                 ami.pause()
                 if HOLD then
-                    LS = { prev = function() return prev_orig_ram, prev_port_ram end, peer = peer, wait_ready = wait_ready, orig_picture = function(d) d = d or 0; return cut(ring[snap.frame + win.lag + d] or ring[snap.frame + 1], win) end, port_call = port_call, port_binary = port_binary, snap = snap, hex = hex, ram16 = function(a) return ami.peek16(a) end, ram32 = function(a) return ami.peek32(a) end }
+                    LS = { loads = loads, prev = function() return prev_orig_ram, prev_port_ram end, peer = peer, wait_ready = wait_ready, orig_picture = function(d) d = d or 0; return cut(ring[snap.frame + win.lag + d] or ring[snap.frame + 1], win) end, port_call = port_call, port_binary = port_binary, snap = snap, hex = hex, ram16 = function(a) return ami.peek16(a) end, ram32 = function(a) return ami.peek32(a) end }
                     say("holding at sync %d: both sides stand (the emulator is paused, the port is stopped in swap_screens)", snap.n)
                     while true do ami.wait(1) end
                 end
