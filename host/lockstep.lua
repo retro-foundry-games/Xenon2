@@ -601,10 +601,13 @@ local function send_high()   -- the original's memory above 512 KB, which the po
     peer:send(ami.read(0x80000, 0x80000))
     wait_ready()
 end
+local trail = {}
 local function apply_joy(snap)
     if snap.n == 1 or snap.n % 200 == 0 or args:match("highall=1") then send_high() end
     local r = reads[snap.n - 1]
     reads[snap.n - 1] = nil
+    trail[#trail + 1] = ("sync %d: stick %s, original's c60=%d a00=%02x, reads {%s}"):format(snap.n, desired_joy and stick_bits(desired_joy) or "-", ami.peek16(0xc60), ami.peek8(0xa00), r and table.concat(r, ",") or "")
+    if #trail > 8 then table.remove(trail, 1) end
     port_call(("rseq, ridx = {%s}, 1"):format(r and table.concat(r, ",") or ""))
     local d = desired_joy
     if not d then return end
@@ -705,6 +708,7 @@ while not done do
         if #problems > 0 then
             different = different + 1
             say("sync %d (emulator frame %d, port frame %s): %s", snap.n, snap.frame, reply:match("synced (%d+)") or "?", table.concat(problems, "; "))
+            for _, l in ipairs(trail) do say("   %s", l) end
             if not CONTINUE then
                 ami.pause()
                 if HOLD then
