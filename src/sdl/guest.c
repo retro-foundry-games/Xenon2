@@ -67,10 +67,11 @@ static int blob_skips(uint32_t m)
 }
 
 int guest_level_table(void) { return blob_raw == 2 ? 2 : 0; }
+extern void *guest_code(uint32_t address);
 
 static void missing_code(void) {}
 
-void *guest_missing_code(uint32_t address)
+static void *guest_missing_code(uint32_t address)
 {
     static uint32_t seen[256];
     static unsigned n;
@@ -82,6 +83,15 @@ void *guest_missing_code(uint32_t address)
         seen[n++] = address;
     fprintf(stderr, "xenon2-sdl: the level's code at $%06X has no C\n", address);
     return (void *)missing_code;
+}
+
+void *guest_code_stub(uint32_t address)
+{
+    void *f = guest_code(address);
+
+    if (!f && address >= BLOB_LO && address < BLOB_HI && blob_raw == 2)
+        return guest_missing_code(address);
+    return f;
 }
 
 /* the shop (pkg_i) switches it on when its blob is loaded over the level's and off when the level's is loaded back */
@@ -117,7 +127,7 @@ void guest_load_range(uint32_t address, const uint8_t *image, uint32_t length)
                 uint32_t v = elem == 2 ? be16(src + o) : be32(src + o);
 
                 if (guest_members[i].ptr && v)
-                    v = (uint32_t)(uintptr_t)(guest_members[i].ptr == 2 ? guest_code(v) : guest_ptr(v));
+                    v = (uint32_t)(uintptr_t)(guest_members[i].ptr == 2 ? guest_code_stub(v) : guest_ptr(v));
                 if (elem == 2)
                     *(uint16_t *)(dst + o) = (uint16_t)v;
                 else
