@@ -2,6 +2,9 @@
 #include "game_all.h"
 #include "amiga/hw.h"
 #include "pkg_b.h"
+#ifdef GAME_SDL
+extern void guest_stick_restore(void);   /* sdl/guest.c: undoes what the lockstep put into v_0a00 */
+#endif
 
 #define CIAA_CRA CIA_BYTE(0xbfe001, 0xe)    /* bit 7: the mains frequency (50 Hz) */
 #define CIAA_ICR CIA_BYTE(0xbfe001, 0xd)
@@ -200,6 +203,9 @@ void irq_vblank(void)
         if (!(CIAA_PRA & 0x80))
             joy |= 0x80;
         irq_joy = joy;
+#ifdef GAME_SDL
+        guest_stick_restore();
+#endif
         if (joy != irq_joy_prev) {
             if (v_0a01 == 0 && (joy & 0x80))
                 v_0a01 = (v_0a00 & 0x80) ? 0 : 0xff;

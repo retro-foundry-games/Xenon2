@@ -228,6 +228,17 @@ do
         end)
     end
 end
+local deferred_keys = {}   -- releases of keys that were pressed in the same interval: the keyboard takes one byte a frame, so they go one sync point later
+local function split_keys(list)
+    local out, pressed = {}, {}
+    for _, k in ipairs(deferred_keys) do out[#out + 1] = k end
+    deferred_keys = {}
+    for _, k in ipairs(list) do
+        if k[2] == 1 then pressed[k[1]] = true end
+        if k[2] == 0 and pressed[k[1]] then deferred_keys[#deferred_keys + 1] = k else out[#out + 1] = k end
+    end
+    return out
+end
 local call_names, call_counts = {}, {}   -- the functions of the code table: original address -> name; the calls since the last sync point on the original's side
 local last_sync_frame = 0
 local function sync_point()
@@ -253,12 +264,17 @@ local function sync_point()
         end
     end
     pending[#pending].shop = shop_loaded   -- the shop's overlay (sector 1476) is the last thing loaded at $54E00 (the level's code lives there too)
-    if PLAY and #key_queue > 0 then pending[#pending].keys = key_queue; key_queue = {} end
-    if replay_keys[n] then
-        pending[#pending].keys = replay_keys[n]
-        for _, k in ipairs(replay_keys[n]) do   -- the original gets the keys as they were typed (the keyboard is what enters the shop)
-            local code = LIBRETRO_OF[k[1]]
-            if code then ami.key(code, k[2] == 1) end
+    do
+        local list = PLAY and key_queue or replay_keys[n] or {}
+        if PLAY then key_queue = {} end
+        if #list > 0 or #deferred_keys > 0 then
+            pending[#pending].keys = split_keys(list)
+            if not PLAY then
+                for _, k in ipairs(pending[#pending].keys) do   -- the original gets the keys as they were typed (the keyboard is what enters the shop); in play it has them from the window
+                    local code = LIBRETRO_OF[k[1]]
+                    if code then ami.key(code, k[2] == 1) end
+                end
+            end
         end
     end
     if PLAY or AUTO then   -- what is applied is written down: the run can be played again (replay=)
@@ -598,6 +614,7 @@ while not done do
     while #pending > 0 and ami.frame() >= pending[1].frame + 2 do
         local snap = table.remove(pending, 1)
         apply_joy(snap)
+        for _, k in ipairs(snap.keys or {}) do port_call(("key(%d, %d)"):format(k[1], k[2])) end   -- before the port runs to the point: a key that ends the pause is what lets it get there
         local reply
         if port_entries >= snap.n then
             reply = ("synced %d 1"):format(0)   -- (the live stepping has parked it at this entry)
@@ -612,7 +629,6 @@ while not done do
             port_entries = snap.n
         end
         if not reply or not reply:match("^synced") then say("lockstep: the port did not reach sync point %d (%s)", snap.n, tostring(reply)); done = true; break end
-        for _, k in ipairs(snap.keys or {}) do port_call(("key(%d, %d)"):format(k[1], k[2])) end
         if snap.joy then desired_joy = snap.joy end
         if STATE and snap.n == 1 and args:match("dumpram=(%S+)") then ami.save_file(args:match("dumpram=(%S+)"), snap.ram) end
         local gap = last_snap_frame and snap.frame - last_snap_frame or 0
