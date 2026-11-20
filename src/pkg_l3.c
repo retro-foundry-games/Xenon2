@@ -684,7 +684,7 @@ void l3_part_arm(Object *a0)
     a0->v3e = 1;
     a0->v2e = 1;
     {
-        uint16_t d0 = (uint16_t)(direction8((int16_t)(W(0x3f03c) - a0->x), (int16_t)(W(0x3f040) - a0->y)) << 5);
+        uint16_t d0 = (uint16_t)(direction8((int16_t)(PLAYER_X - a0->x), (int16_t)(PLAYER_Y - a0->y)) << 5);
         uint32_t r;
 
         d0 = (uint16_t)((d0 & 0xff00) | (uint8_t)((d0 & 0xff) - 0x60));
