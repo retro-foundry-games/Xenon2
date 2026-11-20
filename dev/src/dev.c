@@ -21,6 +21,7 @@
  *   port.save_state(PATH)        the whole state of the port (memory block, chips, sound, disk, input, the game's stack and context); port.load_state(PATH) puts it back,
  *                                also into a new process of the same build (the game stands where it stood: at a frame's end, or inside the function of a stop)
  *   port.run_function(ADDR)      the game starts again at the C function with the original address ADDR, on the memory as it is (the old stack is dropped)
+ *   port.disk_gate(on)           a disk load waits inside the loader (port.disk_waiting()) until port.disk_release(): the lockstep gives it the original's memory at the load's end
  *   port.disk(n)                 put disk 1 or 2 in the drive;  port.quit()
  *   port.listen(PATH)            a unix socket server (fd);  port.accept(fd, ms)  a client (fd) or nil on timeout (ms nil: wait)
  *   port.readline(fd, ms)        a line without its newline; nil, "timeout" or "eof";  port.read(fd, n): n bytes (nil at eof);  port.write(fd, str);  port.close(fd)
@@ -559,6 +560,10 @@ static int l_run_function(lua_State *s)
     return 0;
 }
 
+extern int host_disk_gate, host_disk_waiting;
+static int l_disk_gate(lua_State *s) { host_disk_gate = lua_toboolean(s, 1); return 0; }
+static int l_disk_waiting(lua_State *s) { lua_pushboolean(s, host_disk_waiting); return 1; }
+static int l_disk_release(lua_State *s) { (void)s; host_disk_waiting = 0; return 0; }
 static int l_disk(lua_State *s) { files_insert((int)luaL_checkinteger(s, 1)); return 0; }
 static int l_quit(lua_State *s) { (void)s; exit(0); }
 
@@ -723,7 +728,7 @@ static int l_close(lua_State *s)
 static const luaL_Reg port_functions[] = {
     { "step", l_step }, { "run", l_run }, { "run_until", l_run_until }, { "hook", l_hook }, { "unhook", l_unhook }, { "stop_on", l_stop_on },
     { "frame", l_frame }, { "trace", l_trace }, { "joy", l_joy }, { "key", l_key }, { "ram", l_ram }, { "peek8", l_peek8 }, { "peek16", l_peek16 }, { "peek32", l_peek32 },
-    { "load_ram", l_load_ram }, { "picture", l_picture }, { "picture_hash", l_picture_hash }, { "disk", l_disk }, { "run_function", l_run_function }, { "save_state", l_save_state }, { "load_state", l_load_state }, { "quit", l_quit }, { "listen", l_listen }, { "accept", l_accept }, { "readline", l_readline }, { "read", l_read }, { "write", l_write }, { "close", l_close }, { 0, 0 }
+    { "load_ram", l_load_ram }, { "picture", l_picture }, { "picture_hash", l_picture_hash }, { "disk", l_disk }, { "disk_gate", l_disk_gate }, { "disk_waiting", l_disk_waiting }, { "disk_release", l_disk_release }, { "run_function", l_run_function }, { "save_state", l_save_state }, { "load_state", l_load_state }, { "quit", l_quit }, { "listen", l_listen }, { "accept", l_accept }, { "readline", l_readline }, { "read", l_read }, { "write", l_write }, { "close", l_close }, { 0, 0 }
 };
 
 int main(int argc, char **argv)

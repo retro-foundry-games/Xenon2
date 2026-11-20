@@ -16,6 +16,7 @@
 --     calls=1       also compare the number of calls of every function between two sync points (finds where a difference starts)
 --     startfn=HEX   (with state=) the original's state is inside a function that has no sync point for a long time (the shop: state=shop-before-512k startfn=8ff2): the port is given the memory at once and runs that function
 --     resync=N      after more than N frames between two sync points (a disk load) the port takes the original's memory and the baseline starts again (with startfn=: 120)
+--     gate=0        (default on) a disk load of the port waits for the original's: the port takes the original's memory at the instant its load returns and goes on from there, the comparison starts again
 --     syncs=N       how many synchronisation points to compare (default 300)
 --     tolerant=1    also leave out what depends on how many interrupts the original took while its (slow) code ran: the music player, the sound requests and the joystick bytes (the interrupt fills them), the hardware mirror, the random generator
 --     continue=1    go on after a difference
@@ -143,7 +144,7 @@ for _, line in ipairs{
     -- run until the function with the original address `addr` has been entered once: "synced FRAME COUNT", or "unsynced FRAME" after 20000 frames
     -- the entries of the sync function are counted by one hook; sync(addr) runs to the next one ("synced FRAME N"), live() one frame, or to the entry ("entry" / "frame")
     'entries = 0; function count_entries(addr) port.hook(addr, function() entries = entries + 1 end) end',
-    'function sync(addr) local start = entries; port.stop_on(addr); local ok = false; for _ = 1, 20000 do if port.step() == "hook" and entries > start then ok = true; break end end; port.stop_on(nil); print(ok and ("synced %d %d"):format(port.frame(), entries - start) or ("unsynced %d"):format(port.frame())) end',
+    'function sync(addr) local start = entries; port.stop_on(addr); local ok = false; for _ = 1, 20000 do if port.disk_waiting() then break end; if port.step() == "hook" and entries > start then ok = true; break end end; port.stop_on(nil); print(ok and ("synced %d %d"):format(port.frame(), entries - start) or (port.disk_waiting() and "gated" or ("unsynced %d"):format(port.frame()))) end',
     'function live(addr) local start = entries; port.stop_on(addr); local what = port.step(); port.stop_on(nil); print((what == "hook" and entries > start) and "entry" or "frame") end',
 } do port_call(line) end
 port_call(("count_entries(0x%x)"):format(PORT_ADDR))
@@ -163,7 +164,8 @@ end
 -- ---- the emulator's side: a snapshot at every sync point, from the first instruction of the game on ---------------------------------------------------------------------
 local start_ram
 local fire_until = 0
-local RESYNC_GAP = tonumber(RESYNC) or (args:match("startfn=") and 120 or nil)
+local GATE = args:match("gate=0") == nil
+local RESYNC_GAP = (not GATE) and (tonumber(RESYNC) or (args:match("startfn=") and 120 or nil)) or nil
 local port_entries = 0   -- the entries of the sync function the port has reached (live stepping parks it at one until the original compares it)
 local last_snap_frame = nil
 local pending, n = {}, 0
@@ -527,6 +529,24 @@ local function compare_picture(snap, port_pic)
     return diffs
 end
 
+local loads = {}   -- the original'"'"'s memory at the return of each of its disk loads, in order
+if GATE then
+    port_call("port.disk_gate(true)")
+    ami.hook(0x921a, function()
+        local ret = ami.peek32(ami.reg("a7"))
+        ami.hook(ret, function() ami.unhook(ret); loads[#loads + 1] = ami.read(0, 0x80000) end)
+    end)
+end
+local function service_gate()   -- the port waits inside its loader: it goes on with the original's memory as its load ended
+    while #loads == 0 do ami.wait(1) end
+    local ram = table.remove(loads, 1)
+    peer:send("ram_in(524288)\n")
+    peer:send(ram)
+    wait_ready()
+    port_call("port.disk_release()")
+    baseline = nil
+    say("a disk load (emulator frame %d): the port took the original's memory at the end of its load and went on from there; the comparison starts again", ami.frame())
+end
 local prev_orig_ram, prev_port_ram, last_orig_ram, last_port_ram
 local different, compared, mem_bad, pic_bad = 0, 0, 0, 0
 local done = false
@@ -541,6 +561,10 @@ while not done do
             reply = "synced " .. frame .. " 1"
         else
             reply = port_call(("sync(0x%x)"):format(PORT_ADDR))
+            while reply == "gated" do
+                service_gate()
+                reply = port_call(("sync(0x%x)"):format(PORT_ADDR))
+            end
             port_entries = snap.n
         end
         if not reply or not reply:match("^synced") then say("lockstep: the port did not reach sync point %d (%s)", snap.n, tostring(reply)); done = true; break end
@@ -651,6 +675,7 @@ while not done do
         end
         if LIVE and started and port_entries == compared and not done then   -- the port is not parked ahead: one frame, and its picture on the panel
             if port_call(("live(0x%x)"):format(PORT_ADDR)) == "entry" then port_entries = port_entries + 1 end
+            if GATE and #loads > 0 and port_call('print(port.disk_waiting() and "gated" or "run")') == "gated" then service_gate() end
             ami.panel(1, port_binary("image_out()"), 320, 256, 2, 1, 0)
         end
         ami.wait(1)
