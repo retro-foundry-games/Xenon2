@@ -7,6 +7,7 @@
 #define FN(f) ((obj_fn)(f))
 #define W(a) sh_r16(a)
 #define B(a) sh_r8(a)
+#define PLAYER_X (PLAYER->x)
 #define PLAYER_Y (PLAYER->y)
 
 static Object *alloc_in(Object *list)
@@ -17,6 +18,17 @@ static Object *alloc_in(Object *list)
     o->prev = tail;
     o->next = list;
     tail->next = o;
+    return o;
+}
+
+static Object *insert_head(Object *list)
+{
+    Object *o = obj_free_pop(), *old = list->next;
+
+    list->next = o;
+    o->next = old;
+    o->prev = list;
+    old->prev = o;
     return o;
 }
 
@@ -39,6 +51,7 @@ void l3_spawn_snake(const uint8_t *a1);
 void l3_spawn_diver(const uint8_t *a1);
 void l3_worm_spawn(uint16_t d6);
 void l3_end_draw(Object *a0);
+
 
 /* ---- the entries the engine calls ($54E0C..$54E2C) ---- */
 
@@ -85,6 +98,9 @@ void l3_hook(uint16_t d0, const uint8_t *a1, uint16_t d2)
         break;
     case 2:
         l3_spawn_diver(a1);
+        break;
+    case 3:
+        l3_spawn_parts();
         break;
     }
 }
@@ -489,5 +505,257 @@ void l3_spawn_diver(const uint8_t *a1)
     a0->v42 = 0x12c;
     a0->v28 = 0;
     a0->v44 = 0;
+    bbox_from_frame(a0);
+}
+
+/* ---- the parts of the end ---- */
+
+static void l3_centre(const Object *o, int16_t *x, int16_t *y)
+{
+    const uint8_t *a5 = (const uint8_t *)o->gfx;
+    int16_t dx = (int16_t)(o->x - (int16_t)rd16(a5)), dy = (int16_t)(o->y - (int16_t)rd16(a5 + 2));
+
+    dx = (int16_t)(dx + dx);
+    dy = (int16_t)(dy + dy);
+    *x = (int16_t)(dx + (int16_t)rd16(a5 + 4)) >> 1;
+    *y = (int16_t)(dy + (int16_t)rd16(a5 + 6)) >> 1;
+}
+
+/* level3 $055DEC: the parts of the end, one object each from the table at $558F0 (update, hit, picture, offset x, offset y), put first in list C; the first
+ * of them is the head of the chain; v30 is the place after the part's entry in the table */
+void l3_spawn_parts(void)
+{
+    uint32_t t = 0x558f0;
+    Object *first = 0, *prev = 0;
+
+    do {
+        Object *a0 = insert_head(LIST_C);
+
+        if (prev)
+            prev->chain = a0;
+        else
+            first = a0;
+        a0->type = 0x54;
+        a0->fn_update = (obj_fn)GFN(sh_r32(t));
+        a0->fn_draw = draw_bob_masked;
+        a0->fn_hit = GFN(sh_r32(t + 4));
+        a0->v28 = 0;
+        set_anim(a0, sh_r32(t + 8));
+        a0->pad4e[0] = W(t + 12);
+        a0->pad4e[1] = W(t + 14);
+        SET_V5E(a0, 0);
+        a0->v42 = 0x3e8;
+        a0->flag35 = -1;
+        a0->v46 = (uint8_t *)GPTR(0x570c2);
+        a0->x = (int16_t)(W(0x570c4) - 0x20);
+        a0->y = (int16_t)(W(0x570c6) - 0x28);
+        a0->x_frac = 0;
+        a0->y_frac = 0;
+        a0->ptr4a = (const uint8_t *)GPTR(0x570c8);
+        a0->v2a = 0;
+        a0->v2c = 0;
+        a0->pad4e[2] = 0;
+        a0->v44 = 0;
+        a0->v54 = (int16_t)W(0x54e46);
+        bbox_from_frame(a0);
+        a0->target = first;
+        a0->chain = 0;
+        t += 16;
+        a0->v30 = (int16_t)(t - 0x558f0);
+        a0->v3e = 0;
+        prev = a0;
+    } while (sh_r32(t) != 0);
+    sh_w8(0xd96, 0xff);
+    sh_w8(0xd85, 0xff);
+}
+
+/* level3 $055A88: the first part: it keeps the end's flag d96 set and fires a shot at the player now and then */
+void l3_part_core(Object *a0)
+{
+    uint16_t sum;
+
+    sh_w8(0xd96, 0xff);
+    enemy_update(a0);
+    sum = (uint16_t)(a0->v5e_b[0] + B(0x54e75));
+    a0->v5e_b[0] = (uint8_t)sum;
+    if (sum > 0xff) {
+        Object *s;
+        uint16_t angle;
+
+        a0->v5e_b[0] = (uint8_t)(random_next() & 0x3f);
+        angle = direction8((int16_t)(PLAYER_X - a0->x), (int16_t)(PLAYER_Y - a0->y));
+        s = spawn_enemy_shot((uint16_t)(a0->x + 0x10), (uint16_t)(a0->y + 0x3c), angle, W(0x54e76), 0);
+        set_anim(s, 0x55b14);
+    }
+}
+
+/* level3 $055AF0: a part follows the first by its offsets */
+void l3_part_follow(Object *a0)
+{
+    Object *a1;
+
+    anim_step(a0);
+    a1 = a0->target;
+    a0->x = (int16_t)(a1->x + (int16_t)a0->pad4e[0]);
+    a0->y = (int16_t)(a1->y + (int16_t)a0->pad4e[1]);
+    bbox_from_frame(a0);
+}
+
+/* level3 $055B38: a gun part (v30 $40 the left one, the other the right): while the energy of its side (d60 / d62) is above zero it is shown
+ * as it is and can be hit, then it is the picture of the wreck */
+void l3_part_gun(Object *a0)
+{
+    int16_t side;
+
+    l3_part_follow(a0);
+    side = (int16_t)W(a0->v30 == 0x40 ? 0xd60 : 0xd62);
+    if (side <= 0) {
+        a0->gfx = GPTR(a0->v30 == 0x40 ? 0x5f05e : 0x5f0f0);
+        a0->anim_delay = 0;
+        a0->hit[0] = 0x3e8;
+        a0->fn_hit = (void *)obj_nop_thunk;
+        return;
+    }
+    if (a0->anim_delay != 0) {
+        bbox_from_frame(a0);
+        return;
+    }
+    {
+        uint16_t sum = (uint16_t)(a0->v5e_b[0] + B(0x54e79));
+
+        a0->v5e_b[0] = (uint8_t)sum;
+        if (sum > 0xff) {
+            a0->v5e_b[0] = (uint8_t)(random_next() & 0x3f);
+            set_anim(a0, 0x55a40);
+        }
+    }
+    a0->hit[0] = 0x3e8;
+    a0->hit[2] = 0x3e8;
+}
+
+/* level3 $055BC0: the hit of a gun part: the energy of its side runs out, it explodes, and when d6a hits come to zero the whole end goes */
+void l3_part_hit(Object *a0, Object *a1, uint16_t d0)
+{
+    Object *a2;
+    uint32_t w = a1->v30 == 0x40 ? 0xd60 : 0xd62;
+    uint16_t old = W(w);
+    int16_t x, y;
+
+    for (a2 = a1->target; a2; a2 = a2->chain)
+        a2->fn_draw = draw_bob_or_first;
+    sh_w16(w, (uint16_t)(old - d0));
+    if (old > d0)
+        return;
+    a1->hit[0] = 0x3e8;
+    a1->fn_hit = (void *)obj_nop_thunk;
+    l3_centre(a1, &x, &y);
+    spawn_effect(x, y, (const uint8_t *)GPTR(sh_r32(0xf70)), draw_bob_masked);
+    sh_w16(0xd6a, (uint16_t)(W(0xd6a) - 1));
+    if (W(0xd6a) != 0)
+        return;
+    a1->target->energy = 0;
+    hit_part(a0, a1, 1);
+    spawn_bonuses(4);
+    sh_w8(0xd85, 0);
+}
+
+/* level3 $055C52: an arm's root: now and then it aims at the player and swings (v3e from 1 to $E and back), the next part's angle and speed follow */
+void l3_part_arm(Object *a0)
+{
+    Object *a1;
+
+    l3_part_follow(a0);
+    a1 = a0->prev;
+    if (a0->v3e != 0) {
+        a0->v3e = (int16_t)(a0->v3e + a0->v2e);
+        if (a0->v3e == 0xe)
+            a0->v2e = (int16_t)-a0->v2e;
+        a1->v54 = a0->v3e;
+        bbox_from_frame(a0);
+        return;
+    }
+    if ((random_next() & 0xff) >= 3) {
+        a1->v54 = 0;
+        a1->v2c = 0x40;
+        bbox_from_frame(a0);
+        return;
+    }
+    v_0418 = 0xf;
+    a0->v3e = 1;
+    a0->v2e = 1;
+    {
+        uint16_t d0 = (uint16_t)(direction8((int16_t)(W(0x3f03c) - a0->x), (int16_t)(W(0x3f040) - a0->y)) << 5);
+        uint32_t r;
+
+        d0 = (uint16_t)((d0 & 0xff00) | (uint8_t)((d0 & 0xff) - 0x60));
+        a1->v2a = 0;
+        a1->v2c = (int16_t)d0;
+        r = (((random_next() & 0x1f) + 0x20) << 8) << 2;
+        a1->pad4e[0] = (uint16_t)(r >> 16);
+        a1->pad4e[1] = (uint16_t)r;
+        a1->pad4e[2] = 0;
+        a1->v54 = 1;
+        if (a0->v30 == 0x60) {
+            a1->v2c = (int16_t)((a1->v2c & 0xff00) | (uint8_t)(a1->v2c + 0x40));
+            r = -r;
+            a1->pad4e[0] = (uint16_t)(r >> 16);
+            a1->pad4e[1] = (uint16_t)r;
+        }
+    }
+    bbox_from_frame(a0);
+}
+
+/* the arm's piece takes its place from the next piece and runs its path with the state of the piece before it */
+static void l3_arm_follow(Object *a0)
+{
+    Object *a1 = a0->next;
+
+    a0->x = a1->x;
+    a0->x_frac = a1->x_frac;
+    a0->y = a1->y;
+    a0->y_frac = a1->y_frac;
+    a0->v28 = 0x3e8;
+}
+
+/* level3 $055D12: a piece of an arm: it moves after the next piece by its own path (angle v2a:v2c, speed pad4e), and hands that state to the piece before it */
+void l3_part_arm_piece(Object *a0)
+{
+    int16_t s2a, s2c, s4e0, s4e1, s52;
+    Object *a1;
+
+    l3_arm_follow(a0);
+    s2a = a0->v2a;
+    s2c = a0->v2c;
+    s4e0 = (int16_t)a0->pad4e[0];
+    s4e1 = (int16_t)a0->pad4e[1];
+    s52 = (int16_t)a0->pad4e[2];
+    obj_script_run(a0);
+    a1 = a0->prev;
+    a1->v2a = a0->v2a;
+    a1->v2c = a0->v2c;
+    a1->pad4e[0] = a0->pad4e[0];
+    a1->pad4e[1] = a0->pad4e[1];
+    a1->pad4e[2] = a0->pad4e[2];
+    a1->v54 = a0->v54;
+    a0->pad4e[2] = (uint16_t)s52;
+    a0->pad4e[1] = (uint16_t)s4e1;
+    a0->pad4e[0] = (uint16_t)s4e0;
+    a0->v2c = s2c;
+    a0->v2a = s2a;
+}
+
+/* level3 $055D62: the tip of an arm: it takes its place and path like the pieces, and its picture follows the angle */
+void l3_part_arm_tip(Object *a0)
+{
+    uint16_t d0, d1;
+
+    l3_arm_follow(a0);
+    obj_script_run(a0);
+    d0 = (uint16_t)(((uint16_t)a0->v2c >> 2) & 0x38);
+    if (a0->v54 == 0xe)
+        v_0414 = 0xc;
+    d1 = (uint16_t)(v_0cdc & 4);
+    a0->gfx = GPTR(sh_r32(0x55dac + (uint16_t)(d0 + d1)));
+    a0->anim_delay = 0;
     bbox_from_frame(a0);
 }
