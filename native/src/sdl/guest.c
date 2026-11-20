@@ -66,7 +66,7 @@ static int blob_skips(uint32_t m)
     return (blob_raw == 1 && m >= BLOB_LO && m < BLOB_HI) || (blob_raw == 2 && m >= BLOB_LEVEL_LO && m < BLOB_HI);
 }
 
-int guest_level_table(void) { return blob_raw == 2 ? 2 : 0; }
+int guest_level_table(void) { return blob_raw == 2 ? xenon.v_0e04 : 0; }
 extern void *guest_code(uint32_t address);
 
 static void missing_code(void) {}
