@@ -183,6 +183,32 @@ clear:
     return a0;
 }
 
+#ifdef GAME_SDL
+static int edge_defer, edge_pending;
+static uint8_t edge_old;
+
+/* the fire press the interrupt saw is put into v_0a01 now (when the interrupt that sees it arrives later in the original's frame than it does here) */
+void guest_edge_apply(uint8_t value)
+{
+    if (edge_pending && (value & 0x80)) {
+        edge_pending = 0;
+        if (v_0a01 == 0)
+            v_0a01 = (edge_old & 0x80) ? 0 : 0xff;
+    }
+}
+
+/* the frame's end: a press that no routine saw is in v_0a01 for the next frame */
+void guest_edge_defer(int on)
+{
+    if (edge_pending) {
+        edge_pending = 0;
+        if (v_0a01 == 0)
+            v_0a01 = (edge_old & 0x80) ? 0 : 0xff;
+    }
+    edge_defer = on;
+}
+#endif
+
 /* orig $0020C2: the level 3 interrupt (vertical blank): counts the frame, reads the joystick (port 2) and the fire button into
  * irq_joy / v_0a00, sends pending sound commands to the music player and calls its tick.  Ends with rte. */
 void irq_vblank(void)
@@ -207,6 +233,12 @@ void irq_vblank(void)
         guest_stick_restore();
 #endif
         if (joy != irq_joy_prev) {
+#ifdef GAME_SDL
+            if (edge_defer && v_0a01 == 0 && (joy & 0x80)) {
+                edge_pending = 1;
+                edge_old = v_0a00;
+            } else
+#endif
             if (v_0a01 == 0 && (joy & 0x80))
                 v_0a01 = (v_0a00 & 0x80) ? 0 : 0xff;
             v_0a00 = joy;

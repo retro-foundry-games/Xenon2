@@ -590,6 +590,7 @@ for _, a in ipairs(STICK_READERS) do
         end
         local r = reads[n]
         if not r then r = {}; reads[n] = r end
+        if a ~= 0x56e56 and not r.first then r.first = value end
         r[#r + 1] = ("{0x%x,%d}"):format(a, value)
     end)
 end
@@ -602,7 +603,7 @@ local function send_high()   -- the original's memory above 512 KB, which the po
     wait_ready()
 end
 local trail = {}
-local function apply_joy(snap)
+local function apply_joy0(snap)
     if snap.n == 1 or snap.n % 200 == 0 or args:match("highall=1") then send_high() end
     if snap.n % 50 == 2 then port_call("pcall(port.hook, 0x56e56, rhook)") end   -- level 2 code has an address only once the port runs level 2
     local r = reads[snap.n - 1]
@@ -623,6 +624,13 @@ local function apply_joy(snap)
     if port_joy and stick_bits(port_joy) == stick_bits(d) then return end
     port_joy = d
     port_call(("joy(%d, %d, %d, %d, %d)"):format(d.up, d.down, d.left, d.right, d.fire))
+end
+local function apply_joy(snap)
+    local r = reads[snap.n - 1]
+    local first = r and r.first
+    apply_joy0(snap)
+    -- the interrupt that brings a fire press came after the routine that read the old stick: the press is in v_0a01 from there on
+    port_call(("port.edge_defer(%d)"):format(first and port_joy and first & 0x80 == 0 and stick_bits(port_joy) & 0x80 ~= 0 and 1 or 0))
 end
 local prev_orig_ram, prev_port_ram, last_orig_ram, last_port_ram
 local different, compared, mem_bad, pic_bad = 0, 0, 0, 0

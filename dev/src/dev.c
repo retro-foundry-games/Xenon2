@@ -15,6 +15,7 @@
  *   port.trace(n)                prints the original address of the next n functions the game enters (on stderr)
  *   port.frame()                 the frames so far;  port.joy{up=,down=,left=,right=,fire=};  port.key(amiga_raw_code, down)
  *   port.ram()                   the memory as a string of 0x80000 bytes in the original's byte order (named members converted, raw buffers as they are)
+ *   port.edge_defer(0|1)         the fire press the next interrupt sees is put into v_0a01 at the first poke_stick with the fire bit (1) or at the interrupt (0)
  *   port.poke_stick(BYTE)        sets v_0a00 (the stick byte the game decodes), as the original's interrupt does mid-frame
  *   port.peek8/16/32(address)    from the same (cached until the game runs again)
  *   port.picture()               RGB, 3 bytes a pixel, 320 x 256;  port.picture_hash()
@@ -481,6 +482,14 @@ static int peek(lua_State *s, int size)
     return 1;
 }
 
+void guest_edge_defer(int on);
+
+static int l_edge_defer(lua_State *s)
+{
+    guest_edge_defer((int)luaL_checkinteger(s, 1));
+    return 0;
+}
+
 static int l_poke_stale(lua_State *s)
 {
     guest_set_stale((uint32_t)luaL_checkinteger(s, 1));
@@ -756,7 +765,7 @@ static int l_close(lua_State *s)
 
 static const luaL_Reg port_functions[] = {
     { "step", l_step }, { "run", l_run }, { "run_until", l_run_until }, { "hook", l_hook }, { "unhook", l_unhook }, { "stop_on", l_stop_on },
-    { "frame", l_frame }, { "trace", l_trace }, { "joy", l_joy }, { "key", l_key }, { "ram", l_ram }, { "poke_stick", l_poke_stick }, { "poke_stale", l_poke_stale }, { "peek8", l_peek8 }, { "peek16", l_peek16 }, { "peek32", l_peek32 },
+    { "frame", l_frame }, { "trace", l_trace }, { "joy", l_joy }, { "key", l_key }, { "ram", l_ram }, { "poke_stick", l_poke_stick }, { "poke_stale", l_poke_stale }, { "edge_defer", l_edge_defer }, { "peek8", l_peek8 }, { "peek16", l_peek16 }, { "peek32", l_peek32 },
     { "load_ram", l_load_ram }, { "load_high", l_load_high }, { "picture", l_picture }, { "picture_hash", l_picture_hash }, { "disk", l_disk }, { "disk_gate", l_disk_gate }, { "disk_waiting", l_disk_waiting }, { "disk_release", l_disk_release }, { "run_function", l_run_function }, { "save_state", l_save_state }, { "load_state", l_load_state }, { "quit", l_quit }, { "listen", l_listen }, { "accept", l_accept }, { "readline", l_readline }, { "read", l_read }, { "write", l_write }, { "close", l_close }, { 0, 0 }
 };
 
