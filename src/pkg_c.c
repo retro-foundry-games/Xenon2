@@ -140,6 +140,20 @@ static const uint8_t *tile_mask_ptr(uint16_t w)
     return mask_full;
 }
 
+/* A row of cells can lie past the end of the memory the port has (bobs above the screen read the original's memory beyond 512 KB: the lockstep supplies
+ * it, otherwise it is zeros). */
+#ifdef GAME_SDL
+extern uint16_t guest_high_word(uint32_t address);   /* sdl/guest.c */
+#endif
+static const uint8_t *tile_mask_ptr_at(const uint8_t *cell)
+{
+#ifdef GAME_SDL
+    if (GADDR(cell) + 2 > 0x80000)
+        return tile_mask_ptr(guest_high_word(GADDR(cell)));
+#endif
+    return tile_mask_ptr(rd16(cell));
+}
+
 /* orig $002D1A: fill tile_mask_buf with the tile masks (three words a row) of the map at pixel (x, y), rows + 1 rows high.
  * Inlined: $2D7A (the three pointers of a row of cells, results in a4, a5, a6). */
 void map_tile_mask(uint16_t x, uint16_t y, uint16_t rows)
@@ -158,9 +172,9 @@ void map_tile_mask(uint16_t x, uint16_t y, uint16_t rows)
     d3 = (uint16_t)(d3 + d3);
     a1 += (int16_t)(uint16_t)((uint32_t)(y >> 4) * 0x28);
     a1 += (uint16_t)((x >> 3) & 0xfe);
-    a4 = tile_mask_ptr(rd16(a1));
-    a5 = tile_mask_ptr(rd16(a1 + 2));
-    a6 = tile_mask_ptr(rd16(a1 + 4));
+    a4 = tile_mask_ptr_at(a1);
+    a5 = tile_mask_ptr_at(a1 + 2);
+    a6 = tile_mask_ptr_at(a1 + 4);
     a1 += 40;
     do {
         *out++ = rd16(a4 + d3);
@@ -168,27 +182,13 @@ void map_tile_mask(uint16_t x, uint16_t y, uint16_t rows)
         *out++ = rd16(a6 + d3);
         d3 = (uint16_t)(d3 + 10);
         if (d3 == 0xa0) {
-            a4 = tile_mask_ptr(rd16(a1));
-            a5 = tile_mask_ptr(rd16(a1 + 2));
-            a6 = tile_mask_ptr(rd16(a1 + 4));
+            a4 = tile_mask_ptr_at(a1);
+            a5 = tile_mask_ptr_at(a1 + 2);
+            a6 = tile_mask_ptr_at(a1 + 4);
             a1 += 40;
             d3 = 0;
         }
     } while ((uint16_t)--rows != 0xffff);
-}
-
-/* A row of cells can lie past the end of the memory the port has (bobs above the screen read the original's memory beyond 512 KB: the lockstep supplies
- * it, otherwise it is zeros). */
-#ifdef GAME_SDL
-extern uint16_t guest_high_word(uint32_t address);   /* sdl/guest.c */
-#endif
-static const uint8_t *tile_mask_ptr_at(const uint8_t *cell)
-{
-#ifdef GAME_SDL
-    if (GADDR(cell) + 2 > 0x80000)
-        return tile_mask_ptr(guest_high_word(GADDR(cell)));
-#endif
-    return tile_mask_ptr(rd16(cell));
 }
 
 /* orig $002F66: like map_tile_mask with two words a row (the masks of the cells at x and at x + 16), written as the blitter reads them
