@@ -165,6 +165,15 @@ static Object *find_decoration(Object *a1)
     return a2;
 }
 
+/* the weapon slot that owns an object is freed (fn_hit is its address); an object that no longer has one (a dying shot: fn_hit is obj_nop) makes the original clear a word of its own code, which has no effect */
+static void slot_free(void *fn_hit)
+{
+    Slot *s = (Slot *)fn_hit;
+
+    if ((s >= v_0c66 && s < v_0c66 + 7) || (s >= v_0cfc && s < v_0cfc + 7))
+        s->type = 0;
+}
+
 /* orig $005C3E: a1 and what belongs to it die */
 void kill_with_slot(Object *a1)
 {
@@ -175,7 +184,7 @@ void kill_with_slot(Object *a1)
         if (a2->type != 0)
             kill_object(a2);
     }
-    ((Slot *)a1->fn_hit)->type = 0;
+    slot_free(a1->fn_hit);
     kill_object(a1);
 }
 
@@ -189,7 +198,7 @@ void free_with_slot(Object *a1)
         if (a2->type != 0)
             unlink_to_free(a2);
     }
-    ((Slot *)a1->fn_hit)->type = 0;
+    slot_free(a1->fn_hit);
     unlink_to_free(a1);
 }
 
