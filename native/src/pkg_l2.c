@@ -571,8 +571,8 @@ void l2_gate_update(Object *a0)
 
     if ((int16_t)v_0ccc < 0 && (int16_t)v_0cea <= 0xb40)
         v_0cea = 0xb40;
-    if (a0->v30 == 2 && v_0d5c != 1)
-        hide = 1;
+    if (a0->v30 == 2)
+        hide = v_0d5c != 1;
     else if (a0->v30 == 1)
         hide = px >= 0xa0 || v_0d5e == 3;
     else
@@ -588,7 +588,7 @@ void l2_gate_update(Object *a0)
         d0 = (int16_t)((a0->y << 4) - v_0cd0);
         a0->hit[1] = d0;
         a0->hit[3] = (int16_t)(d0 + 0xf);
-        step = a0->v28 != 4;
+        step = a0->v28 != 4 || v_0d5e == 3;
     }
     if (step && !(v_0cdc & 1))
         a0->v28 = (int16_t)((a0->v28 + 1) & 7);
