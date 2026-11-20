@@ -153,7 +153,7 @@ void l2_hook(uint16_t d0, const uint8_t *a1, uint16_t d2)
         a0->v40 = 0;
         return;
     case 2:
-        a0 = spawn_marker_front(flag ? 0xf0 : 0xf4, a1, (void (*)(void))GFN(0x5568c));
+        a0 = spawn_marker_front(flag ? 0xf0 : 0xf4, a1, (void (*)(void))l2_front_update);
         copy4(a0->v46, (const uint8_t *)GPTR(flag ? 0x55890 : 0x558b8));
         copy4(a0->v46 + 0x28, (const uint8_t *)GPTR(flag ? 0x55894 : 0x558bc));
         return;
@@ -306,6 +306,107 @@ void l2_init(void)
 }
 
 /* ---- the turrets, launchers and what the hooks put into the level ---- */
+
+/* level2 $056596: a piece of the marker $F0 / $F4: every 16 steps it turns towards the player (eight directions), moves by the table,
+ * and on the player's box hurts him; after 80 steps (v28), or when it leaves the screen, it is gone, and in the first case, or when the
+ * player is shielded, it bursts */
+void l2_front_piece_update(Object *a0)
+{
+    static const int16_t dx[8] = { -4, -5, -4, 0, 4, 5, 4, 0 };
+    static const int16_t dy[8] = { -4, 0, 4, 5, 4, 0, -4, -5 };
+    int burst = 0;
+
+    anim_step(a0);
+    a0->v28++;
+    if (a0->v28 >= 0x50) {
+        burst = 1;
+    } else {
+        int16_t x, y;
+
+        if ((a0->v28 & 0xf) == 0) {
+            uint16_t d = direction8((int16_t)(PLAYER_X - a0->x), (int16_t)(PLAYER_Y - a0->y));
+
+            a0->v2a = (int16_t)(~d & 7);
+            set_anim(a0, sh_r32(0x56576 + ((uint16_t)a0->v2a << 2)));
+        }
+        x = (int16_t)(dx[a0->v2a] + a0->x);
+        if ((uint16_t)x >= 0x140) {
+            kill_thunk(a0);
+            return;
+        }
+        a0->x = x;
+        y = (int16_t)(dy[a0->v2a] + a0->y + v_0cd8);
+        if ((uint16_t)y >= 0xc0) {
+            kill_thunk(a0);
+            return;
+        }
+        a0->y = y;
+        bbox_from_frame(a0);
+        if (!point_in_player_box(x, y))
+            return;
+        if (v_0cc8 != 0) {
+            burst = 1;
+        } else {
+            PLAYER->fn_draw = draw_bob_or_first;
+            player_damage(a0, 4);
+            kill_thunk(a0);
+            return;
+        }
+    }
+    if (burst) {
+        const uint8_t *f = (const uint8_t *)a0->gfx;
+        int16_t ex = (int16_t)(((int16_t)(a0->x - (int16_t)rd16(f)) * 2 + (int16_t)rd16(f + 4)) >> 1);
+        int16_t ey = (int16_t)(((int16_t)(a0->y - (int16_t)rd16(f + 2)) * 2 + (int16_t)rd16(f + 6)) >> 1);
+
+        spawn_effect(ex, ey, anim_270e, draw_bob_masked);
+    }
+    kill_thunk(a0);
+}
+
+/* level2 $05568C: the marker $F0 / $F4: waits for the scroll, then its picture takes 20 steps (v28) from a table, and it bursts into
+ * eight pieces ($108, update $056596) */
+void l2_front_update(Object *a0)
+{
+    int i;
+
+    if (a0->v28 == 0) {
+        if ((int16_t)(a0->y - v_0cd0) >= (int16_t)W(0x54e62))
+            a0->v28 = 1;
+        return;
+    }
+    {
+        uint32_t table = a0->type == 0xf0 ? 0x557e8 : 0x5583c;
+        const uint8_t *a2 = (const uint8_t *)GPTR(sh_r32(table + ((uint16_t)a0->v28 << 2)));
+
+        copy4(a0->v46, a2);
+        copy4(a0->v46 + 0x28, a2 + 4);
+    }
+    a0->v28++;
+    if (a0->v28 < 0x15)
+        return;
+    for (i = 7; i >= 0; i--) {
+        uint32_t entry = 0x557a8 + (uint32_t)(7 - i) * 8;
+        Object *s = alloc_in(LIST_C);
+
+        s->type = 0x108;
+        s->fn_update = (obj_fn)l2_front_piece_update;
+        s->fn_draw = draw_bob_masked;
+        s->fn_hit = (void *)hit_explode;
+        set_anim(s, sh_r32(entry));
+        SET_V5E(s, 0);
+        s->x = (int16_t)(a0->x + 0x10 + (int16_t)W(entry + 4));
+        s->y = (int16_t)(a0->y - v_0cd0 + 0x10 + (int16_t)W(entry + 6));
+        s->v2a = (int16_t)i;
+        s->energy = 1;
+        s->flag35 = 0;
+        s->v42 = 0x14;
+        s->v28 = (int16_t)(random_next() & 0x1f);
+        s->v44 = 0;
+        bbox_from_frame(s);
+    }
+    kill_thunk(a0);
+}
+
 
 /* level2 $0558E0: update of the turret $E8 / $EC: its box, the cells it opens and closes (v28 is the step), and at step 7 a shot */
 void l2_turret_update(Object *a0)
