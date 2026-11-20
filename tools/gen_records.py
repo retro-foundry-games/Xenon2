@@ -105,13 +105,14 @@ def main():
            'static void s32(uint8_t *p) { uint32_t v = (uint32_t)p[0] << 24 | (uint32_t)p[1] << 16 | (uint32_t)p[2] << 8 | p[3]; memcpy(p, &v, 4); }',
            'static void sptr(uint8_t *p) { uint32_t v = (uint32_t)p[0] << 24 | (uint32_t)p[1] << 16 | (uint32_t)p[2] << 8 | p[3]; v = v ? (uint32_t)(uintptr_t)guest_ptr(v) : 0; memcpy(p, &v, 4); }',
            'extern uint32_t guest_code_address(const void *function);',
+           'extern void *guest_code_stub(uint32_t address);   /* guest.c: guest_code(), or a function that does nothing for level code with no C */',
            'static void u16(uint8_t *p) { uint16_t v; memcpy(&v, p, 2); p[0] = (uint8_t)(v >> 8); p[1] = (uint8_t)v; }',
            'static void u32(uint8_t *p) { uint32_t v; memcpy(&v, p, 4); p[0] = (uint8_t)(v >> 24); p[1] = (uint8_t)(v >> 16); p[2] = (uint8_t)(v >> 8); p[3] = (uint8_t)v; }',
            'static void uptr(uint8_t *p) { uint32_t v; memcpy(&v, p, 4); v = v ? guest_address((void *)(uintptr_t)v) : 0; p[0] = (uint8_t)(v >> 24); p[1] = (uint8_t)(v >> 16); p[2] = (uint8_t)(v >> 8); p[3] = (uint8_t)v; }',
            'static void sptrv(uint8_t *p) { uint32_t v = (uint32_t)p[0] << 24 | (uint32_t)p[1] << 16 | (uint32_t)p[2] << 8 | p[3]; void *f = v ? guest_code(v) : 0; v = v ? (uint32_t)(uintptr_t)(f ? f : guest_ptr(v)) : 0; memcpy(p, &v, 4); }',
            'static void uptrv(uint8_t *p) { uint32_t v; memcpy(&v, p, 4); if (v) { uint32_t base = (uint32_t)(uintptr_t)guest_ptr(0); v = v - base < 0x80000u ? v - base : guest_code_address((void *)(uintptr_t)v); } p[0] = (uint8_t)(v >> 24); p[1] = (uint8_t)(v >> 16); p[2] = (uint8_t)(v >> 8); p[3] = (uint8_t)v; }',
            'static void ufn(uint8_t *p) { uint32_t v; memcpy(&v, p, 4); v = v ? guest_code_address((void *)(uintptr_t)v) : 0; p[0] = (uint8_t)(v >> 24); p[1] = (uint8_t)(v >> 16); p[2] = (uint8_t)(v >> 8); p[3] = (uint8_t)v; }',
-           'static void sfn(uint8_t *p) { uint32_t v = (uint32_t)p[0] << 24 | (uint32_t)p[1] << 16 | (uint32_t)p[2] << 8 | p[3]; v = v ? (uint32_t)(uintptr_t)guest_code(v) : 0; memcpy(p, &v, 4); }', '']
+           'static void sfn(uint8_t *p) { uint32_t v = (uint32_t)p[0] << 24 | (uint32_t)p[1] << 16 | (uint32_t)p[2] << 8 | p[3]; v = v ? (uint32_t)(uintptr_t)guest_code_stub(v) : 0; memcpy(p, &v, 4); }', '']
     names = sorted(structs)
     for n in names: layout(n, structs, memo)
     out.append('unsigned guest_record_size(const char *type)\n{')
@@ -176,8 +177,8 @@ def main():
     text = '\n'.join(tab) + '\n'
     text = text.replace('    return n;\n}', '    for (unsigned i = 0; i < sizeof code_table2 / sizeof code_table2[0] && n < max; i++)\n        if (code_table2[i].function == function)\n            out[n++] = code_table2[i].address;\n    return n;\n}', 1)
     text = text.replace('    return 0;\n}\n\nvoid *guest_code', '    for (unsigned i = 0; i < sizeof code_table2 / sizeof code_table2[0]; i++)\n        if (code_table2[i].function == function)\n            return code_table2[i].address;\n    return 0;\n}\n\nvoid *guest_code', 1)
-    text = text.replace('void *guest_code(uint32_t address)\n{\n', 'void *guest_code(uint32_t address)\n{\n#ifdef GAME_SDL\n    if (address >= 0x54e00 && address < 0x74000 && guest_level_table() == 2) {   /* the blob of level 2 is loaded: its functions are at the level 1 addresses */\n        for (unsigned i = 0; i < sizeof code_table2 / sizeof code_table2[0]; i++)\n            if (code_table2[i].address == address)\n                return code_table2[i].function;\n        return guest_missing_code(address);\n    }\n#endif\n', 1)
-    text = text.replace('static const struct { uint32_t address; void *function; } code_table[] = {', 'int guest_level_table(void);   /* guest.c: 2 while the blob loaded is level 2\'s */\nvoid *guest_missing_code(uint32_t address);   /* guest.c: a function that does nothing, for code of the level that has no C yet */\nstatic const struct { uint32_t address; void *function; } code_table[] = {', 1)
+    text = text.replace('void *guest_code(uint32_t address)\n{\n', 'void *guest_code(uint32_t address)\n{\n#ifdef GAME_SDL\n    if (address >= 0x54e00 && address < 0x74000 && guest_level_table() == 2) {   /* the blob of level 2 is loaded: its functions are at the level 1 addresses */\n        for (unsigned i = 0; i < sizeof code_table2 / sizeof code_table2[0]; i++)\n            if (code_table2[i].address == address)\n                return code_table2[i].function;\n        return 0;\n    }\n#endif\n', 1)
+    text = text.replace('static const struct { uint32_t address; void *function; } code_table[] = {', 'int guest_level_table(void);   /* guest.c: 2 while the blob loaded is level 2\'s */\nstatic const struct { uint32_t address; void *function; } code_table[] = {', 1)
     open(os.path.join(SRC, 'code_table.c'), 'w').write(text)
     old = os.path.join(SRC, 'sdl', 'code_table.c')
     if os.path.exists(old): os.remove(old)
