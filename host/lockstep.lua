@@ -50,6 +50,7 @@ local TRACEMEM
 do local a, l, f, t = (args:match("tracemem=(%S+)") or ""):match("^(%x+),(%d+),(%d+),(%d+)$"); if a then TRACEMEM = { tonumber(a, 16), tonumber(l), tonumber(f), tonumber(t) } end end   -- tracemem=ADDR,LEN,FROM,TO: both sides' bytes at those sync points
 local NOSPR = args:match("nospr=1") ~= nil   -- debug: sprite DMA off in the original at every frame
 local CONTINUE = args:match("continue=1") ~= nil
+function set_continue(on) CONTINUE = on end   -- from the control shell: ctl.py SOCK 'set_continue(false)' stops the run at the next difference again
 local STRICT = args:match("strict=1") ~= nil
 local REPORT = args:match("report=(%S+)")
 local PLAY = args:match("play=1") ~= nil   -- you play: arrows = stick, Ctrl / Space / Return = fire, in the emulator's window (without --headless); implies hold=1, no sync limit
