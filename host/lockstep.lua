@@ -579,7 +579,7 @@ local desired_joy, port_joy   -- the stick the original has been given, and the 
 -- The original's interrupt decodes the stick into v_0a00 in the middle of a slow frame: the routines that read it before see the old stick, the ones after
 -- the new.  The routines that read it are hooked on the original and the byte each saw is recorded in order, by the sync point before the interval;
 -- the port is told the list and sets v_0a00 to each value as it enters the same routine.
-local STICK_READERS = { 0x56e56, 0x5de6, 0x68b0, 0x3b94, 0x3cdc, 0x3e2c, 0x4340, 0x6372, 0x6426, 0x8ab0, 0x8aee }   -- the last two: the high-score name entry
+local STICK_READERS = { 0x56e56, 0x5de6, 0x68b0, 0x3b94, 0x3cdc, 0x3e2c, 0x4340, 0x6372, 0x6426, 0x7a56, 0x8ab0, 0x8aee }   -- the last two: the high-score name entry
 local reads = {}
 for _, a in ipairs(STICK_READERS) do
     ami.hook(a, function()
