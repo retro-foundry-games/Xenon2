@@ -44,6 +44,9 @@ local COMPARE_PIC = args:match("pic=0") == nil
 local COMPARE_MEM = args:match("mem=0") == nil
 local INLAG = args:match("inlag=(%w+)") or "auto"   -- inlag=auto (default): at the sync points reached from the shop's code the port gets the stick one sync point later than the original (1: everywhere, 0: nowhere)
 local held_joy
+local shop_loaded = false
+local TRACEMEM
+do local a, l, f, t = (args:match("tracemem=(%S+)") or ""):match("^(%x+),(%d+),(%d+),(%d+)$"); if a then TRACEMEM = { tonumber(a, 16), tonumber(l), tonumber(f), tonumber(t) } end end   -- tracemem=ADDR,LEN,FROM,TO: both sides' bytes at those sync points
 local NOSPR = args:match("nospr=1") ~= nil   -- debug: sprite DMA off in the original at every frame
 local CONTINUE = args:match("continue=1") ~= nil
 local STRICT = args:match("strict=1") ~= nil
@@ -245,7 +248,7 @@ local function sync_point()
             for k, v in pairs(stick) do applied_stick[k] = v end
         end
     end
-    pending[#pending].shop = ami.peek32(ami.reg("a7")) >= 0x54e00   -- called from the shop's code (loaded at $54E00)
+    pending[#pending].shop = shop_loaded   -- the shop's overlay (sector 1476) is the last thing loaded at $54E00 (the level's code lives there too)
     if PLAY and #key_queue > 0 then pending[#pending].keys = key_queue; key_queue = {} end
     if replay_keys[n] then
         pending[#pending].keys = replay_keys[n]
@@ -537,6 +540,7 @@ local loads = {}   -- the original'"'"'s memory at the return of each of its dis
 if GATE then
     port_call("port.disk_gate(true)")
     ami.hook(0x921a, function()
+        if ami.reg("a0") == 0x54e00 then shop_loaded = (ami.reg("d0") & 0xffff) == 1476 end
         local ret = ami.peek32(ami.reg("a7"))
         ami.hook(ret, function() ami.unhook(ret); loads[#loads + 1] = ami.read(0, 0x80000) end)
     end)
@@ -599,6 +603,9 @@ while not done do
         local problems = {}
         if COMPARE_MEM then
             local port_ram = port_binary("ram_out()")
+            if TRACEMEM and snap.n >= TRACEMEM[3] and snap.n <= TRACEMEM[4] then
+                say("tracemem sync %d: original %s port %s", snap.n, hex(snap.ram, TRACEMEM[1] + 1, TRACEMEM[2]), hex(port_ram, TRACEMEM[1] + 1, TRACEMEM[2]))
+            end
             if #SHOW > 0 and snap.n <= 8 then
                 for _, m in ipairs(members) do
                     for _, want in ipairs(SHOW) do
