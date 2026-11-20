@@ -348,6 +348,12 @@ void reset_extra_objects(void)
         v_0c66[i] = v_0cfc[i];
 }
 
+/* orig $006426: the read of the stick for the autofire counter (the lockstep hooks it to give the port the byte the original read) */
+uint8_t autofire_stick(void)
+{
+    return v_0a00;
+}
+
 /* orig $006372: the per-frame counters: the panel's fade, the palette load, the two timers, the autofire counter */
 void frame_update(void)
 {
@@ -388,7 +394,7 @@ void frame_update(void)
         if (v_0ca2 == 0)
             reset_extra_objects();
     }
-    if (v_0a00 & 0x80) {
+    if (autofire_stick() & 0x80) {
         int16_t a = (int16_t)v_0c60;
         int16_t b = (int16_t)v_0c64;
 
