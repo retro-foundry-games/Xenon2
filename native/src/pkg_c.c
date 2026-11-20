@@ -1,4 +1,5 @@
 #include "pkg_c.h"
+#include "pkg_i.h"
 #include "game_all.h"
 
 /* ---- helpers ---- */
@@ -163,6 +164,16 @@ void map_tile_mask(uint16_t x, uint16_t y, uint16_t rows)
     } while ((uint16_t)--rows != 0xffff);
 }
 
+/* A row of cells above the screen can lie past the end of the memory ($FC0000 and up is the Kickstart on the Amiga): an empty mask here. */
+static const uint8_t *tile_mask_ptr_at(const uint8_t *cell)
+{
+#ifdef GAME_SDL
+    if (GADDR(cell) + 2 > 0x80000)
+        return mask_empty;
+#endif
+    return tile_mask_ptr(rd16(cell));
+}
+
 /* orig $002F66: like map_tile_mask with two words a row (the masks of the cells at x and at x + 16), written as the blitter reads them
  * (inlined: $2FC0, the two pointers of a row of cells in a4 and a5) */
 uint16_t tile_mask2_words;   /* the words of tile_mask_buf the last map_tile_mask2 wrote (as the blitter reads them) */
@@ -184,8 +195,8 @@ void map_tile_mask2(uint16_t x, uint16_t y, uint16_t rows)
     d3 = (uint16_t)(d3 + d3);
     a1 += (int16_t)(uint16_t)((uint32_t)(y >> 4) * 0x28);
     a1 += (uint16_t)((x >> 3) & 0xfe);
-    a4 = tile_mask_ptr(rd16(a1));
-    a5 = tile_mask_ptr(rd16(a1 + 2));
+    a4 = tile_mask_ptr_at(a1);
+    a5 = tile_mask_ptr_at(a1 + 2);
     a1 += 40;
     do {
         wr16(out, rd16(a4 + d3));
@@ -193,8 +204,8 @@ void map_tile_mask2(uint16_t x, uint16_t y, uint16_t rows)
         out += 4;
         d3 = (uint16_t)(d3 + 10);
         if (d3 == 0xa0) {
-            a4 = tile_mask_ptr(rd16(a1));
-            a5 = tile_mask_ptr(rd16(a1 + 2));
+            a4 = tile_mask_ptr_at(a1);
+            a5 = tile_mask_ptr_at(a1 + 2);
             a1 += 40;
             d3 = 0;
         }
