@@ -77,7 +77,7 @@ Object *l2_collision_hook(int16_t d0, int16_t d1, int16_t d2, int16_t d3);
 void l2_block_hit(Object *a0, Object *a1, uint16_t d0);
 void l2_event(uint16_t d0, const uint8_t *a1); void l2_hook(uint16_t d0, const uint8_t *a1, uint16_t d2);
 void l2_scroll(void); void l2_swap_hook(void); void l2_init(void); void l2_debris_walls(void);
-void l2_turret_update(Object *a0); void l2_front_update(Object *a0); void l2_roamer_update(Object *a0); void l2_roamer_shot_update(Object *a0); void l2_marker_f8_update(Object *a0); void l2_marker_fc_update(Object *a0); void l2_flyer_update(Object *a0); void l2_front_piece_update(Object *a0); void l2_launcher_update(Object *a0); void l2_piece_update(Object *a0); void l2_gate_update(Object *a0);
+void l2_turret_update(Object *a0); void l2_front_update(Object *a0); void l2_boss_rest(Object *a0) __attribute__((noinline)); void l2_roamer_update(Object *a0); void l2_roamer_shot_update(Object *a0); void l2_marker_f8_update(Object *a0); void l2_marker_fc_update(Object *a0); void l2_flyer_update(Object *a0); void l2_front_piece_update(Object *a0); void l2_launcher_update(Object *a0); void l2_piece_update(Object *a0); void l2_gate_update(Object *a0);
 void l2_gate_flash(Object *a0); void l2_boss_update(Object *a0); void l2_boss_draw(Object *a0); void l2_boss_flash(Object *a0);
 void l2_hit_a(Object *a0, Object *a1, uint16_t d0); void l2_hit_b(Object *a0, Object *a1, uint16_t d0); void l2_hit_c(Object *a0, Object *a1, uint16_t d0);
 void l2_gate_hit(Object *a0, Object *a1, uint16_t d0); void l2_boss_hit(Object *a0, Object *a1, uint16_t d0);

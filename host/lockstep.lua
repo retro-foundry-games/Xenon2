@@ -593,7 +593,7 @@ for _, a in ipairs(STICK_READERS) do
         r[#r + 1] = ("{0x%x,%d}"):format(a, value)
     end)
 end
-port_call("rseq, ridx = nil, 1; function rhook(a) local e = rseq and rseq[ridx]; if e and e[1] == a then if a == 0x56e56 then port.poke_stale(e[2]) else port.poke_stick(e[2]) end; ridx = ridx + 1 end end")
+port_call("rseq, ridx = nil, 1; function rhook(a) local i = ridx; while rseq and rseq[i] and rseq[i][1] ~= a do i = i + 1 end; local e = rseq and rseq[i]; if e then if a == 0x56e56 then port.poke_stale(e[2]) else port.poke_stick(e[2]) end; ridx = i + 1 end end")
 for _, a in ipairs(STICK_READERS) do port_call(("port.hook(0x%x, rhook)"):format(a)) end
 local function stick_bits(st) return (st.up == 1 and 1 or 0) | (st.down == 1 and 2 or 0) | (st.left == 1 and 4 or 0) | (st.right == 1 and 8 or 0) | (st.fire == 1 and 0x80 or 0) end
 local function send_high()   -- the original's memory above 512 KB, which the port does not have (the map masks of bobs above the screen read it)
@@ -604,6 +604,7 @@ end
 local trail = {}
 local function apply_joy(snap)
     if snap.n == 1 or snap.n % 200 == 0 or args:match("highall=1") then send_high() end
+    if snap.n % 50 == 2 then port_call("pcall(port.hook, 0x56e56, rhook)") end   -- level 2 code has an address only once the port runs level 2
     local r = reads[snap.n - 1]
     reads[snap.n - 1] = nil
     trail[#trail + 1] = ("sync %d: stick %s, original's c60=%d a00=%02x, reads {%s}"):format(snap.n, desired_joy and stick_bits(desired_joy) or "-", ami.peek16(0xc60), ami.peek8(0xa00), r and table.concat(r, ",") or "")
