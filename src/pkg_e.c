@@ -586,7 +586,7 @@ void swap_player_state(void)
         lb[i] = t;
     }
     cur_player ^= 1;
-    level1_swap_hook();
+    level_swap_hook();
 }
 
 /* orig $006fe8: all 16 palette entries, the copy and the chip's, to black */
@@ -704,7 +704,7 @@ void level_reset_scroll(void)
     v_0cd8 = 1;
     v_0cda = 0;
     v_0cde = 0;
-    level1_init();
+    level_init();
     v_0ce0 = 0;
     v_042e = 0;
     v_0cdc = 0;

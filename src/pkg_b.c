@@ -409,7 +409,7 @@ static void main_loop(void)
         update_score_display();
         redraw_energy_bar();
         draw_enemy_list();
-        level1_scroll();
+        level_scroll();
         update_all();
         frame_update();
         update_shots();

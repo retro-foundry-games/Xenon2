@@ -261,7 +261,7 @@ Object *collide_enemies(Object *o)
     a1 = scan_boxes(LIST_HEAD(LIST_ENEMY), x0, y0, x1, y1);
     if (a1->type != 0)
         return a1;
-    return level1_collision_hook() ? a1 : 0;
+    return level_collision(x0, y0, x1, y1, a1);
 }
 
 /* orig $0030DE: the enemy whose box holds the point (x, y) (in a1 in the original), or 0 when none does and the level blob has
@@ -283,7 +283,7 @@ Object *point_in_enemy(int16_t x, int16_t y)
         }
         a1 = OBJ_FWD(a1);
     }
-    return level1_collision_hook() ? a1 : 0;
+    return level_collision(x, y, x, y, a1);
 }
 
 /* orig $003156: the direction (0 to 7) of (dx, dy), both not negative */
@@ -605,7 +605,7 @@ void scroll_events(void)
         if (d2 < 0)
             break;
         if (d0 > d2 && d1 <= d2) {
-            level1_event(rd16(a1 + 2), a1);
+            level_event(rd16(a1 + 2), a1);
             d0 = (int16_t)v_0cd2;
             d1 = (int16_t)v_0cd0;
         }
@@ -622,7 +622,7 @@ void scroll_events(void)
         if (d2 < 0)
             break;
         if (d0 > d2 && d1 <= d2) {
-            level1_hook(rd16(a1 + 2), a1, (uint16_t)d2);
+            level_hook(rd16(a1 + 2), a1, (uint16_t)d2);
             d0 = (int16_t)v_0cd4;
             d1 = (int16_t)v_0cd0;
         }
