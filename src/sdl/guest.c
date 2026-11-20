@@ -227,6 +227,15 @@ uint16_t guest_high_word(uint32_t address)
     return address + 2 <= sizeof guest_high ? (uint16_t)(guest_high[address] << 8 | guest_high[address + 1]) : 0;
 }
 
+extern uint32_t l2_stale_d0;   /* pkg_l2.c */
+extern int l2_stale_d0_set;
+
+void guest_set_stale(uint32_t value)
+{
+    l2_stale_d0 = value;
+    l2_stale_d0_set = 1;
+}
+
 static int stick_poked;
 static uint8_t stick_saved;
 
