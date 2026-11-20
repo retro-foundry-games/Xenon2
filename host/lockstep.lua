@@ -150,6 +150,7 @@ for _, line in ipairs{
     'function image_out() bin(port.picture()) end',
     'function key(raw, down) port.key(raw, down == 1) end',
     'function ram_in(n) port.load_ram(io.read(n)) end',
+    'function high_in(n) port.load_high(io.read(n)) end',
     -- run until the function with the original address `addr` has been entered once: "synced FRAME COUNT", or "unsynced FRAME" after 20000 frames
     -- the entries of the sync function are counted by one hook; sync(addr) runs to the next one ("synced FRAME N"), live() one frame, or to the entry ("entry" / "frame")
     'entries = 0; function count_entries(addr) port.hook(addr, function() entries = entries + 1 end) end',
@@ -568,7 +569,13 @@ for _, a in ipairs(STICK_READERS) do ami.hook(a, function() local r = reads[n]; 
 port_call("rseq, ridx = nil, 1; function rhook(a) local e = rseq and rseq[ridx]; if e and e[1] == a then port.poke_stick(e[2]); ridx = ridx + 1 end end")
 for _, a in ipairs(STICK_READERS) do port_call(("port.hook(0x%x, rhook)"):format(a)) end
 local function stick_bits(st) return (st.up == 1 and 1 or 0) | (st.down == 1 and 2 or 0) | (st.left == 1 and 4 or 0) | (st.right == 1 and 8 or 0) | (st.fire == 1 and 0x80 or 0) end
+local function send_high()   -- the original's memory above 512 KB, which the port does not have (the map masks of bobs above the screen read it)
+    peer:send("high_in(524288)\n")
+    peer:send(ami.read(0x80000, 0x80000))
+    wait_ready()
+end
 local function apply_joy(snap)
+    if snap.n == 1 or snap.n % 200 == 0 then send_high() end
     local r = reads[snap.n - 1]
     reads[snap.n - 1] = nil
     port_call(("rseq, ridx = {%s}, 1"):format(r and table.concat(r, ",") or ""))

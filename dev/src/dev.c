@@ -18,6 +18,7 @@
  *   port.poke_stick(BYTE)        sets v_0a00 (the stick byte the game decodes), as the original's interrupt does mid-frame
  *   port.peek8/16/32(address)    from the same (cached until the game runs again)
  *   port.picture()               RGB, 3 bytes a pixel, 320 x 256;  port.picture_hash()
+ *   port.load_high(str)          the original's memory from $80000 to $FFFFF (524288 bytes), read by the map masks of bobs above the screen
  *   port.load_ram(str)           the memory of the original (0x80000 bytes, its byte order) into the port, before the game has started
  *   port.save_state(PATH)        the whole state of the port (memory block, chips, sound, disk, input, the game's stack and context); port.load_state(PATH) puts it back,
  *                                also into a new process of the same build (the game stands where it stood: at a frame's end, or inside the function of a stop)
@@ -48,7 +49,8 @@
 void host_idle(void);   /* the game calls it (hw.h HOST_IDLE) */
 extern unsigned guest_code_entries(const void *function, uint32_t *out, unsigned max);
 extern void *guest_code(uint32_t address);
-extern void guest_set_stick(uint8_t value);   /* sdl/guest.c: v_0a00, the stick byte the game decodes */
+extern void guest_set_stick(uint8_t value);
+extern void guest_load_high(const uint8_t *bytes);   /* sdl/guest.c: the original's memory from $80000 to $FFFFF */   /* sdl/guest.c: v_0a00, the stick byte the game decodes */
 
 static lua_State *L;
 static ucontext_t ctrl_ctx, game_ctx;
@@ -514,6 +516,17 @@ static int l_picture_hash(lua_State *s)
     return 1;
 }
 
+static int l_load_high(lua_State *s)
+{
+    size_t n;
+    const char *bytes = luaL_checklstring(s, 1, &n);
+
+    if (n != 0x80000)
+        return luaL_error(s, "load_high wants 524288 bytes");
+    guest_load_high((const uint8_t *)bytes);
+    return 0;
+}
+
 static int l_load_ram(lua_State *s)
 {
     size_t n;
@@ -737,7 +750,7 @@ static int l_close(lua_State *s)
 static const luaL_Reg port_functions[] = {
     { "step", l_step }, { "run", l_run }, { "run_until", l_run_until }, { "hook", l_hook }, { "unhook", l_unhook }, { "stop_on", l_stop_on },
     { "frame", l_frame }, { "trace", l_trace }, { "joy", l_joy }, { "key", l_key }, { "ram", l_ram }, { "poke_stick", l_poke_stick }, { "peek8", l_peek8 }, { "peek16", l_peek16 }, { "peek32", l_peek32 },
-    { "load_ram", l_load_ram }, { "picture", l_picture }, { "picture_hash", l_picture_hash }, { "disk", l_disk }, { "disk_gate", l_disk_gate }, { "disk_waiting", l_disk_waiting }, { "disk_release", l_disk_release }, { "run_function", l_run_function }, { "save_state", l_save_state }, { "load_state", l_load_state }, { "quit", l_quit }, { "listen", l_listen }, { "accept", l_accept }, { "readline", l_readline }, { "read", l_read }, { "write", l_write }, { "close", l_close }, { 0, 0 }
+    { "load_ram", l_load_ram }, { "load_high", l_load_high }, { "picture", l_picture }, { "picture_hash", l_picture_hash }, { "disk", l_disk }, { "disk_gate", l_disk_gate }, { "disk_waiting", l_disk_waiting }, { "disk_release", l_disk_release }, { "run_function", l_run_function }, { "save_state", l_save_state }, { "load_state", l_load_state }, { "quit", l_quit }, { "listen", l_listen }, { "accept", l_accept }, { "readline", l_readline }, { "read", l_read }, { "write", l_write }, { "close", l_close }, { 0, 0 }
 };
 
 int main(int argc, char **argv)

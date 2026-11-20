@@ -164,12 +164,16 @@ void map_tile_mask(uint16_t x, uint16_t y, uint16_t rows)
     } while ((uint16_t)--rows != 0xffff);
 }
 
-/* A row of cells can lie past the end of the memory the port has (the original has the rest, level 2's map goes on there): taken as a solid cell. */
+/* A row of cells can lie past the end of the memory the port has (bobs above the screen read the original's memory beyond 512 KB: the lockstep supplies
+ * it, otherwise it is zeros). */
+#ifdef GAME_SDL
+extern uint16_t guest_high_word(uint32_t address);   /* sdl/guest.c */
+#endif
 static const uint8_t *tile_mask_ptr_at(const uint8_t *cell)
 {
 #ifdef GAME_SDL
     if (GADDR(cell) + 2 > 0x80000)
-        return mask_full;
+        return tile_mask_ptr(guest_high_word(GADDR(cell)));
 #endif
     return tile_mask_ptr(rd16(cell));
 }
