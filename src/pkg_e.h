@@ -28,3 +28,5 @@ void respawn_player(void);
 void switch_player(void);
 void swap_player_state(void);
 #endif
+
+uint8_t autofire_stick(void);                                   /* orig $006426 */
