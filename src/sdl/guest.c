@@ -211,6 +211,16 @@ extern uint32_t guest_code_address(const void *function);
 
 unsigned host_vbl_count(void) { return xenon.vbl_count; }
 
+static uint8_t guest_high[0x80000];   /* the original's memory from $80000 to $FFFFF (the lockstep gives it); zeros otherwise */
+
+void guest_load_high(const uint8_t *bytes) { memcpy(guest_high, bytes, sizeof guest_high); }
+
+uint16_t guest_high_word(uint32_t address)
+{
+    address -= 0x80000;
+    return address + 2 <= sizeof guest_high ? (uint16_t)(guest_high[address] << 8 | guest_high[address + 1]) : 0;
+}
+
 void guest_set_stick(uint8_t value) { xenon.v_0a00 = value; }
 
 void host_export_ram_buf(uint8_t *ram)   /* ram: 0x80000 bytes */
