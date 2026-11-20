@@ -240,12 +240,15 @@ static int stick_poked;
 static uint8_t stick_saved;
 
 /* The lockstep sets the stick byte for the routine that is entered; the interrupt's decode takes the byte it had before (guest_stick_restore). */
+void guest_edge_apply(uint8_t value);
+
 void guest_set_stick(uint8_t value)
 {
     if (!stick_poked)
         stick_saved = xenon.v_0a00;
     stick_poked = 1;
     xenon.v_0a00 = value;
+    guest_edge_apply(value);
 }
 
 void guest_stick_restore(void)
