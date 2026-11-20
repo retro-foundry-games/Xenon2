@@ -579,10 +579,21 @@ local desired_joy, port_joy   -- the stick the original has been given, and the 
 -- The original's interrupt decodes the stick into v_0a00 in the middle of a slow frame: the routines that read it before see the old stick, the ones after
 -- the new.  The routines that read it are hooked on the original and the byte each saw is recorded in order, by the sync point before the interval;
 -- the port is told the list and sets v_0a00 to each value as it enters the same routine.
-local STICK_READERS = { 0x5de6, 0x68b0, 0x3b94, 0x3cdc, 0x3e2c, 0x4340, 0x6372, 0x8ab0, 0x8aee }   -- the last two: the high-score name entry
+local STICK_READERS = { 0x56e56, 0x5de6, 0x68b0, 0x3b94, 0x3cdc, 0x3e2c, 0x4340, 0x6372, 0x8ab0, 0x8aee }   -- the last two: the high-score name entry
 local reads = {}
-for _, a in ipairs(STICK_READERS) do ami.hook(a, function() local r = reads[n]; if not r then r = {}; reads[n] = r end; r[#r + 1] = ("{0x%x,%d}"):format(a, ami.peek8(0xa00)) end) end
-port_call("rseq, ridx = nil, 1; function rhook(a) local e = rseq and rseq[ridx]; if e and e[1] == a then port.poke_stick(e[2]); ridx = ridx + 1 end end")
+for _, a in ipairs(STICK_READERS) do
+    ami.hook(a, function()
+        local value = ami.peek8(0xa00)
+        if a == 0x56e56 then   -- the boss at rest: d0 as the code left it (used with 16 enemies or more)
+            if ami.peek16(0x4e2) >= 0x8000 or ami.peek16(0x4e2) < 0x10 then return end
+            value = ami.reg("d0") & 0xffffffff
+        end
+        local r = reads[n]
+        if not r then r = {}; reads[n] = r end
+        r[#r + 1] = ("{0x%x,%d}"):format(a, value)
+    end)
+end
+port_call("rseq, ridx = nil, 1; function rhook(a) local e = rseq and rseq[ridx]; if e and e[1] == a then if a == 0x56e56 then port.poke_stale(e[2]) else port.poke_stick(e[2]) end; ridx = ridx + 1 end end")
 for _, a in ipairs(STICK_READERS) do port_call(("port.hook(0x%x, rhook)"):format(a)) end
 local function stick_bits(st) return (st.up == 1 and 1 or 0) | (st.down == 1 and 2 or 0) | (st.left == 1 and 4 or 0) | (st.right == 1 and 8 or 0) | (st.fire == 1 and 0x80 or 0) end
 local function send_high()   -- the original's memory above 512 KB, which the port does not have (the map masks of bobs above the screen read it)

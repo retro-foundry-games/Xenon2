@@ -50,6 +50,7 @@ void host_idle(void);   /* the game calls it (hw.h HOST_IDLE) */
 extern unsigned guest_code_entries(const void *function, uint32_t *out, unsigned max);
 extern void *guest_code(uint32_t address);
 extern void guest_set_stick(uint8_t value);
+extern void guest_set_stale(uint32_t value);   /* sdl/guest.c: d0 as the original's boss code finds it */
 extern void guest_load_high(const uint8_t *bytes);   /* sdl/guest.c: the original's memory from $80000 to $FFFFF */   /* sdl/guest.c: v_0a00, the stick byte the game decodes */
 
 static lua_State *L;
@@ -480,6 +481,12 @@ static int peek(lua_State *s, int size)
     return 1;
 }
 
+static int l_poke_stale(lua_State *s)
+{
+    guest_set_stale((uint32_t)luaL_checkinteger(s, 1));
+    return 0;
+}
+
 static int l_poke_stick(lua_State *s)
 {
     guest_set_stick((uint8_t)luaL_checkinteger(s, 1));
@@ -749,7 +756,7 @@ static int l_close(lua_State *s)
 
 static const luaL_Reg port_functions[] = {
     { "step", l_step }, { "run", l_run }, { "run_until", l_run_until }, { "hook", l_hook }, { "unhook", l_unhook }, { "stop_on", l_stop_on },
-    { "frame", l_frame }, { "trace", l_trace }, { "joy", l_joy }, { "key", l_key }, { "ram", l_ram }, { "poke_stick", l_poke_stick }, { "peek8", l_peek8 }, { "peek16", l_peek16 }, { "peek32", l_peek32 },
+    { "frame", l_frame }, { "trace", l_trace }, { "joy", l_joy }, { "key", l_key }, { "ram", l_ram }, { "poke_stick", l_poke_stick }, { "poke_stale", l_poke_stale }, { "peek8", l_peek8 }, { "peek16", l_peek16 }, { "peek32", l_peek32 },
     { "load_ram", l_load_ram }, { "load_high", l_load_high }, { "picture", l_picture }, { "picture_hash", l_picture_hash }, { "disk", l_disk }, { "disk_gate", l_disk_gate }, { "disk_waiting", l_disk_waiting }, { "disk_release", l_disk_release }, { "run_function", l_run_function }, { "save_state", l_save_state }, { "load_state", l_load_state }, { "quit", l_quit }, { "listen", l_listen }, { "accept", l_accept }, { "readline", l_readline }, { "read", l_read }, { "write", l_write }, { "close", l_close }, { 0, 0 }
 };
 

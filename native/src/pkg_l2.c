@@ -721,6 +721,64 @@ void l2_boss_flash(Object *a0)
     draw_tile_grid_flash((const uint8_t *)GPTR(0x5725e), 5, 8, (int16_t)(a0->y - v_0cd0), 0x38);
 }
 
+/* d0 as the original's code leaves it when the boss does not move and many enemies are about: whatever the caller had in the register.  The
+ * lockstep gives the value the original had (l2_stale_d0); without it a value from the scroll. */
+uint32_t l2_stale_d0;
+int l2_stale_d0_set;
+
+/* level2 $056E56: the boss at rest: a pause before the next move (a random number of frames), or, with 16 enemies or more, a move whose
+ * direction and length come from d0 as it stands */
+uint32_t l2_boss_rest_d0(void)
+{
+    uint32_t d0 = l2_stale_d0_set ? l2_stale_d0 : ((uint32_t)v_0cd0 << 3) ^ v_0cdc;
+
+    l2_stale_d0_set = 0;
+    return d0;
+}
+
+/* level2 $056DD8: the boss moves up or down (v2a a step, v2e the frames left) between y $60 and $C0 */
+static void l2_boss_move(Object *a0)
+{
+    int16_t d0;
+
+    if (a0->v2e == 0) {
+        uint32_t r;
+        int16_t d1;
+
+        if ((int16_t)v_04e2 < 0x10) {
+            r = random_next();
+            if (!(r & 0x2000)) {
+                a0->v3e = (int16_t)((r & 7) + 2);
+                return;
+            }
+        } else {
+            r = l2_boss_rest_d0();
+        }
+        d1 = (r & 0x4000) ? -3 : 3;
+        a0->v2e = (int16_t)((r & 7) + 8);
+        a0->v2a = d1;
+        return;
+    }
+    if (B(0x19f9e + 0x1794) == 0)
+        v_0414 = 3;
+    a0->v2e--;
+    d0 = (int16_t)(a0->v2a + a0->y);
+    if (d0 < 0x60) {
+        d0 = 0x60;
+        a0->v2e = 0;
+    }
+    if (d0 > 0xc0) {
+        d0 = 0xc0;
+        a0->v2e = 0;
+    }
+    a0->y = d0;
+    d0 = (int16_t)((v_0cdc & 1) * 4);
+    copy4((uint8_t *)GPTR(0x572b2), (const uint8_t *)GPTR(sh_r32(0x56e46 + d0)));
+    copy4((uint8_t *)GPTR(0x572b2 + 0xc), (const uint8_t *)GPTR(sh_r32(0x56e46 + d0)) + 4);
+    copy4((uint8_t *)GPTR(0x572ba), (const uint8_t *)GPTR(sh_r32(0x56e4e + d0)));
+    copy4((uint8_t *)GPTR(0x572ba + 0xc), (const uint8_t *)GPTR(sh_r32(0x56e4e + d0)) + 4);
+}
+
 /* level2 $056BE8: update of the boss ($50): it waits for the player to come into reach (v28 negative), then counts v28 down; it shoots now
  * and then (a ring of sixteen shots one time in four, else one); while its v3e counts down it changes the cells of its picture.  The moves from
  * $56DD8 on are not written: they test bits of d0 that the original leaves from the shot routine */
@@ -801,7 +859,9 @@ void l2_boss_update(Object *a0)
         set_anim(s, 0x55116);
         s->v28 = 0;
         s->v2a = (int16_t)(random_next() & 7);
+        return;
     }
+    l2_boss_move(a0);
 }
 
 /* ---- the entries by the level in v_0e04: level 1 and level 2 are written, the others are not ---- */
