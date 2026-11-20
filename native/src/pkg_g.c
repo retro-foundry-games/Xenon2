@@ -165,6 +165,18 @@ void hiscore_show(void)
     }
 }
 
+/* orig $8AB0: the first read of the stick in the name entry (the lockstep hooks it to give the port the byte the original read) */
+uint8_t hiscore_stick_first(void)
+{
+    return v_0a00;
+}
+
+/* orig $8AEE: the read of the stick while a letter repeats */
+uint8_t hiscore_stick_again(void)
+{
+    return v_0a00;
+}
+
 /* orig $8A16: a score above the tenth is put into the table in its place; the player picks the three letters of the name with the
  * stick (up/down), fire takes a letter */
 void hiscore_enter(void)
@@ -228,7 +240,7 @@ wait_stick:
     hiscore_draw();
     if (v_0a01)
         goto letter_done;
-    d1 = v_0a00 & 0xc;
+    d1 = hiscore_stick_first() & 0xc;
     d2 = 0xff;
     if (d1 & 4)
         goto step;
@@ -248,11 +260,11 @@ repeat:
     hiscore_draw();
     if (v_0a01)
         goto letter_done;
-    if ((uint8_t)(v_0a00 & 0xc) != d1)
+    if ((uint8_t)(hiscore_stick_again() & 0xc) != d1)
         goto wait_stick;
     if (d7-- != 0)
         goto repeat;
-    goto step_again;
+    goto step;
 letter_done:
     v_0a01 = 0;
     a2++;

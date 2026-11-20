@@ -7,6 +7,8 @@
 void menu(void);                                            /* orig $8CB6 */
 uint16_t continue_screen(void);                             /* orig $8E88 */
 void hiscore_enter(void);                                   /* orig $8A16 */
+uint8_t hiscore_stick_first(void);                         /* orig $8AB0 */
+uint8_t hiscore_stick_again(void);                         /* orig $8AEE */
 void hiscore_show(void);                                    /* orig $89DC */
 void hiscore_draw(void);                                    /* orig $8B20 */
 void draw_big_text(const uint8_t *text, uint16_t *dest);    /* orig $8B6A */
