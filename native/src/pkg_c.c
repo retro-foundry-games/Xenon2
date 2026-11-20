@@ -116,14 +116,27 @@ void anim_op_free(Object *o, const uint8_t *a1)
 
 /* ---- the map under the player ---- */
 
+#ifdef GAME_SDL
+extern const uint8_t *guest_high_ptr(uint32_t address);   /* sdl/guest.c */
+#endif
+
 /* the three words of tile pointers for the next 16 pixel row of the map: 0 = empty tile mask, a negative word = a mask in
  * tile_gfx, else a full one; steps a1 to the next row of cells */
 static const uint8_t *tile_mask_ptr(uint16_t w)
 {
     if (w == 0)
         return mask_empty;
-    if ((int16_t)w < 0)
-        return tile_gfx + ((uint32_t)(w & 0x7fff) << 4);
+    if ((int16_t)w < 0) {
+        const uint8_t *m = tile_gfx + ((uint32_t)(w & 0x7fff) << 4);
+
+#ifdef GAME_SDL
+        if (GADDR(m) + 0xa0 > 0x80000) {   /* the original's memory beyond 512 KB (the lockstep gives it) */
+            m = guest_high_ptr(GADDR(m));
+            return m ? m : mask_empty;
+        }
+#endif
+        return m;
+    }
     return mask_full;
 }
 

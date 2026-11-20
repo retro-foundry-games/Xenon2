@@ -66,7 +66,7 @@ local ROOT = ami.script_dir .. "/.."
 -- members whose values depend on when the interrupts fall relative to the code, not on what the code does
 local IGNORE = { vbl_count = true, v_0404 = true, exc_vectors_lo = true, exc_vectors_hi = true }
 if args:match("tolerant=1") then
-    for _, name in ipairs{ "music_accum", "music_channels", "hw_mirror", "random_a", "random_b", "sfx_channels", "sfx_request", "sfx_samples", "sfx_samples_ready", "v_0414", "v_0418", "irq_joy", "irq_joy_prev", "v_0a00", "v_0a01", "tile_mask_buf" } do IGNORE[name] = true end
+    for _, name in ipairs{ "music_accum", "music_channels", "hw_mirror", "random_a", "random_b", "sfx_channels", "sfx_request", "sfx_samples", "sfx_samples_ready", "v_0414", "v_0418", "irq_joy", "irq_joy_prev", "v_0a00", "v_0a01" } do IGNORE[name] = true end
 end
 if args:match("play=1") or args:match("replay=") then IGNORE.key_table = true; IGNORE.key_code = true end   -- (the keys reach the original's keyboard when they are pressed, the port's at the next sync point)
 for name in (args:match("ignore=(%S+)") or ""):gmatch("[%w_]+") do IGNORE[name] = true end
@@ -591,7 +591,7 @@ local function send_high()   -- the original's memory above 512 KB, which the po
     wait_ready()
 end
 local function apply_joy(snap)
-    if snap.n == 1 or snap.n % 200 == 0 then send_high() end
+    if snap.n == 1 or snap.n % 200 == 0 or args:match("highall=1") then send_high() end
     local r = reads[snap.n - 1]
     reads[snap.n - 1] = nil
     port_call(("rseq, ridx = {%s}, 1"):format(r and table.concat(r, ",") or ""))

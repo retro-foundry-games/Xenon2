@@ -215,6 +215,12 @@ static uint8_t guest_high[0x80000];   /* the original's memory from $80000 to $F
 
 void guest_load_high(const uint8_t *bytes) { memcpy(guest_high, bytes, sizeof guest_high); }
 
+const uint8_t *guest_high_ptr(uint32_t address)   /* 0 outside $80000..$FFFFF */
+{
+    address -= 0x80000;
+    return address < sizeof guest_high ? guest_high + address : 0;
+}
+
 uint16_t guest_high_word(uint32_t address)
 {
     address -= 0x80000;
