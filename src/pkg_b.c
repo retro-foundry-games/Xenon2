@@ -48,6 +48,8 @@ void swap_screens(void)
     uint8_t *t;
     uint32_t list;
 
+    if ((uint16_t)(vbl_count - v_0404) >= v_0410)
+        HOST_IDLE();   /* (the original's frame then takes real time, vertical blanks the interrupt uses to read the stick; the port's takes none) */
     while ((uint16_t)(vbl_count - v_0404) < v_0410)
         HOST_IDLE();
     v_0404 = vbl_count;
