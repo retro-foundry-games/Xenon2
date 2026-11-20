@@ -106,7 +106,7 @@ local started = false
 if STATE then
     ami.wait(1)
     assert(ami.snapshot_load(STATE .. ".state"), "cannot load " .. STATE)
-    if args:match("health=full") then ami.poke16(0xcc6, 0x27); ami.poke8(0xa6b, 0xff) end   -- the player's energy ($CC6, 39 bar cells) and the flag that redraws the bar; the port takes the original's memory at the first sync point
+    if args:match("health=full") then ami.poke16(0xcc6, 0x27); ami.poke8(0xa6b, 0xff); ami.log(string.format("health=full: energy now $%x", ami.peek16(0xcc6))) end   -- the player's energy ($CC6, 39 bar cells) and the flag that redraws the bar; the port takes the original's memory at the first sync point
     started = true
 end
 local peer = ami.peer("port")
