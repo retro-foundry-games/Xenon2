@@ -2063,8 +2063,10 @@ void area_damage(Object *a0, int16_t x0, int16_t y0, int16_t x1, int16_t y1, uin
 
         a1 = scan_boxes(a1, x0, y0, x1, y1);
         if (a1->type == 0) {
-            if (level1_collision_hook())
-                apply_damage(a0, a1, (uint16_t)x0);   /* d0 as the hook leaves it; level 1's returns 0 */
+            Object *hit = level_collision(x0, y0, x1, y1, a1);
+
+            if (hit)
+                apply_damage(a0, hit, (uint16_t)x0);   /* d0 as the hook leaves it */
             return;
         }
         a2 = owner_chain_next(a1);

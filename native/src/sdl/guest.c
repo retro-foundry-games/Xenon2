@@ -55,9 +55,34 @@ extern unsigned guest_record_size(const char *type);
 
 /* put the bytes of the original's memory at ADDRESS (as they are in the image: big endian) into the members that cover them, in this machine's byte
  * order; pointers (addresses of the original's memory) become pointers into the block */
-static int blob_raw;   /* the shop's blob is in $54E00-$73E00 (it overlays the level's): the members of the level that lie there are not converted */
+static int blob_raw;   /* 1: the shop's blob is in $54E00-$73E00 (it overlays the level's): the members of the level that lie there are not converted;
+                        * 2: the blob of a level after the first: the members of level 1 beyond the header ($54E40 on) are not converted */
 #define BLOB_LO 0x54e00u
 #define BLOB_HI 0x74000u
+#define BLOB_LEVEL_LO 0x54e40u
+
+static int blob_skips(uint32_t m)
+{
+    return (blob_raw == 1 && m >= BLOB_LO && m < BLOB_HI) || (blob_raw == 2 && m >= BLOB_LEVEL_LO && m < BLOB_HI);
+}
+
+int guest_level_table(void) { return blob_raw == 2 ? 2 : 0; }
+
+static void missing_code(void) {}
+
+void *guest_missing_code(uint32_t address)
+{
+    static uint32_t seen[256];
+    static unsigned n;
+
+    for (unsigned i = 0; i < n; i++)
+        if (seen[i] == address)
+            return (void *)missing_code;
+    if (n < sizeof seen / sizeof seen[0])
+        seen[n++] = address;
+    fprintf(stderr, "xenon2-sdl: the level's code at $%06X has no C\n", address);
+    return (void *)missing_code;
+}
 
 /* the shop (pkg_i) switches it on when its blob is loaded over the level's and off when the level's is loaded back */
 void guest_blob_raw(int on) { blob_raw = on; }
@@ -67,7 +92,7 @@ void guest_load_range(uint32_t address, const uint8_t *image, uint32_t length)
     for (unsigned i = 0; i < sizeof guest_members / sizeof guest_members[0]; i++) {
         uint32_t m = guest_members[i].address, size = guest_members[i].size, elem = guest_members[i].elem;
 
-        if (blob_raw && m >= BLOB_LO && m < BLOB_HI)
+        if (blob_skips(m))
             continue;
         uint32_t lo = m > address ? m : address, hi = m + size < address + length ? m + size : address + length;
 
@@ -183,7 +208,7 @@ void host_export_ram_buf(uint8_t *ram)   /* ram: 0x80000 bytes */
         uint8_t *m = ram + guest_members[i].address;
         uint32_t size = guest_members[i].size, elem = guest_members[i].elem;
 
-        if (blob_raw && guest_members[i].address >= BLOB_LO && guest_members[i].address < BLOB_HI)
+        if (blob_skips(guest_members[i].address))
             continue;
         if (guest_members[i].rec) {
             unsigned rsize = guest_record_size(guest_members[i].rec);
@@ -244,5 +269,6 @@ int host_export_ram(const char *path)
 void host_import_ram_buf(const uint8_t *ram)
 {
     memcpy(&xenon, ram, sizeof xenon);
+    blob_raw = be16(ram + 0xe04) > 1 ? 2 : 0;   /* (v_0e04: the level) */
     guest_load_range(0, ram, 0x80000);
 }

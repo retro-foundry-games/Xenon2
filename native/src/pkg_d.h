@@ -71,4 +71,17 @@ void kill_with_slot(Object *a1); void free_with_slot(Object *a1); void free_chai
 void player_dies(Object *a0); void player_damage(Object *a0, uint16_t d0); void player_move(Object *a0); void player_update(Object *a0);
 int level1_collision_hook(void); void level1_event(uint16_t d0, const uint8_t *a1); void level1_scroll(void);
 void level1_boss_update(Object *a0); void level1_boss_draw(Object *a0); void level1_init(void);
+
+/* level 2's blob (pkg_l2.c) and the entries that choose by the level in v_0e04 */
+Object *l2_collision_hook(int16_t d0, int16_t d1, int16_t d2, int16_t d3);
+void l2_block_hit(Object *a0, Object *a1, uint16_t d0);
+void l2_event(uint16_t d0, const uint8_t *a1); void l2_hook(uint16_t d0, const uint8_t *a1, uint16_t d2);
+void l2_scroll(void); void l2_swap_hook(void); void l2_init(void); void l2_debris_walls(void);
+void l2_turret_update(Object *a0); void l2_launcher_update(Object *a0); void l2_piece_update(Object *a0); void l2_gate_update(Object *a0);
+void l2_gate_flash(Object *a0); void l2_boss_update(Object *a0); void l2_boss_draw(Object *a0); void l2_boss_flash(Object *a0);
+void l2_hit_a(Object *a0, Object *a1, uint16_t d0); void l2_hit_b(Object *a0, Object *a1, uint16_t d0); void l2_hit_c(Object *a0, Object *a1, uint16_t d0);
+void l2_gate_hit(Object *a0, Object *a1, uint16_t d0); void l2_boss_hit(Object *a0, Object *a1, uint16_t d0);
+Object *level_collision(int16_t x0, int16_t y0, int16_t x1, int16_t y1, Object *miss);
+void level_event(uint16_t d0, const uint8_t *a1); void level_hook(uint16_t d0, const uint8_t *a1, uint16_t d2);
+void level_scroll(void); void level_swap_hook(void); void level_init(void);
 #endif
