@@ -15,6 +15,8 @@ extern void host_idle(void);
 #include "host.h"
 
 int host_manual_disk;
+int host_disk_gate;      /* the lockstep: a load waits (host_disk_waiting) until the script releases it instead of taking the drive's time */
+int host_disk_waiting;
 static int asked_for_sector_0;
 
 void disk_state(host_state_visit visit, void *arg)
@@ -40,6 +42,12 @@ int disk_read_sectors(uint16_t first_sector, uint16_t count, void *dest)
         guest_load_range(guest_address(dest), tmp, (uint32_t)count * 512);
     }
     free(tmp);   /* (before the waiting: no heap object is live in the game's stack while a state can be taken) */
+    if (host_disk_gate) {
+        host_disk_waiting = 1;
+        while (host_disk_waiting)
+            host_idle();
+        return r;
+    }
     /* the real drive takes time (about a second for one sector: the motor, the head, the rotation; 248 sectors took 810 frames): the game's own retry loops count
      * frames, and its loader counts a digit down on the screen as the sectors come in */
     {
