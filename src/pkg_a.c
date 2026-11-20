@@ -615,8 +615,7 @@ HLE_WEAK void draw_tile_grid_flash(const uint8_t *cells, uint16_t cols, uint16_t
     tile_grid(cells, cols, (int16_t)rows, y, x, put_tile_flash);
 }
 
-/* orig $EBA, $1438: draw the bob of an object masked, and hidden where the map's tiles under it are solid; HLE: blitter */
-HLE_WEAK void draw_bob_behind_map(Object *obj)
+static void bob_behind_map(Object *obj)
 {
     Clip c;
     uint16_t d0, size;
@@ -663,4 +662,14 @@ HLE_WEAK void draw_bob_behind_map(Object *obj)
         a1 += 0x28;
         BLIT_WAIT();
     }
+}
+
+/* orig $EBA, $1438: draw the bob of an object masked, and hidden where the map's tiles under it are solid; HLE: blitter (the blitter reads and writes the
+ * mask rows as the original's memory, big-endian words; the member is host-order words: the rows written are put back) */
+HLE_WEAK void draw_bob_behind_map(Object *obj)
+{
+    tile_mask2_words = 0;
+    bob_behind_map(obj);
+    for (uint16_t i = 0; i < tile_mask2_words && i < 75; i++)
+        tile_mask_buf[i] = rd16(&tile_mask_buf[i]);
 }

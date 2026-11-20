@@ -23,6 +23,7 @@ void anim_op_jump(Object *o, const uint8_t *a1);
 void anim_op_free(Object *o, const uint8_t *a1);
 void map_tile_mask(uint16_t x, uint16_t y, uint16_t rows);
 void map_tile_mask2(uint16_t x, uint16_t y, uint16_t rows);
+extern uint16_t tile_mask2_words;
 uint16_t player_tile_hit(Object *o);
 Object *collide_enemies(Object *o);
 Object *scan_boxes(Object *a1, int16_t x0, int16_t y0, int16_t x1, int16_t y1);
