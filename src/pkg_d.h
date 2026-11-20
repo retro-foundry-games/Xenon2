@@ -86,6 +86,8 @@ void l3_event(uint16_t d0, const uint8_t *a1); void l3_hook(uint16_t d0, const u
 void l3_scroll(void); void l3_init(void); void l3_end_draw(Object *a0);
 void l3_enemy_a(Object *a0); void l3_enemy_b(Object *a0); void l3_enemy_c(Object *a0);
 void l3_snake_head(Object *a0); void l3_snake_tail(Object *a0); void l3_snake_body(Object *a0);
+void l3_spawn_parts(void); void l3_part_core(Object *a0); void l3_part_follow(Object *a0); void l3_part_gun(Object *a0);
+void l3_part_hit(Object *a0, Object *a1, uint16_t d0); void l3_part_arm(Object *a0); void l3_part_arm_piece(Object *a0); void l3_part_arm_tip(Object *a0);
 void l3_diver_update(Object *a0); void l3_diver_shot(Object *a0);
 Object *level_collision(int16_t x0, int16_t y0, int16_t x1, int16_t y1, Object *miss);
 void level_event(uint16_t d0, const uint8_t *a1); void level_hook(uint16_t d0, const uint8_t *a1, uint16_t d2);
