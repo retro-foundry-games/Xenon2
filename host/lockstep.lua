@@ -612,10 +612,13 @@ local function apply_joy(snap)
     local d = desired_joy
     if not d then return end
     if not r and port_joy and INLAG ~= "0" and (INLAG == "1" or snap.shop) and held_joy ~= d then   -- no steering call: the shop's stick check runs late
+        local before = held_joy
         held_joy = d
-        return
+        if not before then return end
+        d = before
+    else
+        held_joy = d
     end
-    held_joy = d
     if port_joy and stick_bits(port_joy) == stick_bits(d) then return end
     port_joy = d
     port_call(("joy(%d, %d, %d, %d, %d)"):format(d.up, d.down, d.left, d.right, d.fire))
