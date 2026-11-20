@@ -1,5 +1,6 @@
 /* pkg_d: the weapons, pickups and the player of $4000-$5FFF, and level 1's own code (the blob at $54E00). */
 #include "pkg_d.h"
+#include "pkg_i.h"
 #include "game_all.h"
 #include "amiga/hw.h"
 
@@ -80,7 +81,7 @@ static void set_anim(Object *o, const uint8_t *a)
 
 static void set_ptr_2a(Object *o, Object *p)
 {
-    uint32_t v = (uint32_t)(uintptr_t)p;
+    uint32_t v = p ? GADDR(p) : 0;   /* (the original's address: the two words are compared and exported as they are) */
 
     o->v2a = (int16_t)(v >> 16);
     o->v2c = (int16_t)v;
@@ -88,7 +89,9 @@ static void set_ptr_2a(Object *o, Object *p)
 
 static Object *get_ptr_2a(const Object *o)
 {
-    return (Object *)(uintptr_t)(((uint32_t)(uint16_t)o->v2a << 16) | (uint16_t)o->v2c);
+    uint32_t v = ((uint32_t)(uint16_t)o->v2a << 16) | (uint16_t)o->v2c;
+
+    return v ? (Object *)GPTR(v) : 0;
 }
 
 static void unlink_to_free(Object *o)
