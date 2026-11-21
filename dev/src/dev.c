@@ -800,8 +800,7 @@ int main(int argc, char **argv)
         else if (!strcmp(argv[i], "--window")) window = 1;
         else forwarded[n++] = argv[i];
     }
-    if (!window)
-        forwarded[n++] = "--headless";
+    host_set_headless(!window);
     if (!script) {
         fprintf(stderr, "usage: xenon2-sdl-dev --lua SCRIPT [--window] [port options]\n");
         return 2;

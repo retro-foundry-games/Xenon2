@@ -15,10 +15,9 @@ void guest_load_range(uint32_t address, const uint8_t *bytes, uint32_t length); 
 void guest_blob_raw(int on);                        /* the shop's blob overlays the level's at $54E00: the members there are not converted while it is */
 void host_irq_dispatch(int level);                  /* call the handler in the vector table for interrupt level 1..7 (nothing if there is none) */
 unsigned host_vbl_count(void);                      /* the game's own frame counter ($41C) */
-void host_export_ram_buf(uint8_t *ram_0x80000);     /* the same into a buffer of 0x80000 bytes */
+void host_export_ram_buf(uint8_t *ram_0x80000);     /* the memory in the original's byte order, into a buffer of 0x80000 bytes */
 void host_import_ram_buf(const uint8_t *ram_0x80000);   /* and back: the memory of the original into the block (before the game starts) */
-int host_export_ram(const char *path);              /* the memory in the original's byte order, for tools/compare_state.py */
-void host_game_status(void);                        /* print a few variables of the game (tests) */
+void host_set_headless(int on);                   /* before host_init */
 void host_game_start(void);                         /* call the game's entry (nothing if the C has none yet) */
 int guest_load_game_image(void);                    /* disk 1, tracks 82-159, from $70C00: the game's program and data, as the loader of disk 1 leaves them at $400 */
 
@@ -41,7 +40,6 @@ void files_insert(int disk);
 #define DISPLAY_W 320
 #define DISPLAY_H 256
 void display_render(uint32_t *rgb);
-void display_status(void);                          /* print what the picture is made from */                 /* DISPLAY_W x DISPLAY_H pixels, 0x00RRGGBB */
 
 /* sound.c: Paula from the channel registers */
 void sound_init(void);
