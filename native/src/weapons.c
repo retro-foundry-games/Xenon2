@@ -1759,6 +1759,9 @@ void weapon2c_update(Object *a0)
     }
 }
 
+/* a weapon's phase while fire is held: 1 flying out / following, 2 up, 3 coming back, negative a trail copy */
+#define SHOT_PHASE(o) ((o)->v28)
+
 /* orig $003E2C: update of weapon $4C (slot 5): a beam that flies out while fire is held (v28 = 1), moved by the stick, hurting what it
  * meets, and comes back to the ship when fire is let go (v28 negative) */
 void weapon4c_update(Object *a0)
@@ -1772,16 +1775,16 @@ void weapon4c_update(Object *a0)
         return;
     }
     a0->fn_draw = draw_bob_masked;
-    if (a0->v28 == 0) {
+    if (SHOT_PHASE(a0) == 0) {
         if (!(joy_stick & 0x80)) {
             a0->x = (int16_t)player_trail[0];
             a0->y = (int16_t)(player_trail[1] + 0x19);
             return;
         }
-        a0->v28 = 1;
-    } else if (a0->v28 > 0) {
+        SHOT_PHASE(a0) = 1;
+    } else if (SHOT_PHASE(a0) > 0) {
         if (!(joy_stick & 0x80)) {
-            a0->v28 = -1;
+            SHOT_PHASE(a0) = -1;
             return;
         }
         d0 = (int16_t)(((PLAYER->x - player_x_prev) * 4) + a0->x);
@@ -1810,7 +1813,7 @@ void weapon4c_update(Object *a0)
             d0 = -8;
         a0->y = (int16_t)(a0->y + d0);
         if ((int16_t)player_trail[0] == a0->x && (int16_t)(player_trail[1] + 0x19) == a0->y)
-            a0->v28 = 0;
+            SHOT_PHASE(a0) = 0;
         return;
     }
     bbox_from_frame(a0);
@@ -2009,6 +2012,7 @@ void shell_update(Object *a0)
     area_damage(a0, (int16_t)(a0->x - 0x20), (int16_t)(a0->y - 0x20), (int16_t)(a0->x - 0x20 + 0x3f), (int16_t)(a0->y - 0x20 + 0x3f), blast_damage[1]);
 }
 
+
 /* orig $004340: update of weapon $38 and $3C (slot 5): the shell follows the ship until fire is held (v28 = 1), flies up to the top
  * (v28 = 2), is steered by the stick, leaves a trail of copies of itself (v28 negative, they explode when fire is let go), comes back
  * (v28 = 3) when fire is let go */
@@ -2017,7 +2021,7 @@ void weapon38_update(Object *a0)
     int16_t d0;
 
     anim_step(a0);
-    if (a0->v28 < 0) {
+    if (SHOT_PHASE(a0) < 0) {
         int16_t d1, d2;
         uint16_t w, h;
         const uint8_t *a2;
@@ -2028,8 +2032,8 @@ void weapon38_update(Object *a0)
         }
         if (joy_stick & 0x80)
             return;
-        a0->v28++;
-        if (a0->v28 != 0)
+        SHOT_PHASE(a0)++;
+        if (SHOT_PHASE(a0) != 0)
             return;
         d1 = (int16_t)(a0->x - 8);
         d2 = (int16_t)(a0->y - 8);
@@ -2059,27 +2063,27 @@ void weapon38_update(Object *a0)
         return;
     }
     a0->fn_draw = draw_bob_masked;
-    if (a0->v28 == 0) {
+    if (SHOT_PHASE(a0) == 0) {
         a0->x = PLAYER->x;
         a0->y = (int16_t)(PLAYER->y + 0x19);
         if (joy_stick & 0x80)
-            a0->v28 = 1;
+            SHOT_PHASE(a0) = 1;
         return;
     }
-    if (a0->v28 == 1) {
+    if (SHOT_PHASE(a0) == 1) {
         if (joy_stick & 0x80) {
             if (a0->y > 0x10)
                 a0->y = (int16_t)(a0->y - 0xc);
             else
-                a0->v28 = 2;
+                SHOT_PHASE(a0) = 2;
         } else {
-            a0->v28 = 3;
+            SHOT_PHASE(a0) = 3;
         }
         return;
     }
-    if (a0->v28 == 2) {
+    if (SHOT_PHASE(a0) == 2) {
         if (!(joy_stick & 0x80)) {
-            a0->v28 = 3;
+            SHOT_PHASE(a0) = 3;
             return;
         }
         d0 = a0->x;
@@ -2131,7 +2135,7 @@ void weapon38_update(Object *a0)
             a1->y = a0->y;
             a1->score = a0->score;
             trail_count++;
-            a1->v28 = (int16_t)(-(int16_t)(trail_count * 4));
+            SHOT_PHASE(a1) = (int16_t)(-(int16_t)(trail_count * 4));
         }
         return;
     }
@@ -2148,7 +2152,7 @@ void weapon38_update(Object *a0)
         d0 = -8;
     a0->y = (int16_t)(a0->y + d0);
     if (PLAYER->x == a0->x && (int16_t)(PLAYER->y + 0x19) == a0->y)
-        a0->v28 = 0;
+        SHOT_PHASE(a0) = 0;
 }
 
 /* orig $0064A0: draw routine of the beam of weapon $20, by CPU: a slice 32 pixels wide of the level's pattern (mask and four planes,

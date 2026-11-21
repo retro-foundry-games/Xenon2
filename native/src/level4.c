@@ -792,13 +792,16 @@ static void head_picture(Object *a0)
     bbox_from_frame(a0);
 }
 
+/* the head's use of the scratch fields of Object */
+#define HEAD_BEND(o) ((o)->v28)
+
 /* level4 $056410: the head: it turns to the player, now and then it darts at him; v28 is the length of its bend */
 void l4_b2_head(Object *a0)
 {
     uint16_t d0;
 
     a0->y = (int16_t)(a0->y + scroll_speed);
-    if (a0->v28 == 0) {
+    if (HEAD_BEND(a0) == 0) {
         d0 = aim_at_player(a0, 0, 0);
         if (d0 < 2)
             d0 = 2;
@@ -834,10 +837,10 @@ void l4_b2_head(Object *a0)
             put4e(a0, (uint32_t)(0 - get4e(a0)));
         }
     }
-    a0->v28 = (int16_t)(a0->v28 + a0->v2e);
-    if (a0->v28 >= 0x18)
+    HEAD_BEND(a0) = (int16_t)(HEAD_BEND(a0) + a0->v2e);
+    if (HEAD_BEND(a0) >= 0x18)
         a0->v2e = (int16_t)-a0->v2e;
-    a0->steps = (int16_t)(a0->v28 + 4);
+    a0->steps = (int16_t)(HEAD_BEND(a0) + 4);
     head_picture(a0);
 }
 
