@@ -312,6 +312,9 @@ static int l3_snake_off(Object *a0)
     return 0;
 }
 
+#define SNAKE_LIMIT(o) ((o)->v30)
+#define SNAKE_SWING(o) ((o)->v28)
+
 /* level3 $056490: the first piece of a snake: it waits (v30), looks for the player's height, then swings (v28 between 0 and v30) */
 void l3_snake_head(Object *a0)
 {
@@ -321,8 +324,8 @@ void l3_snake_head(Object *a0)
     if (a0->v2a == 0) {
         int16_t d0;
 
-        if (a0->v30 < 0) {
-            a0->v30++;
+        if (SNAKE_LIMIT(a0) < 0) {
+            SNAKE_LIMIT(a0)++;
             bbox_from_frame(a0);
             return;
         }
@@ -334,14 +337,14 @@ void l3_snake_head(Object *a0)
             return;
         }
         a0->v2a = 2;
-        a0->v30 = (int16_t)((random_next() & 6) + 0xa);
+        SNAKE_LIMIT(a0) = (int16_t)((random_next() & 6) + 0xa);
     }
     a0->fn_draw = draw_bob_masked;
-    a0->v28 = (int16_t)(a0->v2a + a0->v28);
-    if (a0->v28 == 0) {
+    SNAKE_SWING(a0) = (int16_t)(a0->v2a + SNAKE_SWING(a0));
+    if (SNAKE_SWING(a0) == 0) {
         a0->v2a = 0;
-        a0->v30 = -5;
-    } else if (a0->v28 == a0->v30) {
+        SNAKE_LIMIT(a0) = -5;
+    } else if (SNAKE_SWING(a0) == SNAKE_LIMIT(a0)) {
         a0->v2a = (int16_t)-a0->v2a;
     }
     bbox_from_frame(a0);
@@ -471,6 +474,8 @@ void l3_diver_shot(Object *a0)
     }
 }
 
+#define DIVER_STATE(o) ((o)->v28)
+
 /* level3 $056618: the diver ($D0): it crosses the screen sideways, turns at the edges, stops at x $88 and $B8 (v28 1) to shoot, with the shot
  * eleven steps into the animation */
 void l3_diver_update(Object *a0)
@@ -486,7 +491,7 @@ void l3_diver_update(Object *a0)
         return;
     }
     anim_step(a0);
-    if (a0->v28 == 0) {
+    if (DIVER_STATE(a0) == 0) {
         d0 = (int16_t)(a0->v2a + a0->x);
         a0->x = d0;
         if (d0 <= -0x20) {
@@ -498,11 +503,11 @@ void l3_diver_update(Object *a0)
             a2 = 0x5681c;
             flip = 1;
         } else if (d0 == 0x88) {
-            a0->v28 = 1;
+            DIVER_STATE(a0) = 1;
             a2 = 0x567f2;
             flip = 0;
         } else if (d0 == 0xb8) {
-            a0->v28 = 1;
+            DIVER_STATE(a0) = 1;
             a2 = 0x56840;
             flip = 0;
         } else {
@@ -510,7 +515,7 @@ void l3_diver_update(Object *a0)
             return;
         }
     } else if (a0->anim_delay == 0) {
-        a0->v28 = 0;
+        DIVER_STATE(a0) = 0;
         if (a0->x > 0xa0) {
             a0->x = 0xd8;
             a2 = 0x567ce;
@@ -520,8 +525,8 @@ void l3_diver_update(Object *a0)
         }
         flip = 1;
     } else {
-        a0->v28++;
-        if (a0->v28 == 0xb) {
+        DIVER_STATE(a0)++;
+        if (DIVER_STATE(a0) == 0xb) {
             int16_t sx = (int16_t)(a0->x - 5), sy = (int16_t)(a0->y + 4);
             uint32_t gfx = 0x5b330;
             Object *s;
@@ -538,7 +543,7 @@ void l3_diver_update(Object *a0)
             s->anim_delay = 0;
             s->x = sx;
             s->y = sy;
-            s->v28 = 0;
+            DIVER_STATE(s) = 0;
             s->steps = (int16_t)W(0x54e54);
             s->v2a = 3;
             if (a0->x >= 0xa0)
@@ -673,6 +678,8 @@ void l3_part_follow(Object *a0)
     bbox_from_frame(a0);
 }
 
+#define GUN_SIDE(o) ((o)->v30)
+
 /* level3 $055B38: a gun part (v30 $40 the left one, the other the right): while the energy of its side (d60 / d62) is above zero it is shown
  * as it is and can be hit, then it is the picture of the wreck */
 void l3_part_gun(Object *a0)
@@ -680,9 +687,9 @@ void l3_part_gun(Object *a0)
     int16_t side;
 
     l3_part_follow(a0);
-    side = (int16_t)W(a0->v30 == 0x40 ? 0xd60 : 0xd62);
+    side = (int16_t)W(GUN_SIDE(a0) == 0x40 ? 0xd60 : 0xd62);
     if (side <= 0) {
-        a0->gfx = GPTR(a0->v30 == 0x40 ? 0x5f05e : 0x5f0f0);
+        a0->gfx = GPTR(GUN_SIDE(a0) == 0x40 ? 0x5f05e : 0x5f0f0);
         a0->anim_delay = 0;
         a0->hit[0] = 0x3e8;
         a0->fn_hit = (void *)obj_nop_thunk;
@@ -731,6 +738,8 @@ void l3_part_hit(Object *a0, Object *a1, uint16_t d0)
     sh_w8(0xd85, 0);
 }
 
+#define ARM_SWING(o) ((o)->v3e)
+
 /* level3 $055C52: an arm's root: now and then it aims at the player and swings (v3e from 1 to $E and back), the next part's angle and speed follow */
 void l3_part_arm(Object *a0)
 {
@@ -738,11 +747,11 @@ void l3_part_arm(Object *a0)
 
     l3_part_follow(a0);
     a1 = a0->prev;
-    if (a0->v3e != 0) {
-        a0->v3e = (int16_t)(a0->v3e + a0->v2e);
-        if (a0->v3e == 0xe)
+    if (ARM_SWING(a0) != 0) {
+        ARM_SWING(a0) = (int16_t)(ARM_SWING(a0) + a0->v2e);
+        if (ARM_SWING(a0) == 0xe)
             a0->v2e = (int16_t)-a0->v2e;
-        a1->steps = a0->v3e;
+        a1->steps = ARM_SWING(a0);
         bbox_from_frame(a0);
         return;
     }
@@ -753,7 +762,7 @@ void l3_part_arm(Object *a0)
         return;
     }
     sfx_cmd2 = 0xf;
-    a0->v3e = 1;
+    ARM_SWING(a0) = 1;
     a0->v2e = 1;
     {
         uint16_t d0 = (uint16_t)(direction8((int16_t)(PLAYER_X - a0->x), (int16_t)(PLAYER_Y - a0->y)) << 5);
@@ -789,6 +798,9 @@ static void l3_arm_follow(Object *a0)
     a0->v28 = 0x3e8;
 }
 
+#define ARM_ANGLE_HI(o) ((o)->v2a)
+#define ARM_ANGLE_LO(o) ((o)->v2c)
+
 /* level3 $055D12: a piece of an arm: it moves after the next piece by its own path (angle v2a:v2c, speed pad4e), and hands that state to the piece before it */
 void l3_part_arm_piece(Object *a0)
 {
@@ -796,15 +808,15 @@ void l3_part_arm_piece(Object *a0)
     Object *a1;
 
     l3_arm_follow(a0);
-    s2a = a0->v2a;
-    s2c = a0->v2c;
+    s2a = ARM_ANGLE_HI(a0);
+    s2c = ARM_ANGLE_LO(a0);
     s4e0 = (int16_t)a0->turn[0];
     s4e1 = (int16_t)a0->turn[1];
     s52 = (int16_t)a0->turn[2];
     obj_script_run(a0);
     a1 = a0->prev;
-    a1->v2a = a0->v2a;
-    a1->v2c = a0->v2c;
+    ARM_ANGLE_HI(a1) = ARM_ANGLE_HI(a0);
+    ARM_ANGLE_LO(a1) = ARM_ANGLE_LO(a0);
     a1->turn[0] = a0->turn[0];
     a1->turn[1] = a0->turn[1];
     a1->turn[2] = a0->turn[2];
@@ -812,8 +824,8 @@ void l3_part_arm_piece(Object *a0)
     a0->turn[2] = (uint16_t)s52;
     a0->turn[1] = (uint16_t)s4e1;
     a0->turn[0] = (uint16_t)s4e0;
-    a0->v2c = s2c;
-    a0->v2a = s2a;
+    ARM_ANGLE_LO(a0) = s2c;
+    ARM_ANGLE_HI(a0) = s2a;
 }
 
 /* level3 $055D62: the tip of an arm: it takes its place and path like the pieces, and its picture follows the angle */
@@ -870,6 +882,8 @@ static void copy4(uint8_t *dst, const uint8_t *src)
     copy2(dst + 2, src + 2);
 }
 
+#define L3_GUN_OPEN(o) ((o)->v28)
+
 /* level3 $056DF6: a gun of tiles ($F0 or $F4): its tiles open in turn (v28), at the eighth it fires */
 void l3_gun_update(Object *a0)
 {
@@ -885,20 +899,20 @@ void l3_gun_update(Object *a0)
     d0 = (int16_t)(a0->y - scroll_pos + 2);
     a0->hit[1] = d0;
     a0->hit[3] = (int16_t)(d0 + 0xc);
-    if (a0->v28 == 0) {
+    if (L3_GUN_OPEN(a0) == 0) {
         uint16_t sum = (uint16_t)(a0->v5e_b[0] + B(0x54e67));
 
         a0->v5e_b[0] = (uint8_t)sum;
         if (sum > 0xff) {
             a0->v5e_b[0] = (uint8_t)(random_next() & 0x3f);
-            a0->v28 = 1;
+            L3_GUN_OPEN(a0) = 1;
         }
         return;
     }
     a2 = a0->type == 0xf0 ? 0x56eda : 0x56ee8;
-    copy2(a0->script, (const uint8_t *)GPTR(a2 + (uint16_t)(a0->v28 & ~1)));
-    a0->v28++;
-    if (a0->v28 == 8) {
+    copy2(a0->script, (const uint8_t *)GPTR(a2 + (uint16_t)(L3_GUN_OPEN(a0) & ~1)));
+    L3_GUN_OPEN(a0)++;
+    if (L3_GUN_OPEN(a0) == 8) {
         int16_t x = (int16_t)(a0->x + 8), y = (int16_t)(a0->y - scroll_pos), angle = 0;
 
         if (a0->type != 0xf0) {
@@ -908,8 +922,8 @@ void l3_gun_update(Object *a0)
         spawn_enemy_shot((uint16_t)x, (uint16_t)y, (uint16_t)angle, W(0x54e68), GPTR(0x5e69e));
         return;
     }
-    if (a0->v28 == 0xe)
-        a0->v28 = 0;
+    if (L3_GUN_OPEN(a0) == 0xe)
+        L3_GUN_OPEN(a0) = 0;
 }
 
 /* level3 $056220: a gun of tiles from a record ($F0, $F4 when w0c is set) */
@@ -950,6 +964,8 @@ void l3_spawn_boss(const uint8_t *a1)
     }
 }
 
+#define L3_BOSS_CELL(o) ((o)->v28)
+
 /* level3 $05686A: the boss of tiles, first form: it opens and closes its mouth (v28, the cells of the table at $569A2) and fires from the sixth step on */
 void l3_boss_update(Object *a0)
 {
@@ -965,7 +981,7 @@ void l3_boss_update(Object *a0)
     d0 = (uint16_t)(a0->y - scroll_pos + 0x40);
     a0->hit[1] = (int16_t)d0;
     a0->hit[3] = (int16_t)(d0 + 0x1a);
-    d0 = (uint16_t)a0->v28;
+    d0 = (uint16_t)L3_BOSS_CELL(a0);
     if (d0 == 0) {
         if ((uint8_t)random_next() >= B(0x54e57))
             return;
@@ -973,16 +989,16 @@ void l3_boss_update(Object *a0)
     m = a0->script;
     copy4(m + 0xa2, (const uint8_t *)GPTR(0x569a2 + 4 * (d0 & ~1u)));
     copy4(m + 0xca, (const uint8_t *)GPTR(0x569a2 + 4 * (d0 & ~1u) + 4));
-    a0->v28++;
-    if (a0->v28 == 0x12) {
-        a0->v28 = 0;
+    L3_BOSS_CELL(a0)++;
+    if (L3_BOSS_CELL(a0) == 0x12) {
+        L3_BOSS_CELL(a0) = 0;
         return;
     }
-    if (a0->v28 < 4)
+    if (L3_BOSS_CELL(a0) < 4)
         return;
-    if (a0->v28 > 0xb) {
-        if (a0->v28 == 0xc && (uint8_t)random_next() < B(0x54e59))
-            a0->v28 = 4;
+    if (L3_BOSS_CELL(a0) > 0xb) {
+        if (L3_BOSS_CELL(a0) == 0xc && (uint8_t)random_next() < B(0x54e59))
+            L3_BOSS_CELL(a0) = 4;
         return;
     }
     {
@@ -998,7 +1014,7 @@ void l3_boss_update(Object *a0)
         x = (int16_t)(a0->x + 0x20);
         y = (int16_t)(a0->y - scroll_pos + 0x58);
         gfx = sh_r32(sh_r32(0x6ee26 + 4 * (uint32_t)W(0x54e5c)));
-        step = (uint16_t)(a0->v28 & ~1);
+        step = (uint16_t)(L3_BOSS_CELL(a0) & ~1);
         if (step == 6)
             angle = 3;
         if (step == 8)
@@ -1049,6 +1065,8 @@ void l3_boss_flash(Object *a0)
     draw_tile_grid_flash((const uint8_t *)GPTR(cells), 1, 1, (int16_t)(y + 0x40), (uint16_t)(((uint16_t)(a0->x + 0x10) >> 1) & 0xfffc));
 }
 
+#define L3_BOSS2_CELL(o) ((o)->v28)
+
 /* level3 $056AF8: the boss of tiles, second form: the cells of the table at $56D2C in turn (v28), and at the fourth step eight shots */
 void l3_boss2_update(Object *a0)
 {
@@ -1064,7 +1082,7 @@ void l3_boss2_update(Object *a0)
     d0 = (uint16_t)(a0->y + 4 - scroll_pos);
     a0->hit[1] = (int16_t)d0;
     a0->hit[3] = (int16_t)(d0 + 0x17);
-    d0 = (uint16_t)a0->v28;
+    d0 = (uint16_t)L3_BOSS2_CELL(a0);
     if (d0 == 0) {
         uint16_t sum = (uint16_t)(a0->v5e_b[0] + B(0x54e63));
 
@@ -1076,12 +1094,12 @@ void l3_boss2_update(Object *a0)
     m = a0->script;
     copy4(m + 2, (const uint8_t *)GPTR(0x56d2c + 4 * (d0 & ~1u)));
     copy4(m + 0x2a, (const uint8_t *)GPTR(0x56d2c + 4 * (d0 & ~1u) + 4));
-    a0->v28++;
-    if (a0->v28 == 0xa) {
-        a0->v28 = 0;
+    L3_BOSS2_CELL(a0)++;
+    if (L3_BOSS2_CELL(a0) == 0xa) {
+        L3_BOSS2_CELL(a0) = 0;
         return;
     }
-    if (a0->v28 == 4) {
+    if (L3_BOSS2_CELL(a0) == 4) {
         int16_t x = (int16_t)(a0->x + 0x20), y = (int16_t)(a0->y - scroll_pos + 0x18);
         int d7;
 
@@ -1145,11 +1163,13 @@ void l3_spawn_walker(const uint8_t *a1)
     bbox_from_frame(a0);
 }
 
+#define WALKER_DIR(o) ((o)->v2a)
+
 /* level3 $0562B0: the walker: it goes on in its direction (v2a, 8 of them) by the steps of the tables at $56290 / $562A0 and at each tile of the map looks at
  * the cell ahead: a wall turns it by the tables at $56460, a free cell ahead lets it go on; now and then it fires at the player */
 void l3_walker_update(Object *a0)
 {
-    uint32_t d2 = 2 * (uint32_t)(uint16_t)a0->v2a;
+    uint32_t d2 = 2 * (uint32_t)(uint16_t)WALKER_DIR(a0);
     int16_t d0, d1;
     int at_tile = 0, turn = 0;
 
@@ -1194,7 +1214,7 @@ void l3_walker_update(Object *a0)
             a0->x = (int16_t)(a0->x + (int16_t)W(0x56460 + d2));
             a0->y = (int16_t)(a0->y + (int16_t)W(0x56470 + d2));
             ni = W(0x56480 + d2);
-            a0->v2a = (int16_t)ni;
+            WALKER_DIR(a0) = (int16_t)ni;
             set_anim(a0, sh_r32(0x557b0 + 4 * (uint32_t)ni));
         }
     }

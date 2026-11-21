@@ -404,6 +404,8 @@ void l2_flyer_update(Object *a0)
     bbox_from_frame(a0);
 }
 
+#define MARKER_F8_BLINK(o) ((o)->v28)
+
 /* level2 $05533E: the marker $F8: as $05550E, but its picture blinks (v28 0 / 1) until the scroll is near, its steps use a table of
  * two longs, and at step 4 it launches the flyer $E0 */
 void l2_marker_f8_update(Object *a0)
@@ -418,31 +420,31 @@ void l2_marker_f8_update(Object *a0)
     d0 = (int16_t)(a0->y - scroll_pos);
     if (d0 >= 0xb4)
         return;
-    if (a0->v28 >= 5) {
+    if (MARKER_F8_BLINK(a0) >= 5) {
         if (a0->v30 == 0) {
             kill_thunk(a0);
             return;
         }
-        if (a0->v28 >= 9) {
-            a0->v28 = 0;
+        if (MARKER_F8_BLINK(a0) >= 9) {
+            MARKER_F8_BLINK(a0) = 0;
             a0->v30--;
         }
     }
-    if ((uint16_t)a0->v28 <= 1) {
+    if ((uint16_t)MARKER_F8_BLINK(a0) <= 1) {
         if (d0 >= 0x64)
-            a0->v28 = 2;
+            MARKER_F8_BLINK(a0) = 2;
         else if ((frame_tick & 3) == 0)
-            a0->v28 ^= 1;
+            MARKER_F8_BLINK(a0) ^= 1;
     }
-    a2 = (const uint8_t *)GPTR(0x554c6 + ((uint16_t)a0->v28 << 3));
+    a2 = (const uint8_t *)GPTR(0x554c6 + ((uint16_t)MARKER_F8_BLINK(a0) << 3));
     copy4(a0->script, a2);
     copy4(a0->script + 0x28, a2 + 4);
-    if ((uint16_t)a0->v28 < 2)
+    if ((uint16_t)MARKER_F8_BLINK(a0) < 2)
         return;
     if (frame_tick & 3)
         return;
-    a0->v28++;
-    if (a0->v28 != 4)
+    MARKER_F8_BLINK(a0)++;
+    if (MARKER_F8_BLINK(a0) != 4)
         return;
     {
         Object *s = alloc_in(LIST_C);
@@ -458,11 +460,14 @@ void l2_marker_f8_update(Object *a0)
         s->energy = (int16_t)W(0x54e42);
         s->big = (int8_t)0xff;
         s->score = 0x12c;
-        s->v28 = 0;
+        MARKER_F8_BLINK(s) = 0;
         s->kind = 0;
         bbox_from_frame(s);
     }
 }
+
+#define MARKER_FC_STEP(o) ((o)->v28)
+#define MARKER_FC_LAUNCHES(o) ((o)->v30)
 
 /* level2 $05550E: the marker $FC: gone when the scroll has passed it; its picture steps (v28) and at step 4 it launches the flyer $E4;
  * v30 counts the launches left */
@@ -477,26 +482,26 @@ void l2_marker_fc_update(Object *a0)
     d0 = (int16_t)(a0->y - scroll_pos);
     if (d0 >= 0xb4)
         return;
-    if (a0->v28 >= 5) {
-        if (a0->v30 == 0) {
+    if (MARKER_FC_STEP(a0) >= 5) {
+        if (MARKER_FC_LAUNCHES(a0) == 0) {
             kill_thunk(a0);
             return;
         }
-        if (a0->v28 >= 9) {
-            a0->v28 = 0;
-            a0->v30--;
+        if (MARKER_FC_STEP(a0) >= 9) {
+            MARKER_FC_STEP(a0) = 0;
+            MARKER_FC_LAUNCHES(a0)--;
         }
     }
-    if ((uint16_t)a0->v28 <= 1) {
+    if ((uint16_t)MARKER_FC_STEP(a0) <= 1) {
         if (d0 < 0x64)
             return;
-        a0->v28 = 2;
+        MARKER_FC_STEP(a0) = 2;
     }
-    copy2(a0->script, (const uint8_t *)GPTR(0x5567a + ((uint16_t)a0->v28 << 1)));
+    copy2(a0->script, (const uint8_t *)GPTR(0x5567a + ((uint16_t)MARKER_FC_STEP(a0) << 1)));
     if (frame_tick & 3)
         return;
-    a0->v28++;
-    if (a0->v28 != 4)
+    MARKER_FC_STEP(a0)++;
+    if (MARKER_FC_STEP(a0) != 4)
         return;
     {
         Object *s = alloc_in(LIST_C);
@@ -512,7 +517,7 @@ void l2_marker_fc_update(Object *a0)
         s->energy = (int16_t)W(0x54e44);
         s->big = 0;
         s->score = 0x96;
-        s->v28 = 0;
+        MARKER_FC_STEP(s) = 0;
         s->kind = 0;
         bbox_from_frame(s);
     }
@@ -550,6 +555,9 @@ static void l2_restore_blocks(Object *a0)
     }
 }
 
+#define BOLT_DIR(o) ((o)->v2a)
+#define BOLT_TARGET(o) ((o)->v28)
+
 /* level2 $0563E0: the creature's bolt ($110): it turns (v2a, eight directions) towards v28, which is -1 when it flies on; it shoots
  * every so often, moves one step by the table, and at the corners of the table of $056524 takes a new direction; it breaks blocks back
  * into place */
@@ -563,21 +571,21 @@ void l2_roamer_shot_update(Object *a0)
 
     anim_step(a0);
     a0->y = (int16_t)(a0->y + scroll_speed);
-    if (a0->v28 >= 0) {
+    if (BOLT_TARGET(a0) >= 0) {
         if (!(frame_tick & 1)) {
             bbox_from_frame(a0);
             return;
         }
-        d0 = (int16_t)(a0->v28 - a0->v2a);
+        d0 = (int16_t)(BOLT_TARGET(a0) - BOLT_DIR(a0));
         if (d0 != 0) {
             if (d0 < 0)
                 d0 += 8;
-            a0->v2a = (int16_t)((a0->v2a + (d0 > 4 ? -1 : 1)) & 7);
-            set_anim(a0, sh_r32(0x563c0 + ((uint16_t)a0->v2a << 2)));
+            BOLT_DIR(a0) = (int16_t)((BOLT_DIR(a0) + (d0 > 4 ? -1 : 1)) & 7);
+            set_anim(a0, sh_r32(0x563c0 + ((uint16_t)BOLT_DIR(a0) << 2)));
             bbox_from_frame(a0);
             return;
         }
-        a0->v28 = -1;
+        BOLT_TARGET(a0) = -1;
     }
     if ((uint16_t)a0->y < 0xc0) {
         uint16_t sum = (uint16_t)(a0->v5e_b[0] + B(0x54e59));
@@ -595,8 +603,8 @@ void l2_roamer_shot_update(Object *a0)
             spawn_enemy_shot((uint16_t)a0->x, (uint16_t)a0->y, angle, W(0x54e5c), gfx);
         }
     }
-    x = (int16_t)(a0->x + dx[a0->v2a]);
-    y = (int16_t)(a0->y + dy[a0->v2a]);
+    x = (int16_t)(a0->x + dx[BOLT_DIR(a0)]);
+    y = (int16_t)(a0->y + dy[BOLT_DIR(a0)]);
     a0->x = x;
     a0->y = y;
     y = (int16_t)(y + scroll_pos);
@@ -609,7 +617,7 @@ void l2_roamer_shot_update(Object *a0)
             do
                 r = (uint16_t)(random_next() & 3);
             while (r == 0);
-            a0->v28 = (int16_t)W(entry + 4 + (uint32_t)(r - 1) * 2);
+            BOLT_TARGET(a0) = (int16_t)W(entry + 4 + (uint32_t)(r - 1) * 2);
             bbox_from_frame(a0);
             return;
         }
@@ -617,6 +625,9 @@ void l2_roamer_shot_update(Object *a0)
     bbox_from_frame(a0);
     l2_restore_blocks(a0);
 }
+
+#define ROAMER_DIR(o) ((o)->v2a)
+#define ROAMER_STATE(o) ((o)->v28)
 
 /* level2 $05623E: the creature that crosses the screen between the walls (v2a its direction, v28 0 moving, 1 at a wall, 2 shooting): at the
  * frame $5B5D6 of its animation it launches the bolt $110 in its direction and is gone */
@@ -627,38 +638,38 @@ void l2_roamer_update(Object *a0)
 
     anim_step(a0);
     a0->y = (int16_t)(a0->y + scroll_speed);
-    if (a0->v28 == 0) {
-        int16_t x = (int16_t)(a0->x + dx[a0->v2a]);
-        int16_t y = (int16_t)(a0->y + dy[a0->v2a]);
+    if (ROAMER_STATE(a0) == 0) {
+        int16_t x = (int16_t)(a0->x + dx[ROAMER_DIR(a0)]);
+        int16_t y = (int16_t)(a0->y + dy[ROAMER_DIR(a0)]);
 
         if (x <= 0x74) {
             x = 0x74;
-            a0->v28 = 1;
-            a0->v2a = 4;
+            ROAMER_STATE(a0) = 1;
+            ROAMER_DIR(a0) = 4;
         }
         if (x >= 0xcc) {
             x = 0xcc;
-            a0->v28 = 1;
-            a0->v2a = 0;
+            ROAMER_STATE(a0) = 1;
+            ROAMER_DIR(a0) = 0;
         }
         y = (int16_t)(y + scroll_pos);
         if (y <= 0x6c) {
             y = 0x6c;
-            a0->v28 = 1;
-            a0->v2a = 6;
+            ROAMER_STATE(a0) = 1;
+            ROAMER_DIR(a0) = 6;
         }
         if (y >= 0x154) {
             y = 0x154;
-            a0->v28 = 1;
-            a0->v2a = 2;
+            ROAMER_STATE(a0) = 1;
+            ROAMER_DIR(a0) = 2;
         }
         a0->x = x;
         a0->y = (int16_t)(y - scroll_pos);
         return;
     }
-    if (a0->v28 == 1) {
+    if (ROAMER_STATE(a0) == 1) {
         if ((random_next() & 7) == 0) {
-            a0->v28 = 2;
+            ROAMER_STATE(a0) = 2;
             set_anim(a0, 0x5513a);
         }
         return;
@@ -675,15 +686,17 @@ void l2_roamer_update(Object *a0)
         SET_V5E(s, 0);
         s->score = 0x1e;
         s->kind = 0;
-        set_anim(s, sh_r32(0x563c0 + ((uint16_t)a0->v2a << 2)));
+        set_anim(s, sh_r32(0x563c0 + ((uint16_t)ROAMER_DIR(a0) << 2)));
         s->x = a0->x;
         s->y = a0->y;
-        s->v2a = a0->v2a;
-        s->v28 = -1;
+        ROAMER_DIR(s) = ROAMER_DIR(a0);
+        ROAMER_STATE(s) = -1;
         bbox_from_frame(s);
         kill_thunk(a0);
     }
 }
+
+#define FRONT_STEP(o) ((o)->v28)
 
 /* level2 $05568C: the marker $F0 / $F4: waits for the scroll, then its picture takes 20 steps (v28) from a table, and it bursts into
  * eight pieces ($108, update $056596) */
@@ -691,20 +704,20 @@ void l2_front_update(Object *a0)
 {
     int i;
 
-    if (a0->v28 == 0) {
+    if (FRONT_STEP(a0) == 0) {
         if ((int16_t)(a0->y - scroll_pos) >= (int16_t)W(0x54e62))
-            a0->v28 = 1;
+            FRONT_STEP(a0) = 1;
         return;
     }
     {
         uint32_t table = a0->type == 0xf0 ? 0x557e8 : 0x5583c;
-        const uint8_t *a2 = (const uint8_t *)GPTR(sh_r32(table + ((uint16_t)a0->v28 << 2)));
+        const uint8_t *a2 = (const uint8_t *)GPTR(sh_r32(table + ((uint16_t)FRONT_STEP(a0) << 2)));
 
         copy4(a0->script, a2);
         copy4(a0->script + 0x28, a2 + 4);
     }
-    a0->v28++;
-    if (a0->v28 < 0x15)
+    FRONT_STEP(a0)++;
+    if (FRONT_STEP(a0) < 0x15)
         return;
     for (i = 7; i >= 0; i--) {
         uint32_t entry = 0x557a8 + (uint32_t)(7 - i) * 8;
@@ -722,7 +735,7 @@ void l2_front_update(Object *a0)
         s->energy = 1;
         s->big = 0;
         s->score = 0x14;
-        s->v28 = (int16_t)(random_next() & 0x1f);
+        FRONT_STEP(s) = (int16_t)(random_next() & 0x1f);
         s->kind = 0;
         bbox_from_frame(s);
     }
@@ -941,6 +954,9 @@ void l2_debris_walls(void)
     }
 }
 
+#define PIECE_WAIT(o) ((o)->v28)
+#define PIECE_DIR(o) ((o)->v2c)
+
 /* level2 $0566CE: update of a piece of a wall of debris ($114 to $11C): v28 $8000 is a wreck flying off in the direction of v2c; otherwise
  * it follows its path (a wait while v28 is negative), is drawn behind the map while the path is inside it, and its picture goes by the direction */
 void l2_piece_update(Object *a0)
@@ -948,11 +964,11 @@ void l2_piece_update(Object *a0)
     const uint8_t *a1;
     uint16_t d2;
 
-    if (a0->v28 == (int16_t)0x8000) {
+    if (PIECE_WAIT(a0) == (int16_t)0x8000) {
         int16_t d0, d1;
 
         anim_step(a0);
-        d2 = (uint16_t)a0->v2c;
+        d2 = (uint16_t)PIECE_DIR(a0);
         d1 = (int16_t)(piece_directions[d2] >> 2);
         d0 = (int16_t)(piece_directions[(uint16_t)(d2 + 0x40)] >> 2);
         d0 = (int16_t)(d0 + a0->x);
@@ -977,7 +993,7 @@ void l2_piece_update(Object *a0)
         return;
     }
     if (a0->fn_draw == (obj_fn)obj_nop_thunk) {
-        if (a0->v28 >= 0)
+        if (PIECE_WAIT(a0) >= 0)
             a0->fn_draw = draw_bob_behind_map;
     } else if (a0->fn_draw == draw_bob_behind_map) {
         a1 = a0->cursor;
@@ -986,7 +1002,7 @@ void l2_piece_update(Object *a0)
     } else if (rd16(a0->cursor) == 0) {
         a0->fn_draw = draw_bob_behind_map;
     }
-    d2 = (uint16_t)(((uint16_t)(a0->v2c + 0x10) >> 3) & 0x1c);
+    d2 = (uint16_t)(((uint16_t)(PIECE_DIR(a0) + 0x10) >> 3) & 0x1c);
     a0->gfx = GPTR(sh_r32((a0->type == 0x118 ? 0x5681a : a0->type == 0x11c ? 0x5683a : 0x567fa) + d2));
     bbox_from_frame(a0);
 }
@@ -1214,6 +1230,9 @@ static void l2_boss_move(Object *a0)
     copy4((uint8_t *)GPTR(0x572ba + 0xc), (const uint8_t *)GPTR(sh_r32(0x56e4e + d0)) + 4);
 }
 
+#define L2_BOSS_WAIT(o) ((o)->v28)
+#define L2_BOSS_FLASH(o) ((o)->v3e)
+
 /* level2 $056BE8: update of the boss ($50): it waits for the player to come into reach (v28 negative), then counts v28 down; it shoots now
  * and then (a ring of sixteen shots one time in four, else one); while its v3e counts down it changes the cells of its picture.  The moves from
  * $56DD8 on are not written: they test bits of d0 that the original leaves from the shot routine */
@@ -1226,7 +1245,7 @@ void l2_boss_update(Object *a0)
     if ((int16_t)scroll_max <= 0x120)
         scroll_max = 0x120;
     if (a0->v2e == 0) {
-        if (a0->v28 < 0) {
+        if (L2_BOSS_WAIT(a0) < 0) {
             a0->hit[0] = 0x3e8;
             a0->hit[2] = 0x3e8;
             d0 = (int16_t)(PLAYER_Y + scroll_pos);
@@ -1237,12 +1256,12 @@ void l2_boss_update(Object *a0)
                 return;
             a0->v2e = 0x3e8;
             a0->v2a = 3;
-            a0->v28 = 0x154;
+            L2_BOSS_WAIT(a0) = 0x154;
             return;
         }
-        a0->v28--;
-        if (a0->v28 < 0) {
-            a0->v3e = 0;
+        L2_BOSS_WAIT(a0)--;
+        if (L2_BOSS_WAIT(a0) < 0) {
+            L2_BOSS_FLASH(a0) = 0;
             a0->v2e = 0x3e8;
             a0->v2a = -3;
         }
@@ -1272,15 +1291,15 @@ void l2_boss_update(Object *a0)
     a0->hit[3] = (int16_t)(d5 + 0xa);
     if ((int16_t)scroll_pos >= 0x160)
         return;
-    if (a0->v3e != 0) {
+    if (L2_BOSS_FLASH(a0) != 0) {
         const uint8_t *a2;
 
         a0->v30 = (int16_t)((a0->v30 + 4) & 0xc);
         a2 = (const uint8_t *)GPTR(sh_r32(0x56c44 + (uint16_t)a0->v30));
         copy4((uint8_t *)GPTR(0x572aa), a2);
         copy4((uint8_t *)GPTR(0x572aa + 0xc), a2 + 4);
-        a0->v3e--;
-        if (a0->v3e != 0)
+        L2_BOSS_FLASH(a0)--;
+        if (L2_BOSS_FLASH(a0) != 0)
             return;
         s = alloc_in(LIST_C);
         s->type = 0x10c;
@@ -1292,7 +1311,7 @@ void l2_boss_update(Object *a0)
         s->x = 0xa0;
         s->y = (int16_t)(a0->y - scroll_pos + 0x80);
         set_anim(s, 0x55116);
-        s->v28 = 0;
+        L2_BOSS_WAIT(s) = 0;
         s->v2a = (int16_t)(random_next() & 7);
         return;
     }
