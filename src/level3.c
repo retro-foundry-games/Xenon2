@@ -3,6 +3,10 @@
 #include "weapons.h"
 #include "shop.h"
 #include "game_all.h"
+#define WALKER_DIR(o) ((o)->v2a)
+
+/* the scratch fields of Object, by the kind that uses them */
+
 
 /* the path script view of an object (ObjMove) */
 #define PATH_ANGLE_HI(o) ((o)->v2a)
@@ -439,20 +443,20 @@ void l3_spawn_snake(const uint8_t *a1)
             a0->fn_update = FN(l3_snake_head);
         a0->fn_draw = draw_bob_masked;
         a0->x = d0;
-        a0->v2e = d0;
+        SNAKE_X(a0) = d0;
         a0->y = d1;
         a0->fn_hit = (void *)hit_part;
         a0->is_part = 1;
         a0->energy = (int16_t)W(0x54e48);
         a0->big = 0;
         a0->score = 0x190;
-        a0->v28 = 0;
+        SNAKE_SWING(a0) = 0;
         a0->kind = 0;
         SNAKE_STEP(a0) = 0;
         d6 = (int16_t)(7 - d7);
         if (flag)
             d6 = (int16_t)-d6;
-        a0->v30 = d6;
+        SNAKE_LIMIT(a0) = d6;
         bbox_from_frame(a0);
         a0->target = a4;
         a0->chain = 0;
@@ -596,17 +600,17 @@ void l3_spawn_diver(const uint8_t *a1)
     SET_V5E(a0, 0);
     a0->x = (int16_t)(rd16(a1 + 8) - 8);
     a0->y = (int16_t)(rd16(a1 + 0xa) + 8 - scroll_pos);
-    a0->v2a = 2;
+    DIVER_SIDE(a0) = 2;
     if (a0->x > 0xa0) {
         a2 = 0x5681c;
-        a0->v2a = -2;
+        DIVER_SIDE(a0) = -2;
     }
     set_anim(a0, a2);
     a0->fn_hit = (void *)hit_enemy;
     a0->energy = (int16_t)W(0x54e4a);
     a0->big = -1;
     a0->score = 0x12c;
-    a0->v28 = 0;
+    DIVER_STATE(a0) = 0;
     a0->kind = 0;
     bbox_from_frame(a0);
 }
@@ -1175,7 +1179,7 @@ void l3_spawn_walker(const uint8_t *a1)
     a0->type = 0xdc;
     a0->fn_update = FN(l3_walker_update);
     a0->fn_draw = draw_bob_masked;
-    a0->v2a = (int16_t)i;
+    WALKER_DIR(a0) = (int16_t)i;
     SET_V5E(a0, 0);
     a0->x = (int16_t)(rd16(a1 + 8) - 8 + (int16_t)W(0x55790 + 2 * i));
     a0->y = (int16_t)(rd16(a1 + 10) - 8 - scroll_pos + (int16_t)W(0x557a0 + 2 * i));
