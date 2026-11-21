@@ -759,3 +759,27 @@ void l3_part_arm_tip(Object *a0)
     a0->anim_delay = 0;
     bbox_from_frame(a0);
 }
+
+/* level3 $0550D8: an enemy that waits off the screen: by the side of it (the corner, by which of its distances is the shorter) it takes the picture
+ * of its direction from the table at $5513E and goes on as an ordinary enemy (enemy_update) */
+void l3_enemy_enter(Object *a0)
+{
+    int16_t x, y, d0;
+
+    enemy_update(a0);
+    x = a0->x;
+    y = a0->y;
+    if (x < 0) {
+        if (y < 0)
+            d0 = y < x ? 4 : 0;
+        else
+            d0 = (int16_t)(0xc0 - y) < x ? 0xc : 0;
+    } else if (y < 0) {
+        d0 = y < (int16_t)(0x140 - x) ? 4 : 8;
+    } else {
+        d0 = (int16_t)(y - 0xc0) < (int16_t)(x - 0x140) ? 8 : 0xc;
+    }
+    set_anim(a0, sh_r32(0x5513e + d0));
+    a0->fn_update = FN(enemy_update);
+    bbox_from_frame(a0);
+}
