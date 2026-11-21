@@ -801,6 +801,7 @@ int main(int argc, char **argv)
         else forwarded[n++] = argv[i];
     }
     host_set_headless(!window);
+    host_disk_swap_ask = 2;
     if (!script) {
         fprintf(stderr, "usage: xenon2-sdl-dev --lua SCRIPT [--window] [port options]\n");
         return 2;
