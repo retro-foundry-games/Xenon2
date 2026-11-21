@@ -225,7 +225,7 @@ void level1_launcher_update(Object *a0)
         a0->prev = tail;
         a0->next = LIST_B;
         tail->next = a0;
-        a2 = a0->type == 0xd4 ? anim_55236 : anim_551f8;
+        a2 = a0->type == 0xd4 ? anim_l1_launcher_d4_fire : anim_l1_launcher_d0_fire;
         set_anim(a0, a2);
         for (d7 = 2; d7 >= 0; d7--) {
             int16_t d2 = a0->type == 0xd4 ? 5 : 1;
@@ -301,7 +301,7 @@ void level1_hook(uint16_t d0, const uint8_t *a1, uint16_t d2)
     case 4:
         a0 = alloc_c();
         a0->type = flag ? 0xd4 : 0xd0;
-        set_anim(a0, flag ? anim_55212 : anim_551d4);
+        set_anim(a0, flag ? anim_l1_launcher_d4 : anim_l1_launcher_d0);
         a0->fn_update = FN(level1_launcher_update);
         a0->fn_draw = draw_bob_masked;
         a0->fn_hit = (void *)hit_enemy;
@@ -718,7 +718,7 @@ void level1_hit_piece_a(Object *a0, Object *a1, uint16_t d0)
     a1->energy = (int16_t)(old - d0);
     if (old > d0)
         return;
-    level1_piece_burst(a1, anim_55250);
+    level1_piece_burst(a1, anim_l1_piece_a);
 }
 
 /* orig $055C46: the same with the animation $55274 */
@@ -730,7 +730,7 @@ void level1_hit_piece_b(Object *a0, Object *a1, uint16_t d0)
     a1->energy = (int16_t)(old - d0);
     if (old > d0)
         return;
-    level1_piece_burst(a1, anim_55274);
+    level1_piece_burst(a1, anim_l1_piece_b);
 }
 
 /* orig $05605A: update of a burst piece: it moves by a fixed step from the table at piece_directions picked by its random byte ($2D) and goes when it
@@ -839,7 +839,7 @@ void level1_boss_part_update(Object *a0)
 
                 m->shot_count = (uint8_t)(random_next() & 0x3f);
                 shot = spawn_enemy_shot((uint16_t)a0->x, (uint16_t)a0->y, (uint16_t)L1_ANGLE_HI(a0), 4, 0);
-                set_anim(shot, anim_552b0);
+                set_anim(shot, anim_l1_shot);
             }
         }
     }

@@ -377,7 +377,7 @@ void l4_shot_a(Object *a0)
         a0->fn_update = (obj_fn)animate_only;
         a0->x = (int16_t)(d0 >> 1);
         a0->y = (int16_t)(d1 >> 1);
-        anim_header_set(a0, anim_270e);
+        anim_header_set(a0, anim_explosion);
         return;
     }
     if (a0->gfx == GPTR(0x5edca)) {
@@ -1242,7 +1242,7 @@ void l4_walker_hit(Object *a0, Object *a1, uint16_t d0)
     PICKUP_MODE(p) = 7;
     p->fn_update = (obj_fn)pickup_update;
     p->fn_draw = draw_bob_masked;
-    anim_header_set(p, anim_264e);
+    anim_header_set(p, anim_bonus_big);
     p->x = a1->x;
     p->y = (int16_t)(a1->y - scroll_pos);
     PICKUP_DIR(p) = (int16_t)random_next();

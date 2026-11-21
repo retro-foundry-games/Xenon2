@@ -140,7 +140,7 @@ void l2_block_hit(Object *a0, Object *a1, uint16_t d0)
     wr16(e, 0);
     cell = (uint16_t)((uint16_t)(y >> 3) * 0x14 + (x >> 3));
     wr16(level_init_src + cell, 0);
-    spawn_effect((int16_t)(x + 8), (int16_t)(y - scroll_pos + 8), anim_270e, draw_bob_masked);
+    spawn_effect((int16_t)(x + 8), (int16_t)(y - scroll_pos + 8), anim_explosion, draw_bob_masked);
 }
 
 /* level2 $054E10, $055D8A: level events by d0 (a1 = the record that fired): d0 0 is the wave of $326C, 1 to 6 formations */
@@ -386,7 +386,7 @@ void l2_front_piece_update(Object *a0)
         int16_t ex = (int16_t)(((int16_t)(a0->x - (int16_t)rd16(f)) * 2 + (int16_t)rd16(f + 4)) >> 1);
         int16_t ey = (int16_t)(((int16_t)(a0->y - (int16_t)rd16(f + 2)) * 2 + (int16_t)rd16(f + 6)) >> 1);
 
-        spawn_effect(ex, ey, anim_270e, draw_bob_masked);
+        spawn_effect(ex, ey, anim_explosion, draw_bob_masked);
     }
     kill_thunk(a0);
 }
@@ -1134,7 +1134,7 @@ void l2_gate_hit(Object *a0, Object *a1, uint16_t d0)
         return;
     l2_walls_made = 3;
     wr16((uint8_t *)a1->gfx, 0x8e45);
-    spawn_effect((int16_t)(a1->hit[0] + 8), (int16_t)(a1->hit[1] + 8), anim_270e, draw_bob_masked);
+    spawn_effect((int16_t)(a1->hit[0] + 8), (int16_t)(a1->hit[1] + 8), anim_explosion, draw_bob_masked);
     kill_thunk(a1);
     l2_gates_left--;
     if (l2_gates_left == 1) {

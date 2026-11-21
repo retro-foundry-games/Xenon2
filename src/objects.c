@@ -598,7 +598,7 @@ void spawn_effect(int16_t x, int16_t y, const uint8_t *a2, ObjFn a3)
 {
     Object *a0;
 
-    sfx_cmd2 = (a2 == anim_270e) ? 0x85 : 0x83;
+    sfx_cmd2 = (a2 == anim_explosion) ? 0x85 : 0x83;
     a0 = list_insert(LIST_EFFECT);
     a0->type = 0xc;
     a0->fn_update = (obj_fn)animate_only;
