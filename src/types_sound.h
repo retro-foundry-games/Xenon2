@@ -84,9 +84,12 @@ struct SfxDef {
     uint32_t pair_b;        /* a: two word offsets into sfx_wave_base, used alternately */
     uint8_t reload_e;       /* e */
     uint8_t reload_f;       /* f */
-    uint8_t b10, b11, b12, b13;
+    uint8_t rot_a;          /* 10 */
+    uint8_t rot_b;          /* 11 */
+    uint8_t timer;          /* 12 */
+    uint8_t env_speed;      /* 13 */
     uint8_t env_index;      /* 14: index into sfx_env_offsets */
-    uint8_t b15;
+    uint8_t sample_id;      /* 15 */
     uint16_t length;        /* 16: words */
 };
 

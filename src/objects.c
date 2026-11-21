@@ -41,18 +41,18 @@ static void set_cursor(Object *o, const uint8_t *p)
 static void spawnrec_load(struct SpawnRec *r, const uint8_t *p)
 {
     r->scroll = (int16_t)rd16(p);
-    r->w2 = rd16(p + 2);
+    r->arg = rd16(p + 2);
     r->count = rd16(p + 4);
     r->index = rd16(p + 6);
     r->x = (int16_t)rd16(p + 8);
     r->y = (int16_t)rd16(p + 10);
-    r->w0c = rd16(p + 12);
+    r->steps = rd16(p + 12);
 }
 
 static void spawndef_load(struct SpawnDef *d, const uint8_t *p)
 {
     d->kind = rd16(p);
-    d->w2 = rd16(p + 2);
+    d->score = rd16(p + 2);
     d->update = (void (*)(void))GFN(rd32(p + 4));
     d->draw = (void (*)(void))GFN(rd32(p + 8));
     d->hit = (void (*)(void))GFN(rd32(p + 12));
@@ -450,7 +450,7 @@ Object *spawn_formation(Object *a0, const uint8_t *rec_raw, const uint8_t *a2)
             a0->y_frac = 0;
             PATH_ANGLE_HI(a0) = 0;
             PATH_ANGLE_LO(a0) = 0;
-            a0->score = (int16_t)a4->w2;
+            a0->score = (int16_t)a4->score;
             PATH_WAIT(a0) = 0;
             if ((int16_t)a1->x < 100) {
                 d6 = (uint16_t)(0 - d6);
@@ -459,7 +459,7 @@ Object *spawn_formation(Object *a0, const uint8_t *rec_raw, const uint8_t *a2)
                 a0->x = 0;
             }
             if (a5 != a0)
-                PATH_WAIT(a0) = (int16_t)(PATH_WAIT(a0) - (int16_t)a4->w2);
+                PATH_WAIT(a0) = (int16_t)(PATH_WAIT(a0) - (int16_t)a4->score);
             e = (const uint8_t *)GPTR(rd32(level_formations + (int16_t)(uint16_t)((a1->index - 1) * 4)));
             if ((const void *)e < (const void *)level_data_start || (const void *)e >= (const void *)level_events_a)
                 return a0;
@@ -472,7 +472,7 @@ Object *spawn_formation(Object *a0, const uint8_t *rec_raw, const uint8_t *a2)
                 e += 6;
             }
             set_cursor(a0, e);
-            a0->steps = (int16_t)a1->w0c;
+            a0->steps = (int16_t)a1->steps;
             SET_V5E(a0, (int16_t)a1->y);
             d0 = (uint16_t)random_next();
             SET_V5E(a0, (int16_t)((V5E(a0) & 0x00ff) | ((d0 & 0xff) << 8)));
