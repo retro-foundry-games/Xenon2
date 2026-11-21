@@ -2,6 +2,8 @@
 #include "game_all.h"
 #include "amiga/hw.h"
 
+#define OPTION_INDEX(o) ((o)->v30)
+
 /* inlined at its callers: the pair of list links of an append at the end of a list (before the head) */
 static void list_append(Object *head, Object *o)
 {
@@ -240,7 +242,7 @@ void init_objects(void)
         anim_header_set(o, rec);
         o->x = 0xa0;
         o->y = 0xb0;
-        o->v30 = 3 - i;
+        OPTION_INDEX(o) = 3 - i;
     }
     for (i = 0; i < 7; i++)
         weapon_slots[i].type = 0;
@@ -289,7 +291,7 @@ void option_update(Object *a0)
     if ((int16_t)d1 < 0)
         d1 = (uint16_t)-(int16_t)d1;
     d1 += d1;
-    if (a0->v30 & 1)
+    if (OPTION_INDEX(a0) & 1)
         d1 += 0xe;
     d0 += (uint16_t)option_offsets[d1 / 2];
     a0->x = d0;
@@ -297,7 +299,7 @@ void option_update(Object *a0)
     a0->fn_draw = obj_nop;
     if (dive_phase)
         return;
-    bit = (a0->v30 < 2) ? 1 : 2;
+    bit = (OPTION_INDEX(a0) < 2) ? 1 : 2;
     if (joy_stick & bit)
         a0->fn_draw = draw_bob_masked;
 }

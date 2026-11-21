@@ -5,6 +5,13 @@
 #include "weapon_util.h"
 #include "amiga/hw.h"
 
+/* a weapon object sits at its offset from the player */
+#define WEAPON_DX(o) ((o)->v3e)
+#define WEAPON_DY(o) ((o)->v40)
+/* a tile block object: its size in cells less one */
+#define TILE_COLS(o) ((o)->v3e)
+#define TILE_ROWS(o) ((o)->v40)
+
 /* the scratch fields of Object, by the kind that uses them */
 #define DRILL_STATE(o) ((o)->v28)
 #define PICKUP_MODE(o) ((o)->v28)
@@ -482,11 +489,11 @@ static Object *weapon_side(Object *a0, uint16_t type, obj_fn update, const uint8
     n->fn_update = update;
     n->fn_draw = draw_bob_masked;
     n->fn_hit = a2;
-    n->v3e = weapon_slot_offsets[2 * d0];
-    n->v40 = weapon_slot_offsets[2 * d0 + 1];
+    WEAPON_DX(n) = weapon_slot_offsets[2 * d0];
+    WEAPON_DY(n) = weapon_slot_offsets[2 * d0 + 1];
     set_anim(n, anim);
-    n->x = PLAYER->x + n->v3e;
-    n->y = PLAYER->y + n->v40;
+    n->x = PLAYER->x + WEAPON_DX(n);
+    n->y = PLAYER->y + WEAPON_DY(n);
     if (clear28)
         n->v28 = 0;
     n->score = 0;
@@ -519,7 +526,7 @@ Object *weapon_34(Object *a0, Object *a1)
 
     if (n == 0)
         return refill_slot0(a0, a1);
-    if (n->v3e != 0) {
+    if (WEAPON_DX(n) != 0) {
         d = alloc_b_front(a0);
         d->type = 0x40;
         d->fn_update = pod_decoration_update;
@@ -865,7 +872,7 @@ void hit_explode(Object *a0, Object *a1, uint16_t d0)
 void tile_draw(Object *a0)
 {
     a0->fn_draw = obj_nop;
-    draw_tile_grid_flash((const uint8_t *)a0->gfx, (uint16_t)a0->v3e, (uint16_t)a0->v40, (int16_t)(a0->y - scroll_pos), (uint16_t)a0->x >> 1);
+    draw_tile_grid_flash((const uint8_t *)a0->gfx, (uint16_t)TILE_COLS(a0), (uint16_t)TILE_ROWS(a0), (int16_t)(a0->y - scroll_pos), (uint16_t)a0->x >> 1);
 }
 
 /* orig $F20, $005B72: hit routine of a destructible tile block: when it breaks the background is restored */
@@ -882,15 +889,15 @@ void hit_tile(Object *a0, Object *a1, uint16_t d0)
     if (old > d0)
         return;
     player_score += (uint16_t)a1->score;
-    x = (int16_t)(((a1->v3e + 1) << 3) + a1->x);
-    y = (int16_t)(((a1->v40 + 1) << 3) + a1->y - scroll_pos);
+    x = (int16_t)(((TILE_COLS(a1) + 1) << 3) + a1->x);
+    y = (int16_t)(((TILE_ROWS(a1) + 1) << 3) + a1->y - scroll_pos);
     spawn_effect(x, y, anim_273a, draw_bob_masked);
     dst = a1->script;
     src = a1->anim;
-    for (rows = a1->v40; rows >= 0; rows--) {
+    for (rows = TILE_ROWS(a1); rows >= 0; rows--) {
         uint8_t *row = dst;
 
-        for (cols = a1->v3e; cols >= 0; cols--) {
+        for (cols = TILE_COLS(a1); cols >= 0; cols--) {
             wr16(row, rd16(src));
             row += 2;
             src += 2;
@@ -1724,8 +1731,8 @@ void pod_decoration_update(Object *a0)
     anim_step(a0);
     a1 = get_ptr_2a(a0);
     if (a1->type == 0x34) {
-        a0->x = (int16_t)(PLAYER->x + a1->v3e);
-        a0->y = (int16_t)(PLAYER->y + a1->v40);
+        a0->x = (int16_t)(PLAYER->x + WEAPON_DX(a1));
+        a0->y = (int16_t)(PLAYER->y + WEAPON_DY(a1));
         if (respawn_shield) {
             weapon_shield_draw(a0);
             return;
@@ -1844,8 +1851,8 @@ void weapon20_update(Object *a0)
     Object *a1;
 
     anim_step(a0);
-    a0->x = (int16_t)(PLAYER->x + a0->v3e);
-    a0->y = (int16_t)(PLAYER->y + a0->v40);
+    a0->x = (int16_t)(PLAYER->x + WEAPON_DX(a0));
+    a0->y = (int16_t)(PLAYER->y + WEAPON_DY(a0));
     if (respawn_shield) {
         weapon_shield_draw(a0);
         return;
@@ -1919,8 +1926,8 @@ void weapon34_update(Object *a0)
     Object *a1;
 
     anim_step(a0);
-    a0->x = (int16_t)(PLAYER->x + a0->v3e);
-    a0->y = (int16_t)(PLAYER->y + a0->v40);
+    a0->x = (int16_t)(PLAYER->x + WEAPON_DX(a0));
+    a0->y = (int16_t)(PLAYER->y + WEAPON_DY(a0));
     if (respawn_shield) {
         weapon_shield_draw(a0);
         return;
@@ -1971,8 +1978,8 @@ void weapon90_update(Object *a0)
     int16_t d6, d7;
 
     anim_step(a0);
-    a0->x = (int16_t)(PLAYER->x + a0->v3e);
-    a0->y = (int16_t)(PLAYER->y + a0->v40);
+    a0->x = (int16_t)(PLAYER->x + WEAPON_DX(a0));
+    a0->y = (int16_t)(PLAYER->y + WEAPON_DY(a0));
     if (respawn_shield) {
         weapon_shield_draw(a0);
         return;
