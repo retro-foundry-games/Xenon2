@@ -1,6 +1,16 @@
 /* The Amiga build has no libc and no libgcc: the helpers the compiler calls for what the 68000 has no instruction for
- * (32-bit multiply, divide, remainder).  Plain shift-and-subtract; no inline assembly. */
+ * (32-bit multiply, divide, remainder) and memset.  Plain loops; no inline assembly. */
+#include <stddef.h>
 #include <stdint.h>
+
+void *memset(void *s, int c, size_t n)
+{
+    uint8_t *p = s;
+
+    while (n--)
+        *p++ = (uint8_t)c;
+    return s;
+}
 
 uint32_t __udivmodsi4(uint32_t n, uint32_t d, uint32_t *rem)
 {
