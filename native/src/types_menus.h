@@ -16,7 +16,7 @@ struct ObjMove {
     int16_t wait;               /* 28: steps left of the running command (negative: a wait) */
     uint16_t angle_hi, angle_lo; /* 2a: the angle is the low word (at 2c), the high word a fraction */
     uint8_t pad2e[6];           /* 2e */
-    uint8_t flag34;             /* 34 */
+    uint8_t is_part;             /* 34 */
     uint8_t pad35[15];          /* 35 */
     uint16_t id;                /* 44 */
     const uint8_t *script;      /* 46: the script's start */

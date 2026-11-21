@@ -25,7 +25,7 @@ static void kill_thunk(Object *o)
     o->fn_update = (obj_fn)free_object;
     o->fn_draw = (obj_fn)obj_nop_thunk;
     o->fn_hit = (void *)obj_nop_thunk;
-    o->flag34 = 0;
+    o->is_part = 0;
     o->flag60 = 0;
 }
 
@@ -269,7 +269,7 @@ void l4_scroll(void)
         a0->y = -0x20;
         a0->v28 = 0;
         a0->energy = (int16_t)W(0x54e42);
-        a0->flag35 = 0xff;
+        a0->big = 0xff;
         a0->kind = 0;
         a0->score = 0x12c;
         bbox_from_frame(a0);
@@ -372,7 +372,7 @@ void l4_shot_a(Object *a0)
     a1->v28 = 0;
     a1->score = 0x64;
     a1->energy = (int16_t)W(0x54e48);
-    a1->flag35 = 0;
+    a1->big = 0;
     a1->kind = (int16_t)pickup_cycle;
     pickup_cycle++;
     e = pickup_groups;
@@ -477,7 +477,7 @@ void l4_spawn_boss1(void)
         a0->turn[0] = a0->turn[1] = a0->turn[2] = 0;
         a0->v54 = 3;
         a0->energy = (int16_t)W(a1 + 16);
-        a0->flag35 = -1;
+        a0->big = -1;
         a0->v2e = 0;
         a0->hit[0] = 0x3e8;
         a0->hit[2] = 0x3e8;
@@ -758,7 +758,7 @@ void l4_spawn_boss2(const uint8_t *a1_record, uint16_t d2)
         a0->turn[0] = a0->turn[1] = a0->turn[2] = 0;
         a0->v54 = 3;
         a0->energy = B(a1 + 18);
-        a0->flag35 = (int8_t)B(a1 + 19);
+        a0->big = (int8_t)B(a1 + 19);
         a0->v2e = 0;
         bbox_from_frame(a0);
         a1 += 20;
@@ -1117,7 +1117,7 @@ void l4_spawn_walker(const uint8_t *a1)
     a0->fn_draw = GFN(0x56f6a);
     a0->fn_hit = GFN(0x56e84);
     a0->energy = (int16_t)W(0x54e60);
-    a0->flag35 = -1;
+    a0->big = -1;
     a0->hit[0] = 0x3e8;
     a0->hit[2] = 0x3e8;
     a0->score = 0xc8;

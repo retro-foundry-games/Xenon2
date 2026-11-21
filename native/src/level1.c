@@ -278,7 +278,7 @@ void level1_hook(uint16_t d0, const uint8_t *a1, uint16_t d2)
         a0->fn_draw = draw_bob_masked;
         a0->fn_hit = (void *)hit_enemy;
         a0->energy = (int16_t)level_54e5c[2];
-        a0->flag35 = -1;
+        a0->big = -1;
         a0->score = 0xfa;
         SET_V5E(a0, 0);
         a0->x = (int16_t)(rd16(a1 + 8) - 8 + (flag ? 0x10 : 0));
@@ -367,7 +367,7 @@ void level1_boss_update(Object *a0)
             SET_V5E(a1, 0);
             a1->anim = (const uint8_t *)a2;
             a2 = a1;
-            a1->flag35 = 0;
+            a1->big = 0;
             a1->flag60 = -1;
             a1->y = -100;
             a1->hit[0] = 0x3e8;
@@ -587,7 +587,7 @@ void level1_spawn_unit(uint16_t d6)
         a0->score = (int16_t)seg->score;
         a0->v2e = d3;
         a0->energy = 1;
-        a0->flag35 = 0;
+        a0->big = 0;
         SET_V5E(a0, 0);
         a0->anim_delay = 0;
         a0->v46 = s->path;

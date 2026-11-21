@@ -923,12 +923,12 @@ next_command:
                     }
                 }
             }
-            if (o->flag34 == 0) {
+            if (o->is_part == 0) {
                 o->type = 4;
                 o->fn_update = (obj_fn)free_object;
                 o->fn_draw = (obj_fn)obj_nop;
                 o->fn_hit = (obj_fn)obj_nop;
-                o->flag34 = 0;
+                o->is_part = 0;
                 o->flag60 = 0;
                 return;
             }
@@ -940,7 +940,7 @@ next_command:
                 e->fn_update = (obj_fn)free_object;
                 e->fn_draw = (obj_fn)obj_nop;
                 e->fn_hit = (obj_fn)obj_nop;
-                e->flag34 = 0;
+                e->is_part = 0;
                 e->flag60 = 0;
                 if (next == 0)
                     return;

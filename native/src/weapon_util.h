@@ -9,7 +9,7 @@ static inline void kill_object_thunk(Object *o)
     o->fn_update = (obj_fn)free_object;
     o->fn_draw = (obj_fn)obj_nop_thunk;
     o->fn_hit = (void *)obj_nop_thunk;
-    o->flag34 = 0;
+    o->is_part = 0;
     o->flag60 = 0;
 }
 
