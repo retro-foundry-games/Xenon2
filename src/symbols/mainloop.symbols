@@ -11,7 +11,7 @@ var vbl_count 0x41c volatile uint16_t              ; counts the vertical blank i
 var crush_reload 0x41e uint16_t
 var pickup_kind_a 0x45c uint16_t
 var pickup_kind_b 0x45e uint16_t
-var v_09fa 0x9fa uint16_t
+var shop_price_cap 0x9fa uint16_t
 var music_switch 0x9fc uint8_t                           ; non-zero: music enabled
 var v_09fd 0x9fd uint8_t
 var v_09fe 0x9fe uint8_t
@@ -30,5 +30,5 @@ var v_8f94 0x8f94 uint16_t
 var v_8f96 0x8f96 uint16_t
 var v_8fec 0x8fec uint8_t
 arr game_over_text 0x884a uint8_t 20                       ; "GAME OVER" text
-var v_54e3c 0x54e3c uint16_t
-var v_54e3e 0x54e3e uint16_t
+var shop_money_early 0x54e3c uint16_t
+var shop_money_late 0x54e3e uint16_t
