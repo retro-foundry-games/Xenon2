@@ -1,6 +1,9 @@
 #include "pkg_c.h"
 #include "pkg_i.h"
 #include "game_all.h"
+#ifdef GAME_SDL
+uint8_t guest_a6a(uint8_t a01);
+#endif
 
 /* ---- helpers ---- */
 
@@ -694,7 +697,11 @@ void update_all(void)
 
     run_updates(LIST_HEAD(LIST_PLAYER));
     run_updates(LIST_HEAD(LIST_ENEMY));
+#ifdef GAME_SDL
+    v_0a6a = guest_a6a(v_0a01);
+#else
     v_0a6a = v_0a01;
+#endif
     v_0a01 = 0;
     run_updates(LIST_HEAD(LIST_MISC));
     run_updates(LIST_HEAD(LIST_EFFECT));
