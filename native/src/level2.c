@@ -5,6 +5,8 @@
 #include "weapons.h"
 #include "shop.h"
 #include "game_all.h"
+#define PIECE_VAR(o)  ((o)->v2e)
+#define PIECE_WALL(o) ((o)->v30)
 #define L2_BOSS_CELL(o) ((o)->v30)
 #define MARKER_LAUNCHES(o) ((o)->v30)
 #define TILE_COLS(o) ((o)->v3e)
@@ -880,7 +882,7 @@ void l2_hit_a(Object *a0, Object *a1, uint16_t d0)
         hit_enemy(a0, a1, d0);
         return;
     }
-    l2_walls_made &= (uint8_t)~(1 << (a1->v30 & 7));
+    l2_walls_made &= (uint8_t)~(1 << (PIECE_WALL(a1) & 7));
     l2_wreck(a1, 0x55062);
 }
 
@@ -943,7 +945,7 @@ static void l2_debris_wall(uint16_t d6)
         a0->fn_hit = GFN(rd32(a2 + 2));
         a0->gfx = GPTR(rd32(a2 + 6));
         a0->score = (int16_t)rd16(a2 + 10);
-        a0->v2e = (int16_t)d3;
+        PIECE_VAR(a0) = (int16_t)d3;
         a0->energy = (int16_t)W(0x54e52);
         SET_V5E(a0, 0);
         a0->big = 0;
@@ -955,7 +957,7 @@ static void l2_debris_wall(uint16_t d6)
         a0->kind = 0;
         PIECE_WAIT(a0) = (int16_t)d2;
         a0->steps = (int16_t)W(0x54e54);
-        a0->v30 = (int16_t)d6;
+        PIECE_WALL(a0) = (int16_t)d6;
         d2 = (uint16_t)(d2 - 0xa);
         bbox_from_frame(a0);
         a2 += 12;
@@ -1007,10 +1009,10 @@ void l2_piece_update(Object *a0)
         return;
     }
     a0->y = (int16_t)(a0->y + scroll_speed);
-    (&l2_left_wall_made)[(uint16_t)GATE_NUMBER(a0)] = 0xff;
+    (&l2_left_wall_made)[(uint16_t)PIECE_WALL(a0)] = 0xff;
     enemy_update_no_anim(a0);
     if (a0->type == 4) {
-        uint16_t *c = &level_vars[(uint16_t)a0->v2e - 1];
+        uint16_t *c = &level_vars[(uint16_t)PIECE_VAR(a0) - 1];
 
         if (*c == 0)
             *c = 0x18;
