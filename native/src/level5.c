@@ -4,6 +4,11 @@
 #include "game_all.h"
 #include <string.h>
 
+/* the path script view of an object (ObjMove) */
+#define PATH_WAIT(o) ((o)->v28)
+#define PATH_ANGLE_HI(o) ((o)->v2a)
+#define PATH_ANGLE_LO(o) ((o)->v2c)
+
 /* the scratch fields of Object, by the kind that uses them */
 #define BEAM_DY(o) ((o)->v2a)
 
@@ -231,14 +236,14 @@ void l5_spawn_gunners(const uint8_t *a1)
         a0->y = (int16_t)(W(a2 + 4) - scroll_pos);
         a0->energy = (int16_t)W(0x54e42);
         a0->big = 0;
-        a0->v2a = 0;
-        a0->v2c = 0;
+        PATH_ANGLE_HI(a0) = 0;
+        PATH_ANGLE_LO(a0) = 0;
         a0->turn[0] = 0;
         a0->turn[1] = 0;
         a0->turn[2] = 0;
         a0->script = (uint8_t *)GPTR(a2);
         a0->cursor = (const uint8_t *)GPTR(a2 + 6);
-        a0->v28 = d6;
+        PATH_WAIT(a0) = d6;
         d6 = (int16_t)(d6 - (int16_t)W(0x54e44));
         a0->hit[0] = 0x3e8;
         a0->hit[2] = 0x3e8;
