@@ -1975,12 +1975,14 @@ static Object *alloc_c(void)
 /* the pointer in the words $30 and $32 (the drill's target) */
 static Object *get_ptr_30(const Object *o)
 {
-    return (Object *)(uintptr_t)(((uint32_t)(uint16_t)o->v30 << 16) | (uint16_t)o->energy);
+    uint32_t v = ((uint32_t)(uint16_t)o->v30 << 16) | (uint16_t)o->energy;
+
+    return v ? (Object *)GPTR(v) : 0;
 }
 
 static void set_ptr_30(Object *o, Object *p)
 {
-    uint32_t v = (uint32_t)(uintptr_t)p;
+    uint32_t v = p ? GADDR(p) : 0;
 
     o->v30 = (int16_t)(v >> 16);
     o->energy = (int16_t)v;
