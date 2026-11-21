@@ -700,20 +700,20 @@ int32_t shop_can_buy(void)
     int i;
 
     switch (kind) {
-    case 3: return v_0c9e == 2 ? 0 : -1;
+    case 3: return speed_level == 2 ? 0 : -1;
     case 4:
     case 7: return player_energy == 0x27 ? 0 : -1;
-    case 5: return v_0c64 == 3 ? 0 : -1;
-    case 6: return extras_timer != 0 ? 0 : -1;
+    case 5: return autofire_level == 3 ? 0 : -1;
+    case 6: return nashwan_timer != 0 ? 0 : -1;
     case 0xc:
         for (i = 0; i < 7; i++)
             if (weapon_slots[i].type != 0 && weapon_slots[i].obj->v42 != weapon_slots[i].obj->energy)
                 return -1;
         return 0;
-    case 0x10: return hide_charges != 0 ? 0 : -1;
+    case 0x10: return dive_charges != 0 ? 0 : -1;
     case 0x16: return player_lives == 9 ? 0 : -1;
-    case 0x18: return v_0d83 != 0 ? 0 : -1;
-    case 0x19: return v_0c90 != 0 ? 0 : -1;
+    case 0x18: return protection != 0 ? 0 : -1;
+    case 0x19: return shades_timer != 0 ? 0 : -1;
     }
     flags = sh_r8(SH_TAB_FLAGS + (uint16_t)(kind - 1));
     if (flags & 1) {
@@ -751,7 +751,7 @@ int32_t shop_can_buy(void)
 }
 
 /* shop $558E4, $558EC, $55930, $55938: the items that are not a weapon */
-void shop_item_ca2(void) { extras_timer = 0xaa; }
+void shop_item_ca2(void) { nashwan_timer = 0xaa; }
 
 /* shop $558EC: the keeper's advice: the next sentence for the level and the number of hints so far */
 void shop_item_advice(void)
@@ -760,14 +760,14 @@ void shop_item_advice(void)
 
     sh_w8(SH_BLINK_A, 0xc);
     shop_text_home();
-    d0 = (uint16_t)((uint16_t)(level_number - 1) * 0x18 + v_0cf2);
-    if (v_0cf2 != 8 && v_0cf2 != 0x14)
-        v_0cf2 += 4;
+    d0 = (uint16_t)((uint16_t)(level_number - 1) * 0x18 + advice_hints);
+    if (advice_hints != 8 && advice_hints != 0x14)
+        advice_hints += 4;
     shop_print((const uint8_t *)GPTR(sh_r32(SH_TAB_ADVICE + (int16_t)d0)));
     sh_w8(SH_BLINK_A, 0);
 }
 
-void shop_item_c90(void) { v_0c90 = 0xdc; }
+void shop_item_c90(void) { shades_timer = 0xdc; }
 void shop_item_cca(void) { player_lives++; }
 
 /* the routine the item is granted by (the table at $5573A: the pickup and weapon routines of the base game, and the four above) */
@@ -1339,7 +1339,7 @@ void shop_blank_screen(void)
     wr16(a0 + 0x190, 0xf);
 }
 
-/* the weapon slots' latch of the level ($352E) without its test of extras_timer: type and score of each of the 7 slots to slot_snapshot; an empty slot repeats d2 */
+/* the weapon slots' latch of the level ($352E) without its test of nashwan_timer: type and score of each of the 7 slots to slot_snapshot; an empty slot repeats d2 */
 static void latch_slots_all(uint16_t d2)
 {
     uint16_t *out = slot_snapshot;
@@ -1365,7 +1365,7 @@ void shop_leave(void)
     shop_sound_reset();
     music_tick_fn = music_tick;
     music_cmd_fn = (irq_fn)(void *)sfx_play;
-    v_0cf2 = 0xc;
+    advice_hints = 0xc;
 }
 
 /* shop $5505A: the last words of the broadcast, the doorway closes, the screen goes dark in flickering colours */

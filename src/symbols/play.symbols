@@ -6,35 +6,35 @@ var players 0x422 uint16_t                        ; 2 = two players
 var cur_player 0x428 uint16_t
 var free_obj 0x42a Object *                   ; head of the free list of objects
 var crush_timer 0x42e uint16_t
-var hide_phase 0x430 uint16_t
-var hide_step 0x432 uint16_t
-var hide_timer 0x434 uint16_t
+var dive_phase 0x430 uint16_t
+var dive_step 0x432 uint16_t
+var dive_timer 0x434 uint16_t
 var background_scroll 0x436 uint32_t
 var v_043a 0x43a uint16_t
-arr v_043c 0x43c uint16_t 16
-arr v_046c 0x46c uint16_t 8
-arr v_047c 0x47c uint16_t 51
+arr pickup_groups 0x43c uint16_t 16
+arr player_trail 0x46c uint16_t 8
+arr player_history 0x47c uint16_t 51
 var v_04e2 0x4e2 uint16_t
 var joy_stick 0xa00 uint8_t
 var key_pressed 0xa01 uint8_t
 var player_died 0xa02 uint8_t
 arr player_active 0xa03 uint8_t 4                        ; [0..1] flag for each player, [2..3] another one
 var v_0a07 0xa07 uint8_t
-arr v_0a08 0xa08 uint8_t 98
+arr other_player_object 0xa08 uint8_t 98
 var energy_dirty 0xa6b uint8_t
 var level_over 0xa6c uint8_t
 arr obj_list 0xa76 Object 5                   ; list heads (sentinel objects)
 var autofire_counter 0xc60 uint16_t
 var autofire_period 0xc62 uint16_t
-var v_0c64 0xc64 uint16_t
+var autofire_level 0xc64 uint16_t
 arr weapon_slots 0xc66 Slot 7
-var v_0c90 0xc90 uint16_t
+var shades_timer 0xc90 uint16_t
 var player_score 0xc92 uint32_t
 var score_shown 0xc96 uint32_t
 var player_money 0xc9a uint32_t
-var v_0c9e 0xc9e uint16_t
-var hide_charges 0xca0 uint16_t
-var extras_timer 0xca2 uint16_t
+var speed_level 0xc9e uint16_t
+var dive_charges 0xca0 uint16_t
+var nashwan_timer 0xca2 uint16_t
 var level_end_items 0xca4 uint16_t
 var player_money_saved 0xca6 uint32_t
 arr slot_snapshot 0xcaa uint16_t 14
@@ -57,14 +57,14 @@ var player_y_saved 0xce4 uint16_t
 var scroll_y 0xce6 uint16_t
 var scroll_max 0xcea uint16_t
 var pickup_cycle 0xcec uint16_t
-var v_0cee 0xcee uint16_t
+var scroll_margin 0xcee uint16_t
 var continues_left 0xcf0 uint16_t
-var v_0cf2 0xcf2 uint16_t
-var v_0cf4 0xcf4 Object *
-var v_0cf8 0xcf8 Object *
+var advice_hints 0xcf2 uint16_t
+var list_a_prev_saved 0xcf4 Object *
+var list_a_next_saved 0xcf8 Object *
 arr weapon_slots_saved 0xcfc Slot 7
 arr score_digits 0xd7c uint8_t 7                        ; score digits
-var v_0d83 0xd83 uint8_t
+var protection 0xd83 uint8_t
 var player_dead 0xd84 uint8_t
 var v_0d85 0xd85 uint8_t
 var difficulty 0xe02 uint16_t
@@ -72,8 +72,8 @@ var level_number 0xe04 uint16_t
 var respawn_shield 0xe06 uint16_t
 tab digit_gfx 0x1981e uint8_t 640
 tab v_19a9e 0x19a9e uint16_t 640
-arr v_3bcac 0x3bcac uint8_t 12000
-arr v_3ecf4 0x3ecf4 uint32_t 202
+arr other_player_level 0x3bcac uint8_t 12000
+arr other_player_block 0x3ecf4 uint32_t 202
 var player 0x3f01c Object
 arr obj_pool 0x3f07e Object 159
 arr shots 0x42d5c Shot 80
@@ -89,6 +89,6 @@ tab option_offsets 0x6894 int16_t 14                       ; offsets of the opti
 arr palette_shadow 0x7012 uint16_t 16
 tab v_796e 0x796e uint16_t 1
 var text_wait_key 0x8428 uint8_t
-arr v_8836 0x8836 uint8_t 19
+arr ready_text 0x8836 uint8_t 19
 var player_gfx 0xebe2 uint8_t
 arr gauge_pics 0x6336 uint8_t * 10                ; the pictures of the gauge, empty to full

@@ -4,7 +4,7 @@ type Slot 6                                       ; a weapon slot: type word, th
 var player_x_prev 0x4e4 uint16_t                         ; the player's x, one frame old
 var player_y_prev 0x4e6 uint16_t
 var v_04e8 0x4e8 int16_t
-var v_0a6a 0xa6a uint8_t
+var fire_press 0xa6a uint8_t
 var v_0d5a 0xd5a uint16_t
 arr level_vars 0xd26 uint16_t 26                      ; level 1 boss state, cleared by the level's init
 arr unit_live 0xd86 uint8_t 5
@@ -15,7 +15,7 @@ var difficulty_x2 0x426 uint16_t
 tab weapon_slot_offsets 0x2404 int16_t 8                       ; x/y offsets of the four weapon slots
 tab pickup_circle_steps 0x476c int16_t 16                      ; x/y steps of a pickup's eight-step circle
 arr player_pictures 0x60d0 uint8_t * 13                     ; the player's pictures by player_vx + 6
-arr hide_pictures 0x614a uint8_t * 4                      ; the player's pictures while hide_phase is 1..4
+arr dive_pictures 0x614a uint8_t * 4                      ; the player's pictures while dive_phase is 1..4
 tab kill_scores 0x7970 uint16_t 2                      ; score added when a shot kills ($7972: when the pod shot does)
 arr player_shot_pictures 0x27c2 uint8_t * 12                     ; pictures of the player's shots (three each)
 tab anim_2540 0x2540 uint8_t 6                   ; animation headers: picture (long), delay, then the script
@@ -80,7 +80,7 @@ tab pic_182dc 0x182dc uint8_t 2
 tab weapon2c_patterns 0x3d66 int16_t 99                      ; shot patterns of weapon $2C: count - 1, then (dx, dy, speed x, speed y) of each shot; three tables of 17, 33 and 49 words
 tab weapon_damage 0x7966 uint16_t 4               ; damage: $7966 bomb pieces, $7968 beam of weapon $4C, $796A the pod's trail, $796C
 tab blast_damage 0x7974 uint16_t 3                ; $7974 per level of the $34 beam, $7976 the shell, $7978 the blast of weapon $38/$3C
-var v_30dc 0x30dc uint16_t                        ; the damage $3096 keeps while it calls the hit routines
+var area_damage_kept 0x30dc uint16_t                        ; the damage $3096 keeps while it calls the hit routines
 var piece_directions 0xf60 int8_t *                         ; table of the pieces' directions (two bytes each, 64 apart)
 var big_explosion_anim 0xf64 uint8_t *                        ; the big explosion's animation header
 tab level_54e62 0x54e62 uint16_t 1                ; level 1: word the units get as $54
