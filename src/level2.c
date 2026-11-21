@@ -5,6 +5,14 @@
 #include "weapons.h"
 #include "shop.h"
 #include "game_all.h"
+#define MARKER_LAUNCHES(o) ((o)->v30)
+#define TILE_COLS(o) ((o)->v3e)
+#define TILE_ROWS(o) ((o)->v40)
+
+/* the scratch fields of Object, by the kind that uses them */
+#define FRONT_DIR(o) ((o)->v2a)
+#define FRONT_TICK(o) ((o)->v28)
+
 #define L2_BOSS_WAIT(o)  ((o)->v28)
 #define L2_BOSS_FLASH(o) ((o)->v3e)
 #define GATE_NUMBER(o)   ((o)->v30)
@@ -164,8 +172,8 @@ void l2_hook(uint16_t d0, const uint8_t *a1, uint16_t d2)
         a0->anim = (const uint8_t *)GPTR(flag ? 0x559c4 : 0x559c6);
         copy2(a0->script, (const uint8_t *)a0->gfx);
         a0->score = 0x64;
-        a0->v3e = 0;
-        a0->v40 = 0;
+        TILE_COLS(a0) = 0;
+        TILE_ROWS(a0) = 0;
         return;
     case 2:
         a0 = spawn_marker_front(flag ? 0xf0 : 0xf4, a1, (void (*)(void))l2_front_update);
@@ -187,18 +195,18 @@ void l2_hook(uint16_t d0, const uint8_t *a1, uint16_t d2)
         a0->y = (int16_t)(rd16(a1 + 10) - 8 - scroll_pos);
         LAUNCHER_STEP(a0) = -1;
         LAUNCHER_RANGE(a0) = (int16_t)(rd16(a1 + 4) << 4);
-        LAUNCHER_POS(a0) = a0->v2a;
+        LAUNCHER_POS(a0) = LAUNCHER_RANGE(a0);
         a0->kind = 0;
         bbox_from_frame(a0);
         return;
     case 4:
         a0 = spawn_marker_front(0xfc, a1, (void (*)(void))l2_marker_fc_update);
-        a0->v30 = 1;
+        MARKER_LAUNCHES(a0) = 1;
         copy2(a0->script, (const uint8_t *)GPTR(0x5567a));
         return;
     case 5:
         a0 = spawn_marker_front(0xf8, a1, (void (*)(void))l2_marker_f8_update);
-        a0->v30 = 1;
+        MARKER_LAUNCHES(a0) = 1;
         return;
     }
 }
@@ -332,25 +340,25 @@ void l2_front_piece_update(Object *a0)
     int burst = 0;
 
     anim_step(a0);
-    a0->v28++;
-    if (a0->v28 >= 0x50) {
+    FRONT_TICK(a0)++;
+    if (FRONT_TICK(a0) >= 0x50) {
         burst = 1;
     } else {
         int16_t x, y;
 
-        if ((a0->v28 & 0xf) == 0) {
+        if ((FRONT_TICK(a0) & 0xf) == 0) {
             uint16_t d = direction8((int16_t)(PLAYER_X - a0->x), (int16_t)(PLAYER_Y - a0->y));
 
-            a0->v2a = (int16_t)(~d & 7);
-            set_anim(a0, sh_r32(0x56576 + ((uint16_t)a0->v2a << 2)));
+            FRONT_DIR(a0) = (int16_t)(~d & 7);
+            set_anim(a0, sh_r32(0x56576 + ((uint16_t)FRONT_DIR(a0) << 2)));
         }
-        x = (int16_t)(dx[a0->v2a] + a0->x);
+        x = (int16_t)(dx[FRONT_DIR(a0)] + a0->x);
         if ((uint16_t)x >= 0x140) {
             kill_thunk(a0);
             return;
         }
         a0->x = x;
-        y = (int16_t)(dy[a0->v2a] + a0->y + scroll_speed);
+        y = (int16_t)(dy[FRONT_DIR(a0)] + a0->y + scroll_speed);
         if ((uint16_t)y >= 0xc0) {
             kill_thunk(a0);
             return;
@@ -436,13 +444,13 @@ void l2_marker_f8_update(Object *a0)
     if (d0 >= 0xb4)
         return;
     if (MARKER_F8_BLINK(a0) >= 5) {
-        if (a0->v30 == 0) {
+        if (MARKER_LAUNCHES(a0) == 0) {
             kill_thunk(a0);
             return;
         }
         if (MARKER_F8_BLINK(a0) >= 9) {
             MARKER_F8_BLINK(a0) = 0;
-            a0->v30--;
+            MARKER_LAUNCHES(a0)--;
         }
     }
     if ((uint16_t)MARKER_F8_BLINK(a0) <= 1) {
