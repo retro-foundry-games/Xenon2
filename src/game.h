@@ -470,30 +470,30 @@ struct Xenon2 {
     uint8_t * level_events_a;  /* $054E38 var */
     uint16_t shop_money_early;  /* $054E3C var */
     uint16_t shop_money_late;  /* $054E3E var */
-    const uint8_t level_54e40[24];  /* $054E40 tab */
+    const uint8_t l1_shot_params[24];  /* $054E40 tab */
     const uint16_t level_54e58[2];  /* $054E58 tab */
     const uint16_t level_54e5c[3];  /* $054E5C tab */
-    const uint16_t level_54e62[1];  /* $054E62 tab */
+    const uint16_t l1_boss_steps[1];  /* $054E62 tab */
     PAD(2)
-    const uint8_t level_54e66[2];  /* $054E66 tab */
+    const uint8_t l1_formation_1[2];  /* $054E66 tab */
     PAD(24)
-    const uint8_t level_54e80[2];  /* $054E80 tab */
+    const uint8_t l1_formation_2[2];  /* $054E80 tab */
     PAD(24)
-    const uint8_t level_54e9a[2];  /* $054E9A tab */
+    const uint8_t l1_formation_3[2];  /* $054E9A tab */
     PAD(24)
-    const uint8_t level_54eb4[2];  /* $054EB4 tab */
+    const uint8_t l1_formation_4[2];  /* $054EB4 tab */
     PAD(24)
-    const uint8_t level_54ece[2];  /* $054ECE tab */
+    const uint8_t l1_formation_5[2];  /* $054ECE tab */
     PAD(24)
-    const uint8_t level_54ee8[2];  /* $054EE8 tab */
+    const uint8_t l1_formation_6[2];  /* $054EE8 tab */
     PAD(24)
-    const uint8_t level_54f02[2];  /* $054F02 tab */
+    const uint8_t l1_formation_7[2];  /* $054F02 tab */
     PAD(48)
-    const uint8_t level_54f34[2];  /* $054F34 tab */
+    const uint8_t l1_formation_8[2];  /* $054F34 tab */
     PAD(24)
-    const uint8_t level_54f4e[2];  /* $054F4E tab */
+    const uint8_t l1_formation_9[2];  /* $054F4E tab */
     PAD(24)
-    const uint8_t level_54f68[2];  /* $054F68 tab */
+    const uint8_t l1_formation_10[2];  /* $054F68 tab */
     PAD(618)
     const uint8_t anim_l1_launcher_d0[6];  /* $0551D4 tab */
     PAD(30)
@@ -509,24 +509,24 @@ struct Xenon2 {
     PAD(54)
     const uint8_t anim_l1_shot[6];  /* $0552B0 tab */
     PAD(252)
-    const uint8_t level_553b2[32];  /* $0553B2 tab */
-    const uint8_t level_553d2[32];  /* $0553D2 tab */
-    const uint8_t level_553f2[8];  /* $0553F2 tab */
-    const uint8_t level_553fa[8];  /* $0553FA tab */
+    const uint8_t l1_turret_a_cells_e0[32];  /* $0553B2 tab */
+    const uint8_t l1_turret_a_cells_e4[32];  /* $0553D2 tab */
+    const uint8_t l1_turret_a_anim_e0[8];  /* $0553F2 tab */
+    const uint8_t l1_turret_a_anim_e4[8];  /* $0553FA tab */
     PAD(248)
-    const uint8_t level_554fa[80];  /* $0554FA tab */
-    const uint8_t level_5554a[80];  /* $05554A tab */
-    const uint8_t level_5559a[8];  /* $05559A tab */
+    const uint8_t l1_turret_c_steps_dc[80];  /* $0554FA tab */
+    const uint8_t l1_turret_c_steps_d8[80];  /* $05554A tab */
+    const uint8_t l1_turret_c_anim[8];  /* $05559A tab */
     PAD(234)
-    const uint8_t level_5568c[32];  /* $05568C tab */
-    const uint8_t level_556ac[32];  /* $0556AC tab */
-    const uint8_t level_556cc[8];  /* $0556CC tab */
-    const uint8_t level_556d4[8];  /* $0556D4 tab */
+    const uint8_t l1_turret_b_cells_ec[32];  /* $05568C tab */
+    const uint8_t l1_turret_b_cells_e8[32];  /* $0556AC tab */
+    const uint8_t l1_turret_b_anim_e8[8];  /* $0556CC tab */
+    const uint8_t l1_turret_b_anim_ec[8];  /* $0556D4 tab */
     PAD(454)
     const uint16_t level_558a2[80];  /* $0558A2 tab */
     PAD(402)
-    const uint8_t level_55ad4[8];  /* $055AD4 tab */
-    const uint8_t level_55adc[8];  /* $055ADC tab */
+    const uint8_t l1_turret_c_cells_dc[8];  /* $055AD4 tab */
+    const uint8_t l1_turret_c_cells_d8[8];  /* $055ADC tab */
     PAD(514)
     const uint16_t level_55ce6[1];  /* $055CE6 tab */
     struct LevelSeg level_segs[11];  /* $055CE8 arr */
@@ -534,9 +534,9 @@ struct Xenon2 {
     PAD(840)
     uint8_t * level_56174[16];  /* $056174 arr */
     PAD(470)
-    uint8_t * level_5638a[8];  /* $05638A arr */
+    uint8_t * l1_boss_part_pictures[8];  /* $05638A arr */
     PAD(1042)
-    const uint8_t level_567bc[2];  /* $0567BC tab */
+    const uint8_t l1_boss_grid[2];  /* $0567BC tab */
     PAD(60)
     uint8_t level_567fa[20];  /* $0567FA arr */
     PAD(2)
@@ -544,13 +544,13 @@ struct Xenon2 {
     PAD(13800)
     const uint8_t level_59e28[2];  /* $059E28 tab */
     PAD(8890)
-    const uint8_t level_5c0e4[2];  /* $05C0E4 tab */
+    const uint8_t l1_eyes_a[2];  /* $05C0E4 tab */
     PAD(174)
-    const uint8_t level_5c194[2];  /* $05C194 tab */
+    const uint8_t l1_eyes_b[2];  /* $05C194 tab */
     PAD(174)
-    const uint8_t level_5c244[2];  /* $05C244 tab */
+    const uint8_t l1_eyes_c[2];  /* $05C244 tab */
     PAD(52474)
-    uint8_t * level_68f40[5];  /* $068F40 arr */
+    uint8_t * level1_shot_gfx_table[5];  /* $068F40 arr */
     PAD(22710)
     uint8_t level_data_src[12000];  /* $06E80A arr */
     PAD(47670)
@@ -884,20 +884,20 @@ LAYOUT_ASSERT(level_data_start, 0x54e34);
 LAYOUT_ASSERT(level_events_a, 0x54e38);
 LAYOUT_ASSERT(shop_money_early, 0x54e3c);
 LAYOUT_ASSERT(shop_money_late, 0x54e3e);
-LAYOUT_ASSERT(level_54e40, 0x54e40);
+LAYOUT_ASSERT(l1_shot_params, 0x54e40);
 LAYOUT_ASSERT(level_54e58, 0x54e58);
 LAYOUT_ASSERT(level_54e5c, 0x54e5c);
-LAYOUT_ASSERT(level_54e62, 0x54e62);
-LAYOUT_ASSERT(level_54e66, 0x54e66);
-LAYOUT_ASSERT(level_54e80, 0x54e80);
-LAYOUT_ASSERT(level_54e9a, 0x54e9a);
-LAYOUT_ASSERT(level_54eb4, 0x54eb4);
-LAYOUT_ASSERT(level_54ece, 0x54ece);
-LAYOUT_ASSERT(level_54ee8, 0x54ee8);
-LAYOUT_ASSERT(level_54f02, 0x54f02);
-LAYOUT_ASSERT(level_54f34, 0x54f34);
-LAYOUT_ASSERT(level_54f4e, 0x54f4e);
-LAYOUT_ASSERT(level_54f68, 0x54f68);
+LAYOUT_ASSERT(l1_boss_steps, 0x54e62);
+LAYOUT_ASSERT(l1_formation_1, 0x54e66);
+LAYOUT_ASSERT(l1_formation_2, 0x54e80);
+LAYOUT_ASSERT(l1_formation_3, 0x54e9a);
+LAYOUT_ASSERT(l1_formation_4, 0x54eb4);
+LAYOUT_ASSERT(l1_formation_5, 0x54ece);
+LAYOUT_ASSERT(l1_formation_6, 0x54ee8);
+LAYOUT_ASSERT(l1_formation_7, 0x54f02);
+LAYOUT_ASSERT(l1_formation_8, 0x54f34);
+LAYOUT_ASSERT(l1_formation_9, 0x54f4e);
+LAYOUT_ASSERT(l1_formation_10, 0x54f68);
 LAYOUT_ASSERT(anim_l1_launcher_d0, 0x551d4);
 LAYOUT_ASSERT(anim_l1_launcher_d0_fire, 0x551f8);
 LAYOUT_ASSERT(anim_l1_launcher_d4, 0x55212);
@@ -905,33 +905,33 @@ LAYOUT_ASSERT(anim_l1_launcher_d4_fire, 0x55236);
 LAYOUT_ASSERT(anim_l1_piece_a, 0x55250);
 LAYOUT_ASSERT(anim_l1_piece_b, 0x55274);
 LAYOUT_ASSERT(anim_l1_shot, 0x552b0);
-LAYOUT_ASSERT(level_553b2, 0x553b2);
-LAYOUT_ASSERT(level_553d2, 0x553d2);
-LAYOUT_ASSERT(level_553f2, 0x553f2);
-LAYOUT_ASSERT(level_553fa, 0x553fa);
-LAYOUT_ASSERT(level_554fa, 0x554fa);
-LAYOUT_ASSERT(level_5554a, 0x5554a);
-LAYOUT_ASSERT(level_5559a, 0x5559a);
-LAYOUT_ASSERT(level_5568c, 0x5568c);
-LAYOUT_ASSERT(level_556ac, 0x556ac);
-LAYOUT_ASSERT(level_556cc, 0x556cc);
-LAYOUT_ASSERT(level_556d4, 0x556d4);
+LAYOUT_ASSERT(l1_turret_a_cells_e0, 0x553b2);
+LAYOUT_ASSERT(l1_turret_a_cells_e4, 0x553d2);
+LAYOUT_ASSERT(l1_turret_a_anim_e0, 0x553f2);
+LAYOUT_ASSERT(l1_turret_a_anim_e4, 0x553fa);
+LAYOUT_ASSERT(l1_turret_c_steps_dc, 0x554fa);
+LAYOUT_ASSERT(l1_turret_c_steps_d8, 0x5554a);
+LAYOUT_ASSERT(l1_turret_c_anim, 0x5559a);
+LAYOUT_ASSERT(l1_turret_b_cells_ec, 0x5568c);
+LAYOUT_ASSERT(l1_turret_b_cells_e8, 0x556ac);
+LAYOUT_ASSERT(l1_turret_b_anim_e8, 0x556cc);
+LAYOUT_ASSERT(l1_turret_b_anim_ec, 0x556d4);
 LAYOUT_ASSERT(level_558a2, 0x558a2);
-LAYOUT_ASSERT(level_55ad4, 0x55ad4);
-LAYOUT_ASSERT(level_55adc, 0x55adc);
+LAYOUT_ASSERT(l1_turret_c_cells_dc, 0x55ad4);
+LAYOUT_ASSERT(l1_turret_c_cells_d8, 0x55adc);
 LAYOUT_ASSERT(level_55ce6, 0x55ce6);
 LAYOUT_ASSERT(level_segs, 0x55ce8);
 LAYOUT_ASSERT(level_spawns, 0x55d6c);
 LAYOUT_ASSERT(level_56174, 0x56174);
-LAYOUT_ASSERT(level_5638a, 0x5638a);
-LAYOUT_ASSERT(level_567bc, 0x567bc);
+LAYOUT_ASSERT(l1_boss_part_pictures, 0x5638a);
+LAYOUT_ASSERT(l1_boss_grid, 0x567bc);
 LAYOUT_ASSERT(level_567fa, 0x567fa);
 LAYOUT_ASSERT(level_56810, 0x56810);
 LAYOUT_ASSERT(level_59e28, 0x59e28);
-LAYOUT_ASSERT(level_5c0e4, 0x5c0e4);
-LAYOUT_ASSERT(level_5c194, 0x5c194);
-LAYOUT_ASSERT(level_5c244, 0x5c244);
-LAYOUT_ASSERT(level_68f40, 0x68f40);
+LAYOUT_ASSERT(l1_eyes_a, 0x5c0e4);
+LAYOUT_ASSERT(l1_eyes_b, 0x5c194);
+LAYOUT_ASSERT(l1_eyes_c, 0x5c244);
+LAYOUT_ASSERT(level1_shot_gfx_table, 0x68f40);
 LAYOUT_ASSERT(level_data_src, 0x6e80a);
 LAYOUT_ASSERT(level_data_dst, 0x7d120);
 #ifndef GAME_NO_MEMBER_MACROS   /* (the host files that name the members themselves define it) */
@@ -1262,20 +1262,20 @@ LAYOUT_ASSERT(level_data_dst, 0x7d120);
 #define level_events_a (xenon2.level_events_a)
 #define shop_money_early (xenon2.shop_money_early)
 #define shop_money_late (xenon2.shop_money_late)
-#define level_54e40 (xenon2.level_54e40)
+#define l1_shot_params (xenon2.l1_shot_params)
 #define level_54e58 (xenon2.level_54e58)
 #define level_54e5c (xenon2.level_54e5c)
-#define level_54e62 (xenon2.level_54e62)
-#define level_54e66 (xenon2.level_54e66)
-#define level_54e80 (xenon2.level_54e80)
-#define level_54e9a (xenon2.level_54e9a)
-#define level_54eb4 (xenon2.level_54eb4)
-#define level_54ece (xenon2.level_54ece)
-#define level_54ee8 (xenon2.level_54ee8)
-#define level_54f02 (xenon2.level_54f02)
-#define level_54f34 (xenon2.level_54f34)
-#define level_54f4e (xenon2.level_54f4e)
-#define level_54f68 (xenon2.level_54f68)
+#define l1_boss_steps (xenon2.l1_boss_steps)
+#define l1_formation_1 (xenon2.l1_formation_1)
+#define l1_formation_2 (xenon2.l1_formation_2)
+#define l1_formation_3 (xenon2.l1_formation_3)
+#define l1_formation_4 (xenon2.l1_formation_4)
+#define l1_formation_5 (xenon2.l1_formation_5)
+#define l1_formation_6 (xenon2.l1_formation_6)
+#define l1_formation_7 (xenon2.l1_formation_7)
+#define l1_formation_8 (xenon2.l1_formation_8)
+#define l1_formation_9 (xenon2.l1_formation_9)
+#define l1_formation_10 (xenon2.l1_formation_10)
 #define anim_l1_launcher_d0 (xenon2.anim_l1_launcher_d0)
 #define anim_l1_launcher_d0_fire (xenon2.anim_l1_launcher_d0_fire)
 #define anim_l1_launcher_d4 (xenon2.anim_l1_launcher_d4)
@@ -1283,33 +1283,33 @@ LAYOUT_ASSERT(level_data_dst, 0x7d120);
 #define anim_l1_piece_a (xenon2.anim_l1_piece_a)
 #define anim_l1_piece_b (xenon2.anim_l1_piece_b)
 #define anim_l1_shot (xenon2.anim_l1_shot)
-#define level_553b2 (xenon2.level_553b2)
-#define level_553d2 (xenon2.level_553d2)
-#define level_553f2 (xenon2.level_553f2)
-#define level_553fa (xenon2.level_553fa)
-#define level_554fa (xenon2.level_554fa)
-#define level_5554a (xenon2.level_5554a)
-#define level_5559a (xenon2.level_5559a)
-#define level_5568c (xenon2.level_5568c)
-#define level_556ac (xenon2.level_556ac)
-#define level_556cc (xenon2.level_556cc)
-#define level_556d4 (xenon2.level_556d4)
+#define l1_turret_a_cells_e0 (xenon2.l1_turret_a_cells_e0)
+#define l1_turret_a_cells_e4 (xenon2.l1_turret_a_cells_e4)
+#define l1_turret_a_anim_e0 (xenon2.l1_turret_a_anim_e0)
+#define l1_turret_a_anim_e4 (xenon2.l1_turret_a_anim_e4)
+#define l1_turret_c_steps_dc (xenon2.l1_turret_c_steps_dc)
+#define l1_turret_c_steps_d8 (xenon2.l1_turret_c_steps_d8)
+#define l1_turret_c_anim (xenon2.l1_turret_c_anim)
+#define l1_turret_b_cells_ec (xenon2.l1_turret_b_cells_ec)
+#define l1_turret_b_cells_e8 (xenon2.l1_turret_b_cells_e8)
+#define l1_turret_b_anim_e8 (xenon2.l1_turret_b_anim_e8)
+#define l1_turret_b_anim_ec (xenon2.l1_turret_b_anim_ec)
 #define level_558a2 (xenon2.level_558a2)
-#define level_55ad4 (xenon2.level_55ad4)
-#define level_55adc (xenon2.level_55adc)
+#define l1_turret_c_cells_dc (xenon2.l1_turret_c_cells_dc)
+#define l1_turret_c_cells_d8 (xenon2.l1_turret_c_cells_d8)
 #define level_55ce6 (xenon2.level_55ce6)
 #define level_segs (xenon2.level_segs)
 #define level_spawns (xenon2.level_spawns)
 #define level_56174 (xenon2.level_56174)
-#define level_5638a (xenon2.level_5638a)
-#define level_567bc (xenon2.level_567bc)
+#define l1_boss_part_pictures (xenon2.l1_boss_part_pictures)
+#define l1_boss_grid (xenon2.l1_boss_grid)
 #define level_567fa (xenon2.level_567fa)
 #define level_56810 (xenon2.level_56810)
 #define level_59e28 (xenon2.level_59e28)
-#define level_5c0e4 (xenon2.level_5c0e4)
-#define level_5c194 (xenon2.level_5c194)
-#define level_5c244 (xenon2.level_5c244)
-#define level_68f40 (xenon2.level_68f40)
+#define l1_eyes_a (xenon2.l1_eyes_a)
+#define l1_eyes_b (xenon2.l1_eyes_b)
+#define l1_eyes_c (xenon2.l1_eyes_c)
+#define level1_shot_gfx_table (xenon2.level1_shot_gfx_table)
 #define level_data_src (xenon2.level_data_src)
 #define level_data_dst (xenon2.level_data_dst)
 #endif
