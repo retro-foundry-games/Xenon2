@@ -5,6 +5,11 @@
 #include <string.h>
 
 /* the scratch fields of Object, by the kind that uses them */
+#define L4_ANGLE_HI(o) ((o)->v2a)
+#define L4_ANGLE_LO(o) ((o)->v2c)
+
+
+/* the scratch fields of Object, by the kind that uses them */
 #define TOWER_PHASE(o) ((o)->v28)
 
 
@@ -382,8 +387,8 @@ void l4_shot_a(Object *a0)
     a1->fn_update = GFN(0x55724);
     a1->fn_draw = draw_bob_masked;
     a1->fn_hit = (void *)hit_enemy;
-    a1->v2a = 0;
-    a1->v2c = d0;
+    L4_ANGLE_HI(a1) = 0;
+    L4_ANGLE_LO(a1) = d0;
     a1->turn[0] = a1->turn[1] = a1->turn[2] = 0;
     a1->x = (int16_t)(a0->x + d1);
     a1->y = a0->y;
@@ -414,7 +419,7 @@ void l4_shot_a(Object *a0)
 /* level4 $055724: the flying enemy: it follows its script and shows the picture of its direction */
 void l4_enemy_f8(Object *a0)
 {
-    uint16_t old = (uint16_t)a0->v2c, d0, d1;
+    uint16_t old = (uint16_t)L4_ANGLE_LO(a0), d0, d1;
 
     enemy_update(a0);
     if (a0->type != 0xf8) {
@@ -432,7 +437,7 @@ void l4_enemy_f8(Object *a0)
         a0->cursor = (const uint8_t *)GPTR(table);
         a0->v28 = 0;
     }
-    d0 = (uint16_t)((((uint16_t)a0->v2c + 0x10) >> 3) & 0x1c);
+    d0 = (uint16_t)((((uint16_t)L4_ANGLE_LO(a0) + 0x10) >> 3) & 0x1c);
     d1 = (uint16_t)(((old + 0x10) >> 3) & 0x1c);
     if (d0 == d1)
         return;
@@ -490,8 +495,8 @@ void l4_spawn_boss1(void)
         a0->persists = -1;
         a0->y = (int16_t)(W(a1 + 14) - scroll_pos);
         a0->v28 = 0;
-        a0->v2a = 0;
-        a0->v2c = 0;
+        L4_ANGLE_HI(a0) = 0;
+        L4_ANGLE_LO(a0) = 0;
         a0->turn[0] = a0->turn[1] = a0->turn[2] = 0;
         a0->steps = 3;
         a0->energy = (int16_t)W(a1 + 16);
@@ -681,7 +686,7 @@ static void l4_pose(Object *a0)
 
     if (d0 & 0x40)
         d0 = (uint16_t)(0x7f - d0);
-    a0->v2c = (int16_t)(d0 + 0xa0);
+    L4_ANGLE_LO(a0) = (int16_t)(d0 + 0xa0);
     d0 = (uint16_t)((frame_tick * 2 + 0x50) & 0xff);
     if (d0 & 0x80)
         d0 = (uint16_t)((d0 & 0xff00) | (~d0 & 0xff));
@@ -703,7 +708,7 @@ void l4_b1_head(Object *a0)
     a0->anim_delay = 0;
     a0->y = (int16_t)(a0->y + W(0xd70));
     l4_pose(a0);
-    a0->v2c = (int16_t)(a0->v2c ^ 0x80);
+    L4_ANGLE_LO(a0) = (int16_t)(L4_ANGLE_LO(a0) ^ 0x80);
     d0 = a0->target->v28;
     if (d0 > 8) {
         d0 = (int16_t)(0x80 - d0);
@@ -771,8 +776,8 @@ void l4_spawn_boss2(const uint8_t *a1_record, uint16_t d2)
         a0->x = (int16_t)W(a1 + 12);
         a0->y = (int16_t)(W(a1 + 14) - scroll_pos);
         a0->v28 = 0;
-        a0->v2a = 0;
-        a0->v2c = (int16_t)W(a1 + 16);
+        L4_ANGLE_HI(a0) = 0;
+        L4_ANGLE_LO(a0) = (int16_t)W(a1 + 16);
         a0->turn[0] = a0->turn[1] = a0->turn[2] = 0;
         a0->steps = 3;
         a0->energy = B(a1 + 18);
@@ -793,8 +798,8 @@ static void follow_chain(Object *a0)
     a0->x_frac = a1->x_frac;
     a0->y = a1->y;
     a0->y_frac = a1->y_frac;
-    a0->v2a = a1->v2a;
-    a0->v2c = a1->v2c;
+    L4_ANGLE_HI(a0) = L4_ANGLE_HI(a1);
+    L4_ANGLE_LO(a0) = L4_ANGLE_LO(a1);
     a0->turn[0] = a1->turn[0];
     a0->turn[1] = a1->turn[1];
     a0->turn[2] = a1->turn[2];
@@ -827,7 +832,7 @@ void l4_b2_head(Object *a0)
             d0 = 6;
         d0 = (uint16_t)(d0 << 5);
         d0 = (uint16_t)((d0 & 0xff00) | ((d0 - 0x40) & 0xff));
-        a0->v2a = 0;
+        L4_ANGLE_HI(a0) = 0;
         HEAD_ANGLE(a0) = (int16_t)d0;
         a0->turn[0] = a0->turn[1] = a0->turn[2] = 0;
         if ((uint8_t)random_next() >= B(0x54e59)) {
@@ -842,7 +847,7 @@ void l4_b2_head(Object *a0)
             d0 = 6;
         d0 = (uint16_t)(d0 << 5);
         d0 = (uint16_t)((d0 & 0xff00) | ((d0 - 0x60) & 0xff));
-        a0->v2a = 0;
+        L4_ANGLE_HI(a0) = 0;
         HEAD_ANGLE(a0) = (int16_t)d0;
         {
             uint32_t r = ((random_next() & 0x1f) + 0x20) << 10;
