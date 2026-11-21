@@ -15,7 +15,6 @@ typedef void (*AnimOp)(Object *, const uint8_t *);
 enum { LIST_PLAYER = 0, LIST_MISC = 1, LIST_ENEMY = 2, LIST_EFFECT = 3, LIST_FRONT = 4 };
 
 /* other modules, no C yet */
-extern uint32_t random_next(void);                    /* $1F50 */
 /* the level blob's entries ($54E0C: a shot or a point meets nothing else: a flag; $54E10/$54E18: a scroll event fires) */
 
 void anim_step(Object *o);

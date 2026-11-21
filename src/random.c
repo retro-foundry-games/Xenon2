@@ -1,4 +1,4 @@
-#include "game.h"
+#include "random.h"
 
 /* orig $001F50: the random number generator.  A 64-bit state (random_a, random_b) is doubled with add/addx on 16-bit words;
  * the new random_a is the result. */

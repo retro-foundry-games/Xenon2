@@ -1,9 +1,8 @@
 #ifndef TITLE_H
 #define TITLE_H
 #include "game.h"
+#include "random.h"
 
-extern uint32_t random_next(void);
-extern uint16_t random_below(uint16_t n);
 
 /* functions of this module */
 void clear_screen(void);
