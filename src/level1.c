@@ -169,6 +169,11 @@ void level1_turret_c_update(Object *a0)
     spawn_enemy_shot((uint16_t)x, (uint16_t)y, (uint16_t)d2, rd16(level_54e40 + 0xc), level1_shot_gfx(rd16(level_54e40 + 0xa)));
 }
 
+/* the launcher's use of the scratch fields of Object */
+#define LAUNCHER_STEP(o)  ((o)->v28)
+#define LAUNCHER_POS(o)   ((o)->v30)
+#define LAUNCHER_RANGE(o) ((o)->v2a)
+
 /* orig $0556DC: update of the launcher $D0 / $D4: it moves up and down (v28 is its step, v30 its place between 0 and v2a); when the
  * player is level with it (now and then) it goes into list B and fires three shots */
 void level1_launcher_update(Object *a0)
@@ -182,14 +187,14 @@ void level1_launcher_update(Object *a0)
     }
     anim_step(a0);
     a0->y = (int16_t)(a0->y + scroll_speed);
-    if (a0->v28 == 0)
+    if (LAUNCHER_STEP(a0) == 0)
         return;
     d0 = (int16_t)(a0->y - PLAYER->y);
     if (d0 <= 0xa && d0 >= -0x1e && (uint8_t)random_next() < 0x32) {
         Object *tail;
         const uint8_t *a2;
 
-        a0->v28 = 0;
+        LAUNCHER_STEP(a0) = 0;
         a0->next->prev = a0->prev;
         a0->prev->next = a0->next;
         tail = LIST_B->prev;
@@ -207,11 +212,11 @@ void level1_launcher_update(Object *a0)
         }
         return;
     }
-    d0 = a0->v28;
+    d0 = LAUNCHER_STEP(a0);
     a0->y = (int16_t)(a0->y + d0);
-    a0->v30 = (int16_t)(a0->v30 + d0);
-    if (a0->v30 == 0 || a0->v30 == a0->v2a)
-        a0->v28 = (int16_t)-a0->v28;
+    LAUNCHER_POS(a0) = (int16_t)(LAUNCHER_POS(a0) + d0);
+    if (LAUNCHER_POS(a0) == 0 || LAUNCHER_POS(a0) == LAUNCHER_RANGE(a0))
+        LAUNCHER_STEP(a0) = (int16_t)-LAUNCHER_STEP(a0);
     bbox_from_frame(a0);
 }
 
