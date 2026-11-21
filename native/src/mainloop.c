@@ -20,7 +20,7 @@ extern void guest_stick_restore(void);   /* sdl/guest.c: undoes what the lockste
 void scroll_pos_update(uint16_t d0)
 {
     uint16_t d2 = d0;
-    uint16_t d1 = v_0cdc & 1;
+    uint16_t d1 = frame_tick & 1;
 
     d0 = (uint16_t)((int16_t)d0 >> 1);
     d1 &= d2;
@@ -330,40 +330,40 @@ void camera_limit(uint16_t d7, uint16_t d3) __attribute__((noinline));
  * stick byte the original read) */
 void camera_limit(uint16_t d7, uint16_t d3)
 {
-    if (d7 != v_0cea || (joy_stick & 2) == 0)
+    if (d7 != scroll_max || (joy_stick & 2) == 0)
         d3 += v_0cee;
-    if (!((int16_t)d3 > (int16_t)v_0cea))
-        v_0cea = d3;
+    if (!((int16_t)d3 > (int16_t)scroll_max))
+        scroll_max = d3;
 }
 
 /* the camera / scroll speed step of the main loop ($79D6-$7A72) */
 static void camera_step(void)
 {
     uint16_t d7 = scroll_pos;
-    uint16_t d0 = v_0cda;
+    uint16_t d0 = scroll_step;
     uint16_t d1, d2, d3;
 
-    if (d0 != v_0ccc) {
-        v_0ce0++;
-        if ((int16_t)v_0ce0 >= 0x23) {
+    if (d0 != scroll_step_target) {
+        scroll_accel_frames++;
+        if ((int16_t)scroll_accel_frames >= 0x23) {
             d0 += d0;
-            v_0cda = d0;
+            scroll_step = d0;
         }
     } else {
-        v_0ce0 = 0;
+        scroll_accel_frames = 0;
     }
     d1 = scroll_fine;
     d2 = map_row_offset;
     d3 = scroll_pos - d0;
-    if ((int16_t)d3 < (int16_t)v_0ce8) {
-        d3 -= v_0ce8;
+    if ((int16_t)d3 < (int16_t)scroll_min) {
+        d3 -= scroll_min;
         d0 += d3;
-        d3 = v_0ce8;
+        d3 = scroll_min;
     }
-    if ((int16_t)d3 > (int16_t)v_0cea) {
+    if ((int16_t)d3 > (int16_t)scroll_max) {
         d0 += d3;
-        d0 -= v_0cea;
-        d3 = v_0cea;
+        d0 -= scroll_max;
+        d3 = scroll_max;
     }
     d1 -= d0;
     if ((int16_t)d1 < 0) {
@@ -403,17 +403,17 @@ static int key_command(uint8_t key)
         key_code = 0;
         key_pressed = 0;
     } else if (target == KEY_FIRE) {
-        if (v_0d84 == 0) {
-            if (v_0430 == 0) {
-                if (v_0ca0 != 0) {
-                    v_0432 = 1;
+        if (player_dead == 0) {
+            if (hide_phase == 0) {
+                if (hide_charges != 0) {
+                    hide_step = 1;
                     sfx_cmd = 0x10;
-                    v_0430 = 1;
-                    v_0ca0--;
-                    v_0434 = 0x88;
+                    hide_phase = 1;
+                    hide_charges--;
+                    hide_timer = 0x88;
                 }
             } else {
-                v_0434 = 1;
+                hide_timer = 1;
             }
         }
     }
@@ -442,16 +442,16 @@ static void wait_vbl_and_show(void)
 static void main_loop(void)
 {
     for (;;) {
-        v_0cdc++;
-        if ((v_0cdc & 3) == 0) {
-            v_045c = v_0cec;
-            v_045e = v_0cec;
-            v_045e++;
-            v_0cec += 2;
+        frame_tick++;
+        if ((frame_tick & 3) == 0) {
+            pickup_kind_a = pickup_cycle;
+            pickup_kind_b = pickup_cycle;
+            pickup_kind_b++;
+            pickup_cycle += 2;
         }
         scroll_pos_update(scroll_speed);
         draw_background();
-        v_0cda = 1;
+        scroll_step = 1;
         stars_draw();
         update_score_display();
         redraw_energy_bar();
@@ -474,8 +474,8 @@ static void main_loop(void)
         if (player_died) {
             player_died = 0;
             v_0c64 = 1;
-            v_0cc6 = 0x27;
-            v_0a6b = 0xff;
+            player_energy = 0x27;
+            energy_dirty = 0xff;
             player_lives--;
             draw_status_digit();
             if (player_lives == 0) {
@@ -500,9 +500,9 @@ static void main_loop(void)
             }
             switch_player();
         }
-        if (v_0ca4 != 0)
+        if (level_end_items != 0)
             continue;
-        if (v_0a6c == 0) {
+        if (level_over == 0) {
             if (v_0a07 == 0)
                 continue;
         } else {
@@ -538,8 +538,8 @@ static void main_loop(void)
                 shop_run();
                 draw_status_digit();
             }
-            v_0a6c = 0;
-            if (v_0ca2)
+            level_over = 0;
+            if (extras_timer)
                 init_weapons(0);
             if (v_0a07 == 0) {
                 if (music_switch)
@@ -583,14 +583,14 @@ static void main_loop(void)
         level_number++;
         if ((int16_t)level_number >= 6) {
             level_number = 1;
-            v_0e02++;
+            difficulty++;
             v_8f94 = 1;
             v_8f96 = 0;
         }
         loading_level_digit = (uint8_t)(level_number + 0x30);
         level_load();
         create_queued_objects();
-        if (v_0ca2)
+        if (extras_timer)
             init_weapons(0);
         level_start();
         player_active[2] = 0;
@@ -627,9 +627,9 @@ static void game_session_start(void)
     v_8836[18] = 0x31;
     if (player_active[0] == 0)
         v_8836[18] = 0x32;
-    v_8428 = 0xff;
+    text_wait_key = 0xff;
     title_message(v_8836);
-    v_8428 = 0;
+    text_wait_key = 0;
     clear_palette();
     music_restart_if_enabled();
     wait_vbl_and_show();

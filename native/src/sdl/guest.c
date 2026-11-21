@@ -239,7 +239,7 @@ uint8_t guest_a6a(uint8_t a01)
 
 void guest_set_shield(uint16_t frames)
 {
-    xenon2.v_0cc8 = frames;
+    xenon2.shield_timer = frames;
 }
 
 void guest_stick_restore(void)

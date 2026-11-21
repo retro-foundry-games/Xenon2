@@ -87,7 +87,7 @@ memory at the stop, `LS.hex(...)`.  `gdb -p` on the `xenon2-sdl-dev` process sho
 
 ## Things that bit (levels 3 to 5)
 
-- A byte of a member is never read through the raw memory (`sh_r8(0xcdd)`): members are native-endian; use the member (`v_0cdc & 1`).  The blob at `$54E00` and tables out of it are raw big-endian (`W`, `B`, `sh_r32`, `rd16/wr16` for pointers into it).
+- A byte of a member is never read through the raw memory (`sh_r8(0xcdd)`): members are native-endian; use the member (`frame_tick & 1`).  The blob at `$54E00` and tables out of it are raw big-endian (`W`, `B`, `sh_r32`, `rd16/wr16` for pointers into it).
 - A pointer kept in two words of an object (the drill's `$30/$32`) must be the guest address (`GADDR`/`GPTR`), not the host pointer.
 - The list an object enters is told by the original's pointer: `$B48` the head of list C (`insert_head`), `$B4C` its tail (`alloc_in`), `$BAE` the tail of list B.
 - A registers-left-over call (`jsr $EAE` with the d0/d1 the code left; `jsr $E3C` with a stale a2 that is overwritten after) must be written with the values the original had.

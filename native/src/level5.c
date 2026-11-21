@@ -171,8 +171,8 @@ void l5_init(void)
             ((uint8_t *)GPTR(0x7d120))[i] = ((const uint8_t *)GPTR(0x78d44))[i];
         level_init_src = (uint8_t *)GPTR(0x7d120);
     }
-    v_0ce8 = 0;
-    v_0cea = 0x11ff;
+    scroll_min = 0;
+    scroll_max = 0x11ff;
     sh_w8(0xd99, 0);
     sh_w8(0xd9a, 0);
     sh_w16(0xd72, 0x1200);
@@ -181,8 +181,8 @@ void l5_init(void)
     sh_w16(0x563c8, W(0x54e76));
     sh_w8(0xd9b, 0);
     sh_w8(0xd9c, 0);
-    v_0424 = (uint16_t)(v_0e02 * 0xc);
-    v_0426 = (uint16_t)(v_0e02 * 0xe);
+    difficulty_x1 = (uint16_t)(difficulty * 0xc);
+    difficulty_x2 = (uint16_t)(difficulty * 0xe);
 }
 
 /* ---- the gunners ($551E8): ten of them from a formation table ---- */
@@ -370,7 +370,7 @@ void l5_pellet_update(Object *a0)
         bbox_from_frame(a0);
         if (!point_in_player_box(dx, dy))
             return;
-        if (v_0cc8 == 0) {
+        if (shield_timer == 0) {
             PLAYER->fn_draw = (obj_fn)draw_bob_or_first;
             player_damage(a0, 4);
             kill_thunk(a0);
@@ -419,7 +419,7 @@ void l5_spawn_boss1(uint16_t d2)
     memset(p, 0, 600);
     map_row_offset = 0x410;
     scroll_pos = 0x1a0;
-    v_0cea = 0x1a0;
+    scroll_max = 0x1a0;
     for (d7 = 21; d7 >= 0; d7--, rec += 24) {
         Object *a0 = insert_head(LIST_C);
 
@@ -489,10 +489,10 @@ void l5_boss_last(Object *a0)
 /* level5 $055D7E: the boss: the scroll stops at its place, it shifts left and right, and it shakes the screen and fires */
 void l5_boss_update(Object *a0)
 {
-    v_0cea = 0x1a0;
+    scroll_max = 0x1a0;
     if (scroll_pos == 0) {
-        scroll_pos_update(v_0cda);
-        stars_scroll(v_0cda);
+        scroll_pos_update(scroll_step);
+        stars_scroll(scroll_step);
     }
     a0->y = (int16_t)(a0->y + scroll_speed);
     if (a0->v28 == 0) {
@@ -500,7 +500,7 @@ void l5_boss_update(Object *a0)
             return;
         a0->v5e_b[0] = (uint8_t)(random_next() & 0x3f);
         sfx_cmd2 = -1;
-        a0->v28 = (v_0cdc & 1) ? 2 : -2;
+        a0->v28 = (frame_tick & 1) ? 2 : -2;
         return;
     }
     if (a0->v28 > 0) {
@@ -609,7 +609,7 @@ void l5_missile_update(Object *a0)
     bbox_from_frame(a0);
     if (!player_hits(a0))
         return;
-    if (v_0cc8 == 0) {
+    if (shield_timer == 0) {
         PLAYER->fn_draw = (obj_fn)draw_bob_or_first;
         player_damage(a0, 4);
     }
@@ -805,8 +805,8 @@ void l5_boss2_mover(Object *a0)
 {
     int16_t d0;
 
-    if ((int16_t)v_0cea < 0x920)
-        v_0cea = 0x920;
+    if ((int16_t)scroll_max < 0x920)
+        scroll_max = 0x920;
     a0->y = (int16_t)(a0->y + scroll_speed);
     if (a0->v2a != 0) {
         sfx_cmd = 0x16;
@@ -909,7 +909,7 @@ void l5_beam_update(Object *a0)
     a0->hit[3] = (int16_t)(a0->y + a0->v28);
     if (!player_hits(a0))
         return;
-    if (v_0cc8 == 0) {
+    if (shield_timer == 0) {
         player_damage(a0, 6);
         PLAYER->fn_draw = (obj_fn)draw_bob_or_first;
     }
@@ -1134,7 +1134,7 @@ void l5_bridge_update(Object *a0)
     uint8_t *c;
     uint32_t d0;
 
-    if ((int16_t)(v_0cea + 0xd0) < a0->y) {
+    if ((int16_t)(scroll_max + 0xd0) < a0->y) {
         kill_thunk(a0);
         return;
     }
@@ -1236,7 +1236,7 @@ void l5_unit_update(Object *a0)
     uint8_t *c;
     uint32_t d0;
 
-    if ((int16_t)(v_0cea + 0xd0) < a0->y) {
+    if ((int16_t)(scroll_max + 0xd0) < a0->y) {
         kill_thunk(a0);
         return;
     }
@@ -1272,7 +1272,7 @@ void l5_unit_update(Object *a0)
         x = (int16_t)(x + (int16_t)W(0x572aa + d3));
         y = (int16_t)(y + (int16_t)W(0x572ac + d3));
         d3 &= 0xc;
-        if (!(v_0cdc & 1))
+        if (!(frame_tick & 1))
             d3 += 0x10;
         spawn_enemy_shot((uint16_t)x, (uint16_t)y, (uint16_t)a0->v2a, W(0x54e66), GPTR(sh_r32(0x572ca + d3)));
     }
@@ -1343,7 +1343,7 @@ void l5_gun_update(Object *a0)
 {
     uint32_t a2;
 
-    if ((int16_t)(v_0cea + 0xd0) < a0->y) {
+    if ((int16_t)(scroll_max + 0xd0) < a0->y) {
         kill_thunk(a0);
         return;
     }

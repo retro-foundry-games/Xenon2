@@ -432,7 +432,7 @@ void show_text_sequence(uint16_t row, const uint8_t *text, const uint16_t *steps
         clear_screen();
         off = title_index;
         steps = title_steps_ptr;
-        if (v_8428 && steps[off / 2] == 0x11) {
+        if (text_wait_key && steps[off / 2] == 0x11) {
             if (key_pressed == 0)
                 goto no_advance;
             key_pressed = 0;

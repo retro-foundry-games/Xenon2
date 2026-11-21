@@ -150,7 +150,7 @@ void init_level_state(void)
     player_died = 0;
     player_active[0] = 0xff;
     respawn_shield = 8;
-    v_0e02 = 1;
+    difficulty = 1;
     cur_player = 0;
     player_active[1] = (players == 2) ? 0xff : 0;
     player_active[2] = 0;
@@ -224,7 +224,7 @@ void init_objects(void)
     o->x = 0xa0;
     o->y = 0xb0;
     for (i = 0; i < 4; i++) {
-        const uint8_t *rec = &ship_records[i * 24];   /* the record the table at $6CB2 points to */
+        const uint8_t *rec = &option_anims[i * 24];   /* the record the table at $6CB2 points to */
         Object *h = &obj_list[0];
         Object *first;
 
@@ -246,34 +246,34 @@ void init_objects(void)
         weapon_slots[i].type = 0;
     weapon_94(0, 0);
     for (i = 0; i < 14; i++)
-        v_0caa[i] = 0;
+        slot_snapshot[i] = 0;
     latch_slots(0);
-    v_0c60 = 8;
-    v_0c62 = 8;
+    autofire_counter = 8;
+    autofire_period = 8;
     v_0c64 = 1;
-    v_042e = 0;
+    crush_timer = 0;
     v_0c90 = 0;
-    v_0430 = 0;
-    v_0432 = 0;
+    hide_phase = 0;
+    hide_step = 0;
     player_score = 0;
     score_shown = 0;
     v_0c9e = 0;
-    v_0ca0 = 0;
-    v_0434 = 0;
-    v_0ca2 = 0;
+    hide_charges = 0;
+    hide_timer = 0;
+    extras_timer = 0;
     for (i = 0; i < 7; i++)
         score_digits[i] = 0;
-    v_0ca4 = 0;
-    v_0cc6 = 0x27;
-    v_0cc8 = 0;
+    level_end_items = 0;
+    player_energy = 0x27;
+    shield_timer = 0;
     v_0d83 = 0;
-    v_0d84 = 0;
+    player_dead = 0;
     player_lives = 3;
-    v_0ccc = 1;
+    scroll_step_target = 1;
     v_0d85 = 0;
     continues_left = 3;
     draw_status_digit();
-    v_0a6b = 0xff;
+    energy_dirty = 0xff;
     redraw_energy_bar();
 }
 
@@ -295,7 +295,7 @@ void option_update(Object *a0)
     a0->x = d0;
     a0->y = player.y;
     a0->fn_draw = obj_nop;
-    if (v_0430)
+    if (hide_phase)
         return;
     bit = (a0->v30 < 2) ? 1 : 2;
     if (joy_stick & bit)
@@ -357,7 +357,7 @@ uint8_t autofire_stick(void)
 /* orig $006372: the per-frame counters: the panel's fade, the palette load, the two timers, the autofire counter */
 void frame_update(void)
 {
-    if (v_0430 != 0 || v_0d84 != 0) {
+    if (hide_phase != 0 || player_dead != 0) {
         if (respawn_shield != 0x10)
             respawn_shield++;
     } else if (respawn_shield != 0) {
@@ -380,31 +380,31 @@ void frame_update(void)
             }
         }
     }
-    if (v_0434 != 0) {
-        v_0434--;
-        draw_gauge(0x98, 8, v_0434, 0x88);
-        if (v_0434 == 0) {
-            v_0432 = 0xffff;
+    if (hide_timer != 0) {
+        hide_timer--;
+        draw_gauge(0x98, 8, hide_timer, 0x88);
+        if (hide_timer == 0) {
+            hide_step = 0xffff;
             sfx_cmd = 0x10;
         }
     }
-    if (v_0ca2 != 0) {
-        v_0ca2--;
-        draw_gauge(0x98, 0xa0, v_0ca2, 0xaa);
-        if (v_0ca2 == 0)
+    if (extras_timer != 0) {
+        extras_timer--;
+        draw_gauge(0x98, 0xa0, extras_timer, 0xaa);
+        if (extras_timer == 0)
             reset_extra_objects();
     }
     if (autofire_stick() & 0x80) {
-        int16_t a = (int16_t)v_0c60;
+        int16_t a = (int16_t)autofire_counter;
         int16_t b = (int16_t)v_0c64;
 
-        v_0c60 = (uint16_t)(a - b);
+        autofire_counter = (uint16_t)(a - b);
         if (!(a > b)) {
-            v_0c60 += v_0c62;
+            autofire_counter += autofire_period;
             key_pressed = 0xff;
         }
     } else {
-        v_0c60 = v_0c62;
+        autofire_counter = autofire_period;
     }
 }
 
@@ -527,8 +527,8 @@ void create_queued_objects(void)
     uint16_t i;
 
     for (i = 0; i < 7; i++) {
-        uint16_t d1 = v_0caa[i * 2];
-        uint16_t d2 = v_0caa[i * 2 + 1];
+        uint16_t d1 = slot_snapshot[i * 2];
+        uint16_t d2 = slot_snapshot[i * 2 + 1];
 
         if (d1 != 0) {
             Object *a1 = weapon_select(d1, 0, 0);
@@ -546,7 +546,7 @@ void clear_level_objects(void)
     uint16_t i;
 
     sfx_stop_all();
-    if (v_0ca2)
+    if (extras_timer)
         reset_extra_objects();
     d7 = scroll_y - scroll_pos;
     free_chain(obj_list[4].prev, d7);
@@ -611,25 +611,25 @@ void respawn_player(void)
 {
     uint16_t d0, i;
 
-    v_0d84 = 0;
+    player_dead = 0;
     player.x = player_x_saved;
     player.y = 0xb0;
     d0 = scroll_y;
     scroll_pos = d0;
-    v_0cea = d0;
+    scroll_max = d0;
     d0++;
-    v_0cd2 = d0;
+    next_event_a = d0;
     d0 += 0xbf;
-    v_0cd4 = d0;
+    next_event_b = d0;
     scroll_fine = scroll_y & 0xf;
     map_row_offset = (uint16_t)((scroll_y >> 4) * 0x28);
     create_queued_objects();
     player_money = player_money_saved;
     for (i = 0; i < 16; i++)
         v_043c[i] = 0;
-    v_0430 = 0;
-    v_042e = 0;
-    v_0a6b = 0xff;
+    hide_phase = 0;
+    crush_timer = 0;
+    energy_dirty = 0xff;
     player_vx = 0;
     for (i = 0; i < 4; i++) {
         v_046c[i * 2] = player.x;
@@ -641,11 +641,11 @@ void respawn_player(void)
         v_047c[i * 3 + 2] = player.y;
     }
     v_8836[18] = (uint8_t)(cur_player + 0x31);
-    v_8428 = 0xff;
+    text_wait_key = 0xff;
     title_message(v_8836);
-    v_8428 = 0;
+    text_wait_key = 0;
     clear_palette();
-    if (v_0ca2)
+    if (extras_timer)
         init_weapons(0);
 }
 
@@ -674,7 +674,7 @@ void switch_player_after_clear(void)
         if (player_active[2 + d0]) {
             v_0a07 = 0xff;
             if (level_number == 5)
-                v_0a6c = 0xff;
+                level_over = 0xff;
         }
     }
     respawn_player();
@@ -700,24 +700,24 @@ void level_reset_scroll(void)
     map_row_offset = 0x2d00;
     scroll_fine = 0;
     scroll_pos = 0x1200;
-    v_0cd2 = 0x7fee;
-    v_0cd4 = 0x7fee;
+    next_event_a = 0x7fee;
+    next_event_b = 0x7fee;
     v_0cee = 0x10;
     player_x_saved = player.x;
     player_y_saved = player.y;
     scroll_y = scroll_pos;
     player_money_saved = player_money;
     scroll_speed = 1;
-    v_0cda = 0;
+    scroll_step = 0;
     player_vx = 0;
     level_init();
-    v_0ce0 = 0;
-    v_042e = 0;
-    v_0cdc = 0;
+    scroll_accel_frames = 0;
+    crush_timer = 0;
+    frame_tick = 0;
     player_money = 0;
     player_money_saved = 0;
-    v_0ca4 = 0;
-    v_0cec = 1;
+    level_end_items = 0;
+    pickup_cycle = 1;
     v_0cf2 = 0;
 }
 
@@ -734,7 +734,7 @@ void level_start(void)
     v_043a = 0;
     for (i = 0; i < 16; i++)
         v_043c[i] = 0;
-    v_0a6c = 0;
+    level_over = 0;
     joy_stick = 0;
     key_pressed = 0;
     level_reset_scroll();
