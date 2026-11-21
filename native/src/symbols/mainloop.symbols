@@ -4,17 +4,17 @@ arr exc_vectors_hi 0x80 irq_fn 224                 ; vectors $80..$3FF
 var last_flip_vbl 0x404 uint16_t                          ; vbl_count at the last screen flip
 var show_screen 0x40a uint8_t *                    ; the screen being shown
 var min_vbl_per_frame 0x410 uint16_t                          ; minimum vertical blanks per frame (4 on 50 Hz, 5)
-var v_0416 0x416 int16_t
+var sfx_cmd_aux 0x416 int16_t        ; set to -1 with sfx_cmd, never read
 var sfx_cmd2 0x418 int16_t                           ; pending sound command (-1 none), second slot
-var v_041a 0x41a int16_t
+var sfx_cmd2_aux 0x41a int16_t       ; set to -1 with sfx_cmd2, never read
 var vbl_count 0x41c volatile uint16_t              ; counts the vertical blank interrupt (twice each)
 var crush_reload 0x41e uint16_t
 var pickup_kind_a 0x45c uint16_t
 var pickup_kind_b 0x45e uint16_t
 var shop_price_cap 0x9fa uint16_t
 var music_switch 0x9fc uint8_t                           ; non-zero: music enabled
-var v_09fd 0x9fd uint8_t
-var v_09fe 0x9fe uint8_t
+var music_aux_a 0x9fd uint8_t         ; cleared at start, never read
+var music_aux_b 0x9fe uint8_t         ; cleared at start, never read
 var key_code 0x9ff volatile uint8_t                ; the last key from the keyboard interrupt (0 = none)
 var scroll_min 0xce8 uint16_t
 tab star_speed 0x2298 uint16_t 34                  ; starfield scroll step by scroll speed -16..17 (index speed + 16)
@@ -26,8 +26,8 @@ var music_cmd_fn 0x2094 irq_fn                     ; music player command, d0.w 
 var copper_cur 0x700e uint16_t *                   ; the copper list in use (copper_list_a or copper_list_b)
 tab key_table 0x7954 uint32_t 4                    ; key code << 24 | handler address; the last entry (code 0) matches every key
 var loading_level_digit 0x8c41 uint8_t                          ; level digit in the loading text
-var v_8f94 0x8f94 uint16_t
-var v_8f96 0x8f96 uint16_t
+var cycle_flag_a 0x8f94 uint16_t    ; set when a game or a cycle of five levels starts, never read
+var cycle_flag_b 0x8f96 uint16_t    ; cleared with cycle_flag_a, never read
 var shop_closing 0x8fec uint8_t
 arr game_over_text 0x884a uint8_t 20                       ; "GAME OVER" text
 var shop_money_early 0x54e3c uint16_t

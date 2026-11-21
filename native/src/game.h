@@ -48,9 +48,9 @@ struct Xenon2 {
     uint16_t min_vbl_per_frame;  /* $000410 var */
     PAD(2)
     int16_t sfx_cmd;  /* $000414 var */
-    int16_t v_0416;  /* $000416 var */
+    int16_t sfx_cmd_aux;  /* $000416 var */
     int16_t sfx_cmd2;  /* $000418 var */
-    int16_t v_041a;  /* $00041A var */
+    int16_t sfx_cmd2_aux;  /* $00041A var */
     volatile uint16_t vbl_count;  /* $00041C var */
     uint16_t crush_reload;  /* $00041E var */
     uint16_t clip_bottom;  /* $000420 var */
@@ -72,7 +72,7 @@ struct Xenon2 {
     PAD(4)
     uint16_t player_trail[8];  /* $00046C arr */
     uint16_t player_history[51];  /* $00047C arr */
-    uint16_t v_04e2;  /* $0004E2 var */
+    uint16_t target_count;  /* $0004E2 var */
     uint16_t player_x_prev;  /* $0004E4 var */
     uint16_t player_y_prev;  /* $0004E6 var */
     int16_t trail_x;  /* $0004E8 var */
@@ -80,7 +80,7 @@ struct Xenon2 {
     uint16_t shop_door_left;  /* $0004EC var */
     uint16_t shop_door_right;  /* $0004EE var */
     uint8_t shop_keeper_talking;  /* $0004F0 var */
-    uint8_t v_04f1;  /* $0004F1 var */
+    uint8_t shop_keeper_aux;  /* $0004F1 var */
     uint16_t shop_cursor_col;  /* $0004F2 var */
     uint16_t shop_cursor_row;  /* $0004F4 var */
     uint16_t text_x;  /* $0004F6 var */
@@ -88,8 +88,8 @@ struct Xenon2 {
     uint8_t work_area[1280];  /* $0004FA arr */
     uint16_t shop_price_cap;  /* $0009FA var */
     uint8_t music_switch;  /* $0009FC var */
-    uint8_t v_09fd;  /* $0009FD var */
-    uint8_t v_09fe;  /* $0009FE var */
+    uint8_t music_aux_a;  /* $0009FD var */
+    uint8_t music_aux_b;  /* $0009FE var */
     volatile uint8_t key_code;  /* $0009FF var */
     uint8_t joy_stick;  /* $000A00 var */
     uint8_t key_pressed;  /* $000A01 var */
@@ -143,14 +143,14 @@ struct Xenon2 {
     Object * list_a_next_saved;  /* $000CF8 var */
     struct Slot weapon_slots_saved[7];  /* $000CFC arr */
     uint16_t level_vars[26];  /* $000D26 arr */
-    uint16_t v_0d5a;  /* $000D5A var */
+    uint16_t l1_eyes_phase;  /* $000D5A var */
     uint16_t l2_gates_left;  /* $000D5C var */
     uint8_t l2_walls_made;  /* $000D5E var */
     PAD(29)
     uint8_t score_digits[7];  /* $000D7C arr */
     uint8_t protection;  /* $000D83 var */
     uint8_t player_dead;  /* $000D84 var */
-    uint8_t v_0d85;  /* $000D85 var */
+    uint8_t skip_map_draw;  /* $000D85 var */
     uint8_t unit_live[5];  /* $000D86 arr */
     uint8_t l1_boss_spawned;  /* $000D8B var */
     uint8_t l1_boss_zone_entered;  /* $000D8C var */
@@ -273,7 +273,7 @@ struct Xenon2 {
     PAD(2368)
     const int16_t pickup_circle_steps[16];  /* $00476C tab */
     PAD(5700)
-    int16_t v_5dd0;  /* $005DD0 var */
+    int16_t player_vx_prev;  /* $005DD0 var */
     PAD(766)
     uint8_t * player_pictures[13];  /* $0060D0 arr */
     PAD(70)
@@ -297,7 +297,7 @@ struct Xenon2 {
     const uint32_t key_table[4];  /* $007954 tab */
     PAD(2)
     const uint16_t weapon_damage[4];  /* $007966 tab */
-    const uint16_t v_796e[1];  /* $00796E tab */
+    const uint16_t unused_796e[1];  /* $00796E tab */
     const uint16_t kill_scores[2];  /* $007970 tab */
     const uint16_t blast_damage[3];  /* $007974 tab */
     PAD(1116)
@@ -344,8 +344,8 @@ struct Xenon2 {
     PAD(32)
     uint8_t credits_text[10];  /* $008F76 arr */
     const uint8_t insert_disk_text[20];  /* $008F80 tab */
-    uint16_t v_8f94;  /* $008F94 var */
-    uint16_t v_8f96;  /* $008F96 var */
+    uint16_t cycle_flag_a;  /* $008F94 var */
+    uint16_t cycle_flag_b;  /* $008F96 var */
     uint16_t loaded_level;  /* $008F98 var */
     PAD(80)
     uint8_t progress_text[2];  /* $008FEA arr */
@@ -390,10 +390,10 @@ struct Xenon2 {
     PAD(174)
     const uint8_t pic_1838c[2];  /* $01838C tab */
     PAD(3884)
-    const uint8_t v_192ba[2];  /* $0192BA tab */
+    const uint8_t weaponc0_picture[2];  /* $0192BA tab */
     PAD(1378)
     const uint8_t digit_gfx[640];  /* $01981E tab */
-    const uint16_t v_19a9e[640];  /* $019A9E tab */
+    const uint16_t panel_words[640];  /* $019A9E tab */
     uint8_t music_base[4];  /* $019F9E arr */
     PAD(1504)
     uint16_t music_tempo_mul;  /* $01A582 var */
@@ -566,9 +566,9 @@ LAYOUT_ASSERT(draw_screen, 0x406);
 LAYOUT_ASSERT(show_screen, 0x40a);
 LAYOUT_ASSERT(min_vbl_per_frame, 0x410);
 LAYOUT_ASSERT(sfx_cmd, 0x414);
-LAYOUT_ASSERT(v_0416, 0x416);
+LAYOUT_ASSERT(sfx_cmd_aux, 0x416);
 LAYOUT_ASSERT(sfx_cmd2, 0x418);
-LAYOUT_ASSERT(v_041a, 0x41a);
+LAYOUT_ASSERT(sfx_cmd2_aux, 0x41a);
 LAYOUT_ASSERT(vbl_count, 0x41c);
 LAYOUT_ASSERT(crush_reload, 0x41e);
 LAYOUT_ASSERT(clip_bottom, 0x420);
@@ -589,7 +589,7 @@ LAYOUT_ASSERT(pickup_kind_b, 0x45e);
 LAYOUT_ASSERT(hit_box, 0x460);
 LAYOUT_ASSERT(player_trail, 0x46c);
 LAYOUT_ASSERT(player_history, 0x47c);
-LAYOUT_ASSERT(v_04e2, 0x4e2);
+LAYOUT_ASSERT(target_count, 0x4e2);
 LAYOUT_ASSERT(player_x_prev, 0x4e4);
 LAYOUT_ASSERT(player_y_prev, 0x4e6);
 LAYOUT_ASSERT(trail_x, 0x4e8);
@@ -597,7 +597,7 @@ LAYOUT_ASSERT(trail_y, 0x4ea);
 LAYOUT_ASSERT(shop_door_left, 0x4ec);
 LAYOUT_ASSERT(shop_door_right, 0x4ee);
 LAYOUT_ASSERT(shop_keeper_talking, 0x4f0);
-LAYOUT_ASSERT(v_04f1, 0x4f1);
+LAYOUT_ASSERT(shop_keeper_aux, 0x4f1);
 LAYOUT_ASSERT(shop_cursor_col, 0x4f2);
 LAYOUT_ASSERT(shop_cursor_row, 0x4f4);
 LAYOUT_ASSERT(text_x, 0x4f6);
@@ -605,8 +605,8 @@ LAYOUT_ASSERT(text_y, 0x4f8);
 LAYOUT_ASSERT(work_area, 0x4fa);
 LAYOUT_ASSERT(shop_price_cap, 0x9fa);
 LAYOUT_ASSERT(music_switch, 0x9fc);
-LAYOUT_ASSERT(v_09fd, 0x9fd);
-LAYOUT_ASSERT(v_09fe, 0x9fe);
+LAYOUT_ASSERT(music_aux_a, 0x9fd);
+LAYOUT_ASSERT(music_aux_b, 0x9fe);
 LAYOUT_ASSERT(key_code, 0x9ff);
 LAYOUT_ASSERT(joy_stick, 0xa00);
 LAYOUT_ASSERT(key_pressed, 0xa01);
@@ -659,13 +659,13 @@ LAYOUT_ASSERT(list_a_prev_saved, 0xcf4);
 LAYOUT_ASSERT(list_a_next_saved, 0xcf8);
 LAYOUT_ASSERT(weapon_slots_saved, 0xcfc);
 LAYOUT_ASSERT(level_vars, 0xd26);
-LAYOUT_ASSERT(v_0d5a, 0xd5a);
+LAYOUT_ASSERT(l1_eyes_phase, 0xd5a);
 LAYOUT_ASSERT(l2_gates_left, 0xd5c);
 LAYOUT_ASSERT(l2_walls_made, 0xd5e);
 LAYOUT_ASSERT(score_digits, 0xd7c);
 LAYOUT_ASSERT(protection, 0xd83);
 LAYOUT_ASSERT(player_dead, 0xd84);
-LAYOUT_ASSERT(v_0d85, 0xd85);
+LAYOUT_ASSERT(skip_map_draw, 0xd85);
 LAYOUT_ASSERT(unit_live, 0xd86);
 LAYOUT_ASSERT(l1_boss_spawned, 0xd8b);
 LAYOUT_ASSERT(l1_boss_zone_entered, 0xd8c);
@@ -741,7 +741,7 @@ LAYOUT_ASSERT(drill_dy, 0x3ac2);
 LAYOUT_ASSERT(drill_dx, 0x3ad2);
 LAYOUT_ASSERT(weapon2c_patterns, 0x3d66);
 LAYOUT_ASSERT(pickup_circle_steps, 0x476c);
-LAYOUT_ASSERT(v_5dd0, 0x5dd0);
+LAYOUT_ASSERT(player_vx_prev, 0x5dd0);
 LAYOUT_ASSERT(player_pictures, 0x60d0);
 LAYOUT_ASSERT(dive_pictures, 0x614a);
 LAYOUT_ASSERT(gauge_pics, 0x6336);
@@ -755,7 +755,7 @@ LAYOUT_ASSERT(copper_cur, 0x700e);
 LAYOUT_ASSERT(palette_shadow, 0x7012);
 LAYOUT_ASSERT(key_table, 0x7954);
 LAYOUT_ASSERT(weapon_damage, 0x7966);
-LAYOUT_ASSERT(v_796e, 0x796e);
+LAYOUT_ASSERT(unused_796e, 0x796e);
 LAYOUT_ASSERT(kill_scores, 0x7970);
 LAYOUT_ASSERT(blast_damage, 0x7974);
 LAYOUT_ASSERT(title_text, 0x7dd6);
@@ -789,8 +789,8 @@ LAYOUT_ASSERT(menu_text, 0x8dd4);
 LAYOUT_ASSERT(continue_text, 0x8f2e);
 LAYOUT_ASSERT(credits_text, 0x8f76);
 LAYOUT_ASSERT(insert_disk_text, 0x8f80);
-LAYOUT_ASSERT(v_8f94, 0x8f94);
-LAYOUT_ASSERT(v_8f96, 0x8f96);
+LAYOUT_ASSERT(cycle_flag_a, 0x8f94);
+LAYOUT_ASSERT(cycle_flag_b, 0x8f96);
 LAYOUT_ASSERT(loaded_level, 0x8f98);
 LAYOUT_ASSERT(progress_text, 0x8fea);
 LAYOUT_ASSERT(shop_closing, 0x8fec);
@@ -821,9 +821,9 @@ LAYOUT_ASSERT(pic_171d6, 0x171d6);
 LAYOUT_ASSERT(pic_17336, 0x17336);
 LAYOUT_ASSERT(pic_182dc, 0x182dc);
 LAYOUT_ASSERT(pic_1838c, 0x1838c);
-LAYOUT_ASSERT(v_192ba, 0x192ba);
+LAYOUT_ASSERT(weaponc0_picture, 0x192ba);
 LAYOUT_ASSERT(digit_gfx, 0x1981e);
-LAYOUT_ASSERT(v_19a9e, 0x19a9e);
+LAYOUT_ASSERT(panel_words, 0x19a9e);
 LAYOUT_ASSERT(music_base, 0x19f9e);
 LAYOUT_ASSERT(music_tempo_mul, 0x1a582);
 LAYOUT_ASSERT(music_flag_1a584, 0x1a584);
@@ -944,9 +944,9 @@ LAYOUT_ASSERT(level_data_dst, 0x7d120);
 #define show_screen (xenon2.show_screen)
 #define min_vbl_per_frame (xenon2.min_vbl_per_frame)
 #define sfx_cmd (xenon2.sfx_cmd)
-#define v_0416 (xenon2.v_0416)
+#define sfx_cmd_aux (xenon2.sfx_cmd_aux)
 #define sfx_cmd2 (xenon2.sfx_cmd2)
-#define v_041a (xenon2.v_041a)
+#define sfx_cmd2_aux (xenon2.sfx_cmd2_aux)
 #define vbl_count (xenon2.vbl_count)
 #define crush_reload (xenon2.crush_reload)
 #define clip_bottom (xenon2.clip_bottom)
@@ -967,7 +967,7 @@ LAYOUT_ASSERT(level_data_dst, 0x7d120);
 #define hit_box (xenon2.hit_box)
 #define player_trail (xenon2.player_trail)
 #define player_history (xenon2.player_history)
-#define v_04e2 (xenon2.v_04e2)
+#define target_count (xenon2.target_count)
 #define player_x_prev (xenon2.player_x_prev)
 #define player_y_prev (xenon2.player_y_prev)
 #define trail_x (xenon2.trail_x)
@@ -975,7 +975,7 @@ LAYOUT_ASSERT(level_data_dst, 0x7d120);
 #define shop_door_left (xenon2.shop_door_left)
 #define shop_door_right (xenon2.shop_door_right)
 #define shop_keeper_talking (xenon2.shop_keeper_talking)
-#define v_04f1 (xenon2.v_04f1)
+#define shop_keeper_aux (xenon2.shop_keeper_aux)
 #define shop_cursor_col (xenon2.shop_cursor_col)
 #define shop_cursor_row (xenon2.shop_cursor_row)
 #define text_x (xenon2.text_x)
@@ -983,8 +983,8 @@ LAYOUT_ASSERT(level_data_dst, 0x7d120);
 #define work_area (xenon2.work_area)
 #define shop_price_cap (xenon2.shop_price_cap)
 #define music_switch (xenon2.music_switch)
-#define v_09fd (xenon2.v_09fd)
-#define v_09fe (xenon2.v_09fe)
+#define music_aux_a (xenon2.music_aux_a)
+#define music_aux_b (xenon2.music_aux_b)
 #define key_code (xenon2.key_code)
 #define joy_stick (xenon2.joy_stick)
 #define key_pressed (xenon2.key_pressed)
@@ -1037,13 +1037,13 @@ LAYOUT_ASSERT(level_data_dst, 0x7d120);
 #define list_a_next_saved (xenon2.list_a_next_saved)
 #define weapon_slots_saved (xenon2.weapon_slots_saved)
 #define level_vars (xenon2.level_vars)
-#define v_0d5a (xenon2.v_0d5a)
+#define l1_eyes_phase (xenon2.l1_eyes_phase)
 #define l2_gates_left (xenon2.l2_gates_left)
 #define l2_walls_made (xenon2.l2_walls_made)
 #define score_digits (xenon2.score_digits)
 #define protection (xenon2.protection)
 #define player_dead (xenon2.player_dead)
-#define v_0d85 (xenon2.v_0d85)
+#define skip_map_draw (xenon2.skip_map_draw)
 #define unit_live (xenon2.unit_live)
 #define l1_boss_spawned (xenon2.l1_boss_spawned)
 #define l1_boss_zone_entered (xenon2.l1_boss_zone_entered)
@@ -1119,7 +1119,7 @@ LAYOUT_ASSERT(level_data_dst, 0x7d120);
 #define drill_dx (xenon2.drill_dx)
 #define weapon2c_patterns (xenon2.weapon2c_patterns)
 #define pickup_circle_steps (xenon2.pickup_circle_steps)
-#define v_5dd0 (xenon2.v_5dd0)
+#define player_vx_prev (xenon2.player_vx_prev)
 #define player_pictures (xenon2.player_pictures)
 #define dive_pictures (xenon2.dive_pictures)
 #define gauge_pics (xenon2.gauge_pics)
@@ -1133,7 +1133,7 @@ LAYOUT_ASSERT(level_data_dst, 0x7d120);
 #define palette_shadow (xenon2.palette_shadow)
 #define key_table (xenon2.key_table)
 #define weapon_damage (xenon2.weapon_damage)
-#define v_796e (xenon2.v_796e)
+#define unused_796e (xenon2.unused_796e)
 #define kill_scores (xenon2.kill_scores)
 #define blast_damage (xenon2.blast_damage)
 #define title_text (xenon2.title_text)
@@ -1167,8 +1167,8 @@ LAYOUT_ASSERT(level_data_dst, 0x7d120);
 #define continue_text (xenon2.continue_text)
 #define credits_text (xenon2.credits_text)
 #define insert_disk_text (xenon2.insert_disk_text)
-#define v_8f94 (xenon2.v_8f94)
-#define v_8f96 (xenon2.v_8f96)
+#define cycle_flag_a (xenon2.cycle_flag_a)
+#define cycle_flag_b (xenon2.cycle_flag_b)
 #define loaded_level (xenon2.loaded_level)
 #define progress_text (xenon2.progress_text)
 #define shop_closing (xenon2.shop_closing)
@@ -1199,9 +1199,9 @@ LAYOUT_ASSERT(level_data_dst, 0x7d120);
 #define pic_17336 (xenon2.pic_17336)
 #define pic_182dc (xenon2.pic_182dc)
 #define pic_1838c (xenon2.pic_1838c)
-#define v_192ba (xenon2.v_192ba)
+#define weaponc0_picture (xenon2.weaponc0_picture)
 #define digit_gfx (xenon2.digit_gfx)
-#define v_19a9e (xenon2.v_19a9e)
+#define panel_words (xenon2.panel_words)
 #define music_base (xenon2.music_base)
 #define music_tempo_mul (xenon2.music_tempo_mul)
 #define music_flag_1a584 (xenon2.music_flag_1a584)

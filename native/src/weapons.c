@@ -265,7 +265,7 @@ Object *weapon_c0(Object *a0, Object *a1)
     n->fn_update = weaponc0_update;
     n->fn_draw = draw_bob_masked;
     n->fn_hit = s;
-    n->gfx = v_192ba;
+    n->gfx = weaponc0_picture;
     n->anim_delay = 0;
     n->x = PLAYER->x;
     n->y = PLAYER->y;
@@ -1238,7 +1238,7 @@ void player_move(Object *a0)
 
     player_x_prev = a0->x;
     player_y_prev = a0->y;
-    v_5dd0 = player_vx;
+    player_vx_prev = player_vx;
     if (joy_stick & 4) {
         if (player_vx > 0)
             player_vx = 0;
@@ -1471,11 +1471,11 @@ void weapon_shield_draw(Object *a0)
     a0->y = d1;
 }
 
-/* orig $00249C: a random enemy on the screen (a1 in the original; the end of the list when there is none): the (random below v_04e2)th
+/* orig $00249C: a random enemy on the screen (a1 in the original; the end of the list when there is none): the (random below target_count)th
  * one that is on the screen, groups ($B8) skipped, at most five passes over the list */
 static Object *pick_target(void)
 {
-    uint16_t d0 = v_04e2, d1;
+    uint16_t d0 = target_count, d1;
     Object *a1;
 
     if (d0 == 0)

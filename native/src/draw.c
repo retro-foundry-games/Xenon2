@@ -496,7 +496,7 @@ HLE_WEAK void draw_background(void)
     custom->bltadat = 0;
     BLTSIZE_WRITE(0x3028);
     BLIT_WAIT();
-    if (v_0d85)
+    if (skip_map_draw)
         return;
 
     draw_tile_grid(level_init_src + (int16_t)map_row_offset, 0x13, 0xc, (int16_t)-(int16_t)scroll_fine, 0);

@@ -145,7 +145,7 @@ void update_score_display(void)
 void init_level_state(void)
 {
     uint8_t *a0, *a1;
-    const uint16_t *a2 = v_19a9e;
+    const uint16_t *a2 = panel_words;
     uint16_t g, c, i;
     Object *o;
 
@@ -272,7 +272,7 @@ void init_objects(void)
     player_dead = 0;
     player_lives = 3;
     scroll_step_target = 1;
-    v_0d85 = 0;
+    skip_map_draw = 0;
     continues_left = 3;
     draw_status_digit();
     energy_dirty = 0xff;
@@ -503,7 +503,7 @@ void draw_enemy_list(void)
             d1++;
         a1 = owner_chain_next(a1);
     }
-    v_04e2 = d1;
+    target_count = d1;
 }
 
 /* orig $F02, $006862: puts the objects of a chain (towards the previous ones) back on the free list */
@@ -732,7 +732,7 @@ void level_start(void)
     for (i = 0; i < 12000; i++)
         other_player_level[i] = a0[i];
     background_scroll = 0;
-    v_04e2 = 0;
+    target_count = 0;
     trail_count = 0;
     for (i = 0; i < 16; i++)
         pickup_groups[i] = 0;

@@ -474,7 +474,7 @@ void level1_boss_update(Object *a0)
         }
     }
     d0 = (int16_t)(0x1e - a0->energy);
-    v_0d5a = (uint16_t)((v_0d5a & 0xff00) | ((v_0d5a + d0) & 0xff));
+    l1_eyes_phase = (uint16_t)((l1_eyes_phase & 0xff00) | ((l1_eyes_phase + d0) & 0xff));
 draw_table:
     src = sources[(frame_tick & 0xc) >> 2];
     copy_long(&level_567fa[0], src);
@@ -497,7 +497,7 @@ void level1_boss_draw(Object *a0)
     if ((int16_t)scroll_pos >= 0x280)
         return;
     draw_tile_grid(level_567bc, 5, 6, (uint16_t)(a0->y - scroll_pos), 0x38);
-    d7 = (v_0d5a >> 4) & 0xc;
+    d7 = (l1_eyes_phase >> 4) & 0xc;
     draw_bob_masked_at(0x98, (uint16_t)(a0->y - scroll_pos + 0x42), eyes[d7 >> 2]);
 }
 
@@ -514,7 +514,7 @@ void level1_init(void)
     }
     scroll_min = 0;
     scroll_max = 0x11ff;
-    v_0d5a = 0;
+    l1_eyes_phase = 0;
     a0 = obj_free_pop();
     a5 = LIST_C->prev;
     LIST_C->prev = a0;

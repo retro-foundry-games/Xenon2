@@ -1191,7 +1191,7 @@ void l2_boss_rest(Object *a0)
     uint32_t r;
     int16_t d1;
 
-    if ((int16_t)v_04e2 < 0x10) {
+    if ((int16_t)target_count < 0x10) {
         r = random_next();
         if (!(r & 0x2000)) {
             a0->v3e = (int16_t)((r & 7) + 2);
