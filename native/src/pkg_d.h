@@ -98,4 +98,14 @@ void level_event(uint16_t d0, const uint8_t *a1); void level_hook(uint16_t d0, c
 void level_scroll(void); void level_swap_hook(void); void level_init(void);
 void l4_event(uint16_t d0, const uint8_t *a1); void l4_hook(uint16_t d0, const uint8_t *a1, uint16_t d2);
 void l4_scroll(void); void l4_init(void); void l4_spawn_tower(const uint8_t *a1);
+void l4_enemy_a(Object *a0); void l4_shot_a(Object *a0); void l4_enemy_f8(Object *a0); void l4_enemy_b(Object *a0);
+void l4_b1_core(Object *a0); void l4_b1_gun(Object *a0); void l4_b1_head(Object *a0); void l4_b1_body(Object *a0); void l4_b1_tail(Object *a0);
+void l4_b1_core_hit(Object *a0, Object *a1, uint16_t d0); void l4_b1_gun_hit(Object *a0, Object *a1, uint16_t d0); void l4_gun_dead(Object *a0);
+void l4_b1_core_draw(Object *a0); void l4_b1_core_flash(Object *a0); void l4_b1_gun_draw(Object *a0); void l4_b1_gun_flash(Object *a0); void l4_b1_piece_draw(Object *a0);
+void l4_b2_head(Object *a0); void l4_b2_follow(Object *a0); void l4_b2_gun(Object *a0); void l4_b2_barrel(Object *a0); void l4_b2_wave(Object *a0);
+void l4_b2_link(Object *a0); void l4_b2_ring(Object *a0); void l4_b2_eye(Object *a0);
+void l4_b2_gun_hit(Object *a0, Object *a1, uint16_t d0); void l4_b2_barrel_hit(Object *a0, Object *a1, uint16_t d0);
+void l4_b2_ring_hit(Object *a0, Object *a1, uint16_t d0); void l4_b2_eye_hit(Object *a0, Object *a1, uint16_t d0);
+void l4_bar_update(Object *a0); void l4_bar_draw(Object *a0);
+void l4_walker_update(Object *a0); void l4_walker_hit(Object *a0, Object *a1, uint16_t d0); void l4_walker_flash(Object *a0); void l4_walker_draw(Object *a0);
 #endif
