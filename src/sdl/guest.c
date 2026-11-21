@@ -1,6 +1,6 @@
 /* The game's memory and the chips' registers.
  *
- * The memory is one block, struct Xenon (game.h): with MATCH_MEMORY_LAYOUT the members sit at the offsets of the original's addresses, so
+ * The memory is one block, struct Xenon2 (game.h): the members sit at the offsets of the original's addresses, so
  * an address of the original is an offset into the block.  The registers of the custom chips and of the CIAs are objects of their own. */
 #include <stdint.h>
 #include <stdio.h>
@@ -11,38 +11,34 @@
 #include "game.h"
 #include "host.h"
 
-struct Xenon xenon __attribute__((aligned(16)));
+struct Xenon2 xenon2 __attribute__((aligned(16)));
 volatile uint8_t host_custom_raw[0x1000] __attribute__((aligned(4)));
 volatile uint8_t host_cia_raw[0x2000];
 
 #include "guest_members.h"
 
-#ifndef MATCH_MEMORY_LAYOUT
-#error "the SDL port keeps the original's layout (MATCH_MEMORY_LAYOUT) for now"
-#endif
-
-/* an address of the original's memory is an offset into struct Xenon; a value that is already an address of the block (a pointer the C made) stays */
+/* an address of the original's memory is an offset into struct Xenon2; a value that is already an address of the block (a pointer the C made) stays */
 void guest_state(host_state_visit visit, void *arg)
 {
-    visit(&xenon, sizeof xenon, arg);
+    visit(&xenon2, sizeof xenon2, arg);
     visit((void *)host_custom_raw, sizeof host_custom_raw, arg);
     visit((void *)host_cia_raw, sizeof host_cia_raw, arg);
 }
 
 void *guest_ptr(uint32_t address)
 {
-    uint32_t base = (uint32_t)(uintptr_t)&xenon;
+    uint32_t base = (uint32_t)(uintptr_t)&xenon2;
 
-    if (address >= base && address < base + sizeof xenon)
+    if (address >= base && address < base + sizeof xenon2)
         return (void *)(uintptr_t)address;
-    if (address < sizeof xenon)
-        return (uint8_t *)&xenon + address;
+    if (address < sizeof xenon2)
+        return (uint8_t *)&xenon2 + address;
     return 0;
 }
 
 uint32_t guest_address(const void *p)
 {
-    return (uint32_t)((const uint8_t *)p - (const uint8_t *)&xenon);
+    return (uint32_t)((const uint8_t *)p - (const uint8_t *)&xenon2);
 }
 
 static uint16_t be16(const uint8_t *p) { return (uint16_t)(p[0] << 8 | p[1]); }
@@ -66,7 +62,7 @@ static int blob_skips(uint32_t m)
     return (blob_raw == 1 && m >= BLOB_LO && m < BLOB_HI) || (blob_raw == 2 && m >= BLOB_LEVEL_LO && m < BLOB_HI);
 }
 
-int guest_level_table(void) { return blob_raw == 2 ? xenon.v_0e04 : 0; }
+int guest_level_table(void) { return blob_raw == 2 ? xenon2.v_0e04 : 0; }
 extern void *guest_code(uint32_t address);
 
 static void missing_code(void) {}
@@ -151,10 +147,10 @@ int guest_load_game_image(void)
         fprintf(stderr, "xenon2-sdl: cannot read the game's image from disk 1\n");
         return -1;
     }
-    memset(&xenon, 0, sizeof xenon);
+    memset(&xenon2, 0, sizeof xenon2);
     /* the whole image as it is (big endian): the bytes that no member names are still the original's memory, read as bytes by the C that computes addresses
      * from a base; the named members are then converted over it */
-    memcpy((uint8_t *)&xenon + GAME_IMAGE_ADDRESS, image, GAME_IMAGE_SIZE);
+    memcpy((uint8_t *)&xenon2 + GAME_IMAGE_ADDRESS, image, GAME_IMAGE_SIZE);
     guest_load_range(GAME_IMAGE_ADDRESS, image, GAME_IMAGE_SIZE);
     free(image);
     return 0;
@@ -162,8 +158,8 @@ int guest_load_game_image(void)
 
 void host_irq_dispatch(int level)
 {
-    if (level >= 1 && level <= 7 && xenon.irq_vectors[level - 1])
-        xenon.irq_vectors[level - 1]();
+    if (level >= 1 && level <= 7 && xenon2.irq_vectors[level - 1])
+        xenon2.irq_vectors[level - 1]();
 }
 
 extern void game_entry(void) __attribute__((weak));   /* mainloop: the start-up flow of the original ($400) */
@@ -181,7 +177,7 @@ void host_game_start(void)
 extern void guest_unswap_record(const char *type, void *record);
 extern uint32_t guest_code_address(const void *function);
 
-unsigned host_vbl_count(void) { return xenon.vbl_count; }
+unsigned host_vbl_count(void) { return xenon2.vbl_count; }
 
 static uint8_t guest_high[0x80000];   /* the original's memory from $80000 to $FFFFF (the lockstep gives it); zeros otherwise */
 
@@ -217,9 +213,9 @@ void guest_edge_apply(uint8_t value);
 void guest_set_stick(uint8_t value)
 {
     if (!stick_poked)
-        stick_saved = xenon.v_0a00;
+        stick_saved = xenon2.v_0a00;
     stick_poked = 1;
-    xenon.v_0a00 = value;
+    xenon2.v_0a00 = value;
     guest_edge_apply(value);
 }
 
@@ -243,19 +239,19 @@ uint8_t guest_a6a(uint8_t a01)
 
 void guest_set_shield(uint16_t frames)
 {
-    xenon.v_0cc8 = frames;
+    xenon2.v_0cc8 = frames;
 }
 
 void guest_stick_restore(void)
 {
     if (stick_poked)
-        xenon.v_0a00 = stick_saved;
+        xenon2.v_0a00 = stick_saved;
     stick_poked = 0;
 }
 
 void host_export_ram_buf(uint8_t *ram)   /* ram: 0x80000 bytes */
 {
-    memcpy(ram, &xenon, sizeof xenon);
+    memcpy(ram, &xenon2, sizeof xenon2);
     for (unsigned i = 0; i < sizeof guest_members / sizeof guest_members[0]; i++) {
         uint8_t *m = ram + guest_members[i].address;
         uint32_t size = guest_members[i].size, elem = guest_members[i].elem;
@@ -301,7 +297,7 @@ void host_export_ram_buf(uint8_t *ram)   /* ram: 0x80000 bytes */
  * original's state this way) */
 void host_import_ram_buf(const uint8_t *ram)
 {
-    memcpy(&xenon, ram, sizeof xenon);
+    memcpy(&xenon2, ram, sizeof xenon2);
     blob_raw = be16(ram + 0xe04) > 1 ? 2 : 0;   /* (v_0e04: the level) */
     guest_load_range(0, ram, 0x80000);
 }
