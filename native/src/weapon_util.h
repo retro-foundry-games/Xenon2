@@ -10,7 +10,7 @@ static inline void kill_object_thunk(Object *o)
     o->fn_draw = (obj_fn)obj_nop_thunk;
     o->fn_hit = (void *)obj_nop_thunk;
     o->is_part = 0;
-    o->flag60 = 0;
+    o->persists = 0;
 }
 
 static inline Object *alloc_b(Object *a0)

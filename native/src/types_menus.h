@@ -28,7 +28,7 @@ struct ObjMove {
     ObjMove *chain;             /* 5a */
     uint8_t shot_count;         /* 5e */
     uint8_t shot_rate;          /* 5f */
-    uint8_t flag60;             /* 60 */
+    uint8_t persists;             /* 60 */
     uint8_t pad61;
 };
 

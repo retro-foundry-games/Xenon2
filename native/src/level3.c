@@ -39,7 +39,7 @@ static void kill_thunk(Object *o)
     o->fn_draw = (obj_fn)obj_nop_thunk;
     o->fn_hit = (void *)obj_nop_thunk;
     o->is_part = 0;
-    o->flag60 = 0;
+    o->persists = 0;
 }
 
 static void set_anim(Object *o, uint32_t address)
@@ -172,7 +172,7 @@ void l3_init(void)
     a0->type = 0x50;
     a0->fn_update = (obj_fn)obj_nop_thunk;
     a0->fn_draw = FN(l3_end_draw);
-    a0->flag60 = -1;
+    a0->persists = -1;
     level_vars[16] = 0xe496;
     level_vars[17] = 0xaa8a;
     level_vars[18] = 0x5274;

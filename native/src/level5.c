@@ -36,7 +36,7 @@ static void kill_thunk(Object *o)
     o->fn_draw = (obj_fn)obj_nop_thunk;
     o->fn_hit = (void *)obj_nop_thunk;
     o->is_part = 0;
-    o->flag60 = 0;
+    o->persists = 0;
 }
 
 static void set_anim(Object *o, uint32_t address)
@@ -435,7 +435,7 @@ void l5_spawn_boss1(uint16_t d2)
         a0->v3e = (int16_t)W(rec + 18);
         a0->v40 = (int16_t)W(rec + 20);
         a0->v28 = 0;
-        a0->flag60 = 0xff;
+        a0->persists = 0xff;
         a0->v2a = 4;
         a0->energy = B(rec + 22);
         a0->big = B(rec + 23);
@@ -705,7 +705,7 @@ void l5_spawn_boss2(const uint8_t *a1)
         a0->fn_hit = GFN(sh_r32(rec + 10));
         a0->gfx = GPTR(sh_r32(rec + 14));
         a0->anim_delay = 0;
-        a0->flag60 = 0xff;
+        a0->persists = 0xff;
         a0->x = 0x70;
         a0->y = d1;
         a0->v3e = (int16_t)W(rec + 18);

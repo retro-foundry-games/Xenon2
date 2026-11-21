@@ -85,7 +85,7 @@ memory at the stop, `LS.hex(...)`.  `gdb -p` on the `xenon2-sdl-dev` process sho
 
 13. **Naming left in `struct Xenon2`** (2026-11-21): 14 variables are still `v_XXXX` because the code only resets them or never reads them:
    `v_0416 v_041a v_09fd v_09fe v_8f94 v_8f96 v_04f1 v_0d5a v_5dd0 v_192ba v_04e2 v_0d85 v_19a9e v_796e`.
-   `Object` scratch fields `v28 v2a v2c v2e v30 v3e v40 flag60 flag61` mean different things per enemy kind (`ObjMove` is the path-script view); naming them needs one view per kind.
+   `Object` scratch fields `v28 v2a v2c v2e v30 v3e v40` mean different things per enemy kind (`ObjMove` is the path-script view); naming them needs one view per kind.
    `spawn_def_326c` stays raw bytes (shared big-endian format with the level blobs).
 
 12. **Lockstep play, what to know** (2026-11-21): windowed runs are `play=1 live=0 state=frame-N health=full [shield=SECONDS] tolerant=1 record=captures/input/play-X.txt`, started with `setsid -f nohup` and `DISPLAY=:0 WAYLAND_DISPLAY=wayland-1`; `live=0` steps the port only after the original's stick reads are in (the live stepping raced them).  The stick a routine saw is recorded at its read of `joy_stick` (`$5DF8` for the move, `$68F8`/`$690A` for the options), not at its entry: an interrupt between them changes it.  Replays (`replay=`) cannot reproduce stops that came from live joystick timing.  `shield=SECONDS` makes both sides invulnerable.  `set_continue(true)` goes through the shop's differences; the monitor that switches it off needs about 40 s without a new difference.  Saves land in `local/save/frame-N.state`; use the newest by time (`ls -t`).  zsh does not split `$t` in `set -- $t`.

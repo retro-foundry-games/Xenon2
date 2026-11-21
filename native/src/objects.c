@@ -58,7 +58,7 @@ static void kill_object(Object *o)
     o->fn_draw = (obj_fn)obj_nop;
     o->fn_hit = (void *)obj_nop;
     o->is_part = 0;
-    o->flag60 = 0;
+    o->persists = 0;
 }
 
 /* ---- animation scripts ---- */

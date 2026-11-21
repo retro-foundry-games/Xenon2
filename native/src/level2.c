@@ -31,7 +31,7 @@ static void kill_thunk(Object *o)
     o->fn_draw = (obj_fn)obj_nop_thunk;
     o->fn_hit = (void *)obj_nop_thunk;
     o->is_part = 0;
-    o->flag60 = 0;
+    o->persists = 0;
 }
 
 static void copy2(uint8_t *dst, const uint8_t *src)
@@ -245,8 +245,8 @@ void l2_init(void)
     a0->fn_draw = FN(l2_boss_draw);
     a0->fn_hit = (void *)l2_boss_hit;
     SET_V5E(a0, 0);
-    a0->flag60 = -1;
-    a0->flag61 = -1;
+    a0->persists = -1;
+    a0->screen_fixed = -1;
     a0->y = 0x60;
     a0->energy = (int16_t)W(0x54e5e);
     a0->v28 = -1;
@@ -263,8 +263,8 @@ void l2_init(void)
         a0->fn_draw = (obj_fn)obj_nop_thunk;
         a0->fn_hit = (void *)l2_gate_hit;
         a0->energy = (int16_t)W(0x54e60);
-        a0->flag60 = -1;
-        a0->flag61 = -1;
+        a0->persists = -1;
+        a0->screen_fixed = -1;
         SET_V5E(a0, 0);
         a0->x = (int16_t)x;
         a0->y = (int16_t)y;

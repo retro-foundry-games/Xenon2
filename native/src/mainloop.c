@@ -178,8 +178,8 @@ steal:
     prev->next = next;
 clear:
     a0->is_part = 0;
-    a0->flag60 = 0;
-    a0->flag61 = 0;
+    a0->persists = 0;
+    a0->screen_fixed = 0;
     return a0;
 }
 
