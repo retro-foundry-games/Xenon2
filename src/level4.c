@@ -3,6 +3,8 @@
 #include "shop.h"
 #include "game_all.h"
 #include <string.h>
+#define PICKUP_MODE(o) ((o)->v28)
+#define PICKUP_DIR(o)  ((o)->v2a)
 #define PATH_WAIT(o) ((o)->v28)
 
 /* the scratch fields of Object, by the kind that uses them */
@@ -1237,13 +1239,13 @@ void l4_walker_hit(Object *a0, Object *a1, uint16_t d0)
     player_score += (uint16_t)a1->score;
     p = alloc_in(LIST_B);
     p->type = 0x18;
-    WALKER_STATE(p) = 7;
+    PICKUP_MODE(p) = 7;
     p->fn_update = (obj_fn)pickup_update;
     p->fn_draw = draw_bob_masked;
     anim_header_set(p, anim_264e);
     p->x = a1->x;
     p->y = (int16_t)(a1->y - scroll_pos);
-    p->v2a = (int16_t)random_next();
+    PICKUP_DIR(p) = (int16_t)random_next();
     walker_reset(a1);
 }
 

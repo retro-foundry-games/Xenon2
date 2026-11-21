@@ -11,6 +11,7 @@
 
 #define PICKUP_DIR(o) ((o)->v2a)
 #define PICKUP_KIND(o) ((o)->v30)
+#define SHOT_HITS(o) ((o)->v30)
 
 /* a weapon object sits at its offset from the player */
 #define WEAPON_DX(o) ((o)->v3e)
@@ -708,7 +709,7 @@ void shot_fixed_update(Object *a0)
         shot_gone(a0);
         return;
     }
-    if (PICKUP_KIND(a0) == 0)
+    if (SHOT_HITS(a0) == 0)
         return;
     a1 = collide_enemies(a0);
     if (a1 == 0)
@@ -1726,7 +1727,7 @@ void weaponb0_update(Object *a0)
         a1->y = d0;
         set_anim(a1, anim_2796);
         a1->score = a0->score;
-        a1->v30 = d7;
+        SHOT_HITS(a1) = d7;
         SHOT_SPEED_HI(a1) = (int8_t)random_next();
     }
 }
