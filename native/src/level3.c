@@ -3,6 +3,11 @@
 #include "weapons.h"
 #include "shop.h"
 #include "game_all.h"
+#define ARM_ANGLE_HI(o) ((o)->v2a)
+#define ARM_ANGLE_LO(o) ((o)->v2c)
+
+/* the scratch fields of Object, by the kind that uses them */
+
 
 /* the scratch fields of Object, by the kind that uses them */
 #define WALKER_STATE(o) ((o)->v28)
@@ -768,7 +773,7 @@ void l3_part_arm(Object *a0)
     }
     if ((random_next() & 0xff) >= 3) {
         a1->steps = 0;
-        a1->v2c = 0x40;
+        ARM_ANGLE_LO(a1) = 0x40;
         bbox_from_frame(a0);
         return;
     }
@@ -780,15 +785,15 @@ void l3_part_arm(Object *a0)
         uint32_t r;
 
         d0 = (uint16_t)((d0 & 0xff00) | (uint8_t)((d0 & 0xff) - 0x60));
-        a1->v2a = 0;
-        a1->v2c = (int16_t)d0;
+        ARM_ANGLE_HI(a1) = 0;
+        ARM_ANGLE_LO(a1) = (int16_t)d0;
         r = (((random_next() & 0x1f) + 0x20) << 8) << 2;
         a1->turn[0] = (uint16_t)(r >> 16);
         a1->turn[1] = (uint16_t)r;
         a1->turn[2] = 0;
         a1->steps = 1;
         if (a0->v30 == 0x60) {
-            a1->v2c = (int16_t)((a1->v2c & 0xff00) | (uint8_t)(a1->v2c + 0x40));
+            ARM_ANGLE_LO(a1) = (int16_t)((ARM_ANGLE_LO(a1) & 0xff00) | (uint8_t)(ARM_ANGLE_LO(a1) + 0x40));
             r = -r;
             a1->turn[0] = (uint16_t)(r >> 16);
             a1->turn[1] = (uint16_t)r;
@@ -846,7 +851,7 @@ void l3_part_arm_tip(Object *a0)
 
     l3_arm_follow(a0);
     obj_script_run(a0);
-    d0 = (uint16_t)(((uint16_t)a0->v2c >> 2) & 0x38);
+    d0 = (uint16_t)(((uint16_t)ARM_ANGLE_LO(a0) >> 2) & 0x38);
     if (a0->steps == 0xe)
         sfx_cmd = 0xc;
     d1 = (uint16_t)(frame_tick & 4);
