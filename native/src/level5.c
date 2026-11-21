@@ -3,6 +3,10 @@
 #include "shop.h"
 #include "game_all.h"
 #include <string.h>
+#define CANNON_BOB(o) ((o)->v2a)
+
+/* the scratch fields of Object, by the kind that uses them */
+
 
 /* the path script view of an object (ObjMove) */
 #define PATH_WAIT(o) ((o)->v28)
@@ -303,7 +307,7 @@ void l5_spawn_cannon(const uint8_t *a1)
     }
     set_anim(a0, a2);
     a0->kind = 0;
-    a0->v2a = 0x14;
+    CANNON_BOB(a0) = 0x14;
 }
 
 /* the pellet: type $E4 of the cannon and the unit ($55682) */
@@ -465,7 +469,7 @@ void l5_spawn_boss1(uint16_t d2)
         a0->y = (int16_t)0xfec0;
         PART_DX(a0) = (int16_t)W(rec + 18);
         PART_DY(a0) = (int16_t)W(rec + 20);
-        a0->v28 = 0;
+        BOSS_PHASE(a0) = 0;
         a0->persists = 0xff;
         a0->v2a = 4;
         a0->energy = B(rec + 22);
@@ -1039,7 +1043,7 @@ void l5_spawn_gates(const uint8_t *a1)
         a0->fn_hit = GFN(sh_r32(rec + 6));
         a0->x = d0;
         a0->y = d1;
-        a0->v28 = 0;
+        L5_CELL(a0) = 0;
         a0->energy = (int16_t)W(0x54e5e);
         a0->hit[0] = 0x3e8;
         a0->hit[2] = 0x3e8;
