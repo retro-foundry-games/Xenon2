@@ -35,7 +35,7 @@ game's disk reads.
 
 ## The port
 
-`native/` is the reconstruction (the C of the game proper: menu, level 1 and the music player, in `src/pkg_*.c`, each function with `/* orig $ADDR */`),
+`native/` is the reconstruction (the C of the game proper: menu, level 1 and the music player, in `src/*.c`, each function with `/* orig $ADDR */`),
 built in the reproducible shell of `native/flake.nix` (`nix develop`, or just `make`, which re-enters it):
 
     make -C native blob BUILD=build/x     the game for the 68000 as a blob at $C0000 (what the oracle runs against the original)

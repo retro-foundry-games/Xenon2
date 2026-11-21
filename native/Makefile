@@ -69,7 +69,7 @@ $(SDL_BUILD)/h_%.o: $(SRC)/sdl/%.c $(SRC)/game_state.h $(wildcard $(SRC)/*.h $(S
 $(SDL_BUILD):
 	mkdir -p $@
 # the loader tables of the port: how records of the disk image become records of the host, and the C function of each address of the original's code
-$(SRC)/sdl/records.c $(SRC)/code_table.c: $(wildcard $(SRC)/types_*.h $(SRC)/pkg_*.c) ../tools/gen_records.py
+$(SRC)/sdl/records.c $(SRC)/code_table.c: $(wildcard $(SRC)/types_*.h $(filter-out $(SRC)/code_table.c $(SRC)/data.c,$(wildcard $(SRC)/*.c))) ../tools/gen_records.py
 	$(PYTHON) ../tools/gen_records.py
 sdl: $(SDL_BUILD)/xenon2-sdl
 $(SDL_BUILD)/xenon2-sdl: $(SDL_OBJS)

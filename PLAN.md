@@ -15,14 +15,15 @@ and its running.  Method and tools: [DECOMPILING.md](DECOMPILING.md).  Setup and
 
 | module | functions at | instructions | what is probably there |
 | --- | --- | --- | --- |
-| pkg_a | `$0000-$17FF` | ~440 | low-RAM routines: blitter helpers, text, object lists |
-| pkg_b | `$1800-$27FF` + the start-up flow of `$400` (`$7032`, `$70F6`, `$763A` ...) | ~470 | the start, the main loop, random, interrupts |
-| pkg_c | `$2800-$3FFF` | ~455 | |
-| pkg_d | `$4000-$5FFF`, the level blob `$54000-$6FFFF`, `$64000` | ~490 | level code (the blob), enemies |
-| pkg_e | `$6000-$6FFF` | ~540 | |
-| pkg_f | `$7000-$87FF` | ~410 | |
-| pkg_g | `$8800-$FFFF` | ~600 | the menu, the disk check, loader |
-| pkg_h | `$19000-$1FFFF` | ~560 | the music player |
+| draw | `$0000-$17FF` | ~440 | low-RAM routines: blitter helpers, text, object lists |
+| mainloop | `$1800-$27FF` + the start-up flow of `$400` (`$7032`, `$70F6`, `$763A` ...) | ~470 | the start, the main loop, random, interrupts |
+| objects | `$2800-$3FFF` | ~455 | |
+| weapons | `$4000-$5FFF` | ~490 | weapons, pickups, the player |
+| level1 to level5 | the level blob `$54E00-$6FFFF`, one file per level | | the levels' code |
+| play | `$6000-$6FFF` | ~540 | |
+| title | `$7000-$87FF` | ~410 | |
+| menus | `$8800-$FFFF` | ~600 | the menu, the disk check, loader |
+| sound | `$19000-$1FFFF` | ~560 | the music player |
 
 Then: the SDL machine layer (`native/src/sdl/`: guest memory, files, irq, HLE display, sound), the port build, the run.
 
@@ -35,5 +36,5 @@ Then: the SDL machine layer (`native/src/sdl/`: guest memory, files, irq, HLE di
   functions the two scenarios never reach (many weapon, boss and turret routines: written carefully from the disassembly, unchecked).
 - Port: `tools/verify_port.sh` runs the port headless from the title through the menu, the first level selected, loaded (disk 2 asked for and
   inserted) and running, and checks each stage.  Enemies move, shots kill them, the score rises.  Not looked at in the window by the author.
-- The shop (`shop_main`, pkg_i.c and pkg_i2.c): ported and checked by the oracle in the `shop` scenario, see DECOMPILING.md.  The shop's end-of-broadcast path (`v_8fec`) and the
+- The shop (`shop_main`, shop.c and shop_sound.c): ported and checked by the oracle in the `shop` scenario, see DECOMPILING.md.  The shop's end-of-broadcast path (`v_8fec`) and the
   weapon-less corners listed in the commit messages are written from the dump.

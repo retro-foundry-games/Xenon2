@@ -20,7 +20,7 @@ def definitions():
 def main():
     dry = '--dry' in sys.argv
     defs = definitions()
-    files = sorted(glob.glob(os.path.join(SRC, '*.c')) + glob.glob(os.path.join(SRC, 'pkg_*.h')))
+    files = sorted(glob.glob(os.path.join(SRC, '*.c')) + glob.glob(os.path.join(SRC, '*.h')))
     missing, ambiguous, count = {}, {}, 0
     for f in files:
         text = open(f).read()

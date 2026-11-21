@@ -1,0 +1,9 @@
+; level2: the variables level 2's blob ($54E00 while level 2 is loaded) uses; the blob itself is raw memory (see level2.c)
+var v_0d5c 0xd5c uint16_t                          ; level 2: gates left to destroy in the first fight
+var v_0d5e 0xd5e uint8_t                           ; level 2: bit n set while the wall of debris n is made; 3 when the gates are open
+var v_0d8d 0xd8d uint8_t                           ; level 2: $FF once the left wall of debris is made
+var v_0d8e 0xd8e uint8_t
+var v_0d8f 0xd8f uint8_t                           ; level 2: debris waves left before the walls come in the other pattern
+var v_0d90 0xd90 uint8_t                           ; level 2: $FF when the first fight is won
+var level_buf 0xe08 uint8_t *                      ; level 2: the table of blocks that break (four groups of a count and 8-byte entries)
+var level_obj 0xda0 Object                         ; level 2: the object a hit block stands for (its hit routine is the block's)

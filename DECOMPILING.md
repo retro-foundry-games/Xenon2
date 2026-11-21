@@ -71,7 +71,7 @@ the level running with its blob at `$54E00`; 512 KB each).  Read tables and stri
 
 ## Files, and working beside others
 
-Several people work in this tree at once.  Each has a **module name** (`pkg_a`, ...) and owns only:
+Several people work in this tree at once.  Each has a **module name** (`draw`, ...) and owns only:
 
     native/src/<module>.c, <module>.h          the code and its header (prototypes of its functions; `extern` of fn_ADDR callees)
     native/src/types_<module>.h                its record types (included into game_state.h by the generator)
@@ -98,24 +98,24 @@ overlap breaks everyone's build): run `make -C native generate` after editing it
    that wait for the vertical blank) is checked inside its caller or by the later lockstep run; say which in your report.
 5. A function that is not called in either scenario (`calls 0`) is not checked: write it from the listing with extra care and report it.
 
-## The shop (pkg_i.c, pkg_i2.c)
+## The shop (shop.c, shop_sound.c)
 
-The shop is a program of its own: `shop_run` (pkg_g) loads 248 sectors of disk 2 over the level's blob at `$54E00` and `shop_main` is its entry.  Its code, tables and pictures are that
-blob, **raw big-endian memory**: pkg_i.c reads and writes it with `sh_r16/sh_w16...` (`GPTR` and `rd16/wr16`) at the addresses the shop has them, named by `#define SH_...`;
+The shop is a program of its own: `shop_run` (menus) loads 248 sectors of disk 2 over the level's blob at `$54E00` and `shop_main` is its entry.  Its code, tables and pictures are that
+blob, **raw big-endian memory**: shop.c reads and writes it with `sh_r16/sh_w16...` (`GPTR` and `rd16/wr16`) at the addresses the shop has them, named by `#define SH_...`;
 no symbol describes the blob (the level's members that lie there are left alone while it is loaded: `guest_blob_raw`).  Its variables below `$54E00` are in
-`symbols/pkg_i.symbols`.  Functions carry `shop $ADDR` (not `orig $`: the level's code is at the same addresses and the code table is the level's).  An address of its own
+`symbols/shop.symbols`.  Functions carry `shop $ADDR` (not `orig $`: the level's code is at the same addresses and the code table is the level's).  An address of its own
 code that the shop stores in memory is a C function (`shop_irq_tick` and `shop_sound_cmd` in `$2090/$2094`); the table of the routines an item grants (`$5573A`) is a `switch`
-over the base game's C (`item_grant`).  The shop has its own sound player (`$6477C-$64D4A`, pkg_i2.c) that writes the audio registers (`HLE: audio`).
+over the base game's C (`item_grant`).  The shop has its own sound player (`$6477C-$64D4A`, shop_sound.c) that writes the audio registers (`HLE: audio`).
 
 - `analysis-shop/` (`ANALYSIS_DIR=analysis-shop uv run tools/show.py ADDR`) is made by `tools/analyze.py` from `host/trace_shop.lua` (the original single-stepped in the shop under a seeded random
   player; `poke=ADDR:SIZE:VALUE,...` sets variables at frame 0: the cash, the setting).  Code no run reaches is read from the dump with `tools/m68kdis.py captures/trace-shop-1500.bin ADDR LEN`.
 - Oracle scenario `shop` (`tools/check.py --scenario shop`): `local/save/shop-before.state` (the original at `shop_run`, **in the 1 MB chip RAM machine**: a 512 KB state would make
   the blob at `$C0000` alias the game's memory) and a seeded random player; `ORACLE_SEED=N ORACLE_FRAMES=N ORACLE_ARGS="poke=c9a:l:50000"` vary it (seed 0: no stick).  The shop cases
-  (`host/cases/pkg_i.lua`) run only while the shop's code is in memory (`where = in_shop`): the level's code that replaces it sits at the same addresses.
+  (`host/cases/shop.lua`) run only while the shop's code is in memory (`where = in_shop`): the level's code that replaces it sits at the same addresses.
 - `case.input = true` makes the oracle give the program a random player's stick and fire at every frame flip (the routine that flips the screens does not just return): that is how `shop_stick`, `shop_sell`,
   `shop_buy` and the whole `shop_main` are called by the oracle although they wait for the fire button (`ORACLE_SEED=0 ORACLE_FRAMES=150000 ORACLE_ARGS="poke=e04:w:5,8fec:b:255,e8080:l:N"`
   runs the whole shop under another setting or another sequence of inputs).  `frames = N` (the watchdog) and `samples = N` of a case suit the long ones.
-- Fuzz cases (`*_fuzz` in `host/cases/pkg_i.lua`): `hook = ADDR` hooks the case at an address of a function the shop passes every frame, `setup(ami, n)` sets the variables the function reads to random values
+- Fuzz cases (`*_fuzz` in `host/cases/shop.lua`): `hook = ADDR` hooks the case at an address of a function the shop passes every frame, `setup(ami, n)` sets the variables the function reads to random values
   for the call (and returns the function that puts them back), `mutate(regs, n)` changes the registers: that is how the functions a run reaches rarely (`shop_can_buy` for every item and ship, the stock
   pages, the sound channels in every state) are compared at many states.  `cover=ADDR,...` (oracle argument) lists which addresses of the original the run executed.
 
