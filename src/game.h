@@ -159,11 +159,11 @@ struct Xenon2 {
     uint8_t l2_debris_waves;  /* $000D8F var */
     uint8_t l2_first_fight_won;  /* $000D90 var */
     PAD(15)
-    struct Object level_obj;  /* $000DA0 var */
+    struct Object l2_block_object;  /* $000DA0 var */
     uint16_t difficulty;  /* $000E02 var */
     uint16_t level_number;  /* $000E04 var */
     uint16_t respawn_shield;  /* $000E06 var */
-    uint8_t * level_buf;  /* $000E08 var */
+    uint8_t * l2_block_table;  /* $000E08 var */
     PAD(340)
     int8_t * piece_directions;  /* $000F60 var */
     uint8_t * big_explosion_anim;  /* $000F64 var */
@@ -175,8 +175,8 @@ struct Xenon2 {
     PAD(2020)
     const uint8_t tile_mask_block[32];  /* $001EA2 tab */
     PAD(300)
-    uint32_t random_a;  /* $001FEE var */
-    uint32_t random_b;  /* $001FF2 var */
+    uint32_t random_state_a;  /* $001FEE var */
+    uint32_t random_state_b;  /* $001FF2 var */
     PAD(150)
     uint16_t irq_div;  /* $00208C var */
     uint8_t irq_joy;  /* $00208E var */
@@ -530,7 +530,7 @@ struct Xenon2 {
     PAD(514)
     const uint16_t l1_unit_pieces_less_one[1];  /* $055CE6 tab */
     struct LevelSeg level_segs[11];  /* $055CE8 arr */
-    struct LevelSpawn level_spawns[16];  /* $055D6C arr */
+    struct LevelSpawn l1_unit_starts[16];  /* $055D6C arr */
     PAD(840)
     uint8_t * l1_piece_pictures[16];  /* $056174 arr */
     PAD(470)
@@ -673,19 +673,19 @@ LAYOUT_ASSERT(l2_left_wall_made, 0xd8d);
 LAYOUT_ASSERT(l2_right_wall_made, 0xd8e);
 LAYOUT_ASSERT(l2_debris_waves, 0xd8f);
 LAYOUT_ASSERT(l2_first_fight_won, 0xd90);
-LAYOUT_ASSERT(level_obj, 0xda0);
+LAYOUT_ASSERT(l2_block_object, 0xda0);
 LAYOUT_ASSERT(difficulty, 0xe02);
 LAYOUT_ASSERT(level_number, 0xe04);
 LAYOUT_ASSERT(respawn_shield, 0xe06);
-LAYOUT_ASSERT(level_buf, 0xe08);
+LAYOUT_ASSERT(l2_block_table, 0xe08);
 LAYOUT_ASSERT(piece_directions, 0xf60);
 LAYOUT_ASSERT(big_explosion_anim, 0xf64);
 LAYOUT_ASSERT(copper_list_a, 0x1014);
 LAYOUT_ASSERT(copper_list_b, 0x1038);
 LAYOUT_ASSERT(pow10, 0x169e);
 LAYOUT_ASSERT(tile_mask_block, 0x1ea2);
-LAYOUT_ASSERT(random_a, 0x1fee);
-LAYOUT_ASSERT(random_b, 0x1ff2);
+LAYOUT_ASSERT(random_state_a, 0x1fee);
+LAYOUT_ASSERT(random_state_b, 0x1ff2);
 LAYOUT_ASSERT(irq_div, 0x208c);
 LAYOUT_ASSERT(irq_joy, 0x208e);
 LAYOUT_ASSERT(irq_joy_prev, 0x208f);
@@ -921,7 +921,7 @@ LAYOUT_ASSERT(l1_turret_c_cells_dc, 0x55ad4);
 LAYOUT_ASSERT(l1_turret_c_cells_d8, 0x55adc);
 LAYOUT_ASSERT(l1_unit_pieces_less_one, 0x55ce6);
 LAYOUT_ASSERT(level_segs, 0x55ce8);
-LAYOUT_ASSERT(level_spawns, 0x55d6c);
+LAYOUT_ASSERT(l1_unit_starts, 0x55d6c);
 LAYOUT_ASSERT(l1_piece_pictures, 0x56174);
 LAYOUT_ASSERT(l1_boss_part_pictures, 0x5638a);
 LAYOUT_ASSERT(l1_boss_grid, 0x567bc);
@@ -1051,19 +1051,19 @@ LAYOUT_ASSERT(level_data_dst, 0x7d120);
 #define l2_right_wall_made (xenon2.l2_right_wall_made)
 #define l2_debris_waves (xenon2.l2_debris_waves)
 #define l2_first_fight_won (xenon2.l2_first_fight_won)
-#define level_obj (xenon2.level_obj)
+#define l2_block_object (xenon2.l2_block_object)
 #define difficulty (xenon2.difficulty)
 #define level_number (xenon2.level_number)
 #define respawn_shield (xenon2.respawn_shield)
-#define level_buf (xenon2.level_buf)
+#define l2_block_table (xenon2.l2_block_table)
 #define piece_directions (xenon2.piece_directions)
 #define big_explosion_anim (xenon2.big_explosion_anim)
 #define copper_list_a (xenon2.copper_list_a)
 #define copper_list_b (xenon2.copper_list_b)
 #define pow10 (xenon2.pow10)
 #define tile_mask_block (xenon2.tile_mask_block)
-#define random_a (xenon2.random_a)
-#define random_b (xenon2.random_b)
+#define random_state_a (xenon2.random_state_a)
+#define random_state_b (xenon2.random_state_b)
 #define irq_div (xenon2.irq_div)
 #define irq_joy (xenon2.irq_joy)
 #define irq_joy_prev (xenon2.irq_joy_prev)
@@ -1299,7 +1299,7 @@ LAYOUT_ASSERT(level_data_dst, 0x7d120);
 #define l1_turret_c_cells_d8 (xenon2.l1_turret_c_cells_d8)
 #define l1_unit_pieces_less_one (xenon2.l1_unit_pieces_less_one)
 #define level_segs (xenon2.level_segs)
-#define level_spawns (xenon2.level_spawns)
+#define l1_unit_starts (xenon2.l1_unit_starts)
 #define l1_piece_pictures (xenon2.l1_piece_pictures)
 #define l1_boss_part_pictures (xenon2.l1_boss_part_pictures)
 #define l1_boss_grid (xenon2.l1_boss_grid)

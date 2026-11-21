@@ -1,4 +1,4 @@
 ; the lead's own symbols (the random number generator, in the code area of the original)
-var random_a 0x1fee uint32_t ; random number generator state
-var random_b 0x1ff2 uint32_t
+var random_state_a 0x1fee uint32_t ; random number generator state
+var random_state_b 0x1ff2 uint32_t
 arr irq_vectors 0x64 irq_fn 7 ; the interrupt vectors, levels 1 to 7 (assign the handlers here: irq_vectors[2] = irq_vblank)
