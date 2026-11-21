@@ -3,6 +3,27 @@
 #include "shop.h"
 #include "game_all.h"
 #include <string.h>
+#define FN(f) ((obj_fn)(f))
+void l5_unit_update(Object *a0);
+
+void l5_beam_draw(Object *a0);
+void l5_beam_update(Object *a0);
+void l5_boss2_dead(Object *a0);
+void l5_boss2_draw(Object *a0);
+void l5_boss2_flash(Object *a0);
+void l5_boss_draw(Object *a0);
+void l5_bridge_flash(Object *a0);
+void l5_bridge_hit(Object *a0, Object *a1, uint16_t d0);
+void l5_bridge_update(Object *a0);
+void l5_cannon_update(Object *a0);
+void l5_gunner_update(Object *a0);
+void l5_gun_update(Object *a0);
+void l5_missile_update(Object *a0);
+void l5_pellet_update(Object *a0);
+void l5_unit_flash(Object *a0);
+void l5_unit_hit(Object *a0, Object *a1, uint16_t d0);
+void l5_wall_flash_a(Object *a0);
+void l5_wall_flash_b(Object *a0);
 #define CANNON_BOB(o) ((o)->v2a)
 
 /* the scratch fields of Object, by the kind that uses them */
@@ -231,7 +252,7 @@ void l5_spawn_gunners(const uint8_t *a1)
         Object *a0 = insert_head(LIST_C);
 
         a0->type = 0xdc;
-        a0->fn_update = GFN(0x552da);
+        a0->fn_update = FN(l5_gunner_update);
         a0->fn_draw = (obj_fn)draw_bob_masked;
         a0->fn_hit = (void *)hit_enemy;
         a0->gfx = GPTR(0x5c1ea);
@@ -290,7 +311,7 @@ void l5_gunner_update(Object *a0)
 void l5_spawn_cannon(const uint8_t *a1)
 {
     uint16_t d0 = rd16(a1 + 0xc) ? 0x104 : 0x100;
-    Object *a0 = spawn_marker_enemy(d0, a1, (void (*)(void))GFN(0x555a6));
+    Object *a0 = spawn_marker_enemy(d0, a1, (void (*)(void))FN(l5_cannon_update));
     uint32_t a2 = 0x55516;
 
     a0->y = (int16_t)(a0->y - scroll_pos);
@@ -316,7 +337,7 @@ static void spawn_pellet(int16_t d0, int16_t d1, uint16_t d2)
     Object *a1 = alloc_in(LIST_C);
 
     a1->type = 0xe4;
-    a1->fn_update = GFN(0x5581e);
+    a1->fn_update = FN(l5_pellet_update);
     a1->fn_draw = (obj_fn)draw_bob_masked;
     a1->fn_hit = (void *)hit_enemy;
     a1->x = d0;
@@ -485,7 +506,7 @@ void l5_spawn_boss1(uint16_t d2)
 /* level5 $055D1C: the flash of the boss, one frame */
 void l5_boss_flash(Object *a0)
 {
-    a0->fn_draw = GFN(0x55eda);
+    a0->fn_draw = FN(l5_boss_draw);
     draw_tile_grid_flash((const uint8_t *)GPTR(0x57666), 0xe, 0x11, a0->y, (uint16_t)((uint16_t)a0->x >> 1));
 }
 
@@ -571,7 +592,7 @@ fire:
         d1 = (int16_t)(d1 + a0->y);
         a1 = insert_head(LIST_C);
         a1->type = 0xec;
-        a1->fn_update = GFN(0x5605e);
+        a1->fn_update = FN(l5_missile_update);
         a1->fn_draw = (obj_fn)draw_bob_masked;
         a1->fn_hit = (void *)hit_enemy;
         a1->x = d0;
@@ -662,8 +683,8 @@ void l5_turret_update(Object *a0)
         Object *a1 = alloc_in(LIST_B);
 
         a1->type = 0x110;
-        a1->fn_update = GFN(0x56940);
-        a1->fn_draw = GFN(0x56a10);
+        a1->fn_update = FN(l5_beam_update);
+        a1->fn_draw = FN(l5_beam_draw);
         a1->x = (int16_t)(a0->x - 2);
         a1->y = (int16_t)(a0->y - 0x18);
         BEAM_LENGTH(a1) = 0;
@@ -689,7 +710,7 @@ void l5_piece_hit(Object *a0, Object *a1, uint16_t d0)
     if (a1->type != 0x114) {
         kill_thunk(a1);
     } else {
-        a1->fn_update = GFN(0x566ce);
+        a1->fn_update = FN(l5_boss2_dead);
         a1->hit[0] = 0x3e8;
         a1->hit[2] = 0x3e8;
         a1->fn_hit = (void *)obj_nop_thunk;
@@ -702,7 +723,7 @@ void l5_heart_hit(Object *a0, Object *a1, uint16_t d0)
     Object *a2 = a1->target;
 
     a1->fn_draw = (obj_fn)draw_bob_or_first;
-    a2->fn_draw = GFN(0x55d1c);
+    a2->fn_draw = FN(l5_boss_flash);
     if (!dies(a2, d0)) {
         uint32_t q = ((uint32_t)(uint16_t)a2->energy * 0xb) / B(0x55964);
 
@@ -777,7 +798,7 @@ void l5_wheel_hit(Object *a0, Object *a1, uint16_t d0)
     Object *a2 = a1->target;
     int i;
 
-    a2->fn_draw = GFN(0x56840);
+    a2->fn_draw = FN(l5_boss2_flash);
     if (!dies(a1, d0))
         return;
     free_object_chain(LIST_C->prev);
@@ -820,7 +841,7 @@ void l5_boss2_turret_hit(Object *a0, Object *a1, uint16_t d0)
     a1->fn_draw = (obj_fn)draw_bob_or_first;
     if (!dies(a1, d0))
         return;
-    a1->fn_update = GFN(0x566ce);
+    a1->fn_update = FN(l5_boss2_dead);
     a1->hit[0] = 0x3e8;
     a1->hit[2] = 0x3e8;
     a1->fn_hit = (void *)obj_nop_thunk;
@@ -883,8 +904,8 @@ void l5_boss2_mover(Object *a0)
         sfx_cmd = 0x84;
         a1 = alloc_in(LIST_B);
         a1->type = 0x110;
-        a1->fn_update = GFN(0x56940);
-        a1->fn_draw = GFN(0x56a10);
+        a1->fn_update = FN(l5_beam_update);
+        a1->fn_draw = FN(l5_beam_draw);
         a1->x = 0x96;
         a1->y = (int16_t)(a0->y + 0x30);
         MOVER_TICK(a1) = 0;
@@ -901,7 +922,7 @@ pellets:
 /* level5 $056840: the flash of the mover, one frame */
 void l5_boss2_flash(Object *a0)
 {
-    a0->fn_draw = GFN(0x5685a);
+    a0->fn_draw = FN(l5_boss2_draw);
     draw_tile_grid_flash((const uint8_t *)GPTR(0x568f8), 5, 5, a0->y, 0x38);
 }
 
@@ -1089,7 +1110,7 @@ void l5_wall_hit_a(Object *a0, Object *a1, uint16_t d0)
     uint8_t *c;
 
     (void)a0;
-    a1->fn_draw = GFN(0x56e14);
+    a1->fn_draw = FN(l5_wall_flash_a);
     if (!dies(a1, d0))
         return;
     spawn_effect((int16_t)(a1->x + 8), (int16_t)(a1->y - scroll_pos + 8), anim_explosion, draw_bob_masked);
@@ -1112,7 +1133,7 @@ void l5_wall_hit_b(Object *a0, Object *a1, uint16_t d0)
     uint8_t *c;
 
     (void)a0;
-    a1->fn_draw = GFN(0x56e1a);
+    a1->fn_draw = FN(l5_wall_flash_b);
     if (!dies(a1, d0))
         return;
     spawn_effect((int16_t)(a1->x + 8), (int16_t)(a1->y - scroll_pos + 8), anim_explosion, draw_bob_masked);
@@ -1147,10 +1168,10 @@ void l5_wall_flash_b(Object *a0)
 /* level5 $056E40: a piece of the bridge */
 void l5_spawn_bridge(const uint8_t *a1)
 {
-    Object *a0 = spawn_marker_enemy(0xf8, a1, (void (*)(void))GFN(0x56ee2));
+    Object *a0 = spawn_marker_enemy(0xf8, a1, (void (*)(void))FN(l5_bridge_update));
     uint8_t *c;
 
-    a0->fn_hit = GFN(0x56fdc);
+    a0->fn_hit = FN(l5_bridge_hit);
     a0->energy = (int16_t)W(0x54e60);
     a0->hit[0] = 0x3e8;
     a0->hit[2] = 0x3e8;
@@ -1206,7 +1227,7 @@ void l5_bridge_hit(Object *a0, Object *a1, uint16_t d0)
     uint8_t *c;
 
     (void)a0;
-    a1->fn_draw = GFN(0x5706c);
+    a1->fn_draw = FN(l5_bridge_flash);
     if (!dies(a1, d0))
         return;
     spawn_effect((int16_t)(a1->x + 0x10), (int16_t)(a1->y - scroll_pos + 0x10), big_explosion_anim, draw_bob_masked);
@@ -1246,12 +1267,12 @@ void l5_spawn_group(const uint8_t *a1)
 /* level5 $0570AA: a unit of eight directions made of cells */
 Object *l5_spawn_unit(const uint8_t *a1)
 {
-    Object *a0 = spawn_marker_enemy(0xf4, a1, (void (*)(void))GFN(0x5715e));
+    Object *a0 = spawn_marker_enemy(0xf4, a1, (void (*)(void))FN(l5_unit_update));
     uint8_t *c;
     uint32_t d0;
 
     UNIT_DIR(a0) = (int16_t)rd16(a1 + 0xc);
-    a0->fn_hit = GFN(0x572ea);
+    a0->fn_hit = FN(l5_unit_hit);
     a0->energy = (int16_t)W(0x54e62);
     a0->hit[0] = 0x3e8;
     a0->hit[2] = 0x3e8;
@@ -1330,7 +1351,7 @@ void l5_unit_hit(Object *a0, Object *a1, uint16_t d0)
     uint8_t *c;
 
     (void)a0;
-    a1->fn_draw = GFN(0x57388);
+    a1->fn_draw = FN(l5_unit_flash);
     if (!dies(a1, d0))
         return;
     if (UNIT_GROUP(a1) >= 0)
@@ -1364,7 +1385,7 @@ void l5_unit_flash(Object *a0)
 void l5_spawn_gun(const uint8_t *a1)
 {
     int right = rd16(a1 + 0xc) != 0;
-    Object *a0 = spawn_marker_enemy(right ? 0x10c : 0x108, a1, (void (*)(void))GFN(0x5741c));
+    Object *a0 = spawn_marker_enemy(right ? 0x10c : 0x108, a1, (void (*)(void))FN(l5_gun_update));
     uint32_t a2 = right ? 0x57514 : 0x57524, a4 = right ? 0x57536 : 0x57534;
 
     a0->fn_hit = (void *)hit_tile;
