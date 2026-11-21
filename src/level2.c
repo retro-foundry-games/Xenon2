@@ -5,7 +5,9 @@
 #include "weapons.h"
 #include "shop.h"
 #include "game_all.h"
+#define PIECE_DIR_HI(o) ((o)->v2a)
 #define PIECE_VAR(o)  ((o)->v2e)
+#define GATE_STEP(o) ((o)->v28)
 #define PIECE_WALL(o) ((o)->v30)
 #define L2_BOSS_CELL(o) ((o)->v30)
 #define MARKER_LAUNCHES(o) ((o)->v30)
@@ -278,7 +280,7 @@ void l2_init(void)
     L2_BOSS_WAIT(a0) = -1;
     L2_BOSS_FRAMES(a0) = 0;
     L2_BOSS_FLASH(a0) = 0;
-    a0->v30 = 0;
+    L2_BOSS_CELL(a0) = 0;
     a0->kind = 0;
     for (d7 = 2; d7 >= 0; d7--) {
         uint16_t x = gate_at[2 - d7][0], y = gate_at[2 - d7][1];
@@ -295,8 +297,8 @@ void l2_init(void)
         a0->x = (int16_t)x;
         a0->y = (int16_t)y;
         a0->gfx = level_init_src + (uint16_t)(((uint16_t)(y * 0x14) + x) * 2);
-        a0->v28 = 0;
-        a0->v30 = (int16_t)d7;
+        GATE_STEP(a0) = 0;
+        GATE_NUMBER(a0) = (int16_t)d7;
     }
     l2_gates_left = 3;
     l2_walls_made = 0;
@@ -869,7 +871,7 @@ static void l2_wreck(Object *a1, uint32_t a2)
     n->y = a1->y;
     set_anim(n, a2);
     PIECE_WAIT(n) = (int16_t)0x8000;
-    n->v2a = 0;
+    PIECE_DIR_HI(n) = 0;
     PIECE_DIR(n) = (int16_t)(random_next() & 0xff);
     kill_thunk(a1);
 }
