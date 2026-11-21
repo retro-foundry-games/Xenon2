@@ -577,7 +577,7 @@ void level1_spawn_unit(uint16_t d6)
     r = (r >> 5) | (r << 27);
     state[0] = (uint16_t)(r >> 16);
     state[1] = (uint16_t)r;
-    s = &level_spawns[r & 0xf];
+    s = &l1_unit_starts[r & 0xf];
     x = s->x;
     y = (int16_t)(s->y - scroll_step - scroll_pos);
     if (level_vars[(uint16_t)s->index] == 0)

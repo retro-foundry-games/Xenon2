@@ -68,7 +68,7 @@ local ROOT = ami.script_dir .. "/.."
 -- members whose values depend on when the interrupts fall relative to the code, not on what the code does
 local IGNORE = { vbl_count = true, last_flip_vbl = true, exc_vectors_lo = true, exc_vectors_hi = true }
 if args:match("tolerant=1") then
-    for _, name in ipairs{ "music_accum", "music_channels", "hw_mirror", "random_a", "random_b", "sfx_channels", "sfx_request", "sfx_samples", "sfx_samples_ready", "sfx_cmd", "sfx_cmd2", "irq_joy", "irq_joy_prev", "joy_stick", "key_pressed" } do IGNORE[name] = true end
+    for _, name in ipairs{ "music_accum", "music_channels", "hw_mirror", "random_state_a", "random_state_b", "sfx_channels", "sfx_request", "sfx_samples", "sfx_samples_ready", "sfx_cmd", "sfx_cmd2", "irq_joy", "irq_joy_prev", "joy_stick", "key_pressed" } do IGNORE[name] = true end
 end
 if args:match("play=1") or args:match("replay=") then IGNORE.key_table = true; IGNORE.key_code = true end   -- (the keys reach the original's keyboard when they are pressed, the port's at the next sync point)
 for name in (args:match("ignore=(%S+)") or ""):gmatch("[%w_]+") do IGNORE[name] = true end

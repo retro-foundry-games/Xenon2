@@ -1033,19 +1033,19 @@ void enemy_update_no_anim(Object *obj)
 /* orig $EEA, $9670: the random state is kept for enemy_update_seeded, then enemy_update */
 void enemy_update_keep_seed(Object *o)
 {
-    rand_saved[0] = random_a;
-    rand_saved[1] = random_b;
+    rand_saved[0] = random_state_a;
+    rand_saved[1] = random_state_b;
     enemy_update(o);
 }
 
 /* orig $EF0, $9682: enemy_update with the random state of enemy_update_keep_seed; the caller's state is put back */
 void enemy_update_seeded(Object *o)
 {
-    rand_saved[2] = random_a;
-    rand_saved[3] = random_b;
-    random_a = rand_saved[0];
-    random_b = rand_saved[1];
+    rand_saved[2] = random_state_a;
+    rand_saved[3] = random_state_b;
+    random_state_a = rand_saved[0];
+    random_state_b = rand_saved[1];
     enemy_update(o);
-    random_a = rand_saved[2];
-    random_b = rand_saved[3];
+    random_state_a = rand_saved[2];
+    random_state_b = rand_saved[3];
 }

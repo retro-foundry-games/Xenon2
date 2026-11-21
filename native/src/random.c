@@ -1,10 +1,10 @@
 #include "random.h"
 
-/* orig $001F50: the random number generator.  A 64-bit state (random_a, random_b) is doubled with add/addx on 16-bit words;
- * the new random_a is the result. */
+/* orig $001F50: the random number generator.  A 64-bit state (random_state_a, random_state_b) is doubled with add/addx on 16-bit words;
+ * the new random_state_a is the result. */
 uint32_t random_next(void)
 {
-    uint32_t d0 = random_a, d1 = random_b;
+    uint32_t d0 = random_state_a, d1 = random_state_b;
     uint32_t sum, carry, d2;
 
     sum = (d0 & 0xffff) + (d0 & 0xffff);                       /* add.w d0,d0 */
@@ -23,8 +23,8 @@ uint32_t random_next(void)
     d1 = (d1 & 0xffff0000u) | d2;                              /* move.w d2,d1 */
     d0 = (d0 << 16) | (d0 >> 16);
     d1 = (d1 << 16) | (d1 >> 16);
-    random_a = d0;
-    random_b = d1;
+    random_state_a = d0;
+    random_state_b = d1;
     return d0;
 }
 

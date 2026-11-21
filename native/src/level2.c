@@ -94,8 +94,8 @@ static uint32_t ror5(uint16_t *pair)
 
 /* ---- the entries the engine calls ($54E0C..$54E2C) ---- */
 
-/* level2 $054E0C, $056F54: a box (x0, y0)-(x1, y1) meets one of the blocks that break (level_buf: four groups by the quarter of the
- * screen the box is in, a count and entries of state, x, y, the cell that was there); returns level_obj with the entry in its $16, or 0 */
+/* level2 $054E0C, $056F54: a box (x0, y0)-(x1, y1) meets one of the blocks that break (l2_block_table: four groups by the quarter of the
+ * screen the box is in, a count and entries of state, x, y, the cell that was there); returns l2_block_object with the entry in its $16, or 0 */
 Object *l2_collision_hook(int16_t d0, int16_t d1, int16_t d2, int16_t d3)
 {
     const uint8_t *a1;
@@ -110,7 +110,7 @@ Object *l2_collision_hook(int16_t d0, int16_t d1, int16_t d2, int16_t d3)
         d4 |= 4;
     if (d0 <= 0x80)
         d4 |= 8;
-    a1 = level_buf + sh_r32(0x56f24 + d4);
+    a1 = l2_block_table + sh_r32(0x56f24 + d4);
     n = rd16(a1);
     a1 += 2;
     for (; n != 0; n--, a1 += 8) {
@@ -123,17 +123,17 @@ Object *l2_collision_hook(int16_t d0, int16_t d1, int16_t d2, int16_t d3)
             return 0;
         y = (int16_t)rd16(a1 + 4);
         if (box_overlap(d0, d1, d2, d3, x, y, (int16_t)(x + 0xf), (int16_t)(y + 0xf))) {
-            level_obj.gfx = a1;
-            return &level_obj;
+            l2_block_object.gfx = a1;
+            return &l2_block_object;
         }
     }
     return 0;
 }
 
-/* level2 $056FA8: the hit routine of level_obj: the block is broken (its entry's state 0, its cell of the map cleared) and bursts */
+/* level2 $056FA8: the hit routine of l2_block_object: the block is broken (its entry's state 0, its cell of the map cleared) and bursts */
 void l2_block_hit(Object *a0, Object *a1, uint16_t d0)
 {
-    uint8_t *e = (uint8_t *)level_obj.gfx;
+    uint8_t *e = (uint8_t *)l2_block_object.gfx;
     uint16_t x = rd16(e + 2), y = rd16(e + 4);
     uint16_t cell;
 
@@ -235,7 +235,7 @@ void l2_scroll(void)
 /* level2 $054E2C, $054E68: a change of players: the table of blocks and the second player's copy exchange */
 void l2_swap_hook(void)
 {
-    uint8_t *a0 = level_buf, *a1 = (uint8_t *)GPTR(0x3eb8c);
+    uint8_t *a0 = l2_block_table, *a1 = (uint8_t *)GPTR(0x3eb8c);
     int i;
 
     for (i = 0; i < 0xb4; i++, a0 += 2, a1 += 2) {
@@ -262,7 +262,7 @@ void l2_init(void)
         level_init_src = (uint8_t *)GPTR(0x7d120);
         for (i = 359; i >= 0; i--)
             ((uint8_t *)GPTR(0x7d120 - 360))[i] = ((const uint8_t *)GPTR(0x71a12 - 360))[i];
-        level_buf = (uint8_t *)GPTR(0x7d120 - 360);
+        l2_block_table = (uint8_t *)GPTR(0x7d120 - 360);
     }
     scroll_min = 0x9e0;
     scroll_max = 0x11ff;
@@ -309,18 +309,18 @@ void l2_init(void)
     for (i = 0; i < 8; i++)
         level_vars[i] = 0;
     for (i = 0; i < 4; i++) {
-        uint8_t *g = level_buf + groups[i];
+        uint8_t *g = l2_block_table + groups[i];
         uint16_t n = rd16(g);
 
         for (g += 2; n != 0; n--, g += 8)
             wr16(g, 1);
     }
-    level_obj.type = 0;
-    level_obj.prev = &level_obj;
-    level_obj.next = &level_obj;
-    level_obj.fn_update = (obj_fn)obj_nop_thunk;
-    level_obj.fn_draw = (obj_fn)obj_nop_thunk;
-    level_obj.fn_hit = (void *)l2_block_hit;
+    l2_block_object.type = 0;
+    l2_block_object.prev = &l2_block_object;
+    l2_block_object.next = &l2_block_object;
+    l2_block_object.fn_update = (obj_fn)obj_nop_thunk;
+    l2_block_object.fn_draw = (obj_fn)obj_nop_thunk;
+    l2_block_object.fn_hit = (void *)l2_block_hit;
     level_vars[16] = 0x45d2;
     level_vars[17] = 0x72ba;
     level_vars[18] = 0xaa6a;
@@ -328,8 +328,8 @@ void l2_init(void)
     difficulty_x1 = (uint16_t)(difficulty * 1);
     difficulty_x2 = (uint16_t)(difficulty * 2);
     for (i = 0; i < 0xb4; i++) {
-        ((uint8_t *)GPTR(0x3eb8c))[2 * i] = level_buf[2 * i];
-        ((uint8_t *)GPTR(0x3eb8c))[2 * i + 1] = level_buf[2 * i + 1];
+        ((uint8_t *)GPTR(0x3eb8c))[2 * i] = l2_block_table[2 * i];
+        ((uint8_t *)GPTR(0x3eb8c))[2 * i + 1] = l2_block_table[2 * i + 1];
     }
 }
 
@@ -564,7 +564,7 @@ static void l2_restore_blocks(Object *a0)
         d4 |= 4;
     if (d0 <= 0x80)
         d4 |= 8;
-    a1 = level_buf + sh_r32(0x56f24 + d4);
+    a1 = l2_block_table + sh_r32(0x56f24 + d4);
     n = rd16(a1);
     a1 += 2;
     for (; n != 0; n--, a1 += 8) {
