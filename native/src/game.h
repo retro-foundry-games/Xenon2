@@ -152,8 +152,8 @@ struct Xenon2 {
     uint8_t player_dead;  /* $000D84 var */
     uint8_t v_0d85;  /* $000D85 var */
     uint8_t unit_live[5];  /* $000D86 arr */
-    uint8_t v_0d8b;  /* $000D8B var */
-    uint8_t v_0d8c;  /* $000D8C var */
+    uint8_t l1_boss_spawned;  /* $000D8B var */
+    uint8_t l1_boss_zone_entered;  /* $000D8C var */
     uint8_t l2_left_wall_made;  /* $000D8D var */
     uint8_t l2_right_wall_made;  /* $000D8E var */
     uint8_t l2_debris_waves;  /* $000D8F var */
@@ -667,8 +667,8 @@ LAYOUT_ASSERT(protection, 0xd83);
 LAYOUT_ASSERT(player_dead, 0xd84);
 LAYOUT_ASSERT(v_0d85, 0xd85);
 LAYOUT_ASSERT(unit_live, 0xd86);
-LAYOUT_ASSERT(v_0d8b, 0xd8b);
-LAYOUT_ASSERT(v_0d8c, 0xd8c);
+LAYOUT_ASSERT(l1_boss_spawned, 0xd8b);
+LAYOUT_ASSERT(l1_boss_zone_entered, 0xd8c);
 LAYOUT_ASSERT(l2_left_wall_made, 0xd8d);
 LAYOUT_ASSERT(l2_right_wall_made, 0xd8e);
 LAYOUT_ASSERT(l2_debris_waves, 0xd8f);
@@ -1045,8 +1045,8 @@ LAYOUT_ASSERT(level_data_dst, 0x7d120);
 #define player_dead (xenon2.player_dead)
 #define v_0d85 (xenon2.v_0d85)
 #define unit_live (xenon2.unit_live)
-#define v_0d8b (xenon2.v_0d8b)
-#define v_0d8c (xenon2.v_0d8c)
+#define l1_boss_spawned (xenon2.l1_boss_spawned)
+#define l1_boss_zone_entered (xenon2.l1_boss_zone_entered)
 #define l2_left_wall_made (xenon2.l2_left_wall_made)
 #define l2_right_wall_made (xenon2.l2_right_wall_made)
 #define l2_debris_waves (xenon2.l2_debris_waves)
