@@ -7,6 +7,14 @@
 #include "amiga/hw.h"
 
 /* the scratch fields of Object, by the kind that uses them */
+#define L1_ANGLE_HI(o) ((o)->v2a)
+#define L1_ANGLE_LO(o) ((o)->v2c)
+#define UNIT_COUNTER(o) ((o)->v2e)
+#define UNIT_ID(o) ((o)->v30)
+#define UNIT_WAIT(o) ((o)->v28)
+
+
+/* the scratch fields of Object, by the kind that uses them */
 
 
 /* the scratch fields of Object, by the kind that uses them */
@@ -391,8 +399,8 @@ void level1_boss_update(Object *a0)
             a1->hit[0] = 0x3e8;
             a1->hit[2] = 0x3e8;
         }
-        a0->v2a = 0;
-        a0->v2c = 0;
+        L1_ANGLE_HI(a0) = 0;
+        L1_ANGLE_LO(a0) = 0;
         a0->turn[0] = 0;
         a0->turn[1] = 0;
         a0->turn[2] = 0;
@@ -428,7 +436,7 @@ void level1_boss_update(Object *a0)
     if (d0 & 0x40)
         d0 = (int16_t)-(d0 - 0x7f);
     d0 = (int8_t)d0;
-    a0->v2c = (int16_t)(d0 + 0x20);
+    L1_ANGLE_LO(a0) = (int16_t)(d0 + 0x20);
     d0 = (int16_t)((frame_tick + 0x50) & 0xff);
     if (d0 & 0x80)
         d0 = (~d0) & 0xff;
@@ -581,15 +589,15 @@ void level1_spawn_unit(uint16_t d6)
     a0->fn_update = FN(level1_head_update);
     a0->fn_draw = obj_nop_thunk;
     a0->fn_hit = (void *)level1_hit_free;
-    a0->v2e = d3;
+    UNIT_COUNTER(a0) = d3;
     SET_V5E(a0, 0);
     a0->script = s->path;
     ((ObjMove *)a0)->cursor = s->path;
     a0->x = x;
     a0->y = y;
-    a0->v28 = d2;
+    UNIT_WAIT(a0) = d2;
     a0->steps = (int16_t)level_54e62[0];
-    a0->v30 = (int16_t)d6;
+    UNIT_ID(a0) = (int16_t)d6;
     a0->hit[0] = 0x3e8;
     a0->hit[2] = 0x3e8;
     a0->score = 0;
@@ -603,7 +611,7 @@ void level1_spawn_unit(uint16_t d6)
         a0->fn_hit = (void *)seg->hit;
         a0->gfx = seg->gfx;
         a0->score = (int16_t)seg->score;
-        a0->v2e = d3;
+        UNIT_COUNTER(a0) = d3;
         a0->energy = 1;
         a0->big = 0;
         SET_V5E(a0, 0);
@@ -613,9 +621,9 @@ void level1_spawn_unit(uint16_t d6)
         a0->x = x;
         a0->y = y;
         a0->kind = 0;
-        a0->v28 = d2;
+        UNIT_WAIT(a0) = d2;
         a0->steps = 4;
-        a0->v30 = (int16_t)d6;
+        UNIT_ID(a0) = (int16_t)d6;
         d2 = (int16_t)(d2 - 7);
         bbox_from_frame(a0);
     }
@@ -640,7 +648,7 @@ void level1_spawn_unit(uint16_t d6)
 void level1_head_update(Object *a0)
 {
     a0->y = (int16_t)(a0->y + scroll_speed);
-    unit_live[(uint16_t)a0->v30] = 0xff;
+    unit_live[(uint16_t)UNIT_ID(a0)] = 0xff;
     obj_script_step(a0);
     if (a0->type == 4)
         a0->fn_update(a0);
@@ -660,23 +668,23 @@ void level1_segment_update(Object *a0)
     uint16_t d2;
     uint8_t **tab;
 
-    unit_live[(uint16_t)a0->v30] = 0xff;
+    unit_live[(uint16_t)UNIT_ID(a0)] = 0xff;
     a1 = OBJ_FWD(a0);
     if (a1->type == 0xbc) {
-        if (level_vars[(uint16_t)a0->v2e] == 0)
-            level_vars[(uint16_t)a0->v2e] = 0x14;
+        if (level_vars[(uint16_t)UNIT_COUNTER(a0)] == 0)
+            level_vars[(uint16_t)UNIT_COUNTER(a0)] = 0x14;
         kill_object_thunk(a0);
         a0->fn_update(a0);
         return;
     }
     a0->x = a1->x;
     a0->y = (int16_t)(a1->y + scroll_speed);
-    a0->v2a = a1->v2a;
-    a0->v2c = a1->v2c;
-    a0->v28 = a1->v28;
-    if (a0->fn_draw == obj_nop_thunk && a0->v28 >= 0)
+    L1_ANGLE_HI(a0) = L1_ANGLE_HI(a1);
+    L1_ANGLE_LO(a0) = L1_ANGLE_LO(a1);
+    UNIT_WAIT(a0) = UNIT_WAIT(a1);
+    if (a0->fn_draw == obj_nop_thunk && UNIT_WAIT(a0) >= 0)
         a0->fn_draw = draw_bob_masked;
-    d2 = (uint16_t)(((uint16_t)(a0->v2c + 0x10) >> 3) & 0x1c);
+    d2 = (uint16_t)(((uint16_t)(L1_ANGLE_LO(a0) + 0x10) >> 3) & 0x1c);
     tab = &level_56174[a0->type == 0x110 ? 8 : 0];
     a0->gfx = tab[d2 / 4];
     bbox_from_frame(a0);
@@ -693,8 +701,8 @@ static void level1_piece_burst(Object *a1, const uint8_t *a2)
     n->x = a1->x;
     n->y = a1->y;
     set_anim(n, a2);
-    n->v2a = 0;
-    n->v2c = (int16_t)(random_next() & 0xff);
+    L1_ANGLE_HI(n) = 0;
+    L1_ANGLE_LO(n) = (int16_t)(random_next() & 0xff);
     player_score += (uint16_t)a1->score;
     kill_object_thunk(a1);
 }
@@ -731,7 +739,7 @@ void level1_debris_update(Object *a0)
     int16_t d0, d1;
 
     anim_step(a0);
-    d2 = (uint16_t)a0->v2c;
+    d2 = (uint16_t)L1_ANGLE_LO(a0);
     d1 = (int16_t)(piece_directions[d2] >> 2);
     d0 = (int16_t)(piece_directions[(uint16_t)(d2 + 0x40)] >> 2);
     d0 = (int16_t)(d0 + a0->x);
@@ -795,8 +803,8 @@ void level1_boss_part_update(Object *a0)
     a0->x_frac = a1->x_frac;
     a0->y = a1->y;
     a0->y_frac = a1->y_frac;
-    a0->v2a = a1->v2a;
-    a0->v2c = a1->v2c;
+    L1_ANGLE_HI(a0) = L1_ANGLE_HI(a1);
+    L1_ANGLE_LO(a0) = L1_ANGLE_LO(a1);
     a0->turn[0] = a1->turn[0];
     a0->turn[1] = a1->turn[1];
     a0->turn[2] = a1->turn[2];
@@ -818,7 +826,7 @@ void level1_boss_part_update(Object *a0)
     if (a0->type == 0x100) {
         uint16_t dir = direction8((int16_t)(PLAYER->x - a0->x), (int16_t)(PLAYER->y - a0->y));
 
-        a0->v2a = (int16_t)dir;
+        L1_ANGLE_HI(a0) = (int16_t)dir;
         a0->gfx = level_5638a[dir];
         if (a0->steps >= 0xb) {
             uint16_t sum = (uint16_t)(m->shot_count + 0xf);
@@ -828,7 +836,7 @@ void level1_boss_part_update(Object *a0)
                 Object *shot;
 
                 m->shot_count = (uint8_t)(random_next() & 0x3f);
-                shot = spawn_enemy_shot((uint16_t)a0->x, (uint16_t)a0->y, (uint16_t)a0->v2a, 4, 0);
+                shot = spawn_enemy_shot((uint16_t)a0->x, (uint16_t)a0->y, (uint16_t)L1_ANGLE_HI(a0), 4, 0);
                 set_anim(shot, anim_552b0);
             }
         }
