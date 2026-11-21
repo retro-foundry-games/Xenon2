@@ -26,7 +26,7 @@ static void kill_thunk(Object *o)
     o->fn_draw = (obj_fn)obj_nop_thunk;
     o->fn_hit = (void *)obj_nop_thunk;
     o->is_part = 0;
-    o->flag60 = 0;
+    o->persists = 0;
 }
 
 static Object *insert_head(Object *list)
@@ -469,7 +469,7 @@ void l4_spawn_boss1(void)
         a0->fn_hit = GFN(sh_r32(a1 + 4));
         a0->fn_draw = (obj_fn)GFN(sh_r32(a1 + 8));
         a0->x = (int16_t)W(a1 + 12);
-        a0->flag60 = -1;
+        a0->persists = -1;
         a0->y = (int16_t)(W(a1 + 14) - scroll_pos);
         a0->v28 = 0;
         a0->v2a = 0;
@@ -749,7 +749,7 @@ void l4_spawn_boss2(const uint8_t *a1_record, uint16_t d2)
         a0->fn_draw = draw_bob_masked;
         a0->fn_hit = GFN(sh_r32(a1 + 4));
         set_anim(a0, sh_r32(a1 + 8));
-        a0->flag60 = -1;
+        a0->persists = -1;
         a0->x = (int16_t)W(a1 + 12);
         a0->y = (int16_t)(W(a1 + 14) - scroll_pos);
         a0->v28 = 0;

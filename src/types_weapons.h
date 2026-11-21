@@ -40,8 +40,8 @@ struct Object {
     Object *target;             /* 56 */
     Object *chain;              /* 5a */
     uint8_t v5e_b[2];           /* 5e: a word (high byte first), and two bytes in ObjMove (shot_count, shot_rate): kept as bytes, V5E/SET_V5E for the word */
-    int8_t flag60;
-    int8_t flag61;
+    int8_t persists;
+    int8_t screen_fixed;
 };
 #define V5E(o) ((int16_t)(((o)->v5e_b[0] << 8) | (o)->v5e_b[1]))
 #define SET_V5E(o, v) ((o)->v5e_b[0] = (uint8_t)((uint16_t)(v) >> 8), (o)->v5e_b[1] = (uint8_t)(v))

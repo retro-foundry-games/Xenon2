@@ -929,7 +929,7 @@ next_command:
                 o->fn_draw = (obj_fn)obj_nop;
                 o->fn_hit = (obj_fn)obj_nop;
                 o->is_part = 0;
-                o->flag60 = 0;
+                o->persists = 0;
                 return;
             }
             e = o->target;
@@ -941,7 +941,7 @@ next_command:
                 e->fn_draw = (obj_fn)obj_nop;
                 e->fn_hit = (obj_fn)obj_nop;
                 e->is_part = 0;
-                e->flag60 = 0;
+                e->persists = 0;
                 if (next == 0)
                     return;
                 e = next;

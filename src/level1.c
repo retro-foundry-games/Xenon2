@@ -368,7 +368,7 @@ void level1_boss_update(Object *a0)
             a1->anim = (const uint8_t *)a2;
             a2 = a1;
             a1->big = 0;
-            a1->flag60 = -1;
+            a1->persists = -1;
             a1->y = -100;
             a1->hit[0] = 0x3e8;
             a1->hit[2] = 0x3e8;
@@ -500,8 +500,8 @@ void level1_init(void)
     a0->fn_draw = FN(level1_boss_draw);
     a0->fn_hit = (void *)level1_boss_hit;
     SET_V5E(a0, 0);
-    a0->flag60 = -1;
-    a0->flag61 = -1;
+    a0->persists = -1;
+    a0->screen_fixed = -1;
     a0->y = 0x10;
     a0->energy = level_54e58[0];
     a0->v28 = 0;

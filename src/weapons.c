@@ -15,7 +15,7 @@ static void kill_object(Object *o)
     o->fn_draw = obj_nop;
     o->fn_hit = (void *)obj_nop;
     o->is_part = 0;
-    o->flag60 = 0;
+    o->persists = 0;
 }
 
 /* inlined: $2418 and the insertion before the sentinel of list A / B (the object comes back in a0) */
@@ -159,9 +159,9 @@ void free_chain(Object *a1, int16_t d7)
     while (a1->type != 0) {
         Object *next = a1->prev;
 
-        if (a1->flag60 == 0)
+        if (a1->persists == 0)
             unlink_to_free(a1);
-        else if (a1->flag61 == 0)
+        else if (a1->screen_fixed == 0)
             a1->y -= d7;
         a1 = next;
     }
@@ -512,7 +512,7 @@ Object *weapon_34(Object *a0, Object *a1)
         d->type = 0x40;
         d->fn_update = pod_decoration_update;
         d->fn_draw = draw_bob_masked;
-        d->flag60 = -1;
+        d->persists = -1;
         set_anim(d, anim_28ee);
         set_ptr_2a(d, n);
         d->x = n->x;
@@ -600,7 +600,7 @@ void weapon9c_update(Object *a0)
     n->type = 0x28;
     n->fn_update = shell_update;
     n->fn_draw = draw_bob_masked;
-    n->flag60 = -1;
+    n->persists = -1;
     set_anim(n, anim_25e2);
     n->x = PLAYER->x;
     d0 = PLAYER->y - 0xc;
@@ -635,7 +635,7 @@ void weaponA0_update(Object *a0)
         cur->type = 0x48;
         cur->fn_update = drill_update;
         cur->fn_draw = draw_bob_masked;
-        cur->flag60 = -1;
+        cur->persists = -1;
         set_anim(cur, drill_anim[cnt]);
         cur->x = PLAYER->x;
         cur->y = PLAYER->y;
@@ -1014,7 +1014,7 @@ void pickup_bomb(Object *a0)
             a1->fn_draw = obj_nop;
             a1->fn_hit = (void *)obj_nop;
             a1->is_part = 0;
-            a1->flag60 = 0;
+            a1->persists = 0;
         }
         a1 = next;
     }
