@@ -598,6 +598,17 @@ for _, a in ipairs(STICK_READERS) do
         r[#r + 1] = ("{0x%x,%d}"):format(a, value)
     end)
 end
+-- the byte the routine sees is the one at its read of v_0a00, which can come after the entry (the interrupt decodes the stick in between): the entry's record takes it
+for pc, a in pairs({ [0x5df8] = 0x5de6, [0x68f8] = 0x68b0, [0x690a] = 0x68b0, [0x3bb8] = 0x3b94, [0x3d0c] = 0x3cdc, [0x3e46] = 0x3e2c, [0x437a] = 0x4340, [0x7a5c] = 0x7a56 }) do
+    ami.hook(pc, function()
+        local r = reads[n]
+        local prefix = ("{0x%x,"):format(a)
+        if not r then return end
+        for i = #r, 1, -1 do
+            if r[i]:sub(1, #prefix) == prefix then r[i] = ("{0x%x,%d}"):format(a, ami.peek8(0xa00)); return end
+        end
+    end)
+end
 port_call("rseq, ridx, rlog = nil, 1, {}; function rhook(a) local i = ridx; while rseq and rseq[i] and rseq[i][1] ~= a do i = i + 1 end; local e = rseq and rseq[i]; rlog[#rlog + 1] = string.format(\"%x:%s\", a, e and e[2] or \"-\"); if e then if a == 0x56e56 then port.poke_stale(e[2]) else port.poke_stick(e[2]) end; ridx = i + 1 end end")
 for _, a in ipairs(STICK_READERS) do port_call(("port.hook(0x%x, rhook)"):format(a)) end
 local function stick_bits(st) return (st.up == 1 and 1 or 0) | (st.down == 1 and 2 or 0) | (st.left == 1 and 4 or 0) | (st.right == 1 and 8 or 0) | (st.fire == 1 and 0x80 or 0) end
