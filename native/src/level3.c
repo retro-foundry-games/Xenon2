@@ -3,6 +3,8 @@
 #include "weapons.h"
 #include "shop.h"
 #include "game_all.h"
+#define SNAKE_X(o) ((o)->v2e)
+#define ARM_SWING_STEP(o) ((o)->v2e)
 
 /* the scratch fields of Object, by the kind that uses them */
 #define SNAKE_STEP(o) ((o)->v2a)
@@ -379,7 +381,7 @@ void l3_snake_tail(Object *a0)
         return;
     anim_step(a0);
     a1 = a0->target;
-    a0->x = (int16_t)((uint16_t)((uint16_t)SNAKE_LIMIT(a0) * (uint16_t)SNAKE_SWING(a1)) + (uint16_t)a0->v2e);
+    a0->x = (int16_t)((uint16_t)((uint16_t)SNAKE_LIMIT(a0) * (uint16_t)SNAKE_SWING(a1)) + (uint16_t)SNAKE_X(a0));
     if (SNAKE_STEP(a1) == 2 && SNAKE_SWING(a1) == 2) {
         a0->anim_delay = 1;
     } else if (SNAKE_LIMIT(a1) > 0 && SNAKE_LIMIT(a1) == SNAKE_SWING(a1)) {
@@ -397,7 +399,7 @@ void l3_snake_body(Object *a0)
         return;
     a0->fn_draw = (obj_fn)obj_nop_thunk;
     a1 = a0->target;
-    a0->x = (int16_t)((uint16_t)((uint16_t)SNAKE_LIMIT(a0) * (uint16_t)SNAKE_SWING(a1)) + (uint16_t)a0->v2e);
+    a0->x = (int16_t)((uint16_t)((uint16_t)SNAKE_LIMIT(a0) * (uint16_t)SNAKE_SWING(a1)) + (uint16_t)SNAKE_X(a0));
     if (SNAKE_STEP(a1) != 0)
         a0->fn_draw = draw_bob_masked;
     bbox_from_frame(a0);
@@ -768,9 +770,9 @@ void l3_part_arm(Object *a0)
     l3_part_follow(a0);
     a1 = a0->prev;
     if (ARM_SWING(a0) != 0) {
-        ARM_SWING(a0) = (int16_t)(ARM_SWING(a0) + a0->v2e);
+        ARM_SWING(a0) = (int16_t)(ARM_SWING(a0) + ARM_SWING_STEP(a0));
         if (ARM_SWING(a0) == 0xe)
-            a0->v2e = (int16_t)-a0->v2e;
+            ARM_SWING_STEP(a0) = (int16_t)-a0->v2e;
         a1->steps = ARM_SWING(a0);
         bbox_from_frame(a0);
         return;
@@ -783,7 +785,7 @@ void l3_part_arm(Object *a0)
     }
     sfx_cmd2 = 0xf;
     ARM_SWING(a0) = 1;
-    a0->v2e = 1;
+    ARM_SWING_STEP(a0) = 1;
     {
         uint16_t d0 = (uint16_t)(direction8((int16_t)(PLAYER_X - a0->x), (int16_t)(PLAYER_Y - a0->y)) << 5);
         uint32_t r;

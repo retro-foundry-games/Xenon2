@@ -458,8 +458,8 @@ void l5_spawn_boss1(uint16_t d2)
         set_anim(a0, sh_r32(rec + 14));
         a0->x = 0x30;
         a0->y = (int16_t)0xfec0;
-        a0->v3e = (int16_t)W(rec + 18);
-        a0->v40 = (int16_t)W(rec + 20);
+        PART_DX(a0) = (int16_t)W(rec + 18);
+        PART_DY(a0) = (int16_t)W(rec + 20);
         a0->v28 = 0;
         a0->persists = 0xff;
         a0->v2a = 4;
@@ -736,8 +736,8 @@ void l5_spawn_boss2(const uint8_t *a1)
         a0->persists = 0xff;
         a0->x = 0x70;
         a0->y = d1;
-        a0->v3e = (int16_t)W(rec + 18);
-        a0->v40 = (int16_t)W(rec + 20);
+        PART_DX(a0) = (int16_t)W(rec + 18);
+        PART_DY(a0) = (int16_t)W(rec + 20);
         a0->v28 = 0;
         a0->v2a = 4;
         a0->energy = (int16_t)W(rec + 22);
@@ -1241,14 +1241,14 @@ Object *l5_spawn_unit(const uint8_t *a1)
     uint8_t *c;
     uint32_t d0;
 
-    a0->v2a = (int16_t)rd16(a1 + 0xc);
+    UNIT_DIR(a0) = (int16_t)rd16(a1 + 0xc);
     a0->fn_hit = GFN(0x572ea);
     a0->energy = (int16_t)W(0x54e62);
     a0->hit[0] = 0x3e8;
     a0->hit[2] = 0x3e8;
     c = a0->script;
     d0 = (uint32_t)(uint16_t)a0->v2a << 3;
-    a0->v30 = -1;
+    UNIT_GROUP(a0) = -1;
     if (rd16(c - 2) == 0x867d) {
         wr16(c - 2, 0x80d7);
         wr16(c + 0x26, 0x8187);
@@ -1366,8 +1366,8 @@ void l5_spawn_gun(const uint8_t *a1)
     a0->anim = (const uint8_t *)GPTR(a4);
     wr16(a0->script, W(a2));
     a0->score = 0x64;
-    a0->v3e = 0;
-    a0->v40 = 0;
+    PART_DX(a0) = 0;
+    PART_DY(a0) = 0;
 }
 
 /* level5 $05741C: the gun: its cell goes round and it fires every third step */
