@@ -6,9 +6,9 @@
 
 /* level 4: its data tables in the level blob, by the routine that reads them */
 #define L4_SCROLL_DATA 0x5515a
-#define L4_ENEMY_A_DATA 0x5537e
-#define L4_ENEMY_A_DATA_2 0x55386
-#define L4_SHOT_A_TABLE 0x55574
+#define L4_ENEMY_A_CELLS_C8 0x5537e
+#define L4_ENEMY_A_CELLS_OTHER 0x55386
+#define L4_ANIMS_BY_KIND 0x55574
 #define L4_ENEMY_F8_TABLE 0x55714
 #define L4_SPAWN_BOSS1_DATA 0x55880
 #define L4_INIT_DATA_3 0x55890
@@ -16,12 +16,12 @@
 #define L4_INIT_DATA_2 0x558b4
 #define L4_CORE_CELLS_DATA 0x55aac
 #define L4_CORE_CELLS_DATA_2 0x55ae8
-#define L4_GUN_CELLS_DATA 0x55ba0
-#define L4_GUN_CELLS_DATA_2 0x55bc4
-#define L4_B1_CORE_WORDS 0x55c54
-#define L4_B1_GUN_WORDS 0x55e10
-#define L4_B1_GUN_WORDS_2 0x55e20
-#define L4_B1_GUN_TABLE 0x55e30
+#define L4_GUN_CELLS_LEFT 0x55ba0
+#define L4_GUN_CELLS_RIGHT 0x55bc4
+#define L4_B1_CORE_SWAY 0x55c54
+#define L4_B1_GUN_DX_BY_DIR 0x55e10
+#define L4_B1_GUN_DY_BY_DIR 0x55e20
+#define L4_B1_GUN_ANIMS_BY_ANGLE 0x55e30
 #define L4_B1_GUN_DATA 0x55ec8
 #define L4_B1_GUN_DATA_2 0x55ed0
 #define L4_SPAWN_BOSS2_DATA 0x5613a
@@ -31,33 +31,33 @@
 #define L4_INIT_DATA_5 0x562a0
 #define L4_INIT_DATA_6 0x562b4
 #define L4_INIT_DATA_7 0x562c8
-#define L4_B2_BARREL_DATA 0x56552
-#define L4_HEAD_PICTURE_TABLE 0x56576
-#define L4_B2_GUN_TABLE 0x565da
-#define L4_B2_BARREL_TABLE 0x56680
-#define L4_B2_BARREL_WORDS 0x566a0
-#define L4_B2_BARREL_WORDS_2 0x566b0
-#define L4_B2_EYE_TABLE 0x568d2
-#define L4_SPAWN_BAR_DATA 0x56a74
-#define L4_SPAWN_BAR_DATA_2 0x56a98
-#define L4_BAR_DRAW_DATA 0x56c32
-#define L4_SPAWN_WALKER_DATA_2 0x56cd4
-#define L4_SPAWN_WALKER_DATA 0x56cf8
-#define L4_WALKER_TILES_WORDS_2 0x56fd2
-#define L4_WALKER_TILES_WORDS 0x56fe8
-#define L4_WALKER_TILES_DATA 0x56ffe
-#define L4_WALKER_TILES_DATA_2 0x57004
-#define L4_TOWER_UPDATE_DATA 0x57160
-#define L4_TOWER_UPDATE_DATA_2 0x57190
-#define L4_TOWER_HIT_DATA 0x57236
-#define L4_TOWER_HIT_DATA_2 0x5723e
+#define L4_B2_SHOT_ANIM 0x56552
+#define L4_HEAD_PICTURES 0x56576
+#define L4_B2_GUN_PICTURES 0x565da
+#define L4_B2_BARREL_ANIMS_BY_DIR 0x56680
+#define L4_B2_MUZZLE_DX 0x566a0
+#define L4_B2_MUZZLE_DY 0x566b0
+#define L4_B2_EYE_ANIMS 0x568d2
+#define L4_BAR_ANIM_10C 0x56a74
+#define L4_BAR_ANIM_OTHER 0x56a98
+#define L4_BAR_GRIDS 0x56c32
+#define L4_WALKER_ANIM_OTHER 0x56cd4
+#define L4_WALKER_ANIM_E0 0x56cf8
+#define L4_WALKER_GRID_X 0x56fd2
+#define L4_WALKER_GRID_Y 0x56fe8
+#define L4_WALKER_GRID_E0 0x56ffe
+#define L4_WALKER_GRID_E4 0x57004
+#define L4_TOWER_CELLS_D0 0x57160
+#define L4_TOWER_CELLS_D4 0x57190
+#define L4_TOWER_HIT_CELLS_D0 0x57236
+#define L4_TOWER_HIT_CELLS_D4 0x5723e
 #define L4_SHOT_A_DATA_4 0x5738e
 #define L4_SHOT_A_DATA_2 0x57434
 #define L4_SHOT_A_DATA 0x5edca
 #define L4_SHOT_A_DATA_3 0x5f4aa
-#define L4_B1_TAIL_DATA 0x5f81a
-#define L4_B1_HEAD_DATA 0x5f8ca
-#define L4_B2_EYE_DATA 0x5fda6
+#define L4_B1_TAIL_PICTURE 0x5f81a
+#define L4_B1_HEAD_PICTURE 0x5f8ca
+#define L4_B2_EYE_SHOT_PICTURE 0x5fda6
 #define L4_ENEMY_B_DATA_2 0x5fe66
 #define L4_ENEMY_B_DATA 0x5febc
 
@@ -315,7 +315,7 @@ void l4_tower_update(Object *a0)
         }
         return;
     }
-    cells = (a0->type == 0xd0 ? L4_TOWER_UPDATE_DATA : L4_TOWER_UPDATE_DATA_2) + ((uint16_t)TOWER_PHASE(a0) << 3);
+    cells = (a0->type == 0xd0 ? L4_TOWER_CELLS_D0 : L4_TOWER_CELLS_D4) + ((uint16_t)TOWER_PHASE(a0) << 3);
     put_cells(a0->script, cells);
     TOWER_PHASE(a0)++;
     if (TOWER_PHASE(a0) == 4) {
@@ -345,7 +345,7 @@ void l4_tower_hit(Object *a0, Object *a1, uint16_t d0)
         return;
     }
     spawn_effect((int16_t)(a1->x + 0x10), (int16_t)(a1->y - scroll_pos + 0x10), big_explosion_anim, draw_bob_masked);
-    put_cells(a1->script, a1->type == 0xd0 ? L4_TOWER_HIT_DATA : L4_TOWER_HIT_DATA_2);
+    put_cells(a1->script, a1->type == 0xd0 ? L4_TOWER_HIT_CELLS_D0 : L4_TOWER_HIT_CELLS_D4);
     player_score += 0x190;
     kill_thunk(a1);
 }
@@ -354,7 +354,7 @@ void l4_tower_hit(Object *a0, Object *a1, uint16_t d0)
 void l4_tower_draw(Object *a0)
 {
     a0->fn_draw = (obj_fn)obj_nop_thunk;
-    draw_tile_grid_flash((const uint8_t *)GPTR(a0->type == 0xd0 ? L4_TOWER_UPDATE_DATA : L4_TOWER_UPDATE_DATA_2), 1, 1, (int16_t)(a0->y - scroll_pos), (uint16_t)((uint16_t)a0->x >> 1));
+    draw_tile_grid_flash((const uint8_t *)GPTR(a0->type == 0xd0 ? L4_TOWER_CELLS_D0 : L4_TOWER_CELLS_D4), 1, 1, (int16_t)(a0->y - scroll_pos), (uint16_t)((uint16_t)a0->x >> 1));
 }
 
 /* level4 $05700A: a marker makes a tower; the record's word at +$C says which of the two */
@@ -368,7 +368,7 @@ void l4_spawn_tower(const uint8_t *a1)
     a0->energy = (int16_t)W(L4_TOWER_ENERGY);
     a0->hit[0] = 0x3e8;
     a0->hit[2] = 0x3e8;
-    put_cells(a0->script, flag ? L4_TOWER_UPDATE_DATA : L4_TOWER_UPDATE_DATA_2);
+    put_cells(a0->script, flag ? L4_TOWER_CELLS_D0 : L4_TOWER_CELLS_D4);
 }
 
 /* level4 $055090: the scroll: the floor of the scroll ends at $DF0 and between $AE0 and $E50 an enemy comes every 16 pixels */
@@ -423,7 +423,7 @@ void l4_enemy_a(Object *a0)
     if (L4_GUN_TICK(a0) == 8) {
         if (add_carry(&a0->v5e_b[0], B(L4_ENEMY_A_FIRE_RATE))) {
             Object *a1;
-            uint32_t a2 = a0->type == 0xc8 ? L4_ENEMY_A_DATA : L4_ENEMY_A_DATA_2;
+            uint32_t a2 = a0->type == 0xc8 ? L4_ENEMY_A_CELLS_C8 : L4_ENEMY_A_CELLS_OTHER;
 
             a0->v5e_b[0] = (uint8_t)(random_next() & 0x3f);
             a1 = alloc_in(LIST_B);
@@ -512,7 +512,7 @@ void l4_shot_a(Object *a0)
     a1->hit[0] = 0x3e8;
     a1->hit[2] = 0x3e8;
     kind = (uint16_t)((uint16_t)d0 >> 3);
-    anim = sh_r32(L4_SHOT_A_TABLE + kind);
+    anim = sh_r32(L4_ANIMS_BY_KIND + kind);
     set_anim(a1, anim);
     a1->script = (uint8_t *)GPTR(cells);
     a1->cursor = (const uint8_t *)GPTR(cells);
@@ -545,7 +545,7 @@ void l4_enemy_f8(Object *a0)
     d1 = (uint16_t)(((old + 0x10) >> 3) & 0x1c);
     if (d0 == d1)
         return;
-    set_anim(a0, sh_r32(L4_SHOT_A_TABLE + d0));
+    set_anim(a0, sh_r32(L4_ANIMS_BY_KIND + d0));
     bbox_from_frame(a0);
 }
 
@@ -630,7 +630,7 @@ void l4_b1_core(Object *a0)
 
     if ((int16_t)scroll_max < 0x10)
         scroll_max = 0x10;
-    d0 = (uint16_t)(scroll_speed + W(L4_B1_CORE_WORDS + 2 * (uint32_t)(frame_tick & 0xf)));
+    d0 = (uint16_t)(scroll_speed + W(L4_B1_CORE_SWAY + 2 * (uint32_t)(frame_tick & 0xf)));
     sh_w16(0xd70, d0);
     a0->y = (int16_t)(a0->y + (int16_t)d0);
     if (W(0xd6e) != 0) {
@@ -712,20 +712,20 @@ void l4_b1_gun(Object *a0)
     if (add_carry(&a0->v5e_b[0], B(L4_B1_GUN_FIRE_RATE))) {
         Object *s;
         uint16_t angle = (uint16_t)B1_GUN_DIR(a0);
-        uint32_t anim = sh_r32(L4_B1_GUN_TABLE + 4 * (uint32_t)angle);
+        uint32_t anim = sh_r32(L4_B1_GUN_ANIMS_BY_ANGLE + 4 * (uint32_t)angle);
 
         a0->v5e_b[0] = (uint8_t)(random_next() & 0x3f);
         s = spawn_enemy_shot((uint16_t)(a0->x + 0x10), (uint16_t)(a0->y + 0x10), angle, W(L4_B1_GUN_SHOT_STEPS), GPTR(anim));
         set_anim(s, anim);
-        s->x = (int16_t)(s->x + (int16_t)W(L4_B1_GUN_WORDS + 2 * (uint32_t)(uint16_t)B1_GUN_DIR(s)));
-        s->y = (int16_t)(s->y + (int16_t)W(L4_B1_GUN_WORDS_2 + 2 * (uint32_t)(uint16_t)B1_GUN_DIR(s)));
+        s->x = (int16_t)(s->x + (int16_t)W(L4_B1_GUN_DX_BY_DIR + 2 * (uint32_t)(uint16_t)B1_GUN_DIR(s)));
+        s->y = (int16_t)(s->y + (int16_t)W(L4_B1_GUN_DY_BY_DIR + 2 * (uint32_t)(uint16_t)B1_GUN_DIR(s)));
     }
 }
 
 /* the picture of a gun or the core by the cells of a table */
 static void gun_cells(Object *a0, int flash)
 {
-    uint32_t t = a0->x < 0xa0 ? L4_GUN_CELLS_DATA : L4_GUN_CELLS_DATA_2;
+    uint32_t t = a0->x < 0xa0 ? L4_GUN_CELLS_LEFT : L4_GUN_CELLS_RIGHT;
     const uint8_t *cells = (const uint8_t *)GPTR(sh_r32(t + (uint32_t)(int32_t)(int16_t)(B1_GUN_DIR(a0) * 4)));
 
     if (flash)
@@ -808,7 +808,7 @@ void l4_b1_head(Object *a0)
 {
     int16_t d0;
 
-    a0->gfx = GPTR(L4_B1_HEAD_DATA);
+    a0->gfx = GPTR(L4_B1_HEAD_PICTURE);
     a0->anim_delay = 0;
     a0->y = (int16_t)(a0->y + W(0xd70));
     l4_pose(a0);
@@ -843,13 +843,13 @@ static void l4_b1_piece(Object *a0, uint32_t gfx)
 /* level4 $055F26: a piece of the chain */
 void l4_b1_body(Object *a0)
 {
-    l4_b1_piece(a0, L4_B1_HEAD_DATA);
+    l4_b1_piece(a0, L4_B1_HEAD_PICTURE);
 }
 
 /* level4 $055F52: the last piece */
 void l4_b1_tail(Object *a0)
 {
-    l4_b1_piece(a0, L4_B1_TAIL_DATA);
+    l4_b1_piece(a0, L4_B1_TAIL_PICTURE);
 }
 
 /* ---- the second boss ($56976): twenty objects, a worm with a head, a gun and a ring of eyes ---- */
@@ -915,7 +915,7 @@ static void follow_chain(Object *a0)
 /* the head's picture by its angle (four), and its box */
 static void head_picture(Object *a0)
 {
-    a0->gfx = GPTR(sh_r32(L4_HEAD_PICTURE_TABLE + (((uint16_t)HEAD_ANGLE(a0) + 0x10) >> 3 & 0xc)));
+    a0->gfx = GPTR(sh_r32(L4_HEAD_PICTURES + (((uint16_t)HEAD_ANGLE(a0) + 0x10) >> 3 & 0xc)));
     bbox_from_frame(a0);
 }
 
@@ -994,7 +994,7 @@ void l4_b2_gun(Object *a0)
     if (d0 > 6)
         d0 = 6;
     AIM_DIR(a0) = (int16_t)d0;
-    a0->gfx = GPTR(sh_r32(L4_B2_GUN_TABLE + 4 * (uint32_t)d0));
+    a0->gfx = GPTR(sh_r32(L4_B2_GUN_PICTURES + 4 * (uint32_t)d0));
     bbox_from_frame(a0);
 }
 
@@ -1009,16 +1009,16 @@ void l4_b2_barrel(Object *a0)
     a0->y = a1->y;
     if (AIM_DIR(a1) != AIM_DIR(a0)) {
         AIM_DIR(a0) = AIM_DIR(a1);
-        set_anim(a0, sh_r32(L4_B2_BARREL_TABLE + 4 * (uint32_t)(uint16_t)AIM_DIR(a0)));
+        set_anim(a0, sh_r32(L4_B2_BARREL_ANIMS_BY_DIR + 4 * (uint32_t)(uint16_t)AIM_DIR(a0)));
     }
     if (add_carry(&a0->v5e_b[0], B(L4_B2_BARREL_FIRE_RATE))) {
         uint16_t d2 = (uint16_t)AIM_DIR(a0);
         Object *s;
 
         a0->v5e_b[0] = (uint8_t)(random_next() & 0x3f);
-        s = spawn_enemy_shot((uint16_t)(a0->x + (int16_t)W(L4_B2_BARREL_WORDS + 2 * (uint32_t)d2)), (uint16_t)(a0->y + (int16_t)W(L4_B2_BARREL_WORDS_2 + 2 * (uint32_t)d2)), d2, W(L4_B2_BARREL_SHOT_STEPS),
-                             GPTR(L4_B2_BARREL_DATA));
-        set_anim(s, L4_B2_BARREL_DATA);
+        s = spawn_enemy_shot((uint16_t)(a0->x + (int16_t)W(L4_B2_MUZZLE_DX + 2 * (uint32_t)d2)), (uint16_t)(a0->y + (int16_t)W(L4_B2_MUZZLE_DY + 2 * (uint32_t)d2)), d2, W(L4_B2_BARREL_SHOT_STEPS),
+                             GPTR(L4_B2_SHOT_ANIM));
+        set_anim(s, L4_B2_SHOT_ANIM);
     }
     bbox_from_frame(a0);
 }
@@ -1052,7 +1052,7 @@ void l4_b2_ring(Object *a0)
         for (d7 = 7; d7 >= 0; d7--) {
             Object *s = spawn_enemy_shot((uint16_t)a0->x, (uint16_t)a0->y, (uint16_t)d7, W(L4_B2_RING_SHOT_STEPS), GPTR(shot_picture(W(L4_B2_RING_SHOT_PICTURE))));
 
-            set_anim(s, L4_B2_BARREL_DATA);
+            set_anim(s, L4_B2_SHOT_ANIM);
         }
     }
     bbox_from_frame(a0);
@@ -1068,11 +1068,11 @@ void l4_b2_eye(Object *a0)
     d0 = aim_at_player(a0, 0, 0);
     if (d0 != (uint16_t)AIM_DIR(a0)) {
         AIM_DIR(a0) = (int16_t)d0;
-        set_anim(a0, sh_r32(L4_B2_EYE_TABLE + 4 * (uint32_t)d0));
+        set_anim(a0, sh_r32(L4_B2_EYE_ANIMS + 4 * (uint32_t)d0));
     }
     if (add_carry(&a0->v5e_b[0], B(L4_B2_EYE_FIRE_RATE))) {
         a0->v5e_b[0] = (uint8_t)(random_next() & 0x3f);
-        spawn_enemy_shot((uint16_t)a0->x, (uint16_t)a0->y, (uint16_t)AIM_DIR(a0), W(L4_B2_EYE_SHOT_STEPS), GPTR(L4_B2_EYE_DATA));
+        spawn_enemy_shot((uint16_t)a0->x, (uint16_t)a0->y, (uint16_t)AIM_DIR(a0), W(L4_B2_EYE_SHOT_STEPS), GPTR(L4_B2_EYE_SHOT_PICTURE));
     }
     bbox_from_frame(a0);
     a0->hit[1] = (int16_t)(a0->hit[1] - 8);
@@ -1168,7 +1168,7 @@ void l4_spawn_bar(const uint8_t *a1)
 
     a0->y = (int16_t)(a0->y - scroll_pos);
     a0->fn_draw = FN(l4_bar_draw);
-    set_anim(a0, a0->type == 0x10c ? L4_SPAWN_BAR_DATA : L4_SPAWN_BAR_DATA_2);
+    set_anim(a0, a0->type == 0x10c ? L4_BAR_ANIM_10C : L4_BAR_ANIM_OTHER);
 }
 
 /* level4 $056ABC: the bar: it swings out and back; it hurts the player */
@@ -1220,12 +1220,12 @@ void l4_bar_draw(Object *a0)
 
     if (a0->type == 0x10c) {
         if (d0 != 0)
-            draw_tile_grid((const uint8_t *)GPTR(L4_BAR_DRAW_DATA - 2 * d0), (uint16_t)(d0 - 1), 1, a0->y, (uint16_t)((uint16_t)a0->x >> 1));
+            draw_tile_grid((const uint8_t *)GPTR(L4_BAR_GRIDS - 2 * d0), (uint16_t)(d0 - 1), 1, a0->y, (uint16_t)((uint16_t)a0->x >> 1));
         x = (int16_t)((d0 << 4) + a0->x);
         y = (int16_t)(a0->y + 8);
     } else {
         if (d0 != 0)
-            draw_tile_grid((const uint8_t *)GPTR(L4_BAR_DRAW_DATA - 2 * d0), (uint16_t)(d0 - 1), 1, a0->y,
+            draw_tile_grid((const uint8_t *)GPTR(L4_BAR_GRIDS - 2 * d0), (uint16_t)(d0 - 1), 1, a0->y,
                            (uint16_t)((uint16_t)((a0->x - (int16_t)(d0 << 4)) + 0x10) >> 1));
         x = (int16_t)(a0->x - (int16_t)(d0 << 4) + 0xf);
         y = (int16_t)(a0->y + 8);
@@ -1252,7 +1252,7 @@ void l4_spawn_walker(const uint8_t *a1)
     a0->hit[2] = 0x3e8;
     a0->score = 0xc8;
     WALKER_SIDE(a0) = (int16_t)rd16(a1 + 6);
-    set_anim(a0, a0->type == 0xe0 ? L4_SPAWN_WALKER_DATA : L4_SPAWN_WALKER_DATA_2);
+    set_anim(a0, a0->type == 0xe0 ? L4_WALKER_ANIM_E0 : L4_WALKER_ANIM_OTHER);
     a0->kind = 0;
     SET_V5E(a0, W(L4_WALKER_V5E));
     WALKER_HOME_X(a0) = a0->x;
@@ -1267,7 +1267,7 @@ static void walker_reset(Object *a0)
     WALKER_STATE(a0) = 0;
     a0->hit[0] = 0x3e8;
     a0->hit[2] = 0x3e8;
-    set_anim(a0, a0->type == 0xe0 ? L4_SPAWN_WALKER_DATA : L4_SPAWN_WALKER_DATA_2);
+    set_anim(a0, a0->type == 0xe0 ? L4_WALKER_ANIM_E0 : L4_WALKER_ANIM_OTHER);
     a0->energy = (int16_t)W(L4_WALKER_ENERGY);
 }
 
@@ -1351,7 +1351,7 @@ static void walker_tiles(Object *a0)
 
     if (WALKER_STATE(a0) >= 2)
         return;
-    draw_tile_grid((const uint8_t *)GPTR(a0->type == 0xe0 ? L4_WALKER_TILES_DATA : L4_WALKER_TILES_DATA_2), 0, 2, (int16_t)(W(L4_WALKER_TILES_WORDS + d2) - scroll_pos), W(L4_WALKER_TILES_WORDS_2 + d2));
+    draw_tile_grid((const uint8_t *)GPTR(a0->type == 0xe0 ? L4_WALKER_GRID_E0 : L4_WALKER_GRID_E4), 0, 2, (int16_t)(W(L4_WALKER_GRID_Y + d2) - scroll_pos), W(L4_WALKER_GRID_X + d2));
 }
 
 /* level4 $056F3E: the walker's flash */

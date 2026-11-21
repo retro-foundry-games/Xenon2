@@ -8,22 +8,22 @@
 #define L3_ENEMY_A_DATA 0x55078
 #define L3_ENEMY_B_DATA 0x55098
 #define L3_ENEMY_C_DATA 0x550b8
-#define L3_ENEMY_ENTER_TABLE 0x5513e
+#define L3_ENEMY_ENTER_ANIMS 0x5513e
 #define L3_WORM_SPAWN_DATA 0x55270
-#define L3_WORM_HEAD_TABLE 0x55400
+#define L3_WORM_HEAD_ANIMS 0x55400
 #define L3_WORM_HEAD_DATA 0x5549e
 #define L3_WORM_A_DATA 0x5558e
 #define L3_WORM_B_DATA 0x555d2
 #define L3_WORM_FOLLOW_DATA 0x55622
-#define L3_SPAWN_WALKER_WORDS 0x55790
-#define L3_SPAWN_WALKER_WORDS_2 0x557a0
-#define L3_SPAWN_WALKER_TABLE 0x557b0
+#define L3_WALKER_SPAWN_DX 0x55790
+#define L3_WALKER_SPAWN_DY 0x557a0
+#define L3_WALKER_SPAWN_ANIMS 0x557b0
 #define L3_SPAWN_PARTS_DATA 0x558f0
 #define L3_PART_GUN_DATA_3 0x55a40
 #define L3_PART_CORE_DATA 0x55b14
-#define L3_PART_ARM_TIP_TABLE 0x55dac
-#define L3_SPAWN_SNAKE_DATA_4 0x560b4
-#define L3_SPAWN_SNAKE_DATA_3 0x560de
+#define L3_ARM_TIP_PICTURES 0x55dac
+#define L3_SNAKE_ANIM_B 0x560b4
+#define L3_SNAKE_ANIM_A 0x560de
 #define L3_SPAWN_BOSS_DATA 0x561f0
 #define L3_WALKER_UPDATE_WORDS 0x56290
 #define L3_WALKER_UPDATE_WORDS_2 0x562a0
@@ -36,25 +36,25 @@
 #define L3_DIVER_UPDATE_DATA_2 0x5681c
 #define L3_DIVER_UPDATE_DATA_4 0x56840
 #define L3_BOSS_UPDATE_DATA 0x569a2
-#define L3_BOSS_FLASH_DATA 0x56a74
-#define L3_BOSS2_UPDATE_TABLE 0x56bec
+#define L3_BOSS_FLASH_GRID 0x56a74
+#define L3_BOSS2_SHOT_ANIMS 0x56bec
 #define L3_BOSS2_UPDATE_DATA 0x56d2c
-#define L3_GUN_UPDATE_DATA 0x56eda
-#define L3_GUN_UPDATE_DATA_2 0x56ee8
-#define L3_SPAWN_GUN_DATA_2 0x56ef6
-#define L3_SPAWN_GUN_DATA 0x56ef8
+#define L3_GUN_CELLS_F0 0x56eda
+#define L3_GUN_CELLS_OTHER 0x56ee8
+#define L3_GUN_ANIM_B 0x56ef6
+#define L3_GUN_ANIM_A 0x56ef8
 #define L3_END_DRAW_DATA 0x56f9a
 #define L3_SPAWN_PARTS_DATA_2 0x570c2
 #define L3_SPAWN_PARTS_WORDS 0x570c4
 #define L3_SPAWN_PARTS_WORDS_2 0x570c6
 #define L3_SPAWN_PARTS_DATA_3 0x570c8
-#define L3_SPAWN_SNAKE_DATA 0x5b1d0
-#define L3_SPAWN_SNAKE_DATA_2 0x5b280
-#define L3_DIVER_SHOT_DATA 0x5b330
-#define L3_DIVER_SHOT_DATA_2 0x5b386
-#define L3_GUN_UPDATE_DATA_3 0x5e69e
-#define L3_PART_GUN_DATA 0x5f05e
-#define L3_PART_GUN_DATA_2 0x5f0f0
+#define L3_SNAKE_PICTURE_A 0x5b1d0
+#define L3_SNAKE_PICTURE_B 0x5b280
+#define L3_DIVER_SHOT_PICTURE_A 0x5b330
+#define L3_DIVER_SHOT_PICTURE_B 0x5b386
+#define L3_GUN_SHOT_PICTURE 0x5e69e
+#define L3_PART_GUN_PICTURE_SIDE_40 0x5f05e
+#define L3_PART_GUN_PICTURE_OTHER 0x5f0f0
 
 /* level 3: its parameter block at E42 (energies, fire rates, shot steps), by the object that reads them */
 #define L3_WORM_SPAWN_STEPS 0x54e42
@@ -519,11 +519,11 @@ void l3_spawn_snake(const uint8_t *a1)
         int16_t d6;
 
         a0->type = flag ? 0xcc : 0xc8;
-        a0->gfx = GPTR(flag ? L3_SPAWN_SNAKE_DATA : L3_SPAWN_SNAKE_DATA_2);
+        a0->gfx = GPTR(flag ? L3_SNAKE_PICTURE_A : L3_SNAKE_PICTURE_B);
         a0->anim_delay = 0;
         SET_V5E(a0, 0);
         if (d7 == 0)
-            set_anim(a0, flag ? L3_SPAWN_SNAKE_DATA_3 : L3_SPAWN_SNAKE_DATA_4);
+            set_anim(a0, flag ? L3_SNAKE_ANIM_A : L3_SNAKE_ANIM_B);
         a0->fn_update = FN(l3_snake_body);
         if (d7 == 0)
             a0->fn_update = FN(l3_snake_tail);
@@ -584,11 +584,11 @@ void l3_diver_shot(Object *a0)
         return;
     if (a0->x < 0x80) {
         DIVER_SIDE(a0) = 3;
-        a0->gfx = GPTR(L3_DIVER_SHOT_DATA);
+        a0->gfx = GPTR(L3_DIVER_SHOT_PICTURE_A);
     }
     if (a0->x >= 0xc0) {
         DIVER_SIDE(a0) = 5;
-        a0->gfx = GPTR(L3_DIVER_SHOT_DATA_2);
+        a0->gfx = GPTR(L3_DIVER_SHOT_PICTURE_B);
     }
 }
 
@@ -646,12 +646,12 @@ void l3_diver_update(Object *a0)
         DIVER_STATE(a0)++;
         if (DIVER_STATE(a0) == 0xb) {
             int16_t sx = (int16_t)(a0->x - 5), sy = (int16_t)(a0->y + 4);
-            uint32_t gfx = L3_DIVER_SHOT_DATA;
+            uint32_t gfx = L3_DIVER_SHOT_PICTURE_A;
             Object *s;
 
             if (sx > 0xa0) {
                 sx = (int16_t)(sx + 0xa);
-                gfx = L3_DIVER_SHOT_DATA_2;
+                gfx = L3_DIVER_SHOT_PICTURE_B;
             }
             s = alloc_in(LIST_B);
             s->type = 0x14;
@@ -807,7 +807,7 @@ void l3_part_gun(Object *a0)
     l3_part_follow(a0);
     side = (int16_t)W(GUN_SIDE(a0) == 0x40 ? 0xd60 : 0xd62);
     if (side <= 0) {
-        a0->gfx = GPTR(GUN_SIDE(a0) == 0x40 ? L3_PART_GUN_DATA : L3_PART_GUN_DATA_2);
+        a0->gfx = GPTR(GUN_SIDE(a0) == 0x40 ? L3_PART_GUN_PICTURE_SIDE_40 : L3_PART_GUN_PICTURE_OTHER);
         a0->anim_delay = 0;
         a0->hit[0] = 0x3e8;
         a0->fn_hit = (void *)obj_nop_thunk;
@@ -957,7 +957,7 @@ void l3_part_arm_tip(Object *a0)
     if (a0->steps == 0xe)
         sfx_cmd = 0xc;
     d1 = (uint16_t)(frame_tick & 4);
-    a0->gfx = GPTR(sh_r32(L3_PART_ARM_TIP_TABLE + (uint16_t)(d0 + d1)));
+    a0->gfx = GPTR(sh_r32(L3_ARM_TIP_PICTURES + (uint16_t)(d0 + d1)));
     a0->anim_delay = 0;
     bbox_from_frame(a0);
 }
@@ -981,7 +981,7 @@ void l3_enemy_enter(Object *a0)
     } else {
         d0 = (int16_t)(y - 0xc0) < (int16_t)(x - 0x140) ? 8 : 0xc;
     }
-    set_anim(a0, sh_r32(L3_ENEMY_ENTER_TABLE + d0));
+    set_anim(a0, sh_r32(L3_ENEMY_ENTER_ANIMS + d0));
     a0->fn_update = FN(enemy_update);
     bbox_from_frame(a0);
 }
@@ -1027,7 +1027,7 @@ void l3_gun_update(Object *a0)
         }
         return;
     }
-    a2 = a0->type == 0xf0 ? L3_GUN_UPDATE_DATA : L3_GUN_UPDATE_DATA_2;
+    a2 = a0->type == 0xf0 ? L3_GUN_CELLS_F0 : L3_GUN_CELLS_OTHER;
     copy2(a0->script, (const uint8_t *)GPTR(a2 + (uint16_t)(L3_GUN_OPEN(a0) & ~1)));
     L3_GUN_OPEN(a0)++;
     if (L3_GUN_OPEN(a0) == 8) {
@@ -1037,7 +1037,7 @@ void l3_gun_update(Object *a0)
             angle = 4;
             y = (int16_t)(y + 0xa);
         }
-        spawn_enemy_shot((uint16_t)x, (uint16_t)y, (uint16_t)angle, W(L3_GUN_SHOT_STEPS), GPTR(L3_GUN_UPDATE_DATA_3));
+        spawn_enemy_shot((uint16_t)x, (uint16_t)y, (uint16_t)angle, W(L3_GUN_SHOT_STEPS), GPTR(L3_GUN_SHOT_PICTURE));
         return;
     }
     if (L3_GUN_OPEN(a0) == 0xe)
@@ -1049,14 +1049,14 @@ void l3_spawn_gun(const uint8_t *a1)
 {
     int flag = rd16(a1 + 0xc) != 0;
     Object *a0 = spawn_marker_enemy(flag ? 0xf4 : 0xf0, a1, (void (*)(void))l3_gun_update);
-    uint32_t a2 = flag ? L3_GUN_UPDATE_DATA_2 : L3_GUN_UPDATE_DATA;
+    uint32_t a2 = flag ? L3_GUN_CELLS_OTHER : L3_GUN_CELLS_F0;
 
     a0->fn_hit = (void *)hit_tile;
     a0->energy = (int16_t)W(L3_GUN_ENERGY);
     a0->hit[0] = 0x3e8;
     a0->hit[2] = 0x3e8;
     a0->gfx = GPTR(a2);
-    a0->anim = (const uint8_t *)GPTR(flag ? L3_SPAWN_GUN_DATA : L3_SPAWN_GUN_DATA_2);
+    a0->anim = (const uint8_t *)GPTR(flag ? L3_GUN_ANIM_A : L3_GUN_ANIM_B);
     copy2(a0->script, (const uint8_t *)GPTR(a2));
     a0->score = 0x64;
     TILE_COLS(a0) = 0;
@@ -1179,7 +1179,7 @@ void l3_boss_flash(Object *a0)
     uint32_t cells = L3_BOSS_UPDATE_DATA + 4 * (uint32_t)(L3_BOSS_CELL(a0) & ~1);
 
     a0->fn_draw = (obj_fn)obj_nop_thunk;
-    draw_tile_grid_flash((const uint8_t *)GPTR(L3_BOSS_FLASH_DATA), 3, 2, (int16_t)(y + 0x20), (uint16_t)(((uint16_t)a0->x >> 1) & 0xfffc));
+    draw_tile_grid_flash((const uint8_t *)GPTR(L3_BOSS_FLASH_GRID), 3, 2, (int16_t)(y + 0x20), (uint16_t)(((uint16_t)a0->x >> 1) & 0xfffc));
     draw_tile_grid_flash((const uint8_t *)GPTR(cells), 1, 1, (int16_t)(y + 0x40), (uint16_t)(((uint16_t)(a0->x + 0x10) >> 1) & 0xfffc));
 }
 
@@ -1224,7 +1224,7 @@ void l3_boss2_update(Object *a0)
         for (d7 = 7; d7 >= 0; d7--) {
             Object *s = spawn_enemy_shot((uint16_t)x, (uint16_t)y, (uint16_t)d7, W(L3_BOSS2_SHOT_STEPS), 0);
 
-            set_anim(s, sh_r32(L3_BOSS2_UPDATE_TABLE + 4 * (uint32_t)(7 - d7)));
+            set_anim(s, sh_r32(L3_BOSS2_SHOT_ANIMS + 4 * (uint32_t)(7 - d7)));
         }
     }
 }
@@ -1269,9 +1269,9 @@ void l3_spawn_walker(const uint8_t *a1)
     a0->fn_draw = draw_bob_masked;
     WALKER_DIR(a0) = (int16_t)i;
     SET_V5E(a0, 0);
-    a0->x = (int16_t)(rd16(a1 + 8) - 8 + (int16_t)W(L3_SPAWN_WALKER_WORDS + 2 * i));
-    a0->y = (int16_t)(rd16(a1 + 10) - 8 - scroll_pos + (int16_t)W(L3_SPAWN_WALKER_WORDS_2 + 2 * i));
-    set_anim(a0, sh_r32(L3_SPAWN_WALKER_TABLE + 4 * (uint32_t)i));
+    a0->x = (int16_t)(rd16(a1 + 8) - 8 + (int16_t)W(L3_WALKER_SPAWN_DX + 2 * i));
+    a0->y = (int16_t)(rd16(a1 + 10) - 8 - scroll_pos + (int16_t)W(L3_WALKER_SPAWN_DY + 2 * i));
+    set_anim(a0, sh_r32(L3_WALKER_SPAWN_ANIMS + 4 * (uint32_t)i));
     a0->fn_hit = (void *)hit_enemy;
     a0->energy = (int16_t)W(L3_WALKER_ENERGY);
     a0->big = 0;
@@ -1333,7 +1333,7 @@ void l3_walker_update(Object *a0)
             a0->y = (int16_t)(a0->y + (int16_t)W(L3_WALKER_UPDATE_WORDS_5 + d2));
             ni = W(L3_WALKER_UPDATE_WORDS_6 + d2);
             WALKER_DIR(a0) = (int16_t)ni;
-            set_anim(a0, sh_r32(L3_SPAWN_WALKER_TABLE + 4 * (uint32_t)ni));
+            set_anim(a0, sh_r32(L3_WALKER_SPAWN_ANIMS + 4 * (uint32_t)ni));
         }
     }
     {
@@ -1374,7 +1374,7 @@ void l3_worm_head(Object *a0)
     d0 = (uint16_t)((((uint16_t)WORM_PHASE(a0) + 0x10) >> 3) & 0x1c);
     d1 = (uint16_t)(((old + 0x10) >> 3) & 0x1c);
     if (d1 != d0)
-        set_anim(a0, sh_r32(L3_WORM_HEAD_TABLE + d0));
+        set_anim(a0, sh_r32(L3_WORM_HEAD_ANIMS + d0));
     sum = (uint16_t)(a0->v5e_b[0] + B(L3_WORM_HEAD_FIRE_RATE));
     a0->v5e_b[0] = (uint8_t)sum;
     if (sum > 0xff) {
