@@ -765,6 +765,11 @@ void l2_turret_update(Object *a0)
     spawn_enemy_shot((uint16_t)d0, (uint16_t)d1, (uint16_t)d2, W(0x54e4a), GPTR(pic));
 }
 
+/* the launcher's use of the scratch fields of Object */
+#define LAUNCHER_STEP(o)  ((o)->v28)
+#define LAUNCHER_POS(o)   ((o)->v30)
+#define LAUNCHER_RANGE(o) ((o)->v2a)
+
 /* level2 $055A04: update of the launcher $100 / $104: it moves up and down (v28 is its step, v30 its place between 0 and v2a); when the
  * player is level with it (now and then) it goes into list B and fires a shot */
 void l2_launcher_update(Object *a0)
@@ -777,13 +782,13 @@ void l2_launcher_update(Object *a0)
     }
     anim_step(a0);
     a0->y = (int16_t)(a0->y + scroll_speed);
-    if (a0->v28 == 0)
+    if (LAUNCHER_STEP(a0) == 0)
         return;
     d0 = (int16_t)(a0->y - PLAYER_Y);
     if (d0 <= 0xa && d0 >= -0x1e && (uint8_t)random_next() < 0x1e) {
         Object *tail;
 
-        a0->v28 = 0;
+        LAUNCHER_STEP(a0) = 0;
         a0->next->prev = a0->prev;
         a0->prev->next = a0->next;
         tail = LIST_B->prev;
@@ -802,11 +807,11 @@ void l2_launcher_update(Object *a0)
         spawn_enemy_shot((uint16_t)d0, (uint16_t)d1, (uint16_t)d2, W(0x54e4c), GPTR(0x5ccf6));
         return;
     }
-    d0 = a0->v28;
+    d0 = LAUNCHER_STEP(a0);
     a0->y = (int16_t)(a0->y + d0);
-    a0->v30 = (int16_t)(a0->v30 + d0);
-    if (a0->v30 == 0 || a0->v30 == a0->v2a)
-        a0->v28 = (int16_t)-a0->v28;
+    LAUNCHER_POS(a0) = (int16_t)(LAUNCHER_POS(a0) + d0);
+    if (LAUNCHER_POS(a0) == 0 || LAUNCHER_POS(a0) == LAUNCHER_RANGE(a0))
+        LAUNCHER_STEP(a0) = (int16_t)-LAUNCHER_STEP(a0);
     bbox_from_frame(a0);
 }
 
@@ -1169,26 +1174,30 @@ void l2_boss_rest(Object *a0)
     a0->v2a = d1;
 }
 
+/* the boss's use of the scratch fields of Object */
+#define L2_BOSS_STEP(o)   ((o)->v2a)
+#define L2_BOSS_FRAMES(o) ((o)->v2e)
+
 /* level2 $056DD8: the boss moves up or down (v2a a step, v2e the frames left) between y $60 and $C0 */
 static void l2_boss_move(Object *a0)
 {
     int16_t d0;
 
-    if (a0->v2e == 0) {
+    if (L2_BOSS_FRAMES(a0) == 0) {
         l2_boss_rest(a0);
         return;
     }
     if (B(0x19f9e + 0x1794) == 0)
         sfx_cmd = 3;
-    a0->v2e--;
-    d0 = (int16_t)(a0->v2a + a0->y);
+    L2_BOSS_FRAMES(a0)--;
+    d0 = (int16_t)(L2_BOSS_STEP(a0) + a0->y);
     if (d0 < 0x60) {
         d0 = 0x60;
-        a0->v2e = 0;
+        L2_BOSS_FRAMES(a0) = 0;
     }
     if (d0 > 0xc0) {
         d0 = 0xc0;
-        a0->v2e = 0;
+        L2_BOSS_FRAMES(a0) = 0;
     }
     a0->y = d0;
     d0 = (int16_t)((frame_tick & 1) * 4);
