@@ -5,6 +5,10 @@
 #include <string.h>
 
 /* the scratch fields of Object, by the kind that uses them */
+#define TOWER_PHASE(o) ((o)->v28)
+
+
+/* the scratch fields of Object, by the kind that uses them */
 #define AIM_DIR(o) ((o)->v2a)
 #define B1_GUN_DIR(o) ((o)->v2a)
 #define BAR_PHASE(o) ((o)->v28)
@@ -192,20 +196,20 @@ void l4_tower_update(Object *a0)
     d0 = (uint16_t)(a0->y - scroll_pos + 2);
     a0->hit[1] = (int16_t)d0;
     a0->hit[3] = (int16_t)(d0 + 0x1c);
-    if (a0->v28 == 0) {
+    if (TOWER_PHASE(a0) == 0) {
         uint16_t sum = (uint16_t)(a0->v5e_b[0] + B(0x54e69));
 
         a0->v5e_b[0] = (uint8_t)sum;
         if (sum > 0xff) {
             a0->v5e_b[0] = (uint8_t)(random_next() & 0x3f);
-            a0->v28 = 1;
+            TOWER_PHASE(a0) = 1;
         }
         return;
     }
-    cells = (a0->type == 0xd0 ? 0x57160 : 0x57190) + ((uint16_t)a0->v28 << 3);
+    cells = (a0->type == 0xd0 ? 0x57160 : 0x57190) + ((uint16_t)TOWER_PHASE(a0) << 3);
     put_cells(a0->script, cells);
-    a0->v28++;
-    if (a0->v28 == 4) {
+    TOWER_PHASE(a0)++;
+    if (TOWER_PHASE(a0) == 4) {
         int16_t x = (int16_t)(a0->x + 0x12), y = (int16_t)(a0->y - scroll_pos + 0xe);
         uint16_t angle = 2;
         uint32_t table = sh_r32(0x77b70 + 4 * (uint32_t)W(0x54e6a));
@@ -217,8 +221,8 @@ void l4_tower_update(Object *a0)
         spawn_enemy_shot((uint16_t)x, (uint16_t)y, angle, W(0x54e6c), GPTR(sh_r32(table)));
         return;
     }
-    if (a0->v28 == 6)
-        a0->v28 = 0;
+    if (TOWER_PHASE(a0) == 6)
+        TOWER_PHASE(a0) = 0;
 }
 
 /* level4 $0571C0: the hit of a tower: it flashes; when it is shot to pieces it bursts and the cells are the broken ones */
