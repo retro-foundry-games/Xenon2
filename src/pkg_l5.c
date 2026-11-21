@@ -534,7 +534,7 @@ fire:
         if (a0->v28 < 0)
             d1 = 0xf5;
         d1 = (int16_t)(d1 + a0->y);
-        a1 = alloc_in(LIST_C);
+        a1 = insert_head(LIST_C);
         a1->type = 0xec;
         a1->fn_update = GFN(0x5605e);
         a1->fn_draw = (obj_fn)draw_bob_masked;
