@@ -19,7 +19,7 @@ var joy_stick 0xa00 uint8_t
 var key_pressed 0xa01 uint8_t
 var player_died 0xa02 uint8_t
 arr player_active 0xa03 uint8_t 4                        ; [0..1] flag for each player, [2..3] another one
-var v_0a07 0xa07 uint8_t
+var boss_dead 0xa07 uint8_t
 arr other_player_object 0xa08 uint8_t 98
 var energy_dirty 0xa6b uint8_t
 var level_over 0xa6c uint8_t

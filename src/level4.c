@@ -546,7 +546,7 @@ void l4_b1_core_hit(Object *a0, Object *a1, uint16_t d0)
     free_object_chain(LIST_C->prev);
     spawn_bonuses(9);
     debris_burst(a0, 0x13, 0x70, a1->y, 0x60, 0x50, big_explosion_anim);
-    v_0a07 = 0xff;
+    boss_dead = 0xff;
 }
 
 /* level4 $055A1C: the hit of a gun */

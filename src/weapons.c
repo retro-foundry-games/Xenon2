@@ -1366,7 +1366,7 @@ move:
         player_history[1] = a0->x;
         player_history[2] = a0->y;
         if (dive_phase == 0 && (int16_t)crush_timer >= 0 && player_tile_hit(a0)) {
-            crush_timer = v_041e;
+            crush_timer = crush_reload;
             player_vx = 0;
             d0 = (int16_t)(scroll_pos + scroll_margin);
             if (d0 > (int16_t)scroll_max)

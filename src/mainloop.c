@@ -503,7 +503,7 @@ static void main_loop(void)
         if (level_end_items != 0)
             continue;
         if (level_over == 0) {
-            if (v_0a07 == 0)
+            if (boss_dead == 0)
                 continue;
         } else {
             uint16_t other;
@@ -541,14 +541,14 @@ static void main_loop(void)
             level_over = 0;
             if (nashwan_timer)
                 init_weapons(0);
-            if (v_0a07 == 0) {
+            if (boss_dead == 0) {
                 if (music_switch)
                     music_restart_if_enabled();
                 continue;
             }
         }
         /* $7C62: the player's ship was lost or the level ended */
-        v_0a07 = 0;
+        boss_dead = 0;
         if (level_number == 5) {
             for (;;) {
                 Object *a1 = obj_list[1].prev;
@@ -716,7 +716,7 @@ void game_entry(void)
     hardware_init();
     /* SR = $2000: interrupts on */
     music_switch = 0xff;
-    v_041e = 1;
+    crush_reload = 1;
     v_09fd = 0;
     v_09fe = 0;
     clip_bottom = 0xbf;

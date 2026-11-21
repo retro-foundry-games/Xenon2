@@ -676,7 +676,7 @@ void l5_heart_hit(Object *a0, Object *a1, uint16_t d0)
     free_object_chain(LIST_C->prev);
     spawn_bonuses(9);
     debris_burst(a0, 0x27, 0, 0, 0x140, 0xc0, big_explosion_anim);
-    v_0a07 = 0xff;
+    boss_dead = 0xff;
     memset(level_init_src, 0, 1560);
 }
 

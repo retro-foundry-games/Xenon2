@@ -758,7 +758,7 @@ void level1_boss_hit(Object *a0, Object *a1, uint16_t d0)
     spawn_bonuses(8);
     debris_burst(a0, 0x13, 0, 0, 0x140, 0xc0, big_explosion_anim);
     free_object_chain(LIST_HEAD(LIST_ENEMY));
-    v_0a07 = 0xff;
+    boss_dead = 0xff;
 }
 
 /* orig $056278: update of a part of the level 1 boss ($FC, the last $100): it takes the place and the numbers of the part before it
