@@ -4,6 +4,26 @@
 #include "game_all.h"
 #include <string.h>
 
+/* the scratch fields of Object, by the kind that uses them */
+#define BEAM_LENGTH(o) ((o)->v28)
+#define BOSS_PHASE(o) ((o)->v28)
+#define GUNNER_PHASE(o) ((o)->v2c)
+#define L5_CELL(o) ((o)->v28)
+#define L5_TURRET_DIR(o) ((o)->v2a)
+#define MISSILE_DIR(o) ((o)->v2a)
+#define MISSILE_TICK(o) ((o)->v28)
+#define MOVER_STEP(o) ((o)->v2a)
+#define MOVER_TICK(o) ((o)->v28)
+#define PART_DX(o) ((o)->v3e)
+#define PART_DY(o) ((o)->v40)
+#define PELLET_DIR(o) ((o)->v2a)
+#define PELLET_TICK(o) ((o)->v28)
+#define UNIT_DIR(o) ((o)->v2a)
+#define UNIT_GROUP(o) ((o)->v30)
+#define UNIT_TICK(o) ((o)->v28)
+#define WHEEL_ANGLE(o) ((o)->v28)
+
+
 #define W(a) sh_r16(a)
 #define B(a) sh_r8(a)
 
@@ -72,8 +92,8 @@ static void follow_target_offset(Object *a0)
 {
     Object *a1 = a0->target;
 
-    a0->x = (int16_t)(a1->x + a0->v3e);
-    a0->y = (int16_t)(a1->y + a0->v40);
+    a0->x = (int16_t)(a1->x + PART_DX(a0));
+    a0->y = (int16_t)(a1->y + PART_DY(a0));
 }
 
 /* the burst at the hot spot of the picture of o (the end of the hits: $55D1C... $561F4) */
@@ -235,9 +255,9 @@ void l5_gunner_update(Object *a0)
         kill_thunk(a0);
         return;
     }
-    old = (uint16_t)a0->v2c;
+    old = (uint16_t)GUNNER_PHASE(a0);
     obj_script_run(a0);
-    d0 = (uint16_t)(((uint16_t)(a0->v2c + 0x10) >> 3) & 0x1c);
+    d0 = (uint16_t)(((uint16_t)(GUNNER_PHASE(a0) + 0x10) >> 3) & 0x1c);
     d1 = (uint16_t)(((uint16_t)(old + 0x10) >> 3) & 0x1c);
     if (d0 != d1)
         set_anim(a0, sh_r32(0x552ba + d0));
@@ -288,12 +308,12 @@ static void spawn_pellet(int16_t d0, int16_t d1, uint16_t d2)
     a1->fn_hit = (void *)hit_enemy;
     a1->x = d0;
     a1->y = d1;
-    a1->v2a = (int16_t)d2;
+    PELLET_DIR(a1) = (int16_t)d2;
     set_anim(a1, sh_r32(0x557de + 4 * (uint32_t)d2));
     a1->energy = (int16_t)W(0x54e4c);
     a1->big = 0;
     a1->score = 0x64;
-    a1->v28 = (int16_t)(random_next() & 0x1f);
+    PELLET_TICK(a1) = (int16_t)(random_next() & 0x1f);
     a1->kind = 0;
     a1->hit[0] = 0x3e8;
     a1->hit[2] = 0x3e8;
@@ -349,24 +369,24 @@ void l5_pellet_update(Object *a0)
     uint16_t d0;
 
     anim_step(a0);
-    a0->v28 = (int16_t)(a0->v28 + 1);
-    d0 = (uint16_t)a0->v28;
+    PELLET_TICK(a0) = (int16_t)(PELLET_TICK(a0) + 1);
+    d0 = (uint16_t)PELLET_TICK(a0);
     if ((int16_t)d0 < (int16_t)W(0x54e4e)) {
         if ((d0 & 7) == 0) {
             d0 = direction8((int16_t)(PLAYER->x - a0->x), (int16_t)(PLAYER->y - a0->y));
-            d0 = (uint16_t)(d0 - (uint16_t)a0->v2a);
+            d0 = (uint16_t)(d0 - (uint16_t)PELLET_DIR(a0));
             if (d0 != 0) {
                 if ((int16_t)d0 < 0)
                     d0 = (uint16_t)(d0 + 8);
-                a0->v2a = (int16_t)(a0->v2a + 1);
+                PELLET_DIR(a0) = (int16_t)(PELLET_DIR(a0) + 1);
                 if (d0 >= 4 && (d0 != 4 || !((uint16_t)a0->x & 1)))
-                    a0->v2a = (int16_t)(a0->v2a - 2);
-                a0->v2a = (int16_t)(a0->v2a & 7);
-                set_anim(a0, sh_r32(0x557de + 4 * (uint32_t)a0->v2a));
+                    PELLET_DIR(a0) = (int16_t)(PELLET_DIR(a0) - 2);
+                PELLET_DIR(a0) = (int16_t)(PELLET_DIR(a0) & 7);
+                set_anim(a0, sh_r32(0x557de + 4 * (uint32_t)PELLET_DIR(a0)));
             }
         }
-        dx = (int16_t)W(0x557fe + 2 * (uint32_t)a0->v2a);
-        dy = (int16_t)(W(0x5580e + 2 * (uint32_t)a0->v2a) + scroll_speed);
+        dx = (int16_t)W(0x557fe + 2 * (uint32_t)PELLET_DIR(a0));
+        dy = (int16_t)(W(0x5580e + 2 * (uint32_t)PELLET_DIR(a0)) + scroll_speed);
         a0->x = (int16_t)(a0->x + dx);
         a0->y = (int16_t)(a0->y + dy);
         bbox_from_frame(a0);
@@ -497,35 +517,35 @@ void l5_boss_update(Object *a0)
         stars_scroll(scroll_step);
     }
     a0->y = (int16_t)(a0->y + scroll_speed);
-    if (a0->v28 == 0) {
+    if (BOSS_PHASE(a0) == 0) {
         if (!add_carry(&a0->v5e_b[0], B(0x54e51)))
             return;
         a0->v5e_b[0] = (uint8_t)(random_next() & 0x3f);
         sfx_cmd2 = -1;
-        a0->v28 = (frame_tick & 1) ? 2 : -2;
+        BOSS_PHASE(a0) = (frame_tick & 1) ? 2 : -2;
         return;
     }
-    if (a0->v28 > 0) {
-        a0->v28 = (int16_t)(a0->v28 + 2);
-        if (a0->v28 == 0x14) {
+    if (BOSS_PHASE(a0) > 0) {
+        BOSS_PHASE(a0) = (int16_t)(BOSS_PHASE(a0) + 2);
+        if (BOSS_PHASE(a0) == 0x14) {
             sfx_cmd2 = 0x13;
             return;
         }
-        if (a0->v28 == 0x28)
+        if (BOSS_PHASE(a0) == 0x28)
             goto fire;
-        if (a0->v28 == 0x3c)
-            a0->v28 = 0;
+        if (BOSS_PHASE(a0) == 0x3c)
+            BOSS_PHASE(a0) = 0;
         return;
     }
-    a0->v28 = (int16_t)(a0->v28 - 2);
-    if (a0->v28 == (int16_t)0xffec) {
+    BOSS_PHASE(a0) = (int16_t)(BOSS_PHASE(a0) - 2);
+    if (BOSS_PHASE(a0) == (int16_t)0xffec) {
         sfx_cmd2 = 0x13;
         return;
     }
-    if (a0->v28 == (int16_t)0xffd8)
+    if (BOSS_PHASE(a0) == (int16_t)0xffd8)
         goto fire;
-    if (a0->v28 == (int16_t)0xffc4)
-        a0->v28 = 0;
+    if (BOSS_PHASE(a0) == (int16_t)0xffc4)
+        BOSS_PHASE(a0) = 0;
     return;
 fire:
     {
@@ -533,7 +553,7 @@ fire:
         Object *a1;
 
         sfx_stop_all();
-        if (a0->v28 < 0)
+        if (BOSS_PHASE(a0) < 0)
             d1 = 0xf5;
         d1 = (int16_t)(d1 + a0->y);
         a1 = insert_head(LIST_C);
@@ -548,7 +568,7 @@ fire:
         a1->energy = (int16_t)W(0x54e52);
         a1->big = 0;
         a1->score = 0x96;
-        a1->v28 = 1;
+        BOSS_PHASE(a1) = 1;
         a1->kind = 0;
         a1->hit[0] = 0x3e8;
         a1->hit[2] = 0x3e8;
@@ -588,22 +608,22 @@ void l5_missile_update(Object *a0)
     uint16_t dir;
 
     anim_step(a0);
-    a0->v28 = (int16_t)(a0->v28 + 1);
-    if ((a0->v28 & 7) == 0) {
+    MISSILE_TICK(a0) = (int16_t)(MISSILE_TICK(a0) + 1);
+    if ((MISSILE_TICK(a0) & 7) == 0) {
         dir = direction8((int16_t)(PLAYER->x - a0->x), (int16_t)(PLAYER->y - a0->y));
-        dir = (uint16_t)(dir - (uint16_t)a0->v2a);
+        dir = (uint16_t)(dir - (uint16_t)MISSILE_DIR(a0));
         if (dir != 0) {
             if ((int16_t)dir < 0)
                 dir = (uint16_t)(dir + 8);
-            a0->v2a = (int16_t)(a0->v2a + 1);
+            MISSILE_DIR(a0) = (int16_t)(MISSILE_DIR(a0) + 1);
             if (dir >= 4)
-                a0->v2a = (int16_t)(a0->v2a - 2);
-            a0->v2a = (int16_t)(a0->v2a & 7);
-            set_anim(a0, sh_r32(0x5603e + 4 * (uint32_t)a0->v2a));
+                MISSILE_DIR(a0) = (int16_t)(MISSILE_DIR(a0) - 2);
+            MISSILE_DIR(a0) = (int16_t)(MISSILE_DIR(a0) & 7);
+            set_anim(a0, sh_r32(0x5603e + 4 * (uint32_t)MISSILE_DIR(a0)));
         }
     }
-    d0 = (int16_t)W(0x557fe + 2 * (uint32_t)a0->v2a);
-    d1 = (int16_t)W(0x5580e + 2 * (uint32_t)a0->v2a);
+    d0 = (int16_t)W(0x557fe + 2 * (uint32_t)MISSILE_DIR(a0));
+    d1 = (int16_t)W(0x5580e + 2 * (uint32_t)MISSILE_DIR(a0));
     if (sh_r16(0xd7a) == 0) {
         d0 = (int16_t)(d0 + d0);
         d1 = (int16_t)(d1 + d1);
@@ -730,10 +750,10 @@ void l5_wheel_update(Object *a0)
     int16_t d0;
 
     follow_target_offset(a0);
-    d0 = (int16_t)(0x100 - a0->energy + a0->v28);
+    d0 = (int16_t)(0x100 - a0->energy + WHEEL_ANGLE(a0));
     if (d0 >= 0x600)
         d0 = (int16_t)(d0 - 0x600);
-    a0->v28 = d0;
+    WHEEL_ANGLE(a0) = d0;
     a0->gfx = GPTR(sh_r32(0x5650e + (uint32_t)(((uint16_t)d0 >> 6) & 0xfffc)));
     bbox_from_frame(a0);
 }
@@ -771,11 +791,11 @@ void l5_boss2_turret(Object *a0)
 
     follow_target_offset(a0);
     d0 = direction8((int16_t)(PLAYER->x - a0->x), (int16_t)(PLAYER->y - a0->y));
-    a0->v2a = (int16_t)d0;
+    L5_TURRET_DIR(a0) = (int16_t)d0;
     a0->gfx = GPTR(sh_r32(0x56658 + 4 * (uint32_t)d0));
     if (add_carry(&a0->v5e_b[0], B(0x54e57))) {
         a0->v5e_b[0] = (uint8_t)(random_next() & 0x3f);
-        spawn_enemy_shot((uint16_t)(a0->x + 8), (uint16_t)(a0->y + 8), (uint16_t)a0->v2a, W(0x54e58), shot_gfx(W(0x54e6e)));
+        spawn_enemy_shot((uint16_t)(a0->x + 8), (uint16_t)(a0->y + 8), (uint16_t)L5_TURRET_DIR(a0), W(0x54e58), shot_gfx(W(0x54e6e)));
     }
     bbox_from_frame(a0);
 }
@@ -812,14 +832,14 @@ void l5_boss2_mover(Object *a0)
     if ((int16_t)scroll_max < 0x920)
         scroll_max = 0x920;
     a0->y = (int16_t)(a0->y + scroll_speed);
-    if (a0->v2a != 0) {
+    if (MOVER_STEP(a0) != 0) {
         sfx_cmd = 0x16;
-        if (a0->v2a > 0) {
+        if (MOVER_STEP(a0) > 0) {
             a0->y = (int16_t)(a0->y + 1);
-            a0->v2a = (int16_t)(a0->v2a - 1);
+            MOVER_STEP(a0) = (int16_t)(MOVER_STEP(a0) - 1);
         } else {
             a0->y = (int16_t)(a0->y - 1);
-            a0->v2a = (int16_t)(a0->v2a + 1);
+            MOVER_STEP(a0) = (int16_t)(MOVER_STEP(a0) + 1);
         }
     } else {
         uint32_t r = random_next();
@@ -828,23 +848,23 @@ void l5_boss2_mover(Object *a0)
             if (r & 1) {
                 d0 = (int16_t)(0x910 - a0->y - scroll_pos);
                 if (d0 != 0)
-                    a0->v2a = (int16_t)(random_below((uint16_t)d0) + 1);
+                    MOVER_STEP(a0) = (int16_t)(random_below((uint16_t)d0) + 1);
             } else {
                 d0 = (int16_t)(a0->y + scroll_pos - 0x8d0);
                 if (d0 != 0)
-                    a0->v2a = (int16_t)-(int16_t)(random_below((uint16_t)d0) + 1);
+                    MOVER_STEP(a0) = (int16_t)-(int16_t)(random_below((uint16_t)d0) + 1);
             }
         }
     }
-    if (a0->v28 == 0) {
+    if (MOVER_TICK(a0) == 0) {
         if (!add_carry(&a0->v5e_b[0], B(0x54e5b)))
             goto pellets;
         a0->v5e_b[0] = (uint8_t)(random_next() & 0x3f);
     }
-    a0->v28 = (int16_t)(a0->v28 + 1);
-    if (a0->v28 == 9) {
-        a0->v28 = 0;
-    } else if (a0->v28 == 3) {
+    MOVER_TICK(a0) = (int16_t)(MOVER_TICK(a0) + 1);
+    if (MOVER_TICK(a0) == 9) {
+        MOVER_TICK(a0) = 0;
+    } else if (MOVER_TICK(a0) == 3) {
         Object *a1;
 
         sfx_cmd = 0x84;
@@ -854,8 +874,8 @@ void l5_boss2_mover(Object *a0)
         a1->fn_draw = GFN(0x56a10);
         a1->x = 0x96;
         a1->y = (int16_t)(a0->y + 0x30);
-        a1->v28 = 0;
-        a1->v2a = (int16_t)W(0x54e5c);
+        MOVER_TICK(a1) = 0;
+        MOVER_STEP(a1) = (int16_t)W(0x54e5c);
     }
 pellets:
     if (add_carry(&a0->v5e_b[1], B(0x54e7f))) {
@@ -892,10 +912,10 @@ void l5_beam_update(Object *a0)
 
     a0->hit[0] = a0->x;
     a0->hit[2] = (int16_t)(a0->x + 0xb);
-    if (a0->v28 != 0x30) {
-        a0->v28 = (int16_t)(a0->v28 + (int16_t)W(0x54e5c));
-        if (a0->v28 > 0x30)
-            a0->v28 = 0x30;
+    if (BEAM_LENGTH(a0) != 0x30) {
+        BEAM_LENGTH(a0) = (int16_t)(BEAM_LENGTH(a0) + (int16_t)W(0x54e5c));
+        if (BEAM_LENGTH(a0) > 0x30)
+            BEAM_LENGTH(a0) = 0x30;
         a0->y = (int16_t)(a0->y + scroll_speed);
         if (a0->v2a < 0)
             a0->y = (int16_t)(a0->y - (int16_t)W(0x54e5c));
@@ -906,13 +926,13 @@ void l5_beam_update(Object *a0)
             if (d0 >= 0xc0)
                 goto gone;
         } else {
-            d0 = (int16_t)(d0 + a0->v28);
+            d0 = (int16_t)(d0 + BEAM_LENGTH(a0));
             if (d0 < 0)
                 goto gone;
         }
     }
     a0->hit[1] = a0->y;
-    a0->hit[3] = (int16_t)(a0->y + a0->v28);
+    a0->hit[3] = (int16_t)(a0->y + BEAM_LENGTH(a0));
     if (!player_hits(a0))
         return;
     if (shield_timer == 0) {
@@ -932,10 +952,10 @@ void l5_beam_draw(Object *a0)
     uint32_t r0, r1, r2, r3, r4, r5;
     int16_t d6, d7;
 
-    if (a0->v2a < 0 || a0->v28 == 0x30)
+    if (a0->v2a < 0 || BEAM_LENGTH(a0) == 0x30)
         draw_bob_masked_at((uint16_t)a0->x, (uint16_t)a0->y, (const uint8_t *)GPTR(0x5f2fe));
-    if (a0->v2a >= 0 || a0->v28 == 0x30)
-        draw_bob_masked_at((uint16_t)a0->x, (uint16_t)(a0->y + a0->v28 - 1), (const uint8_t *)GPTR(0x5f340));
+    if (a0->v2a >= 0 || BEAM_LENGTH(a0) == 0x30)
+        draw_bob_masked_at((uint16_t)a0->x, (uint16_t)(a0->y + BEAM_LENGTH(a0) - 1), (const uint8_t *)GPTR(0x5f340));
     a1 = screen + (((uint16_t)a0->x >> 3) & 0xfffe);
     sh = (uint16_t)a0->x & 0xf;
     d0 >>= sh;
@@ -949,7 +969,7 @@ void l5_beam_draw(Object *a0)
     r3 = ((d2 & 0xffff) << 16) | (d3 & 0xffff);
     r4 = ((d1 & 0xffff) << 16) | (d2 & 0xffff);
     r5 = ((d0 & 0xffff) << 16) | (d0 & 0xffff);
-    d7 = a0->v28;
+    d7 = BEAM_LENGTH(a0);
     d6 = a0->y;
     if (d6 < 0) {
         d7 = (int16_t)(d7 + d6);
@@ -1024,11 +1044,11 @@ void l5_spawn_gates(const uint8_t *a1)
 /* level5 $056BEE: a gate: its cells go round */
 void l5_gate_update(Object *a0)
 {
-    int16_t d0 = (int16_t)(a0->v28 + 4);
+    int16_t d0 = (int16_t)(L5_CELL(a0) + 4);
 
     if (d0 >= 0x10)
         d0 = 0;
-    a0->v28 = d0;
+    L5_CELL(a0) = d0;
     copy4(a0->script, (const uint8_t *)GPTR(0x56c30 + (uint32_t)d0));
     a0->hit[0] = a0->x;
     a0->hit[2] = (int16_t)(a0->x + 0x20);
@@ -1041,8 +1061,8 @@ void l5_wall_update(Object *a0)
 {
     uint32_t a2 = a0->type == 0x128 ? 0x56c94 : 0x56c9c;
 
-    a0->v28 = (int16_t)((a0->v28 + 1) & 3);
-    wr16(a0->script, W(a2 + 2 * (uint32_t)a0->v28));
+    L5_CELL(a0) = (int16_t)((L5_CELL(a0) + 1) & 3);
+    wr16(a0->script, W(a2 + 2 * (uint32_t)L5_CELL(a0)));
     a0->hit[0] = (int16_t)(a0->x + 3);
     a0->hit[2] = (int16_t)(a0->hit[0] + 0xa);
     a0->hit[1] = (int16_t)(a0->y - scroll_pos + 3);
@@ -1252,29 +1272,29 @@ void l5_unit_update(Object *a0)
     a0->hit[2] = (int16_t)(a0->hit[0] + 0x18);
     a0->hit[1] = (int16_t)(a0->y - scroll_pos + 4);
     a0->hit[3] = (int16_t)(a0->hit[1] + 0x18);
-    if (a0->v28 == 0 && (int16_t)(a0->y - scroll_pos) < -16)
+    if (UNIT_TICK(a0) == 0 && (int16_t)(a0->y - scroll_pos) < -16)
         goto cells;
-    if (a0->v28 != 8) {
-        a0->v28 = (int16_t)(a0->v28 + 1);
-        a0->v2a = (int16_t)((a0->v2a + 1) & 7);
+    if (UNIT_TICK(a0) != 8) {
+        UNIT_TICK(a0) = (int16_t)(UNIT_TICK(a0) + 1);
+        UNIT_DIR(a0) = (int16_t)((UNIT_DIR(a0) + 1) & 7);
         goto cells;
     }
     {
         uint16_t dir = direction8((int16_t)(PLAYER->x - a0->x - 0x10), (int16_t)(PLAYER->y - a0->y + scroll_pos - 0x10));
 
-        dir = (uint16_t)(dir - (uint16_t)a0->v2a);
+        dir = (uint16_t)(dir - (uint16_t)UNIT_DIR(a0));
         if (dir != 0) {
             dir &= 7;
             if (dir < 4)
-                a0->v2a = (int16_t)(a0->v2a + 1);
+                UNIT_DIR(a0) = (int16_t)(UNIT_DIR(a0) + 1);
             else
-                a0->v2a = (int16_t)(a0->v2a - 1);
+                UNIT_DIR(a0) = (int16_t)(UNIT_DIR(a0) - 1);
         }
-        a0->v2a = (int16_t)(a0->v2a & 7);
+        UNIT_DIR(a0) = (int16_t)(UNIT_DIR(a0) & 7);
     }
     if (add_carry(&a0->v5e_b[0], B(0x54e65))) {
         int16_t x = (int16_t)(a0->x + 0x10), y = (int16_t)(a0->y - scroll_pos + 0x10);
-        uint16_t d3 = (uint16_t)((a0->v2a * 4) & 0x1c);
+        uint16_t d3 = (uint16_t)((UNIT_DIR(a0) * 4) & 0x1c);
 
         a0->v5e_b[0] = (uint8_t)(random_next() & 0x3f);
         x = (int16_t)(x + (int16_t)W(0x572aa + d3));
@@ -1282,11 +1302,11 @@ void l5_unit_update(Object *a0)
         d3 &= 0xc;
         if (!(frame_tick & 1))
             d3 += 0x10;
-        spawn_enemy_shot((uint16_t)x, (uint16_t)y, (uint16_t)a0->v2a, W(0x54e66), GPTR(sh_r32(0x572ca + d3)));
+        spawn_enemy_shot((uint16_t)x, (uint16_t)y, (uint16_t)UNIT_DIR(a0), W(0x54e66), GPTR(sh_r32(0x572ca + d3)));
     }
 cells:
     c = a0->script;
-    d0 = (uint32_t)(uint16_t)a0->v2a << 3;
+    d0 = (uint32_t)(uint16_t)UNIT_DIR(a0) << 3;
     copy4(c, (const uint8_t *)GPTR(0x5711e + d0));
     copy4(c + 0x28, (const uint8_t *)GPTR(0x57122 + d0));
 }
@@ -1300,8 +1320,8 @@ void l5_unit_hit(Object *a0, Object *a1, uint16_t d0)
     a1->fn_draw = GFN(0x57388);
     if (!dies(a1, d0))
         return;
-    if (a1->v30 >= 0)
-        sh_w8(0xd9b + (uint32_t)(uint16_t)a1->v30, 0xff);
+    if (UNIT_GROUP(a1) >= 0)
+        sh_w8(0xd9b + (uint32_t)(uint16_t)UNIT_GROUP(a1), 0xff);
     spawn_effect((int16_t)(a1->x + 0x10), (int16_t)(a1->y - scroll_pos + 0x10), big_explosion_anim, draw_bob_masked);
     c = a1->script;
     if (rd16(c - 2) == 0x80d7) {
@@ -1359,15 +1379,15 @@ void l5_gun_update(Object *a0)
     a0->hit[2] = (int16_t)(a0->hit[0] + 0xc);
     a0->hit[1] = (int16_t)(a0->y - scroll_pos + 2);
     a0->hit[3] = (int16_t)(a0->hit[1] + 0xc);
-    if (a0->v28 == 0) {
+    if (L5_CELL(a0) == 0) {
         if (!add_carry(&a0->v5e_b[0], B(0x54e6b)))
             return;
         a0->v5e_b[0] = (uint8_t)(random_next() & 0x3f);
     }
-    a0->v28 = (int16_t)(a0->v28 + 1);
+    L5_CELL(a0) = (int16_t)(L5_CELL(a0) + 1);
     a2 = a0->type == 0x108 ? 0x57524 : 0x57514;
-    wr16(a0->script, W(a2 + 2 * (uint32_t)(uint16_t)a0->v28));
-    if (a0->v28 == 3) {
+    wr16(a0->script, W(a2 + 2 * (uint32_t)(uint16_t)L5_CELL(a0)));
+    if (L5_CELL(a0) == 3) {
         int16_t d0 = (int16_t)(a0->x + 0x18), d1 = (int16_t)(a0->y - scroll_pos + 8);
         uint16_t d2 = 2;
         Object *a1;
@@ -1380,6 +1400,6 @@ void l5_gun_update(Object *a0)
         set_anim(a1, a0->type == 0x108 ? 0x57538 : 0x57550);
         return;
     }
-    if (a0->v28 == 7)
-        a0->v28 = 0;
+    if (L5_CELL(a0) == 7)
+        L5_CELL(a0) = 0;
 }
