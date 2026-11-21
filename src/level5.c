@@ -299,6 +299,8 @@ static void spawn_pellet(int16_t d0, int16_t d1, uint16_t d2)
     a1->hit[2] = 0x3e8;
 }
 
+#define CANNON_BOB(o) ((o)->v2a)
+
 /* level5 $0555A6: the cannon: it moves down by the scroll and slowly up and down by v2a, and fires pellets */
 void l5_cannon_update(Object *a0)
 {
@@ -311,18 +313,18 @@ void l5_cannon_update(Object *a0)
     }
     anim_step(a0);
     d1 = (int16_t)scroll_pos;
-    if (a0->v2a >= 0) {
+    if (CANNON_BOB(a0) >= 0) {
         a0->y = (int16_t)(a0->y + 1);
         d1 = (int16_t)(d1 + a0->y);
         if (d1 >= 0xf20) {
-            a0->v2a = -1;
+            CANNON_BOB(a0) = -1;
             set_anim(a0, a0->type == 0x100 ? 0x5555e : 0x55582);
         }
     } else {
         a0->y = (int16_t)(a0->y - 1);
         d1 = (int16_t)(d1 + a0->y);
         if (d1 <= 0xe30) {
-            a0->v2a = 1;
+            CANNON_BOB(a0) = 1;
             set_anim(a0, a0->type == 0x100 ? 0x55516 : 0x5553a);
         }
     }
@@ -553,11 +555,13 @@ fire:
     }
 }
 
+#define L5_ARM_STROKE(o) ((o)->v28)
+
 /* level5 $055EDA: the arms of the boss (v28 their stroke): the pictures are drawn at its side */
 void l5_boss_draw(Object *a0)
 {
     int16_t d1 = 0x55;
-    int16_t d2 = a0->v28;
+    int16_t d2 = L5_ARM_STROKE(a0);
     int16_t d0;
 
     if (d2 == 0)
@@ -868,10 +872,12 @@ void l5_boss2_flash(Object *a0)
     draw_tile_grid_flash((const uint8_t *)GPTR(0x568f8), 5, 5, a0->y, 0x38);
 }
 
+#define MOVER_CELL(o) ((o)->v28)
+
 /* level5 $05685A: the cells of the mover: three of them change with v28 */
 void l5_boss2_draw(Object *a0)
 {
-    uint32_t d0 = (uint32_t)(uint16_t)a0->v28 * 0xc;
+    uint32_t d0 = (uint32_t)(uint16_t)MOVER_CELL(a0) * 0xc;
 
     sh_w32(0x56908, sh_r32(0x5688c + d0));
     sh_w32(0x56914, sh_r32(0x56890 + d0));
@@ -1128,6 +1134,8 @@ void l5_spawn_bridge(const uint8_t *a1)
     copy4(c + 0x28, (const uint8_t *)GPTR(0x56ea6));
 }
 
+#define BRIDGE_CELL(o) ((o)->v28)
+
 /* level5 $056EE2: the piece: its cells go round by v28 and now and then it fires all round */
 void l5_bridge_update(Object *a0)
 {
@@ -1142,7 +1150,7 @@ void l5_bridge_update(Object *a0)
     a0->hit[2] = (int16_t)(a0->hit[0] + 0x18);
     a0->hit[1] = (int16_t)(a0->y - scroll_pos + 4);
     a0->hit[3] = (int16_t)(a0->hit[1] + 0x18);
-    a0->v28 = (int16_t)((a0->v28 + 1) & 0xf);
+    BRIDGE_CELL(a0) = (int16_t)((BRIDGE_CELL(a0) + 1) & 0xf);
     if (add_carry(&a0->v5e_b[0], B(0x54e73))) {
         int d7;
 
@@ -1154,7 +1162,7 @@ void l5_bridge_update(Object *a0)
         }
     }
     c = a0->script;
-    d0 = (uint32_t)((uint16_t)a0->v28 & 0xe) * 4;
+    d0 = (uint32_t)((uint16_t)BRIDGE_CELL(a0) & 0xe) * 4;
     copy4(c, (const uint8_t *)GPTR(0x56ea2 + d0));
     copy4(c + 0x28, (const uint8_t *)GPTR(0x56ea6 + d0));
 }

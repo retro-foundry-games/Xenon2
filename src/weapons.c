@@ -1566,6 +1566,8 @@ void spinner_update(Object *a0)
         kill_object(a0);
 }
 
+#define DRILL_DIR(o) ((o)->v2a)
+
 /* orig $0039A2: update of a drill bit (type $48): it turns (v2a, eight directions) towards an enemy it keeps in $30 and flies; it hits
  * the first enemy it meets and explodes when there is none or it leaves the screen */
 void drill_update(Object *a0)
@@ -1609,26 +1611,26 @@ have:
     }
     d0 = (int16_t)(a1->hit[0] + 2 - a0->x);
     d1 = (int16_t)(a1->hit[1] + 2 - a0->y);
-    d0 = (int16_t)(direction8(d0, d1) - a0->v2a);
+    d0 = (int16_t)(direction8(d0, d1) - DRILL_DIR(a0));
     if (d0 != 0) {
         if (d0 < 0)
             d0 = (int16_t)(d0 + 8);
         if (d0 < 4)
-            a0->v2a++;
+            DRILL_DIR(a0)++;
         else
-            a0->v2a--;
-        a0->v2a &= 7;
+            DRILL_DIR(a0)--;
+        DRILL_DIR(a0) &= 7;
         a0->v28 = -3;
-        set_anim(a0, heads[a0->v2a]);
+        set_anim(a0, heads[DRILL_DIR(a0)]);
     }
 fly:
-    d1 = (int16_t)(drill_dy[a0->v2a] + a0->y);
+    d1 = (int16_t)(drill_dy[DRILL_DIR(a0)] + a0->y);
     if ((uint16_t)d1 >= 0xc0) {
         kill_object(a0);
         return;
     }
     a0->y = d1;
-    d0 = (int16_t)(drill_dx[a0->v2a] + a0->x);
+    d0 = (int16_t)(drill_dx[DRILL_DIR(a0)] + a0->x);
     if ((uint16_t)d0 >= 0x140) {
         kill_object(a0);
         return;
@@ -1852,6 +1854,8 @@ void weapon20_update(Object *a0)
     }
 }
 
+#define BEAM_GROWTH(o) ((o)->v28)
+
 /* orig $003FDA: update of the beam of weapon $20: it grows (v28 -$20 to $60), then climbs; hurts what it covers */
 void beam_update(Object *a0)
 {
@@ -1862,15 +1866,15 @@ void beam_update(Object *a0)
         kill_object(a0);
         return;
     }
-    if (a0->v28 != 0x41) {
+    if (BEAM_GROWTH(a0) != 0x41) {
         Object *a1 = a0->target;
 
         a0->x = (int16_t)(a1->x - 7);
         a0->y = (int16_t)(a1->y - 0x18);
-        a0->v28 = (int16_t)(a0->v28 + 0x20);
-        if (a0->v28 != 0x60)
+        BEAM_GROWTH(a0) = (int16_t)(BEAM_GROWTH(a0) + 0x20);
+        if (BEAM_GROWTH(a0) != 0x60)
             goto hurt;
-        a0->v28 = 0x41;
+        BEAM_GROWTH(a0) = 0x41;
     }
     a0->y = (int16_t)(a0->y - 0x20);
     if (a0->y < 0) {
@@ -1879,7 +1883,7 @@ void beam_update(Object *a0)
     }
 hurt:
     d0 = a0->x;
-    d1 = (int16_t)(a0->y - a0->v28);
+    d1 = (int16_t)(a0->y - BEAM_GROWTH(a0));
     d2 = a0->score;
     d0 = (int16_t)(d0 + 4);
     d2 = (int16_t)(d2 + d2);
@@ -1985,6 +1989,8 @@ void weapon90_update(Object *a0)
         a0->anim_delay = 1;
 }
 
+#define SHELL_PHASE(o) ((o)->v28)
+
 /* orig $0042A6: update of the shell of weapon $28 (type $28): flies up while v28 < 0, waits, then explodes after 3 frames and hurts
  * what is near */
 void shell_update(Object *a0)
@@ -1994,17 +2000,17 @@ void shell_update(Object *a0)
         return;
     }
     anim_step(a0);
-    if (a0->v28 < 0) {
-        a0->v28++;
+    if (SHELL_PHASE(a0) < 0) {
+        SHELL_PHASE(a0)++;
         a0->y = (int16_t)(a0->y - 6);
         return;
     }
-    if (a0->v28 == 0) {
-        a0->v28 = 3;
+    if (SHELL_PHASE(a0) == 0) {
+        SHELL_PHASE(a0) = 3;
         return;
     }
-    a0->v28--;
-    if (a0->v28 != 0)
+    SHELL_PHASE(a0)--;
+    if (SHELL_PHASE(a0) != 0)
         return;
     sfx_cmd = 0x82;
     debris_burst(a0, 3, (uint16_t)(a0->x - 0x14), (uint16_t)(a0->y - 0x14), 0x28, 0x28, anim_273a);
