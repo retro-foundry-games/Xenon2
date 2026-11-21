@@ -3,6 +3,11 @@
 #include "weapons.h"
 #include "shop.h"
 #include "game_all.h"
+#define PART_SLOT(o) ((o)->v30)
+#define TILE_COLS(o) ((o)->v3e)
+#define TILE_ROWS(o) ((o)->v40)
+#define PATH_WAIT(o) ((o)->v28)
+#define ARM_SWING(o) ((o)->v3e)
 #define WORM_DELAY(o) ((o)->v28)
 #define WALKER_DIR(o) ((o)->v2a)
 
@@ -647,7 +652,7 @@ void l3_spawn_parts(void)
         a0->fn_update = (obj_fn)GFN(sh_r32(t));
         a0->fn_draw = draw_bob_masked;
         a0->fn_hit = GFN(sh_r32(t + 4));
-        a0->v28 = 0;
+        PATH_WAIT(a0) = 0;
         set_anim(a0, sh_r32(t + 8));
         a0->turn[0] = W(t + 12);
         a0->turn[1] = W(t + 14);
@@ -669,8 +674,8 @@ void l3_spawn_parts(void)
         a0->target = first;
         a0->chain = 0;
         t += 16;
-        a0->v30 = (int16_t)(t - 0x558f0);
-        a0->v3e = 0;
+        PART_SLOT(a0) = (int16_t)(t - 0x558f0);
+        ARM_SWING(a0) = 0;
         prev = a0;
     } while (sh_r32(t) != 0);
     sh_w8(0xd96, 0xff);
@@ -807,7 +812,7 @@ void l3_part_arm(Object *a0)
         a1->turn[1] = (uint16_t)r;
         a1->turn[2] = 0;
         a1->steps = 1;
-        if (a0->v30 == 0x60) {
+        if (PART_SLOT(a0) == 0x60) {
             ARM_ANGLE_LO(a1) = (int16_t)((ARM_ANGLE_LO(a1) & 0xff00) | (uint8_t)(ARM_ANGLE_LO(a1) + 0x40));
             r = -r;
             a1->turn[0] = (uint16_t)(r >> 16);
@@ -826,7 +831,7 @@ static void l3_arm_follow(Object *a0)
     a0->x_frac = a1->x_frac;
     a0->y = a1->y;
     a0->y_frac = a1->y_frac;
-    a0->v28 = 0x3e8;
+    PATH_WAIT(a0) = 0x3e8;
 }
 
 #define ARM_ANGLE_HI(o) ((o)->v2a)
@@ -972,8 +977,8 @@ void l3_spawn_gun(const uint8_t *a1)
     a0->anim = (const uint8_t *)GPTR(flag ? 0x56ef8 : 0x56ef6);
     copy2(a0->script, (const uint8_t *)GPTR(a2));
     a0->score = 0x64;
-    a0->v3e = 0;
-    a0->v40 = 0;
+    TILE_COLS(a0) = 0;
+    TILE_ROWS(a0) = 0;
 }
 
 /* level3 $0561A6: the boss of tiles ($F8) from a record: six rows of its tiles are put into the map */
