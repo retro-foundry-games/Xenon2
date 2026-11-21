@@ -1,5 +1,4 @@
-/* The disks: ADF images (880 KB, 512-byte sectors, track after track).  Disk 1 holds the game's program, disk 2 the level data; the
- * game asks for disk 2 in the drive when it starts a level and `files_insert` puts it there. */
+/* The disks: ADF images (880 KB, 512-byte sectors, track after track).  Disk 1 holds the game's program, disk 2 the level data. */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -8,7 +7,6 @@
 
 static uint8_t *disks[3];
 static size_t disk_size[3];
-static int current = 1;
 
 static int load(int n, const char *folder, const char *const *names)
 {
@@ -54,10 +52,3 @@ int files_read_sectors(int disk, uint32_t first, uint32_t count, void *dest)
     return 0;
 }
 
-void files_state(host_state_visit visit, void *arg)
-{
-    visit(&current, sizeof current, arg);
-}
-
-int files_current_disk(void) { return current; }
-void files_insert(int disk) { current = disk; }
