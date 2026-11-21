@@ -465,12 +465,12 @@ Object *spawn_formation(Object *a0, const uint8_t *rec_raw, const uint8_t *a2)
             SET_V5E(a0, (int16_t)a1->y);
             d0 = (uint16_t)random_next();
             SET_V5E(a0, (int16_t)((V5E(a0) & 0x00ff) | ((d0 & 0xff) << 8)));
-            a0->energy = (int16_t)v_0426;
-            a0->kind = (int16_t)v_045e;
+            a0->energy = (int16_t)difficulty_x2;
+            a0->kind = (int16_t)pickup_kind_b;
             a0->flag35 = (int8_t)a4->to_flag35;
             if (a4->to_flag35 == 0) {
-                a0->energy = (int16_t)v_0424;
-                a0->kind = (int16_t)v_045c;
+                a0->energy = (int16_t)difficulty_x1;
+                a0->kind = (int16_t)pickup_kind_a;
             }
             a0->flag34 = (int8_t)a4->to_flag34;
             bbox_from_frame(a0);
@@ -498,9 +498,9 @@ Object *spawn_formation(Object *a0, const uint8_t *rec_raw, const uint8_t *a2)
         d6 = (uint16_t)(d6 + d0);
         a0->chain = 0;
     }
-    d1 = v_045e;
+    d1 = pickup_kind_b;
     if (a0->flag35 == 0)
-        d1 = v_045c;
+        d1 = pickup_kind_a;
     slot = v_043c;
     for (i = 0; i < 8; i++, slot += 2) {
         if (slot[0] == d1) {
@@ -513,7 +513,7 @@ Object *spawn_formation(Object *a0, const uint8_t *rec_raw, const uint8_t *a2)
         if (slot[0] == 0) {
             slot[0] = d1;
             slot[1] = a1->count;
-            v_0cec = (uint16_t)(v_0cec + 1);
+            pickup_cycle = (uint16_t)(pickup_cycle + 1);
             return a0;
         }
     }
@@ -607,15 +607,15 @@ void note_spawn_record(const uint8_t *a1, uint16_t d2)
     latch_slots(d2);
 }
 
-/* orig $F4A, $00352E: copy the type and the score ($42) of the object of each of the 7 weapon slots to v_0caa unless v_0ca2 is set
+/* orig $F4A, $00352E: copy the type and the score ($42) of the object of each of the 7 weapon slots to slot_snapshot unless extras_timer is set
  * (d2 is what an empty slot gets after the first one that was not: the caller's register) */
 void latch_slots(uint16_t d2)
 {
     const Slot *s = weapon_slots;
-    uint16_t *out = v_0caa;
+    uint16_t *out = slot_snapshot;
     int i;
 
-    if (v_0ca2 != 0)
+    if (extras_timer != 0)
         return;
     for (i = 0; i < 7; i++, s++) {
         *out++ = s->type;
@@ -630,7 +630,7 @@ void latch_slots(uint16_t d2)
 void scroll_events(void)
 {
     const uint8_t *a1 = level_events_a;
-    int16_t d0 = (int16_t)v_0cd2;
+    int16_t d0 = (int16_t)next_event_a;
     int16_t d1 = (int16_t)scroll_pos;
 
     for (;; a1 += 14) {
@@ -640,15 +640,15 @@ void scroll_events(void)
             break;
         if (d0 > d2 && d1 <= d2) {
             level_event(rd16(a1 + 2), a1);
-            d0 = (int16_t)v_0cd2;
+            d0 = (int16_t)next_event_a;
             d1 = (int16_t)scroll_pos;
         }
     }
     if (d1 >= d0)
         return;
-    v_0cd2 = (uint16_t)d1;
+    next_event_a = (uint16_t)d1;
     a1 = level_events_b;
-    d0 = (int16_t)v_0cd4;
+    d0 = (int16_t)next_event_b;
     d1 = (int16_t)scroll_pos;
     for (;; a1 += 14) {
         int16_t d2 = (int16_t)rd16(a1);
@@ -657,13 +657,13 @@ void scroll_events(void)
             break;
         if (d0 > d2 && d1 <= d2) {
             level_hook(rd16(a1 + 2), a1, (uint16_t)d2);
-            d0 = (int16_t)v_0cd4;
+            d0 = (int16_t)next_event_b;
             d1 = (int16_t)scroll_pos;
         }
     }
     if (d1 >= d0)
         return;
-    v_0cd4 = (uint16_t)d1;
+    next_event_b = (uint16_t)d1;
 }
 
 /* orig $003656: call the update routine of each object of the list from a0 */
@@ -791,7 +791,7 @@ Object *spawn_marker_front(uint16_t d0, const uint8_t *a1, void (*a2)(void))
 }
 
 /* orig $EFC, $003912: update of a shot of an enemy: animation, moves by steps (v54) along one of 8 directions (v2a), gone when it leaves the
- * screen; when it meets the player the player is hit (unless v_0cc8) and the shot goes */
+ * screen; when it meets the player the player is hit (unless shield_timer) and the shot goes */
 void enemy_shot_update(Object *a0)
 {
     uint16_t d2;
@@ -816,7 +816,7 @@ void enemy_shot_update(Object *a0)
         bbox_from_frame(a0);
         if (!player_hits(a0))
             return;
-        if (v_0cc8 == 0) {
+        if (shield_timer == 0) {
             player_damage(a0, 4);
             PLAYER->fn_draw = (obj_fn)draw_bob_or_first;
         }

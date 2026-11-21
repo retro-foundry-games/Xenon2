@@ -5,10 +5,10 @@ var sfx_cmd 0x414 int16_t
 var players 0x422 uint16_t                        ; 2 = two players
 var cur_player 0x428 uint16_t
 var free_obj 0x42a Object *                   ; head of the free list of objects
-var v_042e 0x42e uint16_t
-var v_0430 0x430 uint16_t
-var v_0432 0x432 uint16_t
-var v_0434 0x434 uint16_t
+var crush_timer 0x42e uint16_t
+var hide_phase 0x430 uint16_t
+var hide_step 0x432 uint16_t
+var hide_timer 0x434 uint16_t
 var background_scroll 0x436 uint32_t
 var v_043a 0x43a uint16_t
 arr v_043c 0x43c uint16_t 16
@@ -21,11 +21,11 @@ var player_died 0xa02 uint8_t
 arr player_active 0xa03 uint8_t 4                        ; [0..1] flag for each player, [2..3] another one
 var v_0a07 0xa07 uint8_t
 arr v_0a08 0xa08 uint8_t 98
-var v_0a6b 0xa6b uint8_t
-var v_0a6c 0xa6c uint8_t
+var energy_dirty 0xa6b uint8_t
+var level_over 0xa6c uint8_t
 arr obj_list 0xa76 Object 5                   ; list heads (sentinel objects)
-var v_0c60 0xc60 uint16_t
-var v_0c62 0xc62 uint16_t
+var autofire_counter 0xc60 uint16_t
+var autofire_period 0xc62 uint16_t
 var v_0c64 0xc64 uint16_t
 arr weapon_slots 0xc66 Slot 7
 var v_0c90 0xc90 uint16_t
@@ -33,30 +33,30 @@ var player_score 0xc92 uint32_t
 var score_shown 0xc96 uint32_t
 var player_money 0xc9a uint32_t
 var v_0c9e 0xc9e uint16_t
-var v_0ca0 0xca0 uint16_t
-var v_0ca2 0xca2 uint16_t
-var v_0ca4 0xca4 uint16_t
+var hide_charges 0xca0 uint16_t
+var extras_timer 0xca2 uint16_t
+var level_end_items 0xca4 uint16_t
 var player_money_saved 0xca6 uint32_t
-arr v_0caa 0xcaa uint16_t 14
-var v_0cc6 0xcc6 uint16_t
-var v_0cc8 0xcc8 uint16_t
+arr slot_snapshot 0xcaa uint16_t 14
+var player_energy 0xcc6 uint16_t
+var shield_timer 0xcc8 uint16_t
 var player_lives 0xcca uint16_t
-var v_0ccc 0xccc uint16_t
+var scroll_step_target 0xccc uint16_t
 var map_row_offset 0xcce uint16_t
 var scroll_pos 0xcd0 uint16_t
-var v_0cd2 0xcd2 uint16_t
-var v_0cd4 0xcd4 uint16_t
+var next_event_a 0xcd2 uint16_t
+var next_event_b 0xcd4 uint16_t
 var scroll_fine 0xcd6 uint16_t
 var scroll_speed 0xcd8 uint16_t
-var v_0cda 0xcda uint16_t
-var v_0cdc 0xcdc uint16_t
+var scroll_step 0xcda uint16_t
+var frame_tick 0xcdc uint16_t
 var player_vx 0xcde int16_t
-var v_0ce0 0xce0 uint16_t
+var scroll_accel_frames 0xce0 uint16_t
 var player_x_saved 0xce2 uint16_t
 var player_y_saved 0xce4 uint16_t
 var scroll_y 0xce6 uint16_t
-var v_0cea 0xcea uint16_t
-var v_0cec 0xcec uint16_t
+var scroll_max 0xcea uint16_t
+var pickup_cycle 0xcec uint16_t
 var v_0cee 0xcee uint16_t
 var continues_left 0xcf0 uint16_t
 var v_0cf2 0xcf2 uint16_t
@@ -65,9 +65,9 @@ var v_0cf8 0xcf8 Object *
 arr weapon_slots_saved 0xcfc Slot 7
 arr score_digits 0xd7c uint8_t 7                        ; score digits
 var v_0d83 0xd83 uint8_t
-var v_0d84 0xd84 uint8_t
+var player_dead 0xd84 uint8_t
 var v_0d85 0xd85 uint8_t
-var v_0e02 0xe02 uint16_t
+var difficulty 0xe02 uint16_t
 var level_number 0xe04 uint16_t
 var respawn_shield 0xe06 uint16_t
 tab digit_gfx 0x1981e uint8_t 640
@@ -84,11 +84,11 @@ arr panel_a 0x4b800 uint8_t 1280                   ; the status panel (score) of
 arr panel_b 0x53f00 uint8_t 1280                   ; and of screen_b
 var level_init_src 0x54e04 uint8_t *
 var level_palette 0x54e1c uint32_t *
-tab ship_records 0x6cc2 uint8_t 96
+tab option_anims 0x6cc2 uint8_t 96                 ; the four options' animation headers (24 bytes each: picture, delay, script)
 tab option_offsets 0x6894 int16_t 14                       ; offsets of the options from the player
 arr palette_shadow 0x7012 uint16_t 16
 tab v_796e 0x796e uint16_t 1
-var v_8428 0x8428 uint8_t
+var text_wait_key 0x8428 uint8_t
 arr v_8836 0x8836 uint8_t 19
 var player_gfx 0xebe2 uint8_t
 arr gauge_pics 0x6336 uint8_t * 10                ; the pictures of the gauge, empty to full

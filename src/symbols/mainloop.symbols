@@ -9,14 +9,14 @@ var sfx_cmd2 0x418 int16_t                           ; pending sound command (-1
 var v_041a 0x41a int16_t
 var vbl_count 0x41c volatile uint16_t              ; counts the vertical blank interrupt (twice each)
 var v_041e 0x41e uint16_t
-var v_045c 0x45c uint16_t
-var v_045e 0x45e uint16_t
+var pickup_kind_a 0x45c uint16_t
+var pickup_kind_b 0x45e uint16_t
 var v_09fa 0x9fa uint16_t
 var music_switch 0x9fc uint8_t                           ; non-zero: music enabled
 var v_09fd 0x9fd uint8_t
 var v_09fe 0x9fe uint8_t
 var key_code 0x9ff volatile uint8_t                ; the last key from the keyboard interrupt (0 = none)
-var v_0ce8 0xce8 uint16_t
+var scroll_min 0xce8 uint16_t
 tab star_speed 0x2298 uint16_t 34                  ; starfield scroll step by scroll speed -16..17 (index speed + 16)
 var irq_div 0x208c uint16_t                        ; the vblank handler with hook runs the hook every third time
 var irq_joy 0x208e uint8_t                         ; joystick bits read in the interrupt: 7 fire, 3 right, 2 left, 1 down, 0 up

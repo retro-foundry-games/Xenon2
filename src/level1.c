@@ -49,7 +49,7 @@ static void copy4(uint8_t *dst, const uint8_t *src)
 /* the turret has left the screen: it dies */
 static int level1_turret_gone(Object *a0)
 {
-    if ((int16_t)(v_0cea + 0xd0) < a0->y) {
+    if ((int16_t)(scroll_max + 0xd0) < a0->y) {
         kill_object_thunk(a0);
         return 1;
     }
@@ -176,7 +176,7 @@ void level1_launcher_update(Object *a0)
     int16_t d0;
     int d7;
 
-    if ((int16_t)(v_0cea + 0xd0 - scroll_pos) < a0->y) {
+    if ((int16_t)(scroll_max + 0xd0 - scroll_pos) < a0->y) {
         kill_object_thunk(a0);
         return;
     }
@@ -300,16 +300,16 @@ void level1_scroll(void)
     int d7, i;
 
     if (v_0d8c == 0 && (int16_t)(scroll_pos + PLAYER->y) < 0xa80) {
-        v_0a6c = 0xff;
+        level_over = 0xff;
         v_0d8c = 0xff;
         scroll_pos = 0x9c0;
-        v_0cea = 0x9c0;
+        scroll_max = 0x9c0;
         map_row_offset = 0x1860;
         scroll_fine = 0;
     }
     if ((int16_t)scroll_pos >= 0xa40 && (int16_t)scroll_pos <= 0xd10) {
-        if ((int16_t)v_0cea < 0xd10)
-            v_0cea = 0xd10;
+        if ((int16_t)scroll_max < 0xd10)
+            scroll_max = 0xd10;
         level1_spawn_units();
         for (d7 = 15; d7 >= 0; d7--) {
             if (*a4 != 0) {
@@ -323,7 +323,7 @@ void level1_scroll(void)
         }
     }
     for (i = 0; i < 5; i++)
-        v_0d86[i] = 0;
+        unit_live[i] = 0;
 }
 
 /* orig $0563AA: update of the level 1 boss (type $50) */
@@ -379,8 +379,8 @@ void level1_boss_update(Object *a0)
         a0->turn[1] = 0;
         a0->turn[2] = 0;
     }
-    if ((int16_t)v_0cea <= 0x1c0)
-        v_0cea = 0x1c0;
+    if ((int16_t)scroll_max <= 0x1c0)
+        scroll_max = 0x1c0;
     a0->hit[0] = 0x80;
     a0->hit[2] = 0xc8;
     d5 = (int16_t)(a0->y - scroll_pos + 4);
@@ -406,18 +406,18 @@ void level1_boss_update(Object *a0)
         a0->v28++;
     if (a0->v28 >= 0x64)
         a0->v28 = -40;
-    d0 = v_0cdc & 0x7f;
+    d0 = frame_tick & 0x7f;
     if (d0 & 0x40)
         d0 = (int16_t)-(d0 - 0x7f);
     d0 = (int8_t)d0;
     a0->v2c = (int16_t)(d0 + 0x20);
-    d0 = (int16_t)((v_0cdc + 0x50) & 0xff);
+    d0 = (int16_t)((frame_tick + 0x50) & 0xff);
     if (d0 & 0x80)
         d0 = (~d0) & 0xff;
     l = (int32_t)(int16_t)(d0 - 0x40) << 10;
     a0->turn[0] = (uint16_t)(l >> 16);
     a0->turn[1] = (uint16_t)l;
-    d0 = (int16_t)((v_0cdc + 0xa0) & 0x1ff);
+    d0 = (int16_t)((frame_tick + 0xa0) & 0x1ff);
     if (d0 & 0x100)
         d0 ^= 0x1ff;
     d0 -= 0x80;
@@ -450,7 +450,7 @@ void level1_boss_update(Object *a0)
     d0 = (int16_t)(0x1e - a0->energy);
     v_0d5a = (uint16_t)((v_0d5a & 0xff00) | ((v_0d5a + d0) & 0xff));
 draw_table:
-    src = sources[(v_0cdc & 0xc) >> 2];
+    src = sources[(frame_tick & 0xc) >> 2];
     copy_long(&level_567fa[0], src);
     copy_long(&level_567fa[4], src + 4);
     copy_long(&level_567fa[12], src + 8);
@@ -486,8 +486,8 @@ void level1_init(void)
             level_data_dst[i] = level_data_src[i];
         level_init_src = level_data_dst;
     }
-    v_0ce8 = 0;
-    v_0cea = 0x11ff;
+    scroll_min = 0;
+    scroll_max = 0x11ff;
     v_0d5a = 0;
     a0 = obj_free_pop();
     a5 = LIST_C->prev;
@@ -508,7 +508,7 @@ void level1_init(void)
     a0->v54 = 0;
     v_0d8b = 0;
     for (i = 0; i < 5; i++)
-        v_0d86[i] = 0;
+        unit_live[i] = 0;
     v_0d8c = 0;
     for (i = 0; i < 16; i++)
         level_vars[i] = 0;
@@ -517,19 +517,19 @@ void level1_init(void)
     level_vars[20] = 0x4aba; level_vars[21] = 0x5d4d;
     level_vars[22] = 0xd225; level_vars[23] = 0x12c5;
     level_vars[24] = 0x28e5; level_vars[25] = 0x1aec;
-    v_0424 = (uint16_t)(v_0e02 * 1);
-    v_0426 = (uint16_t)(v_0e02 * 2);
+    difficulty_x1 = (uint16_t)(difficulty * 1);
+    difficulty_x2 = (uint16_t)(difficulty * 2);
 }
 
 
-/* orig $0055E2C: level 1: starts every unit (a chain of enemies on a path) that is not on the screen; v_0d86 flags the live ones */
+/* orig $0055E2C: level 1: starts every unit (a chain of enemies on a path) that is not on the screen; unit_live flags the live ones */
 void level1_spawn_units(void)
 {
     uint16_t d6;
 
     for (d6 = 0; d6 < 5; d6++) {
-        if (v_0d86[d6] == 0) {
-            v_0d86[d6] = 0xff;
+        if (unit_live[d6] == 0) {
+            unit_live[d6] = 0xff;
             level1_spawn_unit(d6);
         }
     }
@@ -551,7 +551,7 @@ void level1_spawn_unit(uint16_t d6)
     state[1] = (uint16_t)r;
     s = &level_spawns[r & 0xf];
     x = s->x;
-    y = (int16_t)(s->y - v_0cda - scroll_pos);
+    y = (int16_t)(s->y - scroll_step - scroll_pos);
     if (level_vars[(uint16_t)s->index] == 0)
         level_vars[(uint16_t)s->index] = 0x14;
     d3 = s->flag;
@@ -622,7 +622,7 @@ void level1_spawn_unit(uint16_t d6)
 void level1_head_update(Object *a0)
 {
     a0->y = (int16_t)(a0->y + scroll_speed);
-    v_0d86[(uint16_t)a0->v30] = 0xff;
+    unit_live[(uint16_t)a0->v30] = 0xff;
     obj_script_step(a0);
     if (a0->type == 4)
         a0->fn_update(a0);
@@ -642,7 +642,7 @@ void level1_segment_update(Object *a0)
     uint16_t d2;
     uint8_t **tab;
 
-    v_0d86[(uint16_t)a0->v30] = 0xff;
+    unit_live[(uint16_t)a0->v30] = 0xff;
     a1 = OBJ_FWD(a0);
     if (a1->type == 0xbc) {
         if (level_vars[(uint16_t)a0->v2e] == 0)

@@ -687,7 +687,7 @@ void shop_stick(void)
         shop_records_tick();
         shop_records_draw();
         swap_screens_200();
-        v_0cdc++;
+        frame_tick++;
     }
 }
 
@@ -702,15 +702,15 @@ int32_t shop_can_buy(void)
     switch (kind) {
     case 3: return v_0c9e == 2 ? 0 : -1;
     case 4:
-    case 7: return v_0cc6 == 0x27 ? 0 : -1;
+    case 7: return player_energy == 0x27 ? 0 : -1;
     case 5: return v_0c64 == 3 ? 0 : -1;
-    case 6: return v_0ca2 != 0 ? 0 : -1;
+    case 6: return extras_timer != 0 ? 0 : -1;
     case 0xc:
         for (i = 0; i < 7; i++)
             if (weapon_slots[i].type != 0 && weapon_slots[i].obj->v42 != weapon_slots[i].obj->energy)
                 return -1;
         return 0;
-    case 0x10: return v_0ca0 != 0 ? 0 : -1;
+    case 0x10: return hide_charges != 0 ? 0 : -1;
     case 0x16: return player_lives == 9 ? 0 : -1;
     case 0x18: return v_0d83 != 0 ? 0 : -1;
     case 0x19: return v_0c90 != 0 ? 0 : -1;
@@ -751,7 +751,7 @@ int32_t shop_can_buy(void)
 }
 
 /* shop $558E4, $558EC, $55930, $55938: the items that are not a weapon */
-void shop_item_ca2(void) { v_0ca2 = 0xaa; }
+void shop_item_ca2(void) { extras_timer = 0xaa; }
 
 /* shop $558EC: the keeper's advice: the next sentence for the level and the number of hints so far */
 void shop_item_advice(void)
@@ -1339,10 +1339,10 @@ void shop_blank_screen(void)
     wr16(a0 + 0x190, 0xf);
 }
 
-/* the weapon slots' latch of the level ($352E) without its test of v_0ca2: type and score of each of the 7 slots to v_0caa; an empty slot repeats d2 */
+/* the weapon slots' latch of the level ($352E) without its test of extras_timer: type and score of each of the 7 slots to slot_snapshot; an empty slot repeats d2 */
 static void latch_slots_all(uint16_t d2)
 {
-    uint16_t *out = v_0caa;
+    uint16_t *out = slot_snapshot;
     int i;
 
     for (i = 0; i < 7; i++) {

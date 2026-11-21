@@ -75,10 +75,10 @@ void l3_event(uint16_t d0, const uint8_t *a1)
         spawn_formation(0, a1, (const uint8_t *)GPTR(0x54e98));
         break;
     case 3:
-        saved = v_0426;
-        v_0426 = W(0x54e7a);
+        saved = difficulty_x2;
+        difficulty_x2 = W(0x54e7a);
         spawn_formation(0, a1, (const uint8_t *)GPTR(0x54eb2));
-        v_0426 = saved;
+        difficulty_x2 = saved;
         break;
     case 4:
         spawn_formation(0, a1, (const uint8_t *)GPTR(0x54f5c));
@@ -122,19 +122,19 @@ void l3_hook(uint16_t d0, const uint8_t *a1, uint16_t d2)
  * spawner runs and when its flags say so the bonuses come once */
 void l3_scroll(void)
 {
-    if (v_0ce8 == 0xaf0 && scroll_pos == 0xaf0) {
-        v_0cea = 0xaf0;
-        scroll_pos_update(v_0cda);
-        stars_scroll(v_0cda);
-        v_0cda = 0;
+    if (scroll_min == 0xaf0 && scroll_pos == 0xaf0) {
+        scroll_max = 0xaf0;
+        scroll_pos_update(scroll_step);
+        stars_scroll(scroll_step);
+        scroll_step = 0;
         if (B(0xd96) != 0)
             sh_w8(0xd96, 0);
         else
-            v_0ce8 = 0;
+            scroll_min = 0;
     }
     if ((int16_t)scroll_pos <= 0xd0) {
-        if ((int16_t)v_0cea < 0x20)
-            v_0cea = 0x20;
+        if ((int16_t)scroll_max < 0x20)
+            scroll_max = 0x20;
         if (B(0xd92) == 0 && B(0xd94) == 0)
             l3_worm_spawn(0);
         sh_w8(0xd94, 0);
@@ -143,8 +143,8 @@ void l3_scroll(void)
             spawn_bonuses(9);
             v_0a07 = 0xff;
         }
-    } else if ((int16_t)v_0cea < 0xa30) {
-        v_0cea = 0xa30;
+    } else if ((int16_t)scroll_max < 0xa30) {
+        scroll_max = 0xa30;
     }
 }
 
@@ -160,8 +160,8 @@ void l3_init(void)
             ((uint8_t *)GPTR(0x7d120))[i] = ((const uint8_t *)GPTR(0x74386))[i];
         level_init_src = (uint8_t *)GPTR(0x7d120);
     }
-    v_0ce8 = 0xaf0;
-    v_0cea = 0x11ff;
+    scroll_min = 0xaf0;
+    scroll_max = 0x11ff;
     a0 = obj_free_pop();
     s = LIST_SENTINEL(LIST_FRONT);
     old = s->next;
@@ -188,8 +188,8 @@ void l3_init(void)
     sh_w16(0xd6a, 2);
     sh_w16(0xd60, W(0x54e6c));
     sh_w16(0xd62, W(0x54e6c));
-    v_0424 = (uint16_t)(v_0e02 * 2);
-    v_0426 = (uint16_t)(v_0e02 * 3);
+    difficulty_x1 = (uint16_t)(difficulty * 2);
+    difficulty_x2 = (uint16_t)(difficulty * 3);
 }
 
 /* ---- what the level 3's records put into the field ---- */
@@ -238,7 +238,7 @@ void l3_worm_spawn(uint16_t d6)
     }
     path = sh_r32(0x6ef36 + 4 * (uint32_t)d0);
     x = (int16_t)W(path + 2);
-    y = (int16_t)(W(path + 4) - scroll_pos - v_0cda);
+    y = (int16_t)(W(path + 4) - scroll_pos - scroll_step);
     count = W(t) + 1;
     t += 2;
     for (n = 0; n < count; n++) {
@@ -480,7 +480,7 @@ void l3_diver_update(Object *a0)
     int flip;
 
     a0->y = (int16_t)(a0->y + scroll_speed);
-    d0 = (int16_t)((int16_t)v_0cea + 0xd0 - scroll_pos);
+    d0 = (int16_t)((int16_t)scroll_max + 0xd0 - scroll_pos);
     if (d0 < a0->y) {
         kill_thunk(a0);
         return;
@@ -826,7 +826,7 @@ void l3_part_arm_tip(Object *a0)
     d0 = (uint16_t)(((uint16_t)a0->v2c >> 2) & 0x38);
     if (a0->v54 == 0xe)
         sfx_cmd = 0xc;
-    d1 = (uint16_t)(v_0cdc & 4);
+    d1 = (uint16_t)(frame_tick & 4);
     a0->gfx = GPTR(sh_r32(0x55dac + (uint16_t)(d0 + d1)));
     a0->anim_delay = 0;
     bbox_from_frame(a0);
@@ -876,7 +876,7 @@ void l3_gun_update(Object *a0)
     int16_t d0;
     uint32_t a2;
 
-    if ((int16_t)(v_0cea + 0xd0) < a0->y) {
+    if ((int16_t)(scroll_max + 0xd0) < a0->y) {
         kill_thunk(a0);
         return;
     }
@@ -956,7 +956,7 @@ void l3_boss_update(Object *a0)
     uint16_t d0;
     uint8_t *m;
 
-    if ((int16_t)(v_0cea + 0xd0) < a0->y) {
+    if ((int16_t)(scroll_max + 0xd0) < a0->y) {
         kill_thunk(a0);
         return;
     }
@@ -1055,7 +1055,7 @@ void l3_boss2_update(Object *a0)
     uint16_t d0;
     uint8_t *m;
 
-    if ((int16_t)(v_0cea + 0xd0) < a0->y) {
+    if ((int16_t)(scroll_max + 0xd0) < a0->y) {
         kill_thunk(a0);
         return;
     }
@@ -1155,7 +1155,7 @@ void l3_walker_update(Object *a0)
 
     anim_step(a0);
     a0->y = (int16_t)(a0->y + scroll_speed);
-    if ((int16_t)(v_0cea + 0xd0 - scroll_pos) < a0->y) {
+    if ((int16_t)(scroll_max + 0xd0 - scroll_pos) < a0->y) {
         kill_thunk(a0);
         return;
     }

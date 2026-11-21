@@ -196,7 +196,7 @@ void l2_scroll(void)
             l2_debris_walls();
     } else if ((int16_t)scroll_pos > 0x9f0) {
         scroll_pos = 0x9f0;
-        v_0cea = 0x9f0;
+        scroll_max = 0x9f0;
         map_row_offset = 0x18d8;
         scroll_fine = 0;
     }
@@ -236,8 +236,8 @@ void l2_init(void)
             ((uint8_t *)GPTR(0x7d120 - 360))[i] = ((const uint8_t *)GPTR(0x71a12 - 360))[i];
         level_buf = (uint8_t *)GPTR(0x7d120 - 360);
     }
-    v_0ce8 = 0x9e0;
-    v_0cea = 0x11ff;
+    scroll_min = 0x9e0;
+    scroll_max = 0x11ff;
     l2_first_fight_won = 0;
     a0 = alloc_in(LIST_C);
     a0->type = 0x50;
@@ -297,8 +297,8 @@ void l2_init(void)
     level_vars[17] = 0x72ba;
     level_vars[18] = 0xaa6a;
     level_vars[19] = 0x4a56;
-    v_0424 = (uint16_t)(v_0e02 * 1);
-    v_0426 = (uint16_t)(v_0e02 * 2);
+    difficulty_x1 = (uint16_t)(difficulty * 1);
+    difficulty_x2 = (uint16_t)(difficulty * 2);
     for (i = 0; i < 0xb4; i++) {
         ((uint8_t *)GPTR(0x3eb8c))[2 * i] = level_buf[2 * i];
         ((uint8_t *)GPTR(0x3eb8c))[2 * i + 1] = level_buf[2 * i + 1];
@@ -344,7 +344,7 @@ void l2_front_piece_update(Object *a0)
         bbox_from_frame(a0);
         if (!point_in_player_box(x, y))
             return;
-        if (v_0cc8 != 0) {
+        if (shield_timer != 0) {
             burst = 1;
         } else {
             PLAYER->fn_draw = draw_bob_or_first;
@@ -368,7 +368,7 @@ void l2_front_piece_update(Object *a0)
 void l2_flyer_update(Object *a0)
 {
     static const int16_t wobble[8] = { 0, -2, -4, -2, 0, 2, 4, 2 };
-    uint16_t phase = (uint16_t)(v_0cdc + (uint16_t)GADDR(a0));
+    uint16_t phase = (uint16_t)(frame_tick + (uint16_t)GADDR(a0));
     int16_t d0;
 
     anim_step(a0);
@@ -411,7 +411,7 @@ void l2_marker_f8_update(Object *a0)
     int16_t d0;
     const uint8_t *a2;
 
-    if ((int16_t)((int16_t)v_0cea + 0xd0) <= a0->y) {
+    if ((int16_t)((int16_t)scroll_max + 0xd0) <= a0->y) {
         kill_thunk(a0);
         return;
     }
@@ -431,7 +431,7 @@ void l2_marker_f8_update(Object *a0)
     if ((uint16_t)a0->v28 <= 1) {
         if (d0 >= 0x64)
             a0->v28 = 2;
-        else if ((v_0cdc & 3) == 0)
+        else if ((frame_tick & 3) == 0)
             a0->v28 ^= 1;
     }
     a2 = (const uint8_t *)GPTR(0x554c6 + ((uint16_t)a0->v28 << 3));
@@ -439,7 +439,7 @@ void l2_marker_f8_update(Object *a0)
     copy4(a0->v46 + 0x28, a2 + 4);
     if ((uint16_t)a0->v28 < 2)
         return;
-    if (v_0cdc & 3)
+    if (frame_tick & 3)
         return;
     a0->v28++;
     if (a0->v28 != 4)
@@ -470,7 +470,7 @@ void l2_marker_fc_update(Object *a0)
 {
     int16_t d0;
 
-    if ((int16_t)((int16_t)v_0cea + 0xd0) <= a0->y) {
+    if ((int16_t)((int16_t)scroll_max + 0xd0) <= a0->y) {
         kill_thunk(a0);
         return;
     }
@@ -493,7 +493,7 @@ void l2_marker_fc_update(Object *a0)
         a0->v28 = 2;
     }
     copy2(a0->v46, (const uint8_t *)GPTR(0x5567a + ((uint16_t)a0->v28 << 1)));
-    if (v_0cdc & 3)
+    if (frame_tick & 3)
         return;
     a0->v28++;
     if (a0->v28 != 4)
@@ -564,7 +564,7 @@ void l2_roamer_shot_update(Object *a0)
     anim_step(a0);
     a0->y = (int16_t)(a0->y + scroll_speed);
     if (a0->v28 >= 0) {
-        if (!(v_0cdc & 1)) {
+        if (!(frame_tick & 1)) {
             bbox_from_frame(a0);
             return;
         }
@@ -736,7 +736,7 @@ void l2_turret_update(Object *a0)
     int16_t d0, d1, d2;
     uint32_t pic;
 
-    if ((int16_t)(v_0cea + 0xd0) < a0->y) {
+    if ((int16_t)(scroll_max + 0xd0) < a0->y) {
         kill_thunk(a0);
         return;
     }
@@ -771,7 +771,7 @@ void l2_launcher_update(Object *a0)
 {
     int16_t d0, d1, d2;
 
-    if ((int16_t)(v_0cea + 0xd0 - scroll_pos) < a0->y) {
+    if ((int16_t)(scroll_max + 0xd0 - scroll_pos) < a0->y) {
         kill_thunk(a0);
         return;
     }
@@ -882,7 +882,7 @@ static void l2_debris_wall(uint16_t d6)
     }
     a1 = (const uint8_t *)GPTR(0x55f56 + (uint16_t)(((uint16_t)r + d6) * 12));
     d0 = rd16(a1);
-    d1 = (uint16_t)(rd16(a1 + 2) - v_0cda - scroll_pos);
+    d1 = (uint16_t)(rd16(a1 + 2) - scroll_step - scroll_pos);
     d2 = rd16(a1 + 4);
     if (level_vars[d2 - 1] == 0)
         level_vars[d2 - 1] = 0x18;
@@ -992,8 +992,8 @@ void l2_gate_update(Object *a0)
     int hide, step;
     int16_t d0, px = PLAYER_X;
 
-    if ((int16_t)v_0ccc < 0 && (int16_t)v_0cea <= 0xb40)
-        v_0cea = 0xb40;
+    if ((int16_t)scroll_step_target < 0 && (int16_t)scroll_max <= 0xb40)
+        scroll_max = 0xb40;
     if (a0->v30 == 2)
         hide = l2_gates_left != 1;
     else if (a0->v30 == 1)
@@ -1013,7 +1013,7 @@ void l2_gate_update(Object *a0)
         a0->hit[3] = (int16_t)(d0 + 0xf);
         step = a0->v28 != 4 || l2_walls_made == 3;
     }
-    if (step && !(v_0cdc & 1))
+    if (step && !(frame_tick & 1))
         a0->v28 = (int16_t)((a0->v28 + 1) & 7);
     d0 = a0->v28;
     if (d0 > 4)
@@ -1082,7 +1082,7 @@ void l2_gate_hit(Object *a0, Object *a1, uint16_t d0)
     kill_thunk(a1);
     l2_gates_left--;
     if (l2_gates_left == 1) {
-        v_0ccc = 0xffff;
+        scroll_step_target = 0xffff;
         level_vars[16] = 0xd251;
         level_vars[17] = 0x35d3;
         level_vars[18] = 0x894d;
@@ -1090,7 +1090,7 @@ void l2_gate_hit(Object *a0, Object *a1, uint16_t d0)
     }
     if (l2_gates_left != 0)
         return;
-    v_0ccc = 1;
+    scroll_step_target = 1;
     for (i = 0; i < 0x1cc * 2; i++)
         level_init_src[0x1950 + i] = 0;
     for (e = LIST_HEAD(LIST_ENEMY); e->type != 0;) {
@@ -1106,7 +1106,7 @@ void l2_gate_hit(Object *a0, Object *a1, uint16_t d0)
         v_043c[i] = 0;
     debris_burst(a0, 0x27, 0, 0, 0x140, 0xc0, big_explosion_anim);
     spawn_bonuses(4);
-    v_0ce8 = 0;
+    scroll_min = 0;
     l2_first_fight_won = 0xff;
 }
 
@@ -1161,7 +1161,7 @@ void l2_boss_rest(Object *a0)
             return;
         }
     } else {
-        r = l2_stale_d0_set ? l2_stale_d0 : ((uint32_t)scroll_pos << 3) ^ v_0cdc;
+        r = l2_stale_d0_set ? l2_stale_d0 : ((uint32_t)scroll_pos << 3) ^ frame_tick;
         l2_stale_d0_set = 0;
     }
     d1 = (r & 0x4000) ? -3 : 3;
@@ -1191,7 +1191,7 @@ static void l2_boss_move(Object *a0)
         a0->v2e = 0;
     }
     a0->y = d0;
-    d0 = (int16_t)((v_0cdc & 1) * 4);
+    d0 = (int16_t)((frame_tick & 1) * 4);
     copy4((uint8_t *)GPTR(0x572b2), (const uint8_t *)GPTR(sh_r32(0x56e46 + d0)));
     copy4((uint8_t *)GPTR(0x572b2 + 0xc), (const uint8_t *)GPTR(sh_r32(0x56e46 + d0)) + 4);
     copy4((uint8_t *)GPTR(0x572ba), (const uint8_t *)GPTR(sh_r32(0x56e4e + d0)));
@@ -1207,8 +1207,8 @@ void l2_boss_update(Object *a0)
     Object *s;
     uint16_t sum;
 
-    if ((int16_t)v_0cea <= 0x120)
-        v_0cea = 0x120;
+    if ((int16_t)scroll_max <= 0x120)
+        scroll_max = 0x120;
     if (a0->v2e == 0) {
         if (a0->v28 < 0) {
             a0->hit[0] = 0x3e8;

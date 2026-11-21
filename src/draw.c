@@ -341,10 +341,10 @@ void redraw_energy_bar(void)
     uint8_t *a0, *a1;
     uint16_t d0, d2, d3;
 
-    if (!v_0a6b)
+    if (!energy_dirty)
         return;
-    v_0a6b = 0;
-    d0 = v_0cc6;
+    energy_dirty = 0;
+    d0 = player_energy;
     if ((int16_t)d0 > 0x27)
         d0 = 0x27;
     a0 = &screen_b[0x79ea];
