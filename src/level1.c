@@ -6,6 +6,16 @@
 #include "weapon_util.h"
 #include "amiga/hw.h"
 
+/* the scratch fields of Object, by the kind that uses them */
+#define L1_BOSS_MOVE(o) ((o)->v2e)
+#define L1_BOSS_PHASE(o) ((o)->v28)
+#define L1_BOSS_WAIT(o) ((o)->v30)
+
+
+/* the scratch fields of Object, by the kind that uses them */
+#define L1_TURRET_STEP(o) ((o)->v28)
+
+
 #define FN(f) ((obj_fn)(f))
 
 /* ---- level 1's blob ($54E00): the jump table at $54E0C and the routines the engine calls ---- */
@@ -71,12 +81,12 @@ void level1_turret_a_update(Object *a0)
     y = (int16_t)(a0->y - scroll_pos + 4);
     a0->hit[1] = y;
     a0->hit[3] = (int16_t)(y + 0x18);
-    d0 = (uint16_t)(a0->v28 << 3);
+    d0 = (uint16_t)(L1_TURRET_STEP(a0) << 3);
     a2 = a0->type == 0xe0 ? level_553b2 : level_553d2;
     a1 = a0->script;
     copy4(a1, a2 + d0);
     copy4(a1 + 0x28, a2 + d0 + 4);
-    a0->v28 = (int16_t)((a0->v28 + 1) & 3);
+    L1_TURRET_STEP(a0) = (int16_t)((L1_TURRET_STEP(a0) + 1) & 3);
     sum = (uint16_t)(((ObjMove *)a0)->shot_count + level_54e40[3]);
     ((ObjMove *)a0)->shot_count = (uint8_t)sum;
     if (!(sum & 0x100))
@@ -107,12 +117,12 @@ void level1_turret_b_update(Object *a0)
     y = (int16_t)(a0->y - scroll_pos + 4);
     a0->hit[1] = y;
     a0->hit[3] = (int16_t)(y + 0x18);
-    d0 = (uint16_t)(((uint16_t)a0->v28 & 0xfffc) << 1);
+    d0 = (uint16_t)(((uint16_t)L1_TURRET_STEP(a0) & 0xfffc) << 1);
     a2 = a0->type == 0xe8 ? level_556ac : level_5568c;
     a1 = a0->script;
     copy4(a1, a2 + d0);
     copy4(a1 + 0x28, a2 + d0 + 4);
-    a0->v28 = (int16_t)((a0->v28 + 1) & 0xf);
+    L1_TURRET_STEP(a0) = (int16_t)((L1_TURRET_STEP(a0) + 1) & 0xf);
     sum = (uint16_t)(((ObjMove *)a0)->shot_count + level_54e40[0xf]);
     ((ObjMove *)a0)->shot_count = (uint8_t)sum;
     if (!(sum & 0x100))
@@ -142,22 +152,22 @@ void level1_turret_c_update(Object *a0)
     y = (int16_t)(a0->y - scroll_pos + 8);
     a0->hit[1] = y;
     a0->hit[3] = (int16_t)(y + 0x10);
-    d0 = (uint16_t)(((uint16_t)a0->v28 & 0xfffe) << 1);
+    d0 = (uint16_t)(((uint16_t)L1_TURRET_STEP(a0) & 0xfffe) << 1);
     a2 = a0->type == 0xd8 ? level_5554a : level_554fa;
     copy4(a0->script, a2 + d0);
-    if (a0->v28 == 0) {
+    if (L1_TURRET_STEP(a0) == 0) {
         sum = (uint16_t)(((ObjMove *)a0)->shot_count + level_54e40[9]);
         ((ObjMove *)a0)->shot_count = (uint8_t)sum;
         if (!(sum & 0x100))
             return;
         ((ObjMove *)a0)->shot_count = (uint8_t)(random_next() & 0x3f);
     }
-    a0->v28++;
-    if (a0->v28 == 0x28) {
-        a0->v28 = 0;
+    L1_TURRET_STEP(a0)++;
+    if (L1_TURRET_STEP(a0) == 0x28) {
+        L1_TURRET_STEP(a0) = 0;
         return;
     }
-    if (a0->v28 != 0x18)
+    if (L1_TURRET_STEP(a0) != 0x18)
         return;
     x = (int16_t)(a0->x + 0x1a);
     y = (int16_t)(a0->y - scroll_pos + 2);
@@ -391,14 +401,14 @@ void level1_boss_update(Object *a0)
     d5 = (int16_t)(a0->y - scroll_pos + 4);
     a0->hit[1] = d5;
     a0->hit[3] = (int16_t)(d5 + 0x50);
-    if (a0->v28 == 0) {
+    if (L1_BOSS_PHASE(a0) == 0) {
         if ((int16_t)scroll_pos > 0x30)
             goto draw_table;
-        a0->v28 = 1;
-        a0->v2e = 0;
-        a0->v30 = 0xaa;
+        L1_BOSS_PHASE(a0) = 1;
+        L1_BOSS_MOVE(a0) = 0;
+        L1_BOSS_WAIT(a0) = 0xaa;
     }
-    if (a0->v28 < 0) {
+    if (L1_BOSS_PHASE(a0) < 0) {
         if (a0->steps != 0)
             a0->steps--;
     } else if (a0->steps < 0xb) {
@@ -406,11 +416,11 @@ void level1_boss_update(Object *a0)
             sfx_cmd2 = 0xf;
         a0->steps++;
     }
-    a0->v28++;
-    if (a0->v28 == 0)
-        a0->v28++;
-    if (a0->v28 >= 0x64)
-        a0->v28 = -40;
+    L1_BOSS_PHASE(a0)++;
+    if (L1_BOSS_PHASE(a0) == 0)
+        L1_BOSS_PHASE(a0)++;
+    if (L1_BOSS_PHASE(a0) >= 0x64)
+        L1_BOSS_PHASE(a0) = -40;
     d0 = frame_tick & 0x7f;
     if (d0 & 0x40)
         d0 = (int16_t)-(d0 - 0x7f);
@@ -427,29 +437,29 @@ void level1_boss_update(Object *a0)
         d0 ^= 0x1ff;
     d0 -= 0x80;
     a0->turn[2] = (uint16_t)(d0 << 5);
-    d0 = (int16_t)(a0->v2e + a0->y);
+    d0 = (int16_t)(L1_BOSS_MOVE(a0) + a0->y);
     if (d0 < 0x10) {
         d0 = 0x10;
-        a0->v30 = 0;
+        L1_BOSS_WAIT(a0) = 0;
     }
     if (d0 > 0x1e0) {
         d0 = 0x1e0;
-        a0->v30 = 0;
+        L1_BOSS_WAIT(a0) = 0;
     }
     a0->y = d0;
-    a0->v30--;
-    if (a0->v30 < 0) {
-        if (a0->v2e == -1) {
-            a0->v2e = 0;
-            a0->v30 = 0xaa;
-        } else if (a0->v2e == 1) {
-            a0->v2e = 0;
-            a0->v30 = 0x3c;
+    L1_BOSS_WAIT(a0)--;
+    if (L1_BOSS_WAIT(a0) < 0) {
+        if (L1_BOSS_MOVE(a0) == -1) {
+            L1_BOSS_MOVE(a0) = 0;
+            L1_BOSS_WAIT(a0) = 0xaa;
+        } else if (L1_BOSS_MOVE(a0) == 1) {
+            L1_BOSS_MOVE(a0) = 0;
+            L1_BOSS_WAIT(a0) = 0x3c;
         } else {
-            a0->v30 = 0x32;
-            a0->v2e = 1;
+            L1_BOSS_WAIT(a0) = 0x32;
+            L1_BOSS_MOVE(a0) = 1;
             if (a0->y != 0x10)
-                a0->v2e = -1;
+                L1_BOSS_MOVE(a0) = -1;
         }
     }
     d0 = (int16_t)(0x1e - a0->energy);
@@ -460,7 +470,7 @@ draw_table:
     copy_long(&level_567fa[4], src + 4);
     copy_long(&level_567fa[12], src + 8);
     copy_long(&level_567fa[16], src + 12);
-    if (a0->v28 != 0)
+    if (L1_BOSS_PHASE(a0) != 0)
         return;
 hide:
     a0->hit[0] = 0x3e8;
