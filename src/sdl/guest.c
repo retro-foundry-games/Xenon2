@@ -94,7 +94,7 @@ void *guest_code_stub(uint32_t address)
     return f;
 }
 
-/* the shop (pkg_i) switches it on when its blob is loaded over the level's and off when the level's is loaded back */
+/* the shop (shop) switches it on when its blob is loaded over the level's and off when the level's is loaded back */
 void guest_blob_raw(int on) { blob_raw = on; }
 
 void guest_load_range(uint32_t address, const uint8_t *image, uint32_t length)
@@ -166,7 +166,7 @@ void host_irq_dispatch(int level)
         xenon.irq_vectors[level - 1]();
 }
 
-extern void game_entry(void) __attribute__((weak));   /* pkg_b: the start-up flow of the original ($400) */
+extern void game_entry(void) __attribute__((weak));   /* mainloop: the start-up flow of the original ($400) */
 
 void host_game_start(void)
 {
@@ -227,7 +227,7 @@ uint16_t guest_high_word(uint32_t address)
     return address + 2 <= sizeof guest_high ? (uint16_t)(guest_high[address] << 8 | guest_high[address + 1]) : 0;
 }
 
-extern uint32_t l2_stale_d0;   /* pkg_l2.c */
+extern uint32_t l2_stale_d0;   /* level2.c */
 extern int l2_stale_d0_set;
 
 void guest_set_stale(uint32_t value)

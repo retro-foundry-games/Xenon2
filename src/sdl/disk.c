@@ -1,4 +1,4 @@
-/* The game's own disk loader, replaced by a high-level one: the game's C (HLE_WEAK disk_read_sectors, pkg_g) programs the disk DMA and decodes MFM; here the
+/* The game's own disk loader, replaced by a high-level one: the game's C (HLE_WEAK disk_read_sectors, menus) programs the disk DMA and decodes MFM; here the
  * sectors come straight from the ADF of the disk in the drive and are put into the members of the game's memory that cover the destination.
  *
  * The game asks for its game disk in DF0 (sector 0 must hold "X2B "); the disk in the drive is disk 1 when the program starts.  As the real machine

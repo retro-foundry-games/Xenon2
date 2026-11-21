@@ -1,0 +1,15 @@
+; objects: $2800-$3FFF (animation scripts, collisions, spawning of formations, the object loop)
+arr hit_box 0x460 uint16_t 4                      ; the box (x0, y0, x1, y1) a collision test looks at
+arr tile_mask_buf 0x433ac uint16_t 75             ; 25 rows of three words: the solid pixels of the map under a sprite
+tab mask_empty 0x2de6 uint8_t 160                 ; a tile mask without solid pixels (16 rows of 10 bytes)
+tab mask_full 0x2ea6 uint8_t 160                  ; a tile mask that is all solid
+tab hit_mask_ptrs 0x3ae96 uint32_t 16             ; addresses of the 16 masks below (unused: they are 150 bytes apart)
+tab hit_mask_data 0x3aed6 uint16_t 1200           ; the player's 24 row mask shifted by 0..15 pixels (75 words each)
+tab spawn_kinds 0x3728 uint8_t 108                ; 18 x struct SpawnKind: the debris an object breaks into
+tab spawn_def_326c 0x326c uint8_t 26              ; a formation: one definition and its end (struct SpawnDef)
+var level_events_b 0x54e14 uint8_t *             ; the level's second list of scroll events (struct SpawnRec)
+var level_formations 0x54e30 uint8_t *         ; the level's table of formation data
+var level_data_start 0x54e34 uint8_t *
+var level_events_a 0x54e38 uint8_t *             ; the level's list of scroll events (struct SpawnRec); the formation data end here
+tab enemy_shot_dx 0x38d2 int16_t 16              ; x step of an enemy shot, by direction (0-7: eight, then eight more)
+tab enemy_shot_dy 0x38f2 int16_t 16

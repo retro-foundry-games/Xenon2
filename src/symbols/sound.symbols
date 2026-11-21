@@ -1,0 +1,42 @@
+; sound: $19000-$1FFFF (music and sound-effect player; its tables sit in its code area)
+type Instrument 12
+type SongHeader 10
+type MusicChannel 48
+type HwMirror 12
+type SfxSample 16
+type SfxDef 24
+type SfxChannel 36
+arr music_base 0x19f9e uint8_t 4                  ; the address the player's data offsets (words) are relative to
+var music_tempo_mul 0x1a582 uint16_t              ; note length unit (song header tempo)
+var music_volume_lo 0x1a585 uint8_t                ; master volume word = (music_flag_1a584 << 8) | music_volume_lo, 0x40 = full
+var music_rate 0x1a586 uint8_t                    ; added to music_accum each call; a carry skips the tick
+var music_rate_copy 0x1a587 uint8_t
+var music_accum 0x1a588 uint8_t
+var music_fade_speed 0x1a589 uint8_t              ; non-zero: fading out
+var music_fade_count 0x1a58a uint8_t
+var music_enabled 0x1a58c uint8_t
+var instruments_ready 0x1a58d uint8_t             ; the instrument table was built
+var music_playing 0x1a58e uint8_t
+var music_transpose 0x1a58f uint8_t
+var music_pause_count 0x1a590 uint8_t
+var music_paused 0x1a591 uint8_t                  ; non-zero: music is paused (set by the menu code)
+var silence_ptr 0x1a592 uint8_t *                 ; 0x40 bytes of silence after the sample bank
+arr music_channels 0x1a596 MusicChannel 4
+tab music_periods 0x1a656 uint16_t 72
+tab music_env_offsets 0x1a6e6 uint16_t 16
+tab music_env_data 0x1a706 uint8_t 50
+arr instruments 0x1a738 Instrument 20
+arr song_headers 0x1a828 SongHeader 1
+tab music_data 0x1a832 uint8_t 0x984              ; lists of sequences, sequences
+var sfx_samples_ready 0x1b268 uint8_t
+arr sfx_samples 0x1b352 SfxSample 18
+arr sfx_channels 0x1b6d0 SfxChannel 4
+var sfx_request 0x1b760 uint16_t                  ; high byte: channel, low byte: effect number
+arr hw_mirror 0x1b762 HwMirror 4
+arr sfx_defs 0x1b792 SfxDef 23
+var sfx_wave_base 0x1b9ba uint8_t *
+tab sfx_env_offsets 0x1b9be uint16_t 11
+tab sfx_env_data 0x1b9d4 uint8_t 0x88
+tab music_vol_env_offsets 0x1ba5c uint16_t 16
+tab music_vol_env_data 0x1ba7c uint8_t 0x104
+arr sample_bank 0x1bb80 uint8_t 4                 ; the sample file (to $2BAA0): start address only

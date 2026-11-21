@@ -1,0 +1,9 @@
+; shop: the shop (its variables below the blob; the blob itself is raw memory, see shop.c)
+var v_04ec 0x04ec uint16_t                         ; the doorway's left pillar (slides in steps of 4 between $30 and 0; bit 2 selects its picture)
+var v_04ee 0x04ee uint16_t                         ; the doorway's right pillar ($44 .. 0)
+var v_04f0 0x04f0 uint8_t                          ; $FF while the keeper talks (the lower row of the room is redrawn at random)
+var v_04f1 0x04f1 uint8_t
+var v_04f2 0x04f2 uint16_t                         ; the cursor's column (0-4) in the grid; below the grid: 0 leave, 1 go on
+var v_04f4 0x04f4 uint16_t                         ; the cursor's row (0-3, 4 = the buttons)
+var v_04f6 0x04f6 uint16_t                         ; the text's position: x in half bytes
+var v_04f8 0x04f8 uint16_t                         ; the text's y
