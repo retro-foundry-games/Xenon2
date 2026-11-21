@@ -89,6 +89,7 @@ void l3_snake_head(Object *a0); void l3_snake_tail(Object *a0); void l3_snake_bo
 void l3_spawn_parts(void); void l3_part_core(Object *a0); void l3_part_follow(Object *a0); void l3_part_gun(Object *a0);
 void l3_part_hit(Object *a0, Object *a1, uint16_t d0); void l3_part_arm(Object *a0); void l3_part_arm_piece(Object *a0); void l3_part_arm_tip(Object *a0);
 void l3_enemy_enter(Object *a0);
+void l3_worm_head(Object *a0); void l3_worm_a(Object *a0); void l3_worm_b(Object *a0); void l3_worm_c(Object *a0);
 void l3_gun_update(Object *a0); void l3_boss_update(Object *a0); void l3_boss_hit(Object *a0, Object *a1, uint16_t d0); void l3_boss_flash(Object *a0);
 void l3_boss2_update(Object *a0); void l3_boss2_hit(Object *a0, Object *a1, uint16_t d0); void l3_boss2_flash(Object *a0); void l3_walker_update(Object *a0);
 void l3_diver_update(Object *a0); void l3_diver_shot(Object *a0);
