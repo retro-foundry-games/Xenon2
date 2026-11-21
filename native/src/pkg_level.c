@@ -1,5 +1,5 @@
 /* pkg_level: the entries the engine calls, by the level in v_0e04: level 1's code is in pkg_d.c and the others, level 2's in pkg_l2.c, level 3's
- * in pkg_l3.c, level 4's in pkg_l4.c */
+ * in pkg_l3.c, level 4's in pkg_l4.c, level 5's in pkg_l5.c */
 #include "pkg_d.h"
 #include "pkg_i.h"
 #include "game_all.h"
@@ -21,6 +21,8 @@ void level_event(uint16_t d0, const uint8_t *a1)
         l3_event(d0, a1);
     else if (v_0e04 == 4)
         l4_event(d0, a1);
+    else if (v_0e04 == 5)
+        l5_event(d0, a1);
     else if (v_0e04 == 1)
         level1_event(d0, a1);
 }
@@ -33,6 +35,8 @@ void level_hook(uint16_t d0, const uint8_t *a1, uint16_t d2)
         l3_hook(d0, a1, d2);
     else if (v_0e04 == 4)
         l4_hook(d0, a1, d2);
+    else if (v_0e04 == 5)
+        l5_hook(d0, a1, d2);
     else if (v_0e04 == 1)
         level1_hook(d0, a1, d2);
 }
@@ -53,6 +57,8 @@ void level_swap_hook(void)
 {
     if (v_0e04 == 2)
         l2_swap_hook();
+    else if (v_0e04 == 5)
+        l5_swap_hook();
     else if (v_0e04 == 1)
         level1_swap_hook();
 }
@@ -65,6 +71,8 @@ void level_init(void)
         l3_init();
     else if (v_0e04 == 4)
         l4_init();
+    else if (v_0e04 == 5)
+        l5_init();
     else if (v_0e04 == 1)
         level1_init();
 }

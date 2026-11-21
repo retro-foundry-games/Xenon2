@@ -108,4 +108,5 @@ void l4_b2_gun_hit(Object *a0, Object *a1, uint16_t d0); void l4_b2_barrel_hit(O
 void l4_b2_ring_hit(Object *a0, Object *a1, uint16_t d0); void l4_b2_eye_hit(Object *a0, Object *a1, uint16_t d0);
 void l4_bar_update(Object *a0); void l4_bar_draw(Object *a0);
 void l4_walker_update(Object *a0); void l4_walker_hit(Object *a0, Object *a1, uint16_t d0); void l4_walker_flash(Object *a0); void l4_walker_draw(Object *a0);
+void l5_event(uint16_t d0, const uint8_t *a1); void l5_hook(uint16_t d0, const uint8_t *a1, uint16_t d2); void l5_init(void); void l5_swap_hook(void);
 #endif
