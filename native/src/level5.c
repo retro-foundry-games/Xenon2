@@ -1240,7 +1240,7 @@ void l5_spawn_group(const uint8_t *a1)
     uint16_t d0 = rd16(a1 + 6);
 
     if (sh_r8(0xd9b + d0) == 0)
-        l5_spawn_unit(a1)->v30 = (int16_t)d0;
+        UNIT_GROUP(l5_spawn_unit(a1)) = (int16_t)d0;
 }
 
 /* level5 $0570AA: a unit of eight directions made of cells */
