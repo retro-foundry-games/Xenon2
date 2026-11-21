@@ -10,6 +10,7 @@
 /* the scratch fields of Object, by the kind that uses them */
 #define DEBRIS_KIND(o) ((o)->v30)
 #define ENEMY_SHOT_DIR(o) ((o)->v2a)
+#define PICKUP_MODE(o) ((o)->v28)
 
 #ifdef GAME_SDL
 uint8_t guest_a6a(uint8_t a01);
@@ -753,7 +754,7 @@ void spawn_debris(Object *a0_unused, Object *a1, uint16_t d0_unused)
     a0->x = a1->x;
     a0->y = a1->y;
     anim_header_set(a0, (const uint8_t *)k->anim);
-    a0->v28 = 7;
+    PICKUP_MODE(a0) = 7;
     kill_object(a1);
 }
 
@@ -846,7 +847,7 @@ Object *spawn_enemy_shot(uint16_t x, uint16_t y, uint16_t angle, uint16_t steps,
     a0->anim_delay = 0;
     a0->x = (int16_t)x;
     a0->y = (int16_t)y;
-    a0->v2a = (int16_t)angle;
+    ENEMY_SHOT_DIR(a0) = (int16_t)angle;
     a0->steps = (int16_t)steps;
     a0->hit[0] = 0x3e8;
     a0->hit[2] = 0x3e8;

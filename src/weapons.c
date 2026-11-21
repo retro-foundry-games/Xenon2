@@ -4,6 +4,9 @@
 #include "game_all.h"
 #include "weapon_util.h"
 #include "amiga/hw.h"
+
+/* the scratch fields of Object, by the kind that uses them */
+
 #define PICKUP_DIR(o) ((o)->v2a)
 #define PICKUP_KIND(o) ((o)->v30)
 
@@ -2198,7 +2201,7 @@ void beam_draw(Object *a0)
     beam_state[0] = (uint16_t)d0;
     beam_state[1] = (uint16_t)d1;
     beam_state[3] = level;
-    beam_state[2] = (uint16_t)a0->v28;
+    beam_state[2] = (uint16_t)BEAM_GROWTH(a0);
     if (d0 <= -16 || d0 >= 0x140)
         return;
     if ((int16_t)beam_state[2] >= 0x41) {
