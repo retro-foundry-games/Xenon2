@@ -1,6 +1,11 @@
 #include "objects.h"
 #include "shop.h"
 #include "game_all.h"
+
+/* the scratch fields of Object, by the kind that uses them */
+#define DEBRIS_KIND(o) ((o)->v30)
+#define ENEMY_SHOT_DIR(o) ((o)->v2a)
+
 #ifdef GAME_SDL
 uint8_t guest_a6a(uint8_t a01);
 #endif
@@ -733,9 +738,9 @@ void update_all(void)
 void spawn_debris(Object *a0_unused, Object *a1, uint16_t d0_unused)
 {
     Object *a0 = list_insert(LIST_EFFECT);
-    const struct SpawnKind *k = &spawn_kinds[(uint16_t)a1->v30];
+    const struct SpawnKind *k = &spawn_kinds[(uint16_t)DEBRIS_KIND(a1)];
 
-    a0->v30 = a1->v30;
+    DEBRIS_KIND(a0) = DEBRIS_KIND(a1);
     a0->type = k->kind;
     sfx_cmd = 0x11;
     a0->fn_update = (obj_fn)pickup_update;
@@ -799,7 +804,7 @@ void enemy_shot_update(Object *a0)
     int32_t m;
 
     anim_step(a0);
-    d2 = (uint16_t)a0->v2a;
+    d2 = (uint16_t)ENEMY_SHOT_DIR(a0);
     d0 = ((uint32_t)(uint16_t)a0->x << 16) | a0->x_frac;
     d1 = ((uint32_t)(uint16_t)a0->y << 16) | a0->y_frac;
     m = (int32_t)enemy_shot_dx[d2] * (int16_t)a0->steps;
