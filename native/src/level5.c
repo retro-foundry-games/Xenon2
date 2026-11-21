@@ -576,7 +576,7 @@ fire:
         a1->fn_hit = (void *)hit_enemy;
         a1->x = d0;
         a1->y = d1;
-        a1->v2a = 0;
+        MISSILE_DIR(a1) = 0;
         set_anim(a1, 0x55f7e);
         a1->energy = (int16_t)W(0x54e52);
         a1->big = 0;
