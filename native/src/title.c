@@ -362,7 +362,7 @@ void draw_logo_scaled(const uint16_t *gfx, int16_t x, int16_t y, int16_t width, 
 void title_fade_out(void)
 {
     title_scale = 0x10;
-    while (!v_0a01) {
+    while (!key_pressed) {
         clear_screen();
         draw_logo_scaled(title_gfx, -0x70, -0x50, 0xcf, 0x35);
         stars_update();
@@ -383,11 +383,11 @@ void title_fade_in(void)
         clear_screen();
         stars_update();
         swap_screens_200();
-        if (v_0a01)
+        if (key_pressed)
             break;
     } while (--n != 0);
     for (;;) {
-        if (v_0a01)
+        if (key_pressed)
             return;
         clear_screen();
         draw_logo_scaled(title_gfx, -0x70, -0x50, 0xcf, 0x35);
@@ -433,9 +433,9 @@ void show_text_sequence(uint16_t row, const uint8_t *text, const uint16_t *steps
         off = title_index;
         steps = title_steps_ptr;
         if (v_8428 && steps[off / 2] == 0x11) {
-            if (v_0a01 == 0)
+            if (key_pressed == 0)
                 goto no_advance;
-            v_0a01 = 0;
+            key_pressed = 0;
         }
         title_index += 2;
     no_advance:
@@ -503,7 +503,7 @@ void stars_init_dots(void)
 }
 
 /* orig $008220: the credits of the title: pages of three text lines squeezed in and out over the logo and stars;
- * a key (v_0a01) ends it */
+ * a key (key_pressed) ends it */
 void title_credits(void)
 {
     int i;
@@ -524,7 +524,7 @@ void title_credits(void)
     }
     set_palette(title_palette);
     title_fade_in();
-    if (v_0a01)
+    if (key_pressed)
         goto abort;
 l82aa:
     title_draw_logo();
@@ -556,21 +556,21 @@ l82ae:
     if (title_text != v_8836)
         goto l82ae;
     title_fade_out();
-    if (v_0a01)
+    if (key_pressed)
         goto abort;
     hiscore_show();
-    if (v_0a01)
+    if (key_pressed)
         goto abort;
     title_fade_in();
-    if (v_0a01)
+    if (key_pressed)
         goto abort;
     title_text = title_lines;
     title_index = 0;
     goto l82aa;
 frame:
     stars_update();
-    if (v_0a01) {
-        v_0a01 = 0;
+    if (key_pressed) {
+        key_pressed = 0;
         music_silence();
         title_fade_out();
         goto restore;
@@ -580,6 +580,6 @@ frame:
 abort:
     music_silence();
 restore:
-    v_0a01 = 0;
+    key_pressed = 0;
     set_palette(palette_saved);
 }

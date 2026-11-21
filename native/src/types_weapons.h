@@ -57,7 +57,7 @@ struct Slot {
 struct LevelSpawn {
     int16_t x;                  /* 0 */
     int16_t y;                  /* 2: the map's y */
-    int16_t index;              /* 4: the counter in v_0d26 it keeps alive */
+    int16_t index;              /* 4: the counter in level_vars it keeps alive */
     int16_t flag;               /* 6: becomes $2E of the pieces */
     uint8_t *path;              /* 8: the path script */
 };

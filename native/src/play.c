@@ -85,7 +85,7 @@ void panel_init(void)
 /* orig $006766: counts the displayed score up towards the real one by 10, 100 or 1000 and draws the digit that changed */
 void update_score_display(void)
 {
-    int32_t d0 = (int32_t)(v_0c92 - v_0c96);
+    int32_t d0 = (int32_t)(player_score - score_shown);
     uint8_t *digit;
     uint32_t off;   /* from the panel's start */
     uint8_t *pb = (uint8_t *)panel_b;
@@ -94,23 +94,23 @@ void update_score_display(void)
     if (d0 == 0)
         return;
     if (d0 < 0) {
-        v_0c96 = v_0c92;
+        score_shown = player_score;
         return;
     }
     if (d0 >= 0xc8) {
         if (d0 >= 0x7d0) {
-            digit = &v_0d7c[3];
+            digit = &score_digits[3];
             off = 6;
-            v_0c96 += 0x3e8;
+            score_shown += 0x3e8;
         } else {
-            digit = &v_0d7c[4];
+            digit = &score_digits[4];
             off = 7;
-            v_0c96 += 0x64;
+            score_shown += 0x64;
         }
     } else {
-        digit = &v_0d7c[5];
+        digit = &score_digits[5];
         off = 8;
-        v_0c96 += 0xa;
+        score_shown += 0xa;
     }
     if (cur_player)
         off += 0x1b;
@@ -134,7 +134,7 @@ void update_score_display(void)
             return;
         digit--;
         off--;
-        if (digit < v_0d7c)
+        if (digit < score_digits)
             return;
     }
 }
@@ -147,14 +147,14 @@ void init_level_state(void)
     uint16_t g, c, i;
     Object *o;
 
-    v_0a02 = 0;
-    v_0a03[0] = 0xff;
-    v_0e06 = 8;
+    player_died = 0;
+    player_active[0] = 0xff;
+    respawn_shield = 8;
     v_0e02 = 1;
     cur_player = 0;
-    v_0a03[1] = (players == 2) ? 0xff : 0;
-    v_0a03[2] = 0;
-    v_0a03[3] = 0;
+    player_active[1] = (players == 2) ? 0xff : 0;
+    player_active[2] = 0;
+    player_active[3] = 0;
     clear_screens_small();
     a0 = panel_b;   /* what $6bce leaves in a0 and a1: the panels */
     a1 = panel_a;
@@ -192,7 +192,7 @@ void init_level_state(void)
     }
     panel_init();
     init_objects();
-    if (v_0a03[1]) {
+    if (player_active[1]) {
         swap_player_state();
         init_objects();
         swap_player_state();
@@ -243,7 +243,7 @@ void init_objects(void)
         o->v30 = 3 - i;
     }
     for (i = 0; i < 7; i++)
-        v_0c66[i].type = 0;
+        weapon_slots[i].type = 0;
     weapon_94(0, 0);
     for (i = 0; i < 14; i++)
         v_0caa[i] = 0;
@@ -255,29 +255,29 @@ void init_objects(void)
     v_0c90 = 0;
     v_0430 = 0;
     v_0432 = 0;
-    v_0c92 = 0;
-    v_0c96 = 0;
+    player_score = 0;
+    score_shown = 0;
     v_0c9e = 0;
     v_0ca0 = 0;
     v_0434 = 0;
     v_0ca2 = 0;
     for (i = 0; i < 7; i++)
-        v_0d7c[i] = 0;
+        score_digits[i] = 0;
     v_0ca4 = 0;
     v_0cc6 = 0x27;
     v_0cc8 = 0;
     v_0d83 = 0;
     v_0d84 = 0;
-    v_0cca = 3;
+    player_lives = 3;
     v_0ccc = 1;
     v_0d85 = 0;
-    v_0cf0 = 3;
+    continues_left = 3;
     draw_status_digit();
     v_0a6b = 0xff;
     redraw_energy_bar();
 }
 
-/* orig $0068b0: an option's update: follows the player at an offset given by v_0cde, fires when the button says so */
+/* orig $0068b0: an option's update: follows the player at an offset given by player_vx, fires when the button says so */
 void option_update(Object *a0)
 {
     uint16_t d0, d1;
@@ -285,20 +285,20 @@ void option_update(Object *a0)
 
     anim_step(a0);
     d0 = player.x;
-    d1 = (uint16_t)v_0cde;
+    d1 = (uint16_t)player_vx;
     if ((int16_t)d1 < 0)
         d1 = (uint16_t)-(int16_t)d1;
     d1 += d1;
     if (a0->v30 & 1)
         d1 += 0xe;
-    d0 += (uint16_t)v_6894[d1 / 2];
+    d0 += (uint16_t)option_offsets[d1 / 2];
     a0->x = d0;
     a0->y = player.y;
     a0->fn_draw = obj_nop;
     if (v_0430)
         return;
     bit = (a0->v30 < 2) ? 1 : 2;
-    if (v_0a00 & bit)
+    if (joy_stick & bit)
         a0->fn_draw = draw_bob_masked;
 }
 
@@ -308,8 +308,8 @@ void spawn_shot_object(Object *a0, uint16_t d0, uint16_t d1, uint16_t d2, uint16
 {
     Object *a1;
 
-    if (v_0414 < 0)
-        v_0414 = 0x89;
+    if (sfx_cmd < 0)
+        sfx_cmd = 0x89;
     if (a0->v42 != 0) {
         if (a0->v42 != 1)
             a2++;
@@ -345,23 +345,23 @@ void reset_extra_objects(void)
     obj_list[1].prev = v_0cf4;
     obj_list[1].next = v_0cf8;
     for (i = 0; i < 7; i++)
-        v_0c66[i] = v_0cfc[i];
+        weapon_slots[i] = weapon_slots_saved[i];
 }
 
 /* orig $006426: the read of the stick for the autofire counter (the lockstep hooks it to give the port the byte the original read) */
 uint8_t autofire_stick(void)
 {
-    return v_0a00;
+    return joy_stick;
 }
 
 /* orig $006372: the per-frame counters: the panel's fade, the palette load, the two timers, the autofire counter */
 void frame_update(void)
 {
     if (v_0430 != 0 || v_0d84 != 0) {
-        if (v_0e06 != 0x10)
-            v_0e06++;
-    } else if (v_0e06 != 0) {
-        v_0e06--;
+        if (respawn_shield != 0x10)
+            respawn_shield++;
+    } else if (respawn_shield != 0) {
+        respawn_shield--;
     }
     if (v_0c90 != 0) {
         v_0c90--;
@@ -385,7 +385,7 @@ void frame_update(void)
         draw_gauge(0x98, 8, v_0434, 0x88);
         if (v_0434 == 0) {
             v_0432 = 0xffff;
-            v_0414 = 0x10;
+            sfx_cmd = 0x10;
         }
     }
     if (v_0ca2 != 0) {
@@ -401,7 +401,7 @@ void frame_update(void)
         v_0c60 = (uint16_t)(a - b);
         if (!(a > b)) {
             v_0c60 += v_0c62;
-            v_0a01 = 0xff;
+            key_pressed = 0xff;
         }
     } else {
         v_0c60 = v_0c62;
@@ -548,7 +548,7 @@ void clear_level_objects(void)
     sfx_stop_all();
     if (v_0ca2)
         reset_extra_objects();
-    d7 = v_0ce6 - v_0cd0;
+    d7 = scroll_y - scroll_pos;
     free_chain(obj_list[4].prev, d7);
     free_chain(obj_list[3].prev, d7);
     free_chain(obj_list[2].prev, d7);
@@ -612,31 +612,31 @@ void respawn_player(void)
     uint16_t d0, i;
 
     v_0d84 = 0;
-    player.x = v_0ce2;
+    player.x = player_x_saved;
     player.y = 0xb0;
-    d0 = v_0ce6;
-    v_0cd0 = d0;
+    d0 = scroll_y;
+    scroll_pos = d0;
     v_0cea = d0;
     d0++;
     v_0cd2 = d0;
     d0 += 0xbf;
     v_0cd4 = d0;
-    v_0cd6 = v_0ce6 & 0xf;
-    v_0cce = (uint16_t)((v_0ce6 >> 4) * 0x28);
+    scroll_fine = scroll_y & 0xf;
+    map_row_offset = (uint16_t)((scroll_y >> 4) * 0x28);
     create_queued_objects();
-    v_0c9a = v_0ca6;
+    player_money = player_money_saved;
     for (i = 0; i < 16; i++)
         v_043c[i] = 0;
     v_0430 = 0;
     v_042e = 0;
     v_0a6b = 0xff;
-    v_0cde = 0;
+    player_vx = 0;
     for (i = 0; i < 4; i++) {
         v_046c[i * 2] = player.x;
         v_046c[i * 2 + 1] = player.y;
     }
     for (i = 0; i < 17; i++) {
-        v_047c[i * 3] = v_0cd0;
+        v_047c[i * 3] = scroll_pos;
         v_047c[i * 3 + 1] = player.x;
         v_047c[i * 3 + 2] = player.y;
     }
@@ -662,23 +662,23 @@ void switch_player_after_clear(void)
     uint16_t d0;
 
     d0 = cur_player;
-    if (v_0a03[d0]) {
+    if (player_active[d0]) {
         d0 ^= 1;
-        if (v_0a03[d0]) {
-            if (v_0a03[2 + d0] == 0)
+        if (player_active[d0]) {
+            if (player_active[2 + d0] == 0)
                 swap_player_state();
         }
     } else {
         swap_player_state();
         d0 = cur_player;
-        if (v_0a03[2 + d0]) {
+        if (player_active[2 + d0]) {
             v_0a07 = 0xff;
-            if (v_0e04 == 5)
+            if (level_number == 5)
                 v_0a6c = 0xff;
         }
     }
     respawn_player();
-    v_0e06 = 8;
+    respawn_shield = 8;
 }
 
 /* orig $00635E: a gauge of ten steps: the picture for fill / (max + 1) * 10 at (x, y); the original's table has no picture for a full
@@ -697,25 +697,25 @@ void draw_gauge(uint16_t x, uint16_t y, uint16_t fill, uint16_t max)
 /* orig $006f1e: the scroll and timing variables at the start of a level */
 void level_reset_scroll(void)
 {
-    v_0cce = 0x2d00;
-    v_0cd6 = 0;
-    v_0cd0 = 0x1200;
+    map_row_offset = 0x2d00;
+    scroll_fine = 0;
+    scroll_pos = 0x1200;
     v_0cd2 = 0x7fee;
     v_0cd4 = 0x7fee;
     v_0cee = 0x10;
-    v_0ce2 = player.x;
-    v_0ce4 = player.y;
-    v_0ce6 = v_0cd0;
-    v_0ca6 = v_0c9a;
-    v_0cd8 = 1;
+    player_x_saved = player.x;
+    player_y_saved = player.y;
+    scroll_y = scroll_pos;
+    player_money_saved = player_money;
+    scroll_speed = 1;
     v_0cda = 0;
-    v_0cde = 0;
+    player_vx = 0;
     level_init();
     v_0ce0 = 0;
     v_042e = 0;
     v_0cdc = 0;
-    v_0c9a = 0;
-    v_0ca6 = 0;
+    player_money = 0;
+    player_money_saved = 0;
     v_0ca4 = 0;
     v_0cec = 1;
     v_0cf2 = 0;
@@ -729,14 +729,14 @@ void level_start(void)
 
     for (i = 0; i < 12000; i++)
         v_3bcac[i] = a0[i];
-    v_0436 = 0;
+    background_scroll = 0;
     v_04e2 = 0;
     v_043a = 0;
     for (i = 0; i < 16; i++)
         v_043c[i] = 0;
     v_0a6c = 0;
-    v_0a00 = 0;
-    v_0a01 = 0;
+    joy_stick = 0;
+    key_pressed = 0;
     level_reset_scroll();
     if (players == 2) {
         swap_player_state();

@@ -68,7 +68,7 @@ void level1_turret_a_update(Object *a0)
         return;
     a0->hit[0] = (int16_t)(a0->x + 4);
     a0->hit[2] = (int16_t)(a0->x + 4 + 0x18);
-    y = (int16_t)(a0->y - v_0cd0 + 4);
+    y = (int16_t)(a0->y - scroll_pos + 4);
     a0->hit[1] = y;
     a0->hit[3] = (int16_t)(y + 0x18);
     d0 = (uint16_t)(a0->v28 << 3);
@@ -83,7 +83,7 @@ void level1_turret_a_update(Object *a0)
         return;
     ((ObjMove *)a0)->shot_count = (uint8_t)(random_next() & 0x3f);
     x = (int16_t)(a0->x + 0x10);
-    y = (int16_t)(a0->y - v_0cd0 + 0xe);
+    y = (int16_t)(a0->y - scroll_pos + 0xe);
     d2 = 2;
     if (a0->type != 0xe4) {
         d2 = 6;
@@ -104,7 +104,7 @@ void level1_turret_b_update(Object *a0)
         return;
     a0->hit[0] = (int16_t)(a0->x + 0xa);
     a0->hit[2] = (int16_t)(a0->x + 0xa + 0x12);
-    y = (int16_t)(a0->y - v_0cd0 + 4);
+    y = (int16_t)(a0->y - scroll_pos + 4);
     a0->hit[1] = y;
     a0->hit[3] = (int16_t)(y + 0x18);
     d0 = (uint16_t)(((uint16_t)a0->v28 & 0xfffc) << 1);
@@ -119,7 +119,7 @@ void level1_turret_b_update(Object *a0)
         return;
     ((ObjMove *)a0)->shot_count = (uint8_t)(random_next() & 0x3f);
     x = (int16_t)(a0->x + 0x20);
-    y = (int16_t)(a0->y - v_0cd0 + 0xe);
+    y = (int16_t)(a0->y - scroll_pos + 0xe);
     d2 = 2;
     if (a0->type != 0xec) {
         d2 = 6;
@@ -139,7 +139,7 @@ void level1_turret_c_update(Object *a0)
         return;
     a0->hit[0] = (int16_t)(a0->x + 8);
     a0->hit[2] = (int16_t)(a0->x + 8 + 0x10);
-    y = (int16_t)(a0->y - v_0cd0 + 8);
+    y = (int16_t)(a0->y - scroll_pos + 8);
     a0->hit[1] = y;
     a0->hit[3] = (int16_t)(y + 0x10);
     d0 = (uint16_t)(((uint16_t)a0->v28 & 0xfffe) << 1);
@@ -160,7 +160,7 @@ void level1_turret_c_update(Object *a0)
     if (a0->v28 != 0x18)
         return;
     x = (int16_t)(a0->x + 0x1a);
-    y = (int16_t)(a0->y - v_0cd0 + 2);
+    y = (int16_t)(a0->y - scroll_pos + 2);
     d2 = 2;
     if (a0->type != 0xdc) {
         d2 = 6;
@@ -176,12 +176,12 @@ void level1_launcher_update(Object *a0)
     int16_t d0;
     int d7;
 
-    if ((int16_t)(v_0cea + 0xd0 - v_0cd0) < a0->y) {
+    if ((int16_t)(v_0cea + 0xd0 - scroll_pos) < a0->y) {
         kill_object_thunk(a0);
         return;
     }
     anim_step(a0);
-    a0->y = (int16_t)(a0->y + v_0cd8);
+    a0->y = (int16_t)(a0->y + scroll_speed);
     if (a0->v28 == 0)
         return;
     d0 = (int16_t)(a0->y - PLAYER->y);
@@ -282,7 +282,7 @@ void level1_hook(uint16_t d0, const uint8_t *a1, uint16_t d2)
         a0->v42 = 0xfa;
         SET_V5E(a0, 0);
         a0->x = (int16_t)(rd16(a1 + 8) - 8 + (flag ? 0x10 : 0));
-        a0->y = (int16_t)(rd16(a1 + 10) - 8 - v_0cd0);
+        a0->y = (int16_t)(rd16(a1 + 10) - 8 - scroll_pos);
         a0->v28 = -1;
         a0->v2a = (int16_t)(rd16(a1 + 6) << 4);
         a0->v30 = a0->v2a;
@@ -296,18 +296,18 @@ void level1_hook(uint16_t d0, const uint8_t *a1, uint16_t d2)
 void level1_scroll(void)
 {
     const uint16_t *a1 = level_558a2;
-    uint16_t *a4 = v_0d26;
+    uint16_t *a4 = level_vars;
     int d7, i;
 
-    if (v_0d8c == 0 && (int16_t)(v_0cd0 + PLAYER->y) < 0xa80) {
+    if (v_0d8c == 0 && (int16_t)(scroll_pos + PLAYER->y) < 0xa80) {
         v_0a6c = 0xff;
         v_0d8c = 0xff;
-        v_0cd0 = 0x9c0;
+        scroll_pos = 0x9c0;
         v_0cea = 0x9c0;
-        v_0cce = 0x1860;
-        v_0cd6 = 0;
+        map_row_offset = 0x1860;
+        scroll_fine = 0;
     }
-    if ((int16_t)v_0cd0 >= 0xa40 && (int16_t)v_0cd0 <= 0xd10) {
+    if ((int16_t)scroll_pos >= 0xa40 && (int16_t)scroll_pos <= 0xd10) {
         if ((int16_t)v_0cea < 0xd10)
             v_0cea = 0xd10;
         level1_spawn_units();
@@ -336,7 +336,7 @@ void level1_boss_update(Object *a0)
     const uint8_t *src;
     static const uint8_t *const sources[4] = { level_56810, level_56810 + 16, level_56810 + 32, level_56810 + 16 };
 
-    if ((int16_t)v_0cd0 > 0x1c0)
+    if ((int16_t)scroll_pos > 0x1c0)
         goto hide;
     if (v_0d8b == 0) {
         v_0d8b = 0xff;
@@ -383,11 +383,11 @@ void level1_boss_update(Object *a0)
         v_0cea = 0x1c0;
     a0->hit[0] = 0x80;
     a0->hit[2] = 0xc8;
-    d5 = (int16_t)(a0->y - v_0cd0 + 4);
+    d5 = (int16_t)(a0->y - scroll_pos + 4);
     a0->hit[1] = d5;
     a0->hit[3] = (int16_t)(d5 + 0x50);
     if (a0->v28 == 0) {
-        if ((int16_t)v_0cd0 > 0x30)
+        if ((int16_t)scroll_pos > 0x30)
             goto draw_table;
         a0->v28 = 1;
         a0->v2e = 0;
@@ -398,7 +398,7 @@ void level1_boss_update(Object *a0)
             a0->v54--;
     } else if (a0->v54 < 0xb) {
         if (a0->v54 == 0)
-            v_0418 = 0xf;
+            sfx_cmd2 = 0xf;
         a0->v54++;
     }
     a0->v28++;
@@ -468,11 +468,11 @@ void level1_boss_draw(Object *a0)
     static const void *const eyes[4] = { level_5c0e4, level_5c194, level_5c244, level_5c194 };
     uint16_t d7;
 
-    if ((int16_t)v_0cd0 >= 0x280)
+    if ((int16_t)scroll_pos >= 0x280)
         return;
-    draw_tile_grid(level_567bc, 5, 6, (uint16_t)(a0->y - v_0cd0), 0x38);
+    draw_tile_grid(level_567bc, 5, 6, (uint16_t)(a0->y - scroll_pos), 0x38);
     d7 = (v_0d5a >> 4) & 0xc;
-    draw_bob_masked_at(0x98, (uint16_t)(a0->y - v_0cd0 + 0x42), eyes[d7 >> 2]);
+    draw_bob_masked_at(0x98, (uint16_t)(a0->y - scroll_pos + 0x42), eyes[d7 >> 2]);
 }
 
 /* orig $054E20 (-> $5566A8): level 1 starts: its data is copied once, the boss is made */
@@ -511,12 +511,12 @@ void level1_init(void)
         v_0d86[i] = 0;
     v_0d8c = 0;
     for (i = 0; i < 16; i++)
-        v_0d26[i] = 0;
-    v_0d26[16] = 0x45d2; v_0d26[17] = 0x72ba;
-    v_0d26[18] = 0xaa6a; v_0d26[19] = 0x4a56;
-    v_0d26[20] = 0x4aba; v_0d26[21] = 0x5d4d;
-    v_0d26[22] = 0xd225; v_0d26[23] = 0x12c5;
-    v_0d26[24] = 0x28e5; v_0d26[25] = 0x1aec;
+        level_vars[i] = 0;
+    level_vars[16] = 0x45d2; level_vars[17] = 0x72ba;
+    level_vars[18] = 0xaa6a; level_vars[19] = 0x4a56;
+    level_vars[20] = 0x4aba; level_vars[21] = 0x5d4d;
+    level_vars[22] = 0xd225; level_vars[23] = 0x12c5;
+    level_vars[24] = 0x28e5; level_vars[25] = 0x1aec;
     v_0424 = (uint16_t)(v_0e02 * 1);
     v_0426 = (uint16_t)(v_0e02 * 2);
 }
@@ -540,7 +540,7 @@ void level1_spawn_units(void)
  * head (type $10C, it follows the path) and the pieces (level_segs, each follows the object before it) */
 void level1_spawn_unit(uint16_t d6)
 {
-    uint16_t *state = &v_0d26[16 + 2 * d6];
+    uint16_t *state = &level_vars[16 + 2 * d6];
     uint32_t r = ((uint32_t)state[0] << 16) | state[1];
     const struct LevelSpawn *s;
     Object *first, *a0;
@@ -551,9 +551,9 @@ void level1_spawn_unit(uint16_t d6)
     state[1] = (uint16_t)r;
     s = &level_spawns[r & 0xf];
     x = s->x;
-    y = (int16_t)(s->y - v_0cda - v_0cd0);
-    if (v_0d26[(uint16_t)s->index] == 0)
-        v_0d26[(uint16_t)s->index] = 0x14;
+    y = (int16_t)(s->y - v_0cda - scroll_pos);
+    if (level_vars[(uint16_t)s->index] == 0)
+        level_vars[(uint16_t)s->index] = 0x14;
     d3 = s->flag;
     d2 = 0;
     n = (int16_t)level_55ce6[0];
@@ -618,10 +618,10 @@ void level1_spawn_unit(uint16_t d6)
     first->target = a0;
 }
 
-/* orig $0561B4: update of the head of a unit (type $10C): it follows its path (scrolled by v_0cd8), keeps the unit marked live */
+/* orig $0561B4: update of the head of a unit (type $10C): it follows its path (scrolled by scroll_speed), keeps the unit marked live */
 void level1_head_update(Object *a0)
 {
-    a0->y = (int16_t)(a0->y + v_0cd8);
+    a0->y = (int16_t)(a0->y + scroll_speed);
     v_0d86[(uint16_t)a0->v30] = 0xff;
     obj_script_step(a0);
     if (a0->type == 4)
@@ -645,14 +645,14 @@ void level1_segment_update(Object *a0)
     v_0d86[(uint16_t)a0->v30] = 0xff;
     a1 = OBJ_FWD(a0);
     if (a1->type == 0xbc) {
-        if (v_0d26[(uint16_t)a0->v2e] == 0)
-            v_0d26[(uint16_t)a0->v2e] = 0x14;
+        if (level_vars[(uint16_t)a0->v2e] == 0)
+            level_vars[(uint16_t)a0->v2e] = 0x14;
         kill_object_thunk(a0);
         a0->fn_update(a0);
         return;
     }
     a0->x = a1->x;
-    a0->y = (int16_t)(a1->y + v_0cd8);
+    a0->y = (int16_t)(a1->y + scroll_speed);
     a0->v2a = a1->v2a;
     a0->v2c = a1->v2c;
     a0->v28 = a1->v28;
@@ -677,7 +677,7 @@ static void level1_piece_burst(Object *a1, const uint8_t *a2)
     set_anim(n, a2);
     n->v2a = 0;
     n->v2c = (int16_t)(random_next() & 0xff);
-    v_0c92 += (uint16_t)a1->v42;
+    player_score += (uint16_t)a1->v42;
     kill_object_thunk(a1);
 }
 
@@ -705,7 +705,7 @@ void level1_hit_piece_b(Object *a0, Object *a1, uint16_t d0)
     level1_piece_burst(a1, anim_55274);
 }
 
-/* orig $05605A: update of a burst piece: it moves by a fixed step from the table at v_0f60 picked by its random byte ($2D) and goes when it
+/* orig $05605A: update of a burst piece: it moves by a fixed step from the table at piece_directions picked by its random byte ($2D) and goes when it
  * leaves the screen */
 void level1_debris_update(Object *a0)
 {
@@ -714,8 +714,8 @@ void level1_debris_update(Object *a0)
 
     anim_step(a0);
     d2 = (uint16_t)a0->v2c;
-    d1 = (int16_t)(v_0f60[d2] >> 2);
-    d0 = (int16_t)(v_0f60[(uint16_t)(d2 + 0x40)] >> 2);
+    d1 = (int16_t)(piece_directions[d2] >> 2);
+    d0 = (int16_t)(piece_directions[(uint16_t)(d2 + 0x40)] >> 2);
     d0 = (int16_t)(d0 + a0->x);
     d1 = (int16_t)(d1 + a0->y);
     if ((uint16_t)d0 >= 0x140 || (uint16_t)d1 >= 0xc0) {
@@ -731,9 +731,9 @@ void level1_debris_update(Object *a0)
 void level1_boss_flash(Object *a0)
 {
     a0->fn_draw = FN(level1_boss_draw);
-    if ((int16_t)v_0cd0 >= 0x280)
+    if ((int16_t)scroll_pos >= 0x280)
         return;
-    draw_tile_grid_flash(level_567bc, 5, 6, (int16_t)(a0->y - v_0cd0), 0x38);
+    draw_tile_grid_flash(level_567bc, 5, 6, (int16_t)(a0->y - scroll_pos), 0x38);
 }
 
 /* orig $0561DA: hit routine of the level 1 boss: when the shooter's box meets the part of the boss that can be hurt the boss flashes
@@ -745,7 +745,7 @@ void level1_boss_hit(Object *a0, Object *a1, uint16_t d0)
 
     if (v_0d8b == 0)
         return;
-    y = (int16_t)(a1->y - v_0cd0 + 0x44);
+    y = (int16_t)(a1->y - scroll_pos + 0x44);
     if (!box_overlap((int16_t)hit_box[0], (int16_t)hit_box[1], (int16_t)hit_box[2], (int16_t)hit_box[3], 0x98, y, 0xa7, (int16_t)(y + 0xe)))
         return;
     a1->fn_draw = FN(level1_boss_flash);
@@ -756,7 +756,7 @@ void level1_boss_hit(Object *a0, Object *a1, uint16_t d0)
     v_0d8b = 0;
     kill_object_thunk(a1);
     spawn_bonuses(8);
-    debris_burst(a0, 0x13, 0, 0, 0x140, 0xc0, v_0f64);
+    debris_burst(a0, 0x13, 0, 0, 0x140, 0xc0, big_explosion_anim);
     free_object_chain(LIST_HEAD(LIST_ENEMY));
     v_0a07 = 0xff;
 }
@@ -788,7 +788,7 @@ void level1_boss_part_update(Object *a0)
         a0->x_frac = 0;
         a0->y = (int16_t)(a0->y + 0x60);
         a0->y_frac = 0;
-        a0->y = (int16_t)(a0->y - v_0cd0);
+        a0->y = (int16_t)(a0->y - scroll_pos);
     }
     a0->v28 = 0x64;
     enemy_update_no_anim(a0);

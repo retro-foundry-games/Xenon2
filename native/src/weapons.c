@@ -121,7 +121,7 @@ static void slot_free(void *fn_hit)
 {
     Slot *s = (Slot *)fn_hit;
 
-    if ((s >= v_0c66 && s < v_0c66 + 7) || (s >= v_0cfc && s < v_0cfc + 7))
+    if ((s >= weapon_slots && s < weapon_slots + 7) || (s >= weapon_slots_saved && s < weapon_slots_saved + 7))
         s->type = 0;
 }
 
@@ -187,7 +187,7 @@ static void dismiss_slot5(void)
 /* orig $005540: the basic weapon comes back when slot 0 is empty */
 Object *refill_slot0(Object *a0, Object *a1)
 {
-    if (v_0c66[0].type == 0)
+    if (weapon_slots[0].type == 0)
         weapon_94(a0, a1);
     return a1;
 }
@@ -470,8 +470,8 @@ static Object *weapon_side(Object *a0, uint16_t type, obj_fn update, const uint8
     n->fn_update = update;
     n->fn_draw = draw_bob_masked;
     n->fn_hit = a2;
-    n->v3e = v_2404[2 * d0];
-    n->v40 = v_2404[2 * d0 + 1];
+    n->v3e = weapon_slot_offsets[2 * d0];
+    n->v40 = weapon_slot_offsets[2 * d0 + 1];
     set_anim(n, anim);
     n->x = PLAYER->x + n->v3e;
     n->y = PLAYER->y + n->v40;
@@ -549,7 +549,7 @@ void weapon94_update(Object *a0)
     if (v_0430)
         return;
     if (v_0a6a)
-        spawn_shot_object(a0, 0, -9, 0, -6, (void *const *)&v_27c2[3]);
+        spawn_shot_object(a0, 0, -9, 0, -6, (void *const *)&player_shot_pictures[3]);
 }
 
 /* orig $0055B2: update of weapon $98 */
@@ -558,8 +558,8 @@ void weapon98_update(Object *a0)
     if (v_0430)
         return;
     if (v_0a6a) {
-        spawn_shot_object(a0, -9, 0, -2, -3, (void *const *)&v_27c2[0]);
-        spawn_shot_object(a0, 9, 0, 2, -3, (void *const *)&v_27c2[6]);
+        spawn_shot_object(a0, -9, 0, -2, -3, (void *const *)&player_shot_pictures[0]);
+        spawn_shot_object(a0, 9, 0, 2, -3, (void *const *)&player_shot_pictures[6]);
     }
 }
 
@@ -569,14 +569,14 @@ void weapon44_update(Object *a0)
     anim_step(a0);
     a0->x = PLAYER->x;
     a0->y = PLAYER->y;
-    if (v_0e06) {
+    if (respawn_shield) {
         weapon_shield_draw(a0);
         return;
     }
     a0->fn_draw = draw_bob_masked;
     if (v_0a6a) {
         a0->anim_delay = 1;
-        spawn_shot_object(a0, 0, 9, 0, 0x12, (void *const *)&v_27c2[9]);
+        spawn_shot_object(a0, 0, 9, 0, 0x12, (void *const *)&player_shot_pictures[9]);
     }
 }
 
@@ -628,7 +628,7 @@ void weaponA0_update(Object *a0)
         if (a1->type == 0x48)
             return;
     SET_V5E(a0, 0x12);
-    v_0414 = 9;
+    sfx_cmd = 9;
     cur = a0;
     for (cnt = 7; cnt >= 0; cnt -= 2) {
         cur = alloc_b(cur);
@@ -686,7 +686,7 @@ void shot_fixed_update(Object *a0)
     a1 = collide_enemies(a0);
     if (a1 == 0)
         return;
-    d = (uint16_t)(a0->v42 + v_7970[1]);
+    d = (uint16_t)(a0->v42 + kill_scores[1]);
     shot_gone(a0);
     apply_damage(a0, a1, d);
 }
@@ -715,7 +715,7 @@ void shot_update(Object *a0)
     a1 = point_in_enemy(a0->x, a0->y);
     if (a1 == 0)
         return;
-    d = (uint16_t)(a0->v42 + v_7970[0]);
+    d = (uint16_t)(a0->v42 + kill_scores[0]);
     shot_gone(a0);
     apply_damage(a0, a1, d);
 }
@@ -838,7 +838,7 @@ void enemy_killed(Object *a0, Object *a1)
             n->v2a = (int16_t)random_next();
         }
     }
-    v_0c92 += (uint16_t)a1->v42;
+    player_score += (uint16_t)a1->v42;
     kill_object(a1);
 }
 
@@ -853,7 +853,7 @@ void hit_explode(Object *a0, Object *a1, uint16_t d0)
 void tile_draw(Object *a0)
 {
     a0->fn_draw = obj_nop;
-    draw_tile_grid_flash((const uint8_t *)a0->gfx, (uint16_t)a0->v3e, (uint16_t)a0->v40, (int16_t)(a0->y - v_0cd0), (uint16_t)a0->x >> 1);
+    draw_tile_grid_flash((const uint8_t *)a0->gfx, (uint16_t)a0->v3e, (uint16_t)a0->v40, (int16_t)(a0->y - scroll_pos), (uint16_t)a0->x >> 1);
 }
 
 /* orig $F20, $005B72: hit routine of a destructible tile block: when it breaks the background is restored */
@@ -869,9 +869,9 @@ void hit_tile(Object *a0, Object *a1, uint16_t d0)
     a1->energy = (int16_t)(old - d0);
     if (old > d0)
         return;
-    v_0c92 += (uint16_t)a1->v42;
+    player_score += (uint16_t)a1->v42;
     x = (int16_t)(((a1->v3e + 1) << 3) + a1->x);
-    y = (int16_t)(((a1->v40 + 1) << 3) + a1->y - v_0cd0);
+    y = (int16_t)(((a1->v40 + 1) << 3) + a1->y - scroll_pos);
     spawn_effect(x, y, anim_273a, draw_bob_masked);
     dst = a1->v46;
     src = a1->anim;
@@ -892,7 +892,7 @@ void hit_tile(Object *a0, Object *a1, uint16_t d0)
 static void shield_up(uint16_t d)
 {
     v_0cc6 += d;
-    v_0414 = 7;
+    sfx_cmd = 7;
     if ((int16_t)v_0cc6 > 0x27)
         v_0cc6 = 0x27;
     v_0a6b = 0xff;
@@ -975,7 +975,7 @@ void pickup_bomb(Object *a0)
 
     for (i = 0; i < 8; i++)
         saved[i] = ((uint32_t)palette_shadow[2 * i] << 16) | palette_shadow[2 * i + 1];
-    v_0414 = 2;
+    sfx_cmd = 2;
     for (n = 0x1e; n >= 0; n--) {
         d0 = (uint16_t)random_next();
         for (k = 0; k < 16; k++) {
@@ -1048,9 +1048,9 @@ void init_weapons(Object *a0)
     v_0cf4 = LIST_A->prev;
     v_0cf8 = LIST_A->next;
     for (i = 0; i < 7; i++) {
-        v_0cfc[i] = v_0c66[i];
-        v_0c66[i].type = 0;
-        v_0c66[i].obj = 0;
+        weapon_slots_saved[i] = weapon_slots[i];
+        weapon_slots[i].type = 0;
+        weapon_slots[i].obj = 0;
     }
     LIST_A->type = 0;
     LIST_A->prev = LIST_A;
@@ -1078,7 +1078,7 @@ static void pickup_call(int idx, Object *a0)
 {
     static const uint8_t loud[19] = { 1, 1, 1, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0 };
 
-    v_0414 = loud[idx] ? 4 : 0x81;
+    sfx_cmd = loud[idx] ? 4 : 0x81;
     switch (idx) {
     case 0: pickup_move(a0); break;
     case 1: pickup_speed(a0); break;
@@ -1139,8 +1139,8 @@ void pickup_update(Object *a0)
             }
         }
         idx = (a0->v2a << 2) & 0x1c;
-        a0->x += v_476c[idx >> 1];
-        a0->y += v_476c[(idx >> 1) + 1];
+        a0->x += pickup_circle_steps[idx >> 1];
+        a0->y += pickup_circle_steps[(idx >> 1) + 1];
     }
     bbox_from_frame(a0);
     if (!player_hits(a0))
@@ -1156,8 +1156,8 @@ void pickup_update(Object *a0)
             return;
         }
     }
-    v_0c9a += d7;
-    v_0414 = 5;
+    player_money += d7;
+    sfx_cmd = 5;
     if (v_0ca4 != 0) {
         v_0ca4--;
         if (v_0ca4 == 0)
@@ -1177,8 +1177,8 @@ void player_dies(Object *a0)
     v_0d84 = 0xff;
     v_0cc6 = 0;
     v_0a6b = 0xff;
-    v_0414 = 10;
-    v_0418 = 10;
+    sfx_cmd = 10;
+    sfx_cmd2 = 10;
     v_0430 = 1;
     v_0434 = 0;
     set_anim(PLAYER, a2);
@@ -1212,32 +1212,32 @@ void player_damage(Object *a0, uint16_t d0)
     player_dies(a0);
 }
 
-/* orig $005DE6: the player's steering: v_0cde (the sideways speed), the stick in v_0a00 */
+/* orig $005DE6: the player's steering: player_vx (the sideways speed), the stick in joy_stick */
 void player_move(Object *a0)
 {
     int16_t d0;
 
-    v_04e4 = a0->x;
-    v_04e6 = a0->y;
-    v_5dd0 = v_0cde;
-    if (v_0a00 & 4) {
-        if (v_0cde > 0)
-            v_0cde = 0;
-        if (v_0cde > -6)
-            v_0cde--;
-    } else if (v_0a00 & 8) {
-        if (v_0cde < 0)
-            v_0cde = 0;
-        if (v_0cde < 6)
-            v_0cde++;
-    } else if (v_0cde != 0) {
-        if (v_0cde < 0)
-            v_0cde++;
+    player_x_prev = a0->x;
+    player_y_prev = a0->y;
+    v_5dd0 = player_vx;
+    if (joy_stick & 4) {
+        if (player_vx > 0)
+            player_vx = 0;
+        if (player_vx > -6)
+            player_vx--;
+    } else if (joy_stick & 8) {
+        if (player_vx < 0)
+            player_vx = 0;
+        if (player_vx < 6)
+            player_vx++;
+    } else if (player_vx != 0) {
+        if (player_vx < 0)
+            player_vx++;
         else
-            v_0cde--;
+            player_vx--;
     }
     v_0cda = v_0ccc;
-    if (v_0a00 & 1) {
+    if (joy_stick & 1) {
         if (a0->y <= 0x10) {
             a0->y = 0x10;
             v_0cda = 1;
@@ -1246,22 +1246,22 @@ void player_move(Object *a0)
         a0->y -= 3;
         a0->y -= v_0c9e;
     }
-    if (v_0a00 & 2) {
+    if (joy_stick & 2) {
         if (a0->y < 0xb0) {
             a0->y += 3;
             a0->y += v_0c9e;
-        } else if (v_0cd0 != v_0cea) {
+        } else if (scroll_pos != v_0cea) {
             v_0cda = 0xffff;
             a0->y = 0xb0;
         }
     }
 side:
-    d0 = v_0cde;
+    d0 = player_vx;
     if (d0 != 0) {
         if (d0 < 0) {
-            if (v_0a00 & 4)
+            if (joy_stick & 4)
                 d0 = -6;
-        } else if (v_0a00 & 8) {
+        } else if (joy_stick & 8) {
             d0 = 6;
         }
     }
@@ -1289,8 +1289,8 @@ void player_update(Object *a0)
         anim_step(a0);
         if (a0->anim_delay == 0) {
             a0->fn_draw = obj_nop;
-            if ((int16_t)v_0e06 >= 0x10)
-                v_0a02 = 0xff;
+            if ((int16_t)respawn_shield >= 0x10)
+                player_died = 0xff;
         }
         return;
     }
@@ -1339,7 +1339,7 @@ after_hit:
         }
         v_042e--;
         v_0cda = v_0ccc;
-        d0 = (int16_t)(v_047c[3] - v_0cd0);
+        d0 = (int16_t)(v_047c[3] - scroll_pos);
         a0->x = v_047c[4];
         d0 += v_047c[5];
         if (d0 > 0xb0) {
@@ -1362,23 +1362,23 @@ move:
         player_move(a0);
         for (i = 50; i >= 3; i--)
             v_047c[i] = v_047c[i - 3];
-        v_047c[0] = v_0cd0;
+        v_047c[0] = scroll_pos;
         v_047c[1] = a0->x;
         v_047c[2] = a0->y;
         if (v_0430 == 0 && (int16_t)v_042e >= 0 && player_tile_hit(a0)) {
             v_042e = v_041e;
-            v_0cde = 0;
-            d0 = (int16_t)(v_0cd0 + v_0cee);
+            player_vx = 0;
+            d0 = (int16_t)(scroll_pos + v_0cee);
             if (d0 > (int16_t)v_0cea)
                 v_0cea = d0;
         }
     }
     for (i = 0; i < 6; i++)
         v_046c[i] = v_046c[i + 2];
-    v_046c[6] = v_04e4;
-    v_046c[7] = v_04e6;
+    v_046c[6] = player_x_prev;
+    v_046c[7] = player_y_prev;
     if (v_0430 == 0) {
-        a0->gfx = (const void *)v_60d0[v_0cde + 6];
+        a0->gfx = (const void *)player_pictures[player_vx + 6];
         return;
     }
     a0->gfx = (const void *)v_614a[v_0430 - 1];
@@ -1414,14 +1414,14 @@ static void set_ptr_30(Object *o, Object *p)
     o->energy = (int16_t)v;
 }
 
-/* orig $006912: the draw of a weapon object while v_0e06 is not 0 (after a respawn: 8 down to 0; at $10 nothing is drawn): the position
- * becomes the player's centre plus the difference of the centres times v_0e06 (the centre of the picture, not its corner) */
+/* orig $006912: the draw of a weapon object while respawn_shield is not 0 (after a respawn: 8 down to 0; at $10 nothing is drawn): the position
+ * becomes the player's centre plus the difference of the centres times respawn_shield (the centre of the picture, not its corner) */
 void weapon_shield_draw(Object *a0)
 {
     const uint8_t *g;
     int16_t d0, d1, d2, d3;
 
-    if (v_0e06 == 0x10) {
+    if (respawn_shield == 0x10) {
         a0->fn_draw = obj_nop;
         return;
     }
@@ -1446,8 +1446,8 @@ void weapon_shield_draw(Object *a0)
     d1 = (int16_t)(d1 >> 1);
     d2 = (int16_t)(d2 - d0);
     d3 = (int16_t)(d3 - d1);
-    d0 = (int16_t)(d0 + (int16_t)((int32_t)d2 * (int16_t)v_0e06));
-    d1 = (int16_t)(d1 + (int16_t)((int32_t)d3 * (int16_t)v_0e06));
+    d0 = (int16_t)(d0 + (int16_t)((int32_t)d2 * (int16_t)respawn_shield));
+    d1 = (int16_t)(d1 + (int16_t)((int32_t)d3 * (int16_t)respawn_shield));
     a0->x = d0;
     a0->y = d1;
 }
@@ -1518,8 +1518,8 @@ void debris_burst(Object *a0, int16_t d7, uint16_t x, uint16_t y, uint16_t w, ui
         n->y = (int16_t)(random_below(h) + y);
         set_anim(n, a2);
     } while (--d7 != -1);
-    v_0414 = 0x83;
-    v_0418 = 0x83;
+    sfx_cmd = 0x83;
+    sfx_cmd2 = 0x83;
     sfx_play(0x83);
 }
 
@@ -1555,7 +1555,7 @@ void spinner_update(Object *a0)
     anim_step(a0);
     a0->x = PLAYER->x;
     a0->y = PLAYER->y;
-    if (v_0e06) {
+    if (respawn_shield) {
         weapon_shield_draw(a0);
         return;
     }
@@ -1647,14 +1647,14 @@ void weaponc0_update(Object *a0)
 {
     a0->x = PLAYER->x;
     a0->y = PLAYER->y;
-    if (v_0e06) {
+    if (respawn_shield) {
         weapon_shield_draw(a0);
         return;
     }
     a0->fn_draw = draw_bob_masked;
     if (v_0a6a) {
-        spawn_shot_object(a0, 0, (uint16_t)-9, (uint16_t)-5, (uint16_t)-12, (void *const *)&v_27c2[3]);
-        spawn_shot_object(a0, 0, (uint16_t)-9, 6, (uint16_t)-12, (void *const *)&v_27c2[3]);
+        spawn_shot_object(a0, 0, (uint16_t)-9, (uint16_t)-5, (uint16_t)-12, (void *const *)&player_shot_pictures[3]);
+        spawn_shot_object(a0, 0, (uint16_t)-9, 6, (uint16_t)-12, (void *const *)&player_shot_pictures[3]);
     }
 }
 
@@ -1666,12 +1666,12 @@ void weaponb0_update(Object *a0)
     anim_step(a0);
     a0->x = PLAYER->x;
     a0->y = PLAYER->y;
-    if (v_0e06) {
+    if (respawn_shield) {
         weapon_shield_draw(a0);
         return;
     }
     a0->fn_draw = draw_bob_masked;
-    if (!(v_0a00 & 0x80)) {
+    if (!(joy_stick & 0x80)) {
         if (a0->v28 != 0) {
             sfx_stop_all();
             a0->v28 = 0;
@@ -1679,7 +1679,7 @@ void weaponb0_update(Object *a0)
         return;
     }
     if (a0->v28 == 0 || sfx_channels[2].active == 0) {
-        v_0414 = 1;
+        sfx_cmd = 1;
         a0->v28 = 1;
     }
     for (d7 = 1; d7 >= 0; d7--) {
@@ -1712,7 +1712,7 @@ void pod_decoration_update(Object *a0)
     if (a1->type == 0x34) {
         a0->x = (int16_t)(PLAYER->x + a1->v3e);
         a0->y = (int16_t)(PLAYER->y + a1->v40);
-        if (v_0e06) {
+        if (respawn_shield) {
             weapon_shield_draw(a0);
             return;
         }
@@ -1726,7 +1726,7 @@ void pod_decoration_update(Object *a0)
  * the free places of the shots' table */
 void weapon2c_update(Object *a0)
 {
-    static const int16_t *const pat[3] = { &v_3d66[0], &v_3d66[17], &v_3d66[50] };
+    static const int16_t *const pat[3] = { &weapon2c_patterns[0], &weapon2c_patterns[17], &weapon2c_patterns[50] };
     const int16_t *a1;
     Shot *a2;
     int16_t d7, d6;
@@ -1734,14 +1734,14 @@ void weapon2c_update(Object *a0)
     anim_step(a0);
     a0->x = (int16_t)v_046c[0];
     a0->y = (int16_t)(v_046c[1] + 0x19);
-    if (v_0e06) {
+    if (respawn_shield) {
         weapon_shield_draw(a0);
         return;
     }
     a0->fn_draw = draw_bob_masked;
     if (a0->v28)
         a0->v28--;
-    if (!(v_0a00 & 0x80) || a0->v28 != 0)
+    if (!(joy_stick & 0x80) || a0->v28 != 0)
         return;
     a0->v28 = 6;
     a1 = pat[(uint16_t)a0->v42];
@@ -1767,30 +1767,30 @@ void weapon4c_update(Object *a0)
     Object *a1;
 
     anim_step(a0);
-    if (v_0e06) {
+    if (respawn_shield) {
         weapon_shield_draw(a0);
         return;
     }
     a0->fn_draw = draw_bob_masked;
     if (a0->v28 == 0) {
-        if (!(v_0a00 & 0x80)) {
+        if (!(joy_stick & 0x80)) {
             a0->x = (int16_t)v_046c[0];
             a0->y = (int16_t)(v_046c[1] + 0x19);
             return;
         }
         a0->v28 = 1;
     } else if (a0->v28 > 0) {
-        if (!(v_0a00 & 0x80)) {
+        if (!(joy_stick & 0x80)) {
             a0->v28 = -1;
             return;
         }
-        d0 = (int16_t)(((PLAYER->x - v_04e4) * 4) + a0->x);
+        d0 = (int16_t)(((PLAYER->x - player_x_prev) * 4) + a0->x);
         if (d0 < 0)
             d0 = 0;
         if (d0 > 0x13f)
             d0 = 0x13f;
         a0->x = d0;
-        d0 = (int16_t)(((PLAYER->y - v_04e6) * 4) + a0->y);
+        d0 = (int16_t)(((PLAYER->y - player_y_prev) * 4) + a0->y);
         if (d0 < 0)
             d0 = 0;
         if (d0 > 0xbf)
@@ -1816,7 +1816,7 @@ void weapon4c_update(Object *a0)
     bbox_from_frame(a0);
     a1 = collide_enemies(a0);
     if (a1) {
-        v_0414 = 0x15;
+        sfx_cmd = 0x15;
         apply_damage(a0, a1, weapon_damage[1]);
     }
 }
@@ -1829,7 +1829,7 @@ void weapon20_update(Object *a0)
     anim_step(a0);
     a0->x = (int16_t)(PLAYER->x + a0->v3e);
     a0->y = (int16_t)(PLAYER->y + a0->v40);
-    if (v_0e06) {
+    if (respawn_shield) {
         weapon_shield_draw(a0);
         return;
     }
@@ -1837,7 +1837,7 @@ void weapon20_update(Object *a0)
     if (V5E(a0) >= 0)
         SET_V5E(a0, V5E(a0) - 1);
     if (v_0a6a && V5E(a0) < 0) {
-        v_0414 = 6;
+        sfx_cmd = 6;
         a1 = alloc_b(a0);
         a1->type = 0x24;
         a1->fn_draw = FN(beam_draw);
@@ -1902,7 +1902,7 @@ void weapon34_update(Object *a0)
     anim_step(a0);
     a0->x = (int16_t)(PLAYER->x + a0->v3e);
     a0->y = (int16_t)(PLAYER->y + a0->v40);
-    if (v_0e06) {
+    if (respawn_shield) {
         weapon_shield_draw(a0);
         return;
     }
@@ -1919,7 +1919,7 @@ void weapon34_update(Object *a0)
         return;
     }
     if (v_0a6a && a0->gfx == (const void *)pic_171d6) {
-        v_0414 = 0x80;
+        sfx_cmd = 0x80;
         set_anim(a0, anim_27f2);
     }
 }
@@ -1954,7 +1954,7 @@ void weapon90_update(Object *a0)
     anim_step(a0);
     a0->x = (int16_t)(PLAYER->x + a0->v3e);
     a0->y = (int16_t)(PLAYER->y + a0->v40);
-    if (v_0e06) {
+    if (respawn_shield) {
         weapon_shield_draw(a0);
         return;
     }
@@ -2003,7 +2003,7 @@ void shell_update(Object *a0)
     a0->v28--;
     if (a0->v28 != 0)
         return;
-    v_0414 = 0x82;
+    sfx_cmd = 0x82;
     debris_burst(a0, 3, (uint16_t)(a0->x - 0x14), (uint16_t)(a0->y - 0x14), 0x28, 0x28, anim_273a);
     kill_object(a0);
     area_damage(a0, (int16_t)(a0->x - 0x20), (int16_t)(a0->y - 0x20), (int16_t)(a0->x - 0x20 + 0x3f), (int16_t)(a0->y - 0x20 + 0x3f), blast_damage[1]);
@@ -2026,7 +2026,7 @@ void weapon38_update(Object *a0)
             kill_object(a0);
             return;
         }
-        if (v_0a00 & 0x80)
+        if (joy_stick & 0x80)
             return;
         a0->v28++;
         if (a0->v28 != 0)
@@ -2054,7 +2054,7 @@ void weapon38_update(Object *a0)
         kill_object(a0);
         return;
     }
-    if (v_0e06) {
+    if (respawn_shield) {
         weapon_shield_draw(a0);
         return;
     }
@@ -2062,12 +2062,12 @@ void weapon38_update(Object *a0)
     if (a0->v28 == 0) {
         a0->x = PLAYER->x;
         a0->y = (int16_t)(PLAYER->y + 0x19);
-        if (v_0a00 & 0x80)
+        if (joy_stick & 0x80)
             a0->v28 = 1;
         return;
     }
     if (a0->v28 == 1) {
-        if (v_0a00 & 0x80) {
+        if (joy_stick & 0x80) {
             if (a0->y > 0x10)
                 a0->y = (int16_t)(a0->y - 0xc);
             else
@@ -2078,29 +2078,29 @@ void weapon38_update(Object *a0)
         return;
     }
     if (a0->v28 == 2) {
-        if (!(v_0a00 & 0x80)) {
+        if (!(joy_stick & 0x80)) {
             a0->v28 = 3;
             return;
         }
         d0 = a0->x;
-        if (v_0a00 & 4) {
+        if (joy_stick & 4) {
             d0 = (int16_t)(d0 - 8);
             if (d0 < 0)
                 d0 = 0;
         }
-        if (v_0a00 & 8) {
+        if (joy_stick & 8) {
             d0 = (int16_t)(d0 + 8);
             if (d0 > 0x13f)
                 d0 = 0x13f;
         }
         a0->x = d0;
         d0 = a0->y;
-        if (v_0a00 & 1) {
+        if (joy_stick & 1) {
             d0 = (int16_t)(d0 - 8);
             if (d0 < 0)
                 d0 = 0;
         }
-        if (v_0a00 & 2) {
+        if (joy_stick & 2) {
             d0 = (int16_t)(d0 + 8);
             if (d0 > 0xbf)
                 d0 = 0xbf;

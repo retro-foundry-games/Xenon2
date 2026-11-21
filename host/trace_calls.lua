@@ -24,7 +24,7 @@ for _, a in ipairs{ 0x2026, 0x202e } do
     ami.hook(a, function()
         if not started then return end
         swaps = swaps + 1
-        print(string.format("swap thunk $%x entry %d (frame %d): vbl_count %d v_0404 %d v_0410 %d", a, swaps, ami.frame(), ami.peek16(0x41c), ami.peek16(0x404), ami.peek16(0x410)))
+        print(string.format("swap thunk $%x entry %d (frame %d): vbl_count %d last_flip_vbl %d min_vbl_per_frame %d", a, swaps, ami.frame(), ami.peek16(0x41c), ami.peek16(0x404), ami.peek16(0x410)))
     end)
 end
 ami.hook(0x7032, function() started = true; print(string.format("start: draw_screen %08x show_screen %08x copper_cur %08x", ami.peek32(0x406), ami.peek32(0x40a), ami.peek32(0x700c))) end)

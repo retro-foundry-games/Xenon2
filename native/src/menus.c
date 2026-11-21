@@ -156,7 +156,7 @@ void hiscore_show(void)
     show_text_sequence(0xc, title_hiscore, wipe_in);
     for (;;) {
         hiscore_draw();
-        if (v_0a01)
+        if (key_pressed)
             break;
         if (--n == 0) {
             show_text_sequence(0xc, title_hiscore, wipe_out);
@@ -168,20 +168,20 @@ void hiscore_show(void)
 /* orig $8AB0: the first read of the stick in the name entry (the lockstep hooks it to give the port the byte the original read) */
 uint8_t hiscore_stick_first(void)
 {
-    return v_0a00;
+    return joy_stick;
 }
 
 /* orig $8AEE: the read of the stick while a letter repeats */
 uint8_t hiscore_stick_again(void)
 {
-    return v_0a00;
+    return joy_stick;
 }
 
 /* orig $8A16: a score above the tenth is put into the table in its place; the player picks the three letters of the name with the
  * stick (up/down), fire takes a letter */
 void hiscore_enter(void)
 {
-    int32_t d0 = (int32_t)v_0c92;
+    int32_t d0 = (int32_t)player_score;
     uint32_t *a0;
     uint8_t *a1, *a2;
     const uint8_t *a3;
@@ -194,7 +194,7 @@ void hiscore_enter(void)
     if (d0 <= (int32_t)hiscore_values[9])
         return;
     title_in_hiscore();
-    d0 = (int32_t)v_0c92;
+    d0 = (int32_t)player_score;
     a0 = &hiscore_values[9];
     a1 = &hiscore_lines[9 * 15];
     for (;;) {
@@ -230,7 +230,7 @@ void hiscore_enter(void)
         d0 += unit;
         a2++;
     }
-    v_0a01 = 0;
+    key_pressed = 0;
     a2 = a1 + 12;
     a3 = text_chars;
     idx = 0;
@@ -238,7 +238,7 @@ next_letter:
     *a2 = a3[(int16_t)idx];
 wait_stick:
     hiscore_draw();
-    if (v_0a01)
+    if (key_pressed)
         goto letter_done;
     d1 = hiscore_stick_first() & 0xc;
     d2 = 0xff;
@@ -258,7 +258,7 @@ step_again:
 repeat:
     *a2 = a3[(int16_t)idx];
     hiscore_draw();
-    if (v_0a01)
+    if (key_pressed)
         goto letter_done;
     if ((uint8_t)(hiscore_stick_again() & 0xc) != d1)
         goto wait_stick;
@@ -266,7 +266,7 @@ repeat:
         goto repeat;
     goto step;
 letter_done:
-    v_0a01 = 0;
+    key_pressed = 0;
     a2++;
     if (*a2 == 0x3a)
         goto next_letter;
@@ -280,7 +280,7 @@ letter_done:
 /* orig $8F56: CREDITS n at the bottom of the screen */
 void credits_draw(void)
 {
-    credits_text[8] = (uint8_t)(v_0cf0 + 0x30);
+    credits_text[8] = (uint8_t)(continues_left + 0x30);
     draw_text(credits_text, draw_screen + 0x7316);
 }
 
@@ -290,10 +290,10 @@ void menu(void)
     int16_t sel = 0;
     const uint8_t *a1;
 
-    v_0cf0 = 3;
+    continues_left = 3;
     title_stars_start();
     show_text_sequence(0xc, menu_text, wipe_in);
-    v_0a01 = 0;
+    key_pressed = 0;
     for (;;) {
         clear_screen();
         title_y = 0xc;
@@ -310,7 +310,7 @@ void menu(void)
         draw_text_row(a1);
         title_y = 0x6c;
         a1 = &menu_text[100];
-        if (!v_09fc)
+        if (!music_switch)
             a1 = &menu_text[140];
         if (sel == 2)
             a1 += 0x14;
@@ -318,28 +318,28 @@ void menu(void)
         credits_draw();
         stars_update();
         swap_screens_200();
-        if (v_0a00 & 1) {
-            v_0a00 = 0;
-            v_0414 = 0xc;
+        if (joy_stick & 1) {
+            joy_stick = 0;
+            sfx_cmd = 0xc;
             sel--;
             if (sel < 0)
                 sel = 2;
             continue;
         }
-        if (v_0a00 & 2) {
-            v_0a00 = 0;
-            v_0414 = 0xc;
+        if (joy_stick & 2) {
+            joy_stick = 0;
+            sfx_cmd = 0xc;
             sel++;
             if (sel >= 3)
                 sel = 0;
             continue;
         }
-        if (!v_0a01)
+        if (!key_pressed)
             continue;
-        v_0a01 = 0;
-        v_0414 = 0xd;
+        key_pressed = 0;
+        sfx_cmd = 0xd;
         if (sel == 2) {
-            v_09fc = (uint8_t)~v_09fc;
+            music_switch = (uint8_t)~music_switch;
             continue;
         }
         break;
@@ -356,7 +356,7 @@ uint16_t continue_screen(void)
 
     title_stars_start();
     show_text_sequence(0x50, continue_text, wipe_in);
-    v_0a01 = 0;
+    key_pressed = 0;
     for (;;) {
         clear_screen();
         title_y = 0x50;
@@ -367,10 +367,10 @@ uint16_t continue_screen(void)
         credits_draw();
         stars_update();
         swap_screens_200();
-        if (v_0a01) {
+        if (key_pressed) {
             show_text_sequence(0x50, continue_text, wipe_out);
             title_restore();
-            v_0a01 = 0;
+            key_pressed = 0;
             return 1;
         }
         if (--n == 0) {
@@ -404,10 +404,10 @@ int game_disk_present(void)
     return ok;
 }
 
-/* orig $917E: loads the code of the level in v_0e04 unless it is loaded; asks for the game disk while it is not in */
+/* orig $917E: loads the code of the level in level_number unless it is loaded; asks for the game disk while it is not in */
 void level_load(void)
 {
-    uint16_t level = v_0e04;
+    uint16_t level = level_number;
     uint16_t i;
 
     if (level == loaded_level)
@@ -424,7 +424,7 @@ void level_load(void)
         title_out_insert_disk();
     }
     irq_vectors[2] = irq_vblank_hooked;
-    i = (uint16_t)((uint16_t)(v_0e04 - 1) * 2);
+    i = (uint16_t)((uint16_t)(level_number - 1) * 2);
     guest_blob_raw(level > 1 ? 2 : 0);   /* (level 1's members at $54E40 on do not describe the blob of another level) */
     disk_read_sectors(level_sectors[i], level_sectors[i + 1], &map_image);
     irq_vectors[2] = irq_vblank;
@@ -460,13 +460,13 @@ void shop_run(void)
     title_out_shop();
     clear_palette();
     shop_main();
-    guest_blob_raw(v_0e04 > 1 ? 2 : 0);
+    guest_blob_raw(level_number > 1 ? 2 : 0);
     if (v_0a07 != 0) {
         uint16_t other = cur_player ^ 1;
 
-        if (v_0a03[other] == 0)
+        if (player_active[other] == 0)
             return;
-        if (v_0a03[2 + other] != 0)
+        if (player_active[2 + other] != 0)
             return;
     } else {
         loading_text[1] = 0x52;
@@ -485,7 +485,7 @@ void shop_run(void)
         loading_text[2] = 0x45;
     }
     irq_vectors[2] = irq_vblank_hooked;
-    i = (uint16_t)((uint16_t)(v_0e04 - 1) * 2);
+    i = (uint16_t)((uint16_t)(level_number - 1) * 2);
     {
         int16_t count = (int16_t)level_sectors[i + 1];
 

@@ -204,7 +204,7 @@ void l5_spawn_gunners(const uint8_t *a1)
         a0->gfx = GPTR(0x5c1ea);
         a0->anim_delay = 0;
         a0->x = (int16_t)W(a2 + 2);
-        a0->y = (int16_t)(W(a2 + 4) - v_0cd0);
+        a0->y = (int16_t)(W(a2 + 4) - scroll_pos);
         a0->energy = (int16_t)W(0x54e42);
         a0->flag35 = 0;
         a0->v2a = 0;
@@ -230,7 +230,7 @@ void l5_gunner_update(Object *a0)
 {
     uint16_t old, d0, d1;
 
-    a0->y = (int16_t)(a0->y + v_0cd8);
+    a0->y = (int16_t)(a0->y + scroll_speed);
     if (a0->y >= 0x190) {
         kill_thunk(a0);
         return;
@@ -260,7 +260,7 @@ void l5_spawn_cannon(const uint8_t *a1)
     Object *a0 = spawn_marker_enemy(d0, a1, (void (*)(void))GFN(0x555a6));
     uint32_t a2 = 0x55516;
 
-    a0->y = (int16_t)(a0->y - v_0cd0);
+    a0->y = (int16_t)(a0->y - scroll_pos);
     a0->fn_draw = (obj_fn)draw_bob_masked;
     a0->fn_hit = (void *)hit_enemy;
     a0->energy = (int16_t)W(0x54e48);
@@ -304,13 +304,13 @@ void l5_cannon_update(Object *a0)
 {
     int16_t d1;
 
-    a0->y = (int16_t)(a0->y + v_0cd8);
+    a0->y = (int16_t)(a0->y + scroll_speed);
     if (a0->y >= 0x190) {
         kill_thunk(a0);
         return;
     }
     anim_step(a0);
-    d1 = (int16_t)v_0cd0;
+    d1 = (int16_t)scroll_pos;
     if (a0->v2a >= 0) {
         a0->y = (int16_t)(a0->y + 1);
         d1 = (int16_t)(d1 + a0->y);
@@ -364,7 +364,7 @@ void l5_pellet_update(Object *a0)
             }
         }
         dx = (int16_t)W(0x557fe + 2 * (uint32_t)a0->v2a);
-        dy = (int16_t)(W(0x5580e + 2 * (uint32_t)a0->v2a) + v_0cd8);
+        dy = (int16_t)(W(0x5580e + 2 * (uint32_t)a0->v2a) + scroll_speed);
         a0->x = (int16_t)(a0->x + dx);
         a0->y = (int16_t)(a0->y + dy);
         bbox_from_frame(a0);
@@ -394,9 +394,9 @@ void l5_spawn_boss1(uint16_t d2)
     if (B(0xd99))
         return;
     sh_w8(0xd99, 0xff);
-    v_0ce6 = 0x1a0;
-    v_0ce2 = 0xa0;
-    v_0ce4 = 0xb0;
+    scroll_y = 0x1a0;
+    player_x_saved = 0xa0;
+    player_y_saved = 0xb0;
     latch_slots(d2);
     sh_w16(0x62d22, 0xffff);
     sh_w16(0x7491c, 0xffff);
@@ -417,8 +417,8 @@ void l5_spawn_boss1(uint16_t d2)
         p += 4;
     }
     memset(p, 0, 600);
-    v_0cce = 0x410;
-    v_0cd0 = 0x1a0;
+    map_row_offset = 0x410;
+    scroll_pos = 0x1a0;
     v_0cea = 0x1a0;
     for (d7 = 21; d7 >= 0; d7--, rec += 24) {
         Object *a0 = insert_head(LIST_C);
@@ -490,23 +490,23 @@ void l5_boss_last(Object *a0)
 void l5_boss_update(Object *a0)
 {
     v_0cea = 0x1a0;
-    if (v_0cd0 == 0) {
+    if (scroll_pos == 0) {
         scroll_pos_update(v_0cda);
         stars_scroll(v_0cda);
     }
-    a0->y = (int16_t)(a0->y + v_0cd8);
+    a0->y = (int16_t)(a0->y + scroll_speed);
     if (a0->v28 == 0) {
         if (!add_carry(&a0->v5e_b[0], B(0x54e51)))
             return;
         a0->v5e_b[0] = (uint8_t)(random_next() & 0x3f);
-        v_0418 = -1;
+        sfx_cmd2 = -1;
         a0->v28 = (v_0cdc & 1) ? 2 : -2;
         return;
     }
     if (a0->v28 > 0) {
         a0->v28 = (int16_t)(a0->v28 + 2);
         if (a0->v28 == 0x14) {
-            v_0418 = 0x13;
+            sfx_cmd2 = 0x13;
             return;
         }
         if (a0->v28 == 0x28)
@@ -517,7 +517,7 @@ void l5_boss_update(Object *a0)
     }
     a0->v28 = (int16_t)(a0->v28 - 2);
     if (a0->v28 == (int16_t)0xffec) {
-        v_0418 = 0x13;
+        sfx_cmd2 = 0x13;
         return;
     }
     if (a0->v28 == (int16_t)0xffd8)
@@ -647,8 +647,8 @@ void l5_piece_hit(Object *a0, Object *a1, uint16_t d0)
     if (!dies(a1, d0))
         return;
     sh_w16(0xd7a, (uint16_t)(sh_r16(0xd7a) - 1));
-    v_0c92 += 0xc8;
-    explode_at(a1, a1->flag35 ? v_0f64 : anim_270e);
+    player_score += 0xc8;
+    explode_at(a1, a1->flag35 ? big_explosion_anim : anim_270e);
     if (a1->type != 0x114) {
         kill_thunk(a1);
     } else {
@@ -675,7 +675,7 @@ void l5_heart_hit(Object *a0, Object *a1, uint16_t d0)
     memset(level_init_src + 0x1e0, 0, 720);
     free_object_chain(LIST_C->prev);
     spawn_bonuses(9);
-    debris_burst(a0, 0x27, 0, 0, 0x140, 0xc0, v_0f64);
+    debris_burst(a0, 0x27, 0, 0, 0x140, 0xc0, big_explosion_anim);
     v_0a07 = 0xff;
     memset(level_init_src, 0, 1560);
 }
@@ -693,7 +693,7 @@ void l5_spawn_boss2(const uint8_t *a1)
     if (B(0xd9a))
         return;
     sh_w8(0xd9a, 0xff);
-    d1 = (int16_t)(rd16(a1 + 0xa) - 8 - v_0cd0);
+    d1 = (int16_t)(rd16(a1 + 0xa) - 8 - scroll_pos);
     for (d7 = 9; d7 >= 0; d7--, rec += 24) {
         Object *a0 = insert_head(LIST_C);
 
@@ -744,11 +744,11 @@ void l5_wheel_hit(Object *a0, Object *a1, uint16_t d0)
     if (!dies(a1, d0))
         return;
     free_object_chain(LIST_C->prev);
-    debris_burst(a0, 0x13, 0x70, (uint16_t)(0x8d0 - v_0cd0), 0x60, 0xa0, v_0f64);
+    debris_burst(a0, 0x13, 0x70, (uint16_t)(0x8d0 - scroll_pos), 0x60, 0xa0, big_explosion_anim);
     spawn_bonuses(4);
     for (i = 0; i < 10; i++)
         memset(level_init_src + 0x1614 + 0x28 * i, 0, 16);
-    v_0c92 += 0x5dc;
+    player_score += 0x5dc;
 }
 
 /* level5 $056594: a small turning part: its picture by the scroll */
@@ -757,7 +757,7 @@ void l5_spinner_update(Object *a0)
     uint32_t t = a0->type == 0x118 ? 0x565c2 : 0x565d2;
 
     follow_target_offset(a0);
-    a0->gfx = GPTR(sh_r32(t + 4 * (uint32_t)(uint16_t)((uint16_t)(a0->y + v_0cd0) & 3)));
+    a0->gfx = GPTR(sh_r32(t + 4 * (uint32_t)(uint16_t)((uint16_t)(a0->y + scroll_pos) & 3)));
 }
 
 /* level5 $0565E2: a turret of the boss: it turns to the player and fires */
@@ -787,7 +787,7 @@ void l5_boss2_turret_hit(Object *a0, Object *a1, uint16_t d0)
     a1->hit[0] = 0x3e8;
     a1->hit[2] = 0x3e8;
     a1->fn_hit = (void *)obj_nop_thunk;
-    v_0c92 += 0xc8;
+    player_score += 0xc8;
     spawn_effect((int16_t)(a1->x + 8), (int16_t)(a1->y + 8), anim_270e, draw_bob_masked);
 }
 
@@ -807,9 +807,9 @@ void l5_boss2_mover(Object *a0)
 
     if ((int16_t)v_0cea < 0x920)
         v_0cea = 0x920;
-    a0->y = (int16_t)(a0->y + v_0cd8);
+    a0->y = (int16_t)(a0->y + scroll_speed);
     if (a0->v2a != 0) {
-        v_0414 = 0x16;
+        sfx_cmd = 0x16;
         if (a0->v2a > 0) {
             a0->y = (int16_t)(a0->y + 1);
             a0->v2a = (int16_t)(a0->v2a - 1);
@@ -822,11 +822,11 @@ void l5_boss2_mover(Object *a0)
 
         if ((uint8_t)r < 0xf) {
             if (r & 1) {
-                d0 = (int16_t)(0x910 - a0->y - v_0cd0);
+                d0 = (int16_t)(0x910 - a0->y - scroll_pos);
                 if (d0 != 0)
                     a0->v2a = (int16_t)(random_below((uint16_t)d0) + 1);
             } else {
-                d0 = (int16_t)(a0->y + v_0cd0 - 0x8d0);
+                d0 = (int16_t)(a0->y + scroll_pos - 0x8d0);
                 if (d0 != 0)
                     a0->v2a = (int16_t)-(int16_t)(random_below((uint16_t)d0) + 1);
             }
@@ -843,7 +843,7 @@ void l5_boss2_mover(Object *a0)
     } else if (a0->v28 == 3) {
         Object *a1;
 
-        v_0414 = 0x84;
+        sfx_cmd = 0x84;
         a1 = alloc_in(LIST_B);
         a1->type = 0x110;
         a1->fn_update = GFN(0x56940);
@@ -890,7 +890,7 @@ void l5_beam_update(Object *a0)
         a0->v28 = (int16_t)(a0->v28 + (int16_t)W(0x54e5c));
         if (a0->v28 > 0x30)
             a0->v28 = 0x30;
-        a0->y = (int16_t)(a0->y + v_0cd8);
+        a0->y = (int16_t)(a0->y + scroll_speed);
         if (a0->v2a < 0)
             a0->y = (int16_t)(a0->y - (int16_t)W(0x54e5c));
     } else {
@@ -1026,7 +1026,7 @@ void l5_gate_update(Object *a0)
     copy4(a0->v46, (const uint8_t *)GPTR(0x56c30 + (uint32_t)d0));
     a0->hit[0] = a0->x;
     a0->hit[2] = (int16_t)(a0->x + 0x20);
-    a0->hit[1] = (int16_t)(a0->y - v_0cd0 + 2);
+    a0->hit[1] = (int16_t)(a0->y - scroll_pos + 2);
     a0->hit[3] = (int16_t)(a0->hit[1] + 0xc);
 }
 
@@ -1039,7 +1039,7 @@ void l5_wall_update(Object *a0)
     wr16(a0->v46, W(a2 + 2 * (uint32_t)a0->v28));
     a0->hit[0] = (int16_t)(a0->x + 3);
     a0->hit[2] = (int16_t)(a0->hit[0] + 0xa);
-    a0->hit[1] = (int16_t)(a0->y - v_0cd0 + 3);
+    a0->hit[1] = (int16_t)(a0->y - scroll_pos + 3);
     a0->hit[3] = (int16_t)(a0->hit[1] + 0xa);
 }
 
@@ -1053,7 +1053,7 @@ void l5_wall_hit_a(Object *a0, Object *a1, uint16_t d0)
     a1->fn_draw = GFN(0x56e14);
     if (!dies(a1, d0))
         return;
-    spawn_effect((int16_t)(a1->x + 8), (int16_t)(a1->y - v_0cd0 + 8), anim_270e, draw_bob_masked);
+    spawn_effect((int16_t)(a1->x + 8), (int16_t)(a1->y - scroll_pos + 8), anim_270e, draw_bob_masked);
     c = a1->v46;
     wr16(c, 0x87b5);
     wr32(c + 2, 0);
@@ -1063,7 +1063,7 @@ void l5_wall_hit_a(Object *a0, Object *a1, uint16_t d0)
     a3 = a2->prev;
     kill_thunk(a2);
     kill_thunk(a3);
-    v_0c92 += 0xc8;
+    player_score += 0xc8;
 }
 
 /* level5 $056D5C: the hit of the gun on the right: it and the two after it go */
@@ -1076,7 +1076,7 @@ void l5_wall_hit_b(Object *a0, Object *a1, uint16_t d0)
     a1->fn_draw = GFN(0x56e1a);
     if (!dies(a1, d0))
         return;
-    spawn_effect((int16_t)(a1->x + 8), (int16_t)(a1->y - v_0cd0 + 8), anim_270e, draw_bob_masked);
+    spawn_effect((int16_t)(a1->x + 8), (int16_t)(a1->y - scroll_pos + 8), anim_270e, draw_bob_masked);
     c = a1->v46;
     wr16(c, 0x87ab);
     wr32(c - 4, 0);
@@ -1086,21 +1086,21 @@ void l5_wall_hit_b(Object *a0, Object *a1, uint16_t d0)
     a3 = a2->next;
     kill_thunk(a2);
     kill_thunk(a3);
-    v_0c92 += 0xc8;
+    player_score += 0xc8;
 }
 
 /* level5 $056E14: the flash of the gun on the left, one frame */
 void l5_wall_flash_a(Object *a0)
 {
     a0->fn_draw = (obj_fn)obj_nop_thunk;
-    draw_tile_grid_flash((const uint8_t *)GPTR(0x56e3c), 0, 0, (int16_t)(a0->y - v_0cd0), (uint16_t)((uint16_t)a0->x >> 1));
+    draw_tile_grid_flash((const uint8_t *)GPTR(0x56e3c), 0, 0, (int16_t)(a0->y - scroll_pos), (uint16_t)((uint16_t)a0->x >> 1));
 }
 
 /* level5 $056E1A: the flash of the gun on the right, one frame */
 void l5_wall_flash_b(Object *a0)
 {
     a0->fn_draw = (obj_fn)obj_nop_thunk;
-    draw_tile_grid_flash((const uint8_t *)GPTR(0x56e3e), 0, 0, (int16_t)(a0->y - v_0cd0), (uint16_t)((uint16_t)a0->x >> 1));
+    draw_tile_grid_flash((const uint8_t *)GPTR(0x56e3e), 0, 0, (int16_t)(a0->y - scroll_pos), (uint16_t)((uint16_t)a0->x >> 1));
 }
 
 /* ---- the bridge pieces ($56E40) ---- */
@@ -1140,7 +1140,7 @@ void l5_bridge_update(Object *a0)
     }
     a0->hit[0] = (int16_t)(a0->x + 4);
     a0->hit[2] = (int16_t)(a0->hit[0] + 0x18);
-    a0->hit[1] = (int16_t)(a0->y - v_0cd0 + 4);
+    a0->hit[1] = (int16_t)(a0->y - scroll_pos + 4);
     a0->hit[3] = (int16_t)(a0->hit[1] + 0x18);
     a0->v28 = (int16_t)((a0->v28 + 1) & 0xf);
     if (add_carry(&a0->v5e_b[0], B(0x54e73))) {
@@ -1148,7 +1148,7 @@ void l5_bridge_update(Object *a0)
 
         a0->v5e_b[0] = (uint8_t)(random_next() & 0x3f);
         for (d7 = 7; d7 >= 0; d7--) {
-            Object *a1 = spawn_enemy_shot((uint16_t)(a0->x + 0x10), (uint16_t)(a0->y - v_0cd0 + 0x10), (uint16_t)d7, W(0x54e74), 0);
+            Object *a1 = spawn_enemy_shot((uint16_t)(a0->x + 0x10), (uint16_t)(a0->y - scroll_pos + 0x10), (uint16_t)d7, W(0x54e74), 0);
 
             set_anim(a1, 0x56fb8);
         }
@@ -1168,7 +1168,7 @@ void l5_bridge_hit(Object *a0, Object *a1, uint16_t d0)
     a1->fn_draw = GFN(0x5706c);
     if (!dies(a1, d0))
         return;
-    spawn_effect((int16_t)(a1->x + 0x10), (int16_t)(a1->y - v_0cd0 + 0x10), v_0f64, draw_bob_masked);
+    spawn_effect((int16_t)(a1->x + 0x10), (int16_t)(a1->y - scroll_pos + 0x10), big_explosion_anim, draw_bob_masked);
     c = a1->v46;
     if (rd16(c - 2) == 0xc7) {
         wr16(c - 2, 0x8669);
@@ -1180,7 +1180,7 @@ void l5_bridge_hit(Object *a0, Object *a1, uint16_t d0)
     }
     wr32(c, 0);
     wr32(c + 0x28, 0);
-    v_0c92 += 0x1f4;
+    player_score += 0x1f4;
     kill_thunk(a1);
 }
 
@@ -1188,7 +1188,7 @@ void l5_bridge_hit(Object *a0, Object *a1, uint16_t d0)
 void l5_bridge_flash(Object *a0)
 {
     a0->fn_draw = (obj_fn)obj_nop_thunk;
-    draw_tile_grid_flash((const uint8_t *)GPTR(0x56ea2), 1, 1, (int16_t)(a0->y - v_0cd0), (uint16_t)((uint16_t)a0->x >> 1));
+    draw_tile_grid_flash((const uint8_t *)GPTR(0x56ea2), 1, 1, (int16_t)(a0->y - scroll_pos), (uint16_t)((uint16_t)a0->x >> 1));
 }
 
 /* ---- the units of eight directions ($570AA) ---- */
@@ -1242,9 +1242,9 @@ void l5_unit_update(Object *a0)
     }
     a0->hit[0] = (int16_t)(a0->x + 4);
     a0->hit[2] = (int16_t)(a0->hit[0] + 0x18);
-    a0->hit[1] = (int16_t)(a0->y - v_0cd0 + 4);
+    a0->hit[1] = (int16_t)(a0->y - scroll_pos + 4);
     a0->hit[3] = (int16_t)(a0->hit[1] + 0x18);
-    if (a0->v28 == 0 && (int16_t)(a0->y - v_0cd0) < -16)
+    if (a0->v28 == 0 && (int16_t)(a0->y - scroll_pos) < -16)
         goto cells;
     if (a0->v28 != 8) {
         a0->v28 = (int16_t)(a0->v28 + 1);
@@ -1252,7 +1252,7 @@ void l5_unit_update(Object *a0)
         goto cells;
     }
     {
-        uint16_t dir = direction8((int16_t)(PLAYER->x - a0->x - 0x10), (int16_t)(PLAYER->y - a0->y + v_0cd0 - 0x10));
+        uint16_t dir = direction8((int16_t)(PLAYER->x - a0->x - 0x10), (int16_t)(PLAYER->y - a0->y + scroll_pos - 0x10));
 
         dir = (uint16_t)(dir - (uint16_t)a0->v2a);
         if (dir != 0) {
@@ -1265,7 +1265,7 @@ void l5_unit_update(Object *a0)
         a0->v2a = (int16_t)(a0->v2a & 7);
     }
     if (add_carry(&a0->v5e_b[0], B(0x54e65))) {
-        int16_t x = (int16_t)(a0->x + 0x10), y = (int16_t)(a0->y - v_0cd0 + 0x10);
+        int16_t x = (int16_t)(a0->x + 0x10), y = (int16_t)(a0->y - scroll_pos + 0x10);
         uint16_t d3 = (uint16_t)((a0->v2a * 4) & 0x1c);
 
         a0->v5e_b[0] = (uint8_t)(random_next() & 0x3f);
@@ -1294,7 +1294,7 @@ void l5_unit_hit(Object *a0, Object *a1, uint16_t d0)
         return;
     if (a1->v30 >= 0)
         sh_w8(0xd9b + (uint32_t)(uint16_t)a1->v30, 0xff);
-    spawn_effect((int16_t)(a1->x + 0x10), (int16_t)(a1->y - v_0cd0 + 0x10), v_0f64, draw_bob_masked);
+    spawn_effect((int16_t)(a1->x + 0x10), (int16_t)(a1->y - scroll_pos + 0x10), big_explosion_anim, draw_bob_masked);
     c = a1->v46;
     if (rd16(c - 2) == 0x80d7) {
         wr16(c - 2, 0x867d);
@@ -1306,7 +1306,7 @@ void l5_unit_hit(Object *a0, Object *a1, uint16_t d0)
     }
     wr32(c, 0);
     wr32(c + 0x28, 0);
-    v_0c92 += 0x190;
+    player_score += 0x190;
     kill_thunk(a1);
 }
 
@@ -1314,7 +1314,7 @@ void l5_unit_hit(Object *a0, Object *a1, uint16_t d0)
 void l5_unit_flash(Object *a0)
 {
     a0->fn_draw = (obj_fn)obj_nop_thunk;
-    draw_tile_grid_flash((const uint8_t *)GPTR(0x5711e), 1, 1, (int16_t)(a0->y - v_0cd0), (uint16_t)((uint16_t)a0->x >> 1));
+    draw_tile_grid_flash((const uint8_t *)GPTR(0x5711e), 1, 1, (int16_t)(a0->y - scroll_pos), (uint16_t)((uint16_t)a0->x >> 1));
 }
 
 /* ---- the guns of cells ($573AC) ---- */
@@ -1349,7 +1349,7 @@ void l5_gun_update(Object *a0)
     }
     a0->hit[0] = (int16_t)(a0->x + 2);
     a0->hit[2] = (int16_t)(a0->hit[0] + 0xc);
-    a0->hit[1] = (int16_t)(a0->y - v_0cd0 + 2);
+    a0->hit[1] = (int16_t)(a0->y - scroll_pos + 2);
     a0->hit[3] = (int16_t)(a0->hit[1] + 0xc);
     if (a0->v28 == 0) {
         if (!add_carry(&a0->v5e_b[0], B(0x54e6b)))
@@ -1360,7 +1360,7 @@ void l5_gun_update(Object *a0)
     a2 = a0->type == 0x108 ? 0x57524 : 0x57514;
     wr16(a0->v46, W(a2 + 2 * (uint32_t)(uint16_t)a0->v28));
     if (a0->v28 == 3) {
-        int16_t d0 = (int16_t)(a0->x + 0x18), d1 = (int16_t)(a0->y - v_0cd0 + 8);
+        int16_t d0 = (int16_t)(a0->x + 0x18), d1 = (int16_t)(a0->y - scroll_pos + 8);
         uint16_t d2 = 2;
         Object *a1;
 

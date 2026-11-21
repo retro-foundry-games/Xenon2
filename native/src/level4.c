@@ -175,7 +175,7 @@ void l4_tower_update(Object *a0)
     }
     a0->hit[0] = (int16_t)(a0->x + 2);
     a0->hit[2] = (int16_t)(a0->x + 0x1e);
-    d0 = (uint16_t)(a0->y - v_0cd0 + 2);
+    d0 = (uint16_t)(a0->y - scroll_pos + 2);
     a0->hit[1] = (int16_t)d0;
     a0->hit[3] = (int16_t)(d0 + 0x1c);
     if (a0->v28 == 0) {
@@ -192,7 +192,7 @@ void l4_tower_update(Object *a0)
     put_cells(a0->v46, cells);
     a0->v28++;
     if (a0->v28 == 4) {
-        int16_t x = (int16_t)(a0->x + 0x12), y = (int16_t)(a0->y - v_0cd0 + 0xe);
+        int16_t x = (int16_t)(a0->x + 0x12), y = (int16_t)(a0->y - scroll_pos + 0xe);
         uint16_t angle = 2;
         uint32_t table = sh_r32(0x77b70 + 4 * (uint32_t)W(0x54e6a));
 
@@ -217,9 +217,9 @@ void l4_tower_hit(Object *a0, Object *a1, uint16_t d0)
         a1->fn_draw = FN(l4_tower_draw);
         return;
     }
-    spawn_effect((int16_t)(a1->x + 0x10), (int16_t)(a1->y - v_0cd0 + 0x10), v_0f64, draw_bob_masked);
+    spawn_effect((int16_t)(a1->x + 0x10), (int16_t)(a1->y - scroll_pos + 0x10), big_explosion_anim, draw_bob_masked);
     put_cells(a1->v46, a1->type == 0xd0 ? 0x57236 : 0x5723e);
-    v_0c92 += 0x190;
+    player_score += 0x190;
     kill_thunk(a1);
 }
 
@@ -227,7 +227,7 @@ void l4_tower_hit(Object *a0, Object *a1, uint16_t d0)
 void l4_tower_draw(Object *a0)
 {
     a0->fn_draw = (obj_fn)obj_nop_thunk;
-    draw_tile_grid_flash((const uint8_t *)GPTR(a0->type == 0xd0 ? 0x57160 : 0x57190), 1, 1, (int16_t)(a0->y - v_0cd0), (uint16_t)((uint16_t)a0->x >> 1));
+    draw_tile_grid_flash((const uint8_t *)GPTR(a0->type == 0xd0 ? 0x57160 : 0x57190), 1, 1, (int16_t)(a0->y - scroll_pos), (uint16_t)((uint16_t)a0->x >> 1));
 }
 
 /* level4 $05700A: a marker makes a tower; the record's word at +$C says which of the two */
@@ -247,9 +247,9 @@ void l4_spawn_tower(const uint8_t *a1)
 /* level4 $055090: the scroll: the floor of the scroll ends at $DF0 and between $AE0 and $E50 an enemy comes every 16 pixels */
 void l4_scroll(void)
 {
-    if ((int16_t)v_0cea >= 0xdf0 && (int16_t)v_0cd0 <= 0xdf0)
+    if ((int16_t)v_0cea >= 0xdf0 && (int16_t)scroll_pos <= 0xdf0)
         v_0cea = 0xdf0;
-    if ((v_0cdc & 0xf) != 0 || (int16_t)v_0cd0 > 0xe50 || (int16_t)v_0cd0 < 0xae0)
+    if ((v_0cdc & 0xf) != 0 || (int16_t)scroll_pos > 0xe50 || (int16_t)scroll_pos < 0xae0)
         return;
     {
         Object *a0 = alloc_in(LIST_C);
@@ -287,7 +287,7 @@ static void l4_kill(Object *a0)
 void l4_enemy_a(Object *a0)
 {
     anim_step(a0);
-    a0->y = (int16_t)(a0->y + v_0cd8 + W(0x54e44));
+    a0->y = (int16_t)(a0->y + scroll_speed + W(0x54e44));
     if (a0->y >= 0xc8) {
         l4_kill(a0);
         return;
@@ -332,7 +332,7 @@ void l4_shot_a(Object *a0)
     uint16_t *e;
     int i;
 
-    a0->y = (int16_t)(a0->y + v_0cd8);
+    a0->y = (int16_t)(a0->y + scroll_speed);
     anim_step(a0);
     if (a0->anim_delay == 0) {
         const uint8_t *a5 = (const uint8_t *)a0->gfx;
@@ -426,7 +426,7 @@ void l4_enemy_f8(Object *a0)
 void l4_enemy_b(Object *a0)
 {
     anim_step(a0);
-    a0->y = (int16_t)(a0->y + v_0cd8 + W(0x54e4c));
+    a0->y = (int16_t)(a0->y + scroll_speed + W(0x54e4c));
     if (a0->y >= 0xc8) {
         l4_kill(a0);
         return;
@@ -470,7 +470,7 @@ void l4_spawn_boss1(void)
         a0->fn_draw = (obj_fn)GFN(sh_r32(a1 + 8));
         a0->x = (int16_t)W(a1 + 12);
         a0->flag60 = -1;
-        a0->y = (int16_t)(W(a1 + 14) - v_0cd0);
+        a0->y = (int16_t)(W(a1 + 14) - scroll_pos);
         a0->v28 = 0;
         a0->v2a = 0;
         a0->v2c = 0;
@@ -496,14 +496,14 @@ static void gun_box(Object *a0)
     a0->hit[3] = (int16_t)(a0->hit[1] + 0x14);
 }
 
-/* level4 $055C74: the core: it keeps the screen from scrolling past it and now and then it fires (v_0418 = the shake) */
+/* level4 $055C74: the core: it keeps the screen from scrolling past it and now and then it fires (sfx_cmd2 = the shake) */
 void l4_b1_core(Object *a0)
 {
     uint16_t d0;
 
     if ((int16_t)v_0cea < 0x10)
         v_0cea = 0x10;
-    d0 = (uint16_t)(v_0cd8 + W(0x55c54 + 2 * (uint32_t)(v_0cdc & 0xf)));
+    d0 = (uint16_t)(scroll_speed + W(0x55c54 + 2 * (uint32_t)(v_0cdc & 0xf)));
     sh_w16(0xd70, d0);
     a0->y = (int16_t)(a0->y + (int16_t)d0);
     if (W(0xd6e) != 0) {
@@ -519,7 +519,7 @@ void l4_b1_core(Object *a0)
         if (!add_carry(&a0->v5e_b[0], B(0x54e53)))
             return;
         a0->v5e_b[0] = (uint8_t)(random_next() & 0x3f);
-        v_0418 = 0xf;
+        sfx_cmd2 = 0xf;
     }
     {
         uint8_t low = (uint8_t)((a0->v28 & 0xff) + 1);
@@ -530,7 +530,7 @@ void l4_b1_core(Object *a0)
             return;
         }
         if (low == 0x78)
-            v_0418 = 0xf;
+            sfx_cmd2 = 0xf;
     }
 }
 
@@ -545,7 +545,7 @@ void l4_b1_core_hit(Object *a0, Object *a1, uint16_t d0)
         return;
     free_object_chain(LIST_C->prev);
     spawn_bonuses(9);
-    debris_burst(a0, 0x13, 0x70, a1->y, 0x60, 0x50, v_0f64);
+    debris_burst(a0, 0x13, 0x70, a1->y, 0x60, 0x50, big_explosion_anim);
     v_0a07 = 0xff;
 }
 
@@ -559,7 +559,7 @@ void l4_b1_gun_hit(Object *a0, Object *a1, uint16_t d0)
     if (old > d0)
         return;
     sh_w16(0xd6e, (uint16_t)(W(0xd6e) - 1));
-    spawn_effect((int16_t)(a1->x + 0x10), (int16_t)(a1->y - v_0cd0 + 0x20), v_0f64, draw_bob_masked);
+    spawn_effect((int16_t)(a1->x + 0x10), (int16_t)(a1->y - scroll_pos + 0x20), big_explosion_anim, draw_bob_masked);
     a1->v2a = -1;
     a1->fn_update = GFN(0x55d0e);
     a1->fn_hit = (void *)obj_nop_thunk;
@@ -737,9 +737,9 @@ void l4_spawn_boss2(const uint8_t *a1_record, uint16_t d2)
     if (B(0xd97) != 0)
         return;
     sh_w8(0xd97, 0xff);
-    v_0ce6 = 0x9b0;
-    v_0ce2 = 0xa0;
-    v_0ce4 = 0xb0;
+    scroll_y = 0x9b0;
+    player_x_saved = 0xa0;
+    player_y_saved = 0xb0;
     latch_slots(d2);
     for (n = 0; n < 20; n++) {
         Object *a0 = insert_head(LIST_C);
@@ -751,7 +751,7 @@ void l4_spawn_boss2(const uint8_t *a1_record, uint16_t d2)
         set_anim(a0, sh_r32(a1 + 8));
         a0->flag60 = -1;
         a0->x = (int16_t)W(a1 + 12);
-        a0->y = (int16_t)(W(a1 + 14) - v_0cd0);
+        a0->y = (int16_t)(W(a1 + 14) - scroll_pos);
         a0->v28 = 0;
         a0->v2a = 0;
         a0->v2c = (int16_t)W(a1 + 16);
@@ -797,7 +797,7 @@ void l4_b2_head(Object *a0)
 {
     uint16_t d0;
 
-    a0->y = (int16_t)(a0->y + v_0cd8);
+    a0->y = (int16_t)(a0->y + scroll_speed);
     if (a0->v28 == 0) {
         d0 = aim_at_player(a0, 0, 0);
         if (d0 < 2)
@@ -844,7 +844,7 @@ void l4_b2_head(Object *a0)
 /* level4 $056530: the pieces behind the head */
 void l4_b2_follow(Object *a0)
 {
-    a0->y = (int16_t)(a0->y + v_0cd8);
+    a0->y = (int16_t)(a0->y + scroll_speed);
     follow_chain(a0);
     head_picture(a0);
 }
@@ -856,7 +856,7 @@ void l4_b2_gun(Object *a0)
 
     if ((int16_t)v_0cea < 0x9b0)
         v_0cea = 0x9b0;
-    a0->y = (int16_t)(a0->y + v_0cd8);
+    a0->y = (int16_t)(a0->y + scroll_speed);
     follow_chain(a0);
     d0 = aim_at_player(a0, 0, 0);
     if (d0 < 2)
@@ -896,7 +896,7 @@ void l4_b2_barrel(Object *a0)
 /* level4 $0567E0: the first of the tail: its angle and sway follow the scroll */
 void l4_b2_wave(Object *a0)
 {
-    a0->y = (int16_t)(a0->y + v_0cd8);
+    a0->y = (int16_t)(a0->y + scroll_speed);
     a0->v54 = 0xc;
     l4_pose(a0);
 }
@@ -904,7 +904,7 @@ void l4_b2_wave(Object *a0)
 /* level4 $056854: a piece of the tail */
 void l4_b2_link(Object *a0)
 {
-    a0->y = (int16_t)(a0->y + v_0cd8);
+    a0->y = (int16_t)(a0->y + scroll_speed);
     follow_chain(a0);
     bbox_from_frame(a0);
 }
@@ -912,7 +912,7 @@ void l4_b2_link(Object *a0)
 /* level4 $056864: the last piece of the tail: it fires rings of eight */
 void l4_b2_ring(Object *a0)
 {
-    a0->y = (int16_t)(a0->y + v_0cd8);
+    a0->y = (int16_t)(a0->y + scroll_speed);
     anim_step(a0);
     follow_chain(a0);
     if (add_carry(&a0->v5e_b[0], B(0x54e7f))) {
@@ -933,7 +933,7 @@ void l4_b2_eye(Object *a0)
 {
     uint16_t d0;
 
-    a0->y = (int16_t)(a0->y + v_0cd8);
+    a0->y = (int16_t)(a0->y + scroll_speed);
     anim_step(a0);
     d0 = aim_at_player(a0, 0, 0);
     if (d0 != (uint16_t)a0->v2a) {
@@ -969,16 +969,16 @@ void l4_b2_gun_hit(Object *a0, Object *a1, uint16_t d0)
         a3 = a2->prev;
         kill_thunk(a2);
     }
-    debris_burst(a0, 0x27, 0, 0, 0x140, 0xc0, v_0f64);
+    debris_burst(a0, 0x27, 0, 0, 0x140, 0xc0, big_explosion_anim);
     spawn_bonuses(4);
     memset(level_init_src + 0x1658, 0, 0xa0 * 4);
     v_0ce8 = 0;
-    v_0c92 += 0x7d0;
+    player_score += 0x7d0;
     v_0ccc = 1;
-    v_0cd0 = 0x8a0;
+    scroll_pos = 0x8a0;
     v_0cea = 0x8a0;
-    v_0cce = 0x1590;
-    v_0cd6 = 0;
+    map_row_offset = 0x1590;
+    scroll_fine = 0;
 }
 
 /* level4 $056350 */
@@ -1036,7 +1036,7 @@ void l4_spawn_bar(const uint8_t *a1)
     int right = rd16(a1 + 0xc) != 0;
     Object *a0 = spawn_marker_front(right ? 0x110 : 0x10c, a1, (void (*)(void))GFN(0x56abc));
 
-    a0->y = (int16_t)(a0->y - v_0cd0);
+    a0->y = (int16_t)(a0->y - scroll_pos);
     a0->fn_draw = GFN(0x56b8e);
     set_anim(a0, a0->type == 0x10c ? 0x56a74 : 0x56a98);
 }
@@ -1046,7 +1046,7 @@ void l4_bar_update(Object *a0)
 {
     int16_t d0, d1, d2;
 
-    a0->y = (int16_t)(a0->y + v_0cd8);
+    a0->y = (int16_t)(a0->y + scroll_speed);
     if (a0->y > 0x188) {
         kill_thunk(a0);
         return;
@@ -1163,7 +1163,7 @@ void l4_walker_update(Object *a0)
     if (a0->v28 == 1) {
         if (a0->anim_delay == 0) {
             a0->v28 = 2;
-            a0->v2e = (int16_t)(PLAYER->y - a0->y + v_0cd0);
+            a0->v2e = (int16_t)(PLAYER->y - a0->y + scroll_pos);
         }
         goto box;
     }
@@ -1179,8 +1179,8 @@ void l4_walker_update(Object *a0)
     return;
 box:
     bbox_from_frame(a0);
-    a0->hit[1] = (int16_t)(a0->hit[1] - v_0cd0);
-    a0->hit[3] = (int16_t)(a0->hit[3] - v_0cd0);
+    a0->hit[1] = (int16_t)(a0->hit[1] - scroll_pos);
+    a0->hit[3] = (int16_t)(a0->hit[3] - scroll_pos);
 }
 
 /* level4 $056E84: the hit of the walker: when it is shot to pieces it bursts, drops a pickup and goes back */
@@ -1199,9 +1199,9 @@ void l4_walker_hit(Object *a0, Object *a1, uint16_t d0)
     a5 = (const uint8_t *)a1->gfx;
     x = (int16_t)(((int16_t)(a1->x - (int16_t)rd16(a5)) * 2 + (int16_t)rd16(a5 + 4)) >> 1);
     y = (int16_t)(((int16_t)(a1->y - (int16_t)rd16(a5 + 2)) * 2 + (int16_t)rd16(a5 + 6)) >> 1);
-    y = (int16_t)(y - v_0cd0);
-    spawn_effect(x, y, v_0f64, draw_bob_masked);
-    v_0c92 += (uint16_t)a1->v42;
+    y = (int16_t)(y - scroll_pos);
+    spawn_effect(x, y, big_explosion_anim, draw_bob_masked);
+    player_score += (uint16_t)a1->v42;
     p = alloc_in(LIST_B);
     p->type = 0x18;
     p->v28 = 7;
@@ -1209,7 +1209,7 @@ void l4_walker_hit(Object *a0, Object *a1, uint16_t d0)
     p->fn_draw = draw_bob_masked;
     anim_header_set(p, anim_264e);
     p->x = a1->x;
-    p->y = (int16_t)(a1->y - v_0cd0);
+    p->y = (int16_t)(a1->y - scroll_pos);
     p->v2a = (int16_t)random_next();
     walker_reset(a1);
 }
@@ -1221,13 +1221,13 @@ static void walker_tiles(Object *a0)
 
     if (a0->v28 >= 2)
         return;
-    draw_tile_grid((const uint8_t *)GPTR(a0->type == 0xe0 ? 0x56ffe : 0x57004), 0, 2, (int16_t)(W(0x56fe8 + d2) - v_0cd0), W(0x56fd2 + d2));
+    draw_tile_grid((const uint8_t *)GPTR(a0->type == 0xe0 ? 0x56ffe : 0x57004), 0, 2, (int16_t)(W(0x56fe8 + d2) - scroll_pos), W(0x56fd2 + d2));
 }
 
 /* level4 $056F3E: the walker's flash */
 void l4_walker_flash(Object *a0)
 {
-    int16_t y = (int16_t)(a0->y - v_0cd0);
+    int16_t y = (int16_t)(a0->y - scroll_pos);
 
     a0->fn_draw = GFN(0x56f6a);
     if (y > 0xdc)
@@ -1239,7 +1239,7 @@ void l4_walker_flash(Object *a0)
 /* level4 $056F6A: the walker's picture */
 void l4_walker_draw(Object *a0)
 {
-    int16_t y = (int16_t)(a0->y - v_0cd0);
+    int16_t y = (int16_t)(a0->y - scroll_pos);
 
     if (y > 0xdc)
         return;

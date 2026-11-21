@@ -161,12 +161,12 @@ static const uint8_t *tile_mask_ptr_at(const uint8_t *cell)
  * Inlined: $2D7A (the three pointers of a row of cells, results in a4, a5, a6). */
 void map_tile_mask(uint16_t x, uint16_t y, uint16_t rows)
 {
-    const uint8_t *a1 = level_init_src + (int16_t)v_0cce;
+    const uint8_t *a1 = level_init_src + (int16_t)map_row_offset;
     const uint8_t *a4, *a5, *a6;
     uint16_t d3, d4;
     uint16_t *out = tile_mask_buf;
 
-    y = (uint16_t)(y + v_0cd6);
+    y = (uint16_t)(y + scroll_fine);
     d3 = y & 0xf;
     d4 = d3;
     d3 = (uint16_t)(d3 + d3);
@@ -200,13 +200,13 @@ uint16_t tile_mask2_words;   /* the words of tile_mask_buf the last map_tile_mas
 
 void map_tile_mask2(uint16_t x, uint16_t y, uint16_t rows)
 {
-    const uint8_t *a1 = level_init_src + (int16_t)v_0cce;
+    const uint8_t *a1 = level_init_src + (int16_t)map_row_offset;
     const uint8_t *a4, *a5;
     uint16_t d3, d4;
     uint8_t *out = (uint8_t *)tile_mask_buf;
 
     tile_mask2_words = (uint16_t)((rows + 1) * 2);
-    y = (uint16_t)(y + v_0cd6);
+    y = (uint16_t)(y + scroll_fine);
     d3 = y & 0xf;
     d4 = d3;
     d3 = (uint16_t)(d3 + d3);
@@ -587,7 +587,7 @@ void spawn_effect(int16_t x, int16_t y, const uint8_t *a2, ObjFn a3)
 {
     Object *a0;
 
-    v_0418 = (a2 == anim_270e) ? 0x85 : 0x83;
+    sfx_cmd2 = (a2 == anim_270e) ? 0x85 : 0x83;
     a0 = list_insert(LIST_EFFECT);
     a0->type = 0xc;
     a0->fn_update = (obj_fn)animate_only;
@@ -600,10 +600,10 @@ void spawn_effect(int16_t x, int16_t y, const uint8_t *a2, ObjFn a3)
 /* orig $EA2, $003518 (reached by a jump; goes on in $352E): remember the record of a spawn */
 void note_spawn_record(const uint8_t *a1, uint16_t d2)
 {
-    v_0ce2 = rd16(a1 + 8);
-    v_0ce4 = rd16(a1 + 10);
-    v_0ce6 = rd16(a1);
-    v_0ca6 = v_0c9a;
+    player_x_saved = rd16(a1 + 8);
+    player_y_saved = rd16(a1 + 10);
+    scroll_y = rd16(a1);
+    player_money_saved = player_money;
     latch_slots(d2);
 }
 
@@ -611,7 +611,7 @@ void note_spawn_record(const uint8_t *a1, uint16_t d2)
  * (d2 is what an empty slot gets after the first one that was not: the caller's register) */
 void latch_slots(uint16_t d2)
 {
-    const Slot *s = v_0c66;
+    const Slot *s = weapon_slots;
     uint16_t *out = v_0caa;
     int i;
 
@@ -626,12 +626,12 @@ void latch_slots(uint16_t d2)
 }
 
 /* orig $003554: fire the level's scroll events: each record of the two lists whose scroll value lies between the new scroll
- * position (v_0cd0) and the old one calls the level's routine ($54E10 for the first list, $54E18 for the second) */
+ * position (scroll_pos) and the old one calls the level's routine ($54E10 for the first list, $54E18 for the second) */
 void scroll_events(void)
 {
     const uint8_t *a1 = level_events_a;
     int16_t d0 = (int16_t)v_0cd2;
-    int16_t d1 = (int16_t)v_0cd0;
+    int16_t d1 = (int16_t)scroll_pos;
 
     for (;; a1 += 14) {
         int16_t d2 = (int16_t)rd16(a1);
@@ -641,7 +641,7 @@ void scroll_events(void)
         if (d0 > d2 && d1 <= d2) {
             level_event(rd16(a1 + 2), a1);
             d0 = (int16_t)v_0cd2;
-            d1 = (int16_t)v_0cd0;
+            d1 = (int16_t)scroll_pos;
         }
     }
     if (d1 >= d0)
@@ -649,7 +649,7 @@ void scroll_events(void)
     v_0cd2 = (uint16_t)d1;
     a1 = level_events_b;
     d0 = (int16_t)v_0cd4;
-    d1 = (int16_t)v_0cd0;
+    d1 = (int16_t)scroll_pos;
     for (;; a1 += 14) {
         int16_t d2 = (int16_t)rd16(a1);
 
@@ -658,7 +658,7 @@ void scroll_events(void)
         if (d0 > d2 && d1 <= d2) {
             level_hook(rd16(a1 + 2), a1, (uint16_t)d2);
             d0 = (int16_t)v_0cd4;
-            d1 = (int16_t)v_0cd0;
+            d1 = (int16_t)scroll_pos;
         }
     }
     if (d1 >= d0)
@@ -698,11 +698,11 @@ void update_all(void)
     run_updates(LIST_HEAD(LIST_PLAYER));
     run_updates(LIST_HEAD(LIST_ENEMY));
 #ifdef GAME_SDL
-    v_0a6a = guest_a6a(v_0a01);
+    v_0a6a = guest_a6a(key_pressed);
 #else
-    v_0a6a = v_0a01;
+    v_0a6a = key_pressed;
 #endif
-    v_0a01 = 0;
+    key_pressed = 0;
     run_updates(LIST_HEAD(LIST_MISC));
     run_updates(LIST_HEAD(LIST_EFFECT));
     run_updates(LIST_HEAD(LIST_FRONT));
@@ -737,7 +737,7 @@ void spawn_debris(Object *a0_unused, Object *a1, uint16_t d0_unused)
 
     a0->v30 = a1->v30;
     a0->type = k->kind;
-    v_0414 = 0x11;
+    sfx_cmd = 0x11;
     a0->fn_update = (obj_fn)pickup_update;
     a0->fn_draw = (obj_fn)draw_bob_masked;
     a0->x = a1->x;
@@ -810,7 +810,7 @@ void enemy_shot_update(Object *a0)
     a0->x_frac = (uint16_t)d0;
     a0->y_frac = (uint16_t)d1;
     d0 >>= 16;
-    d1 = (uint16_t)((d1 >> 16) + v_0cd8);
+    d1 = (uint16_t)((d1 >> 16) + scroll_speed);
     a0->y = (int16_t)d1;
     if (d0 < 0x140 && d1 < 0xc0) {
         bbox_from_frame(a0);

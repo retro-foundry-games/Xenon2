@@ -3,7 +3,7 @@
 #include "amiga/hw.h"
 #include "mainloop.h"
 #ifdef GAME_SDL
-extern void guest_stick_restore(void);   /* sdl/guest.c: undoes what the lockstep put into v_0a00 */
+extern void guest_stick_restore(void);   /* sdl/guest.c: undoes what the lockstep put into joy_stick */
 #endif
 
 #define CIAA_CRA CIA_BYTE(0xbfe001, 0xe)    /* bit 7: the mains frequency (50 Hz) */
@@ -16,7 +16,7 @@ extern void guest_stick_restore(void);   /* sdl/guest.c: undoes what the lockste
 #define STAR_MASK(s) ((s)->y)
 #define STAR_POS(s) ((s)->z)
 
-/* orig $ED8, $001F22: the background's scroll position (v_0436, high word) moves back by half the scroll speed; d0.w = scroll speed */
+/* orig $ED8, $001F22: the background's scroll position (background_scroll, high word) moves back by half the scroll speed; d0.w = scroll speed */
 void scroll_pos_update(uint16_t d0)
 {
     uint16_t d2 = d0;
@@ -26,12 +26,12 @@ void scroll_pos_update(uint16_t d0)
     d1 &= d2;
     d0 += d1;
     if (d0 != 0) {
-        d0 = (uint16_t)(v_0436 >> 16) - d0;
+        d0 = (uint16_t)(background_scroll >> 16) - d0;
         if ((int16_t)d0 < 0)
             d0 += 0xc0;
         if ((int16_t)d0 >= 0xc0)
             d0 -= 0xc0;
-        v_0436 = (v_0436 & 0xffffu) | ((uint32_t)d0 << 16);
+        background_scroll = (background_scroll & 0xffffu) | ((uint32_t)d0 << 16);
     }
 }
 
@@ -51,11 +51,11 @@ void swap_screens(void)
     uint8_t *t;
     uint32_t list;
 
-    if ((uint16_t)(vbl_count - v_0404) >= v_0410)
+    if ((uint16_t)(vbl_count - last_flip_vbl) >= min_vbl_per_frame)
         HOST_IDLE();   /* (the original's frame then takes real time, vertical blanks the interrupt uses to read the stick; the port's takes none) */
-    while ((uint16_t)(vbl_count - v_0404) < v_0410)
+    while ((uint16_t)(vbl_count - last_flip_vbl) < min_vbl_per_frame)
         HOST_IDLE();
-    v_0404 = vbl_count;
+    last_flip_vbl = vbl_count;
     while (!(custom->vposr & 1))
         HOST_IDLE();
     while ((custom->vhposr >> 8) < 2)
@@ -117,7 +117,7 @@ void stars_draw(void)
 {
     uint8_t *screen = draw_screen;
 
-    stars_scroll(v_0cd8);
+    stars_scroll(scroll_speed);
     for (int g = 0; g < 4; g++) {
         for (int i = 0; i < 12; i++) {
             struct Star *s = &stars[g * 12 + i];
@@ -187,30 +187,30 @@ clear:
 static int edge_defer, edge_pending;
 static uint8_t edge_old;
 
-/* the fire press the interrupt saw is put into v_0a01 now (when the interrupt that sees it arrives later in the original's frame than it does here) */
+/* the fire press the interrupt saw is put into key_pressed now (when the interrupt that sees it arrives later in the original's frame than it does here) */
 void guest_edge_apply(uint8_t value)
 {
     if (edge_pending && (value & 0x80)) {
         edge_pending = 0;
-        if (v_0a01 == 0)
-            v_0a01 = (edge_old & 0x80) ? 0 : 0xff;
+        if (key_pressed == 0)
+            key_pressed = (edge_old & 0x80) ? 0 : 0xff;
     }
 }
 
-/* the frame's end: a press that no routine saw is in v_0a01 for the next frame */
+/* the frame's end: a press that no routine saw is in key_pressed for the next frame */
 void guest_edge_defer(int on)
 {
     if (edge_pending) {
         edge_pending = 0;
-        if (v_0a01 == 0)
-            v_0a01 = (edge_old & 0x80) ? 0 : 0xff;
+        if (key_pressed == 0)
+            key_pressed = (edge_old & 0x80) ? 0 : 0xff;
     }
     edge_defer = on;
 }
 #endif
 
 /* orig $0020C2: the level 3 interrupt (vertical blank): counts the frame, reads the joystick (port 2) and the fire button into
- * irq_joy / v_0a00, sends pending sound commands to the music player and calls its tick.  Ends with rte. */
+ * irq_joy / joy_stick, sends pending sound commands to the music player and calls its tick.  Ends with rte. */
 void irq_vblank(void)
 {
     if (custom->intreqr & 0x20) {
@@ -234,26 +234,26 @@ void irq_vblank(void)
 #endif
         if (joy != irq_joy_prev) {
 #ifdef GAME_SDL
-            if (edge_defer && v_0a01 == 0 && (joy & 0x80)) {
+            if (edge_defer && key_pressed == 0 && (joy & 0x80)) {
                 edge_pending = 1;
-                edge_old = v_0a00;
+                edge_old = joy_stick;
             } else
 #endif
-            if (v_0a01 == 0 && (joy & 0x80))
-                v_0a01 = (v_0a00 & 0x80) ? 0 : 0xff;
-            v_0a00 = joy;
+            if (key_pressed == 0 && (joy & 0x80))
+                key_pressed = (joy_stick & 0x80) ? 0 : 0xff;
+            joy_stick = joy;
             irq_joy_prev = joy;
         }
-        if (v_0414 >= 0 || v_0418 >= 0) {
+        if (sfx_cmd >= 0 || sfx_cmd2 >= 0) {
             void (*cmd)(uint16_t) = (void (*)(uint16_t))music_cmd_fn;   /* d0.w = command */
 
-            if (v_0414 >= 0) {
-                cmd((uint16_t)v_0414 | 0x200);
-                v_0414 = -1;
+            if (sfx_cmd >= 0) {
+                cmd((uint16_t)sfx_cmd | 0x200);
+                sfx_cmd = -1;
             }
-            if (v_0418 >= 0) {
-                cmd((uint16_t)v_0418 | 0x100);
-                v_0418 = -1;
+            if (sfx_cmd2 >= 0) {
+                cmd((uint16_t)sfx_cmd2 | 0x100);
+                sfx_cmd2 = -1;
             }
         }
         music_tick_fn();
@@ -318,7 +318,7 @@ static void apply_palette(void)
 
 static void music_restart_if_enabled(void)
 {
-    if (v_09fc) {
+    if (music_switch) {
         music_start(0);
         music_flag_1a584 = 0x30;
     }
@@ -330,7 +330,7 @@ void camera_limit(uint16_t d7, uint16_t d3) __attribute__((noinline));
  * stick byte the original read) */
 void camera_limit(uint16_t d7, uint16_t d3)
 {
-    if (d7 != v_0cea || (v_0a00 & 2) == 0)
+    if (d7 != v_0cea || (joy_stick & 2) == 0)
         d3 += v_0cee;
     if (!((int16_t)d3 > (int16_t)v_0cea))
         v_0cea = d3;
@@ -339,7 +339,7 @@ void camera_limit(uint16_t d7, uint16_t d3)
 /* the camera / scroll speed step of the main loop ($79D6-$7A72) */
 static void camera_step(void)
 {
-    uint16_t d7 = v_0cd0;
+    uint16_t d7 = scroll_pos;
     uint16_t d0 = v_0cda;
     uint16_t d1, d2, d3;
 
@@ -352,9 +352,9 @@ static void camera_step(void)
     } else {
         v_0ce0 = 0;
     }
-    d1 = v_0cd6;
-    d2 = v_0cce;
-    d3 = v_0cd0 - d0;
+    d1 = scroll_fine;
+    d2 = map_row_offset;
+    d3 = scroll_pos - d0;
     if ((int16_t)d3 < (int16_t)v_0ce8) {
         d3 -= v_0ce8;
         d0 += d3;
@@ -373,10 +373,10 @@ static void camera_step(void)
         d1 -= 0x10;
         d2 += 0x28;
     }
-    v_0cd8 = d0;
-    v_0cd6 = d1;
-    v_0cce = d2;
-    v_0cd0 = d3;
+    scroll_speed = d0;
+    scroll_fine = d1;
+    map_row_offset = d2;
+    scroll_pos = d3;
     camera_limit(d7, d3);
 }
 
@@ -397,17 +397,17 @@ static int key_command(uint8_t key)
     if (target == KEY_RESTART)
         return 1;
     if (target == KEY_PAUSE) {
-        v_0a01 = 0;
-        while (*(volatile uint8_t *)&v_0a01 == 0 && key_code == 0)
+        key_pressed = 0;
+        while (*(volatile uint8_t *)&key_pressed == 0 && key_code == 0)
             HOST_IDLE();
         key_code = 0;
-        v_0a01 = 0;
+        key_pressed = 0;
     } else if (target == KEY_FIRE) {
         if (v_0d84 == 0) {
             if (v_0430 == 0) {
                 if (v_0ca0 != 0) {
                     v_0432 = 1;
-                    v_0414 = 0x10;
+                    sfx_cmd = 0x10;
                     v_0430 = 1;
                     v_0ca0--;
                     v_0434 = 0x88;
@@ -449,7 +449,7 @@ static void main_loop(void)
             v_045e++;
             v_0cec += 2;
         }
-        scroll_pos_update(v_0cd8);
+        scroll_pos_update(scroll_speed);
         draw_background();
         v_0cda = 1;
         stars_draw();
@@ -471,30 +471,30 @@ static void main_loop(void)
         camera_step();
         swap_screens_192();
         apply_palette();
-        if (v_0a02) {
-            v_0a02 = 0;
+        if (player_died) {
+            player_died = 0;
             v_0c64 = 1;
             v_0cc6 = 0x27;
             v_0a6b = 0xff;
-            v_0cca--;
+            player_lives--;
             draw_status_digit();
-            if (v_0cca == 0) {
+            if (player_lives == 0) {
                 clear_palette();
                 hiscore_enter();
                 clear_palette();
-                v_0cf0--;
-                if (v_0cf0 == 0 || continue_screen() == 0) {
-                    title_message(v_884a);
-                    v_0a03[cur_player] = 0;
-                    if (v_0a03[cur_player ^ 1] == 0)
+                continues_left--;
+                if (continues_left == 0 || continue_screen() == 0) {
+                    title_message(game_over_text);
+                    player_active[cur_player] = 0;
+                    if (player_active[cur_player ^ 1] == 0)
                         return;
                 } else {
-                    v_0cca = 3;
+                    player_lives = 3;
                     draw_status_digit();
-                    v_0c92 = 0;
+                    player_score = 0;
                     for (int i = 0; i < 7; i++)
-                        v_0d7c[i] = 0;
-                    v_0c96 = 0;
+                        score_digits[i] = 0;
+                    score_shown = 0;
                     panel_clear_score();
                 }
             }
@@ -510,31 +510,31 @@ static void main_loop(void)
             uint32_t d1 = 0;
 
             music_silence();
-            if ((int16_t)v_0cd0 <= 0x1e0) {
+            if ((int16_t)scroll_pos <= 0x1e0) {
                 d1 = v_54e3c;
                 v_09fa = (uint16_t)d1;
                 d1 = (uint16_t)(d1 + 0x190);
-                if ((int32_t)d1 > (int32_t)v_0c9a) {
+                if ((int32_t)d1 > (int32_t)player_money) {
                     uint16_t r = (uint16_t)((random_next() & 3) * 0x32);
 
                     d1 = (uint16_t)(d1 + r);
-                    v_0c9a = d1;
+                    player_money = d1;
                 }
             } else {
                 d1 = v_54e3e;
                 v_09fa = (uint16_t)d1;
-                if ((int32_t)d1 > (int32_t)v_0c9a) {
+                if ((int32_t)d1 > (int32_t)player_money) {
                     uint16_t r = (uint16_t)((random_next() & 3) * 0x32);
 
                     d1 = (uint16_t)(d1 + r);
-                    v_0c9a = d1;
+                    player_money = d1;
                 }
             }
             v_0d83 = 0;
             v_8fec = 0;
             other = cur_player ^ 1;
-            if ((int16_t)v_0cd0 > 0x3c0 || v_0e04 != 5 ||
-                (v_8fec = 0xff, players != 2) || v_0a03[other] == 0 || v_0a03[other + 2] != 0) {
+            if ((int16_t)scroll_pos > 0x3c0 || level_number != 5 ||
+                (v_8fec = 0xff, players != 2) || player_active[other] == 0 || player_active[other + 2] != 0) {
                 shop_run();
                 draw_status_digit();
             }
@@ -542,14 +542,14 @@ static void main_loop(void)
             if (v_0ca2)
                 init_weapons(0);
             if (v_0a07 == 0) {
-                if (v_09fc)
+                if (music_switch)
                     music_restart_if_enabled();
                 continue;
             }
         }
         /* $7C62: the player's ship was lost or the level ended */
         v_0a07 = 0;
-        if (v_0e04 == 5) {
+        if (level_number == 5) {
             for (;;) {
                 Object *a1 = obj_list[1].prev;
 
@@ -559,13 +559,13 @@ static void main_loop(void)
             }
             refill_slot0(0, 0);
             latch_slots(0);
-            v_0cf0++;
+            continues_left++;
         }
         {
             uint16_t other = cur_player ^ 1;
 
-            if (v_0a03[other] != 0 && v_0a03[other + 2] == 0) {
-                v_0a03[cur_player + 2] = 0xff;
+            if (player_active[other] != 0 && player_active[other + 2] == 0) {
+                player_active[cur_player + 2] = 0xff;
                 clear_level_objects();
                 free_object_chain(obj_list[2].prev);
                 free_object_chain(obj_list[4].prev);
@@ -580,21 +580,21 @@ static void main_loop(void)
         free_object_chain(obj_list[2].prev);
         free_object_chain(obj_list[4].prev);
         free_object_chain(obj_list[3].prev);
-        v_0e04++;
-        if ((int16_t)v_0e04 >= 6) {
-            v_0e04 = 1;
+        level_number++;
+        if ((int16_t)level_number >= 6) {
+            level_number = 1;
             v_0e02++;
             v_8f94 = 1;
             v_8f96 = 0;
         }
-        v_8c41 = (uint8_t)(v_0e04 + 0x30);
+        loading_level_digit = (uint8_t)(level_number + 0x30);
         level_load();
         create_queued_objects();
         if (v_0ca2)
             init_weapons(0);
         level_start();
-        v_0a03[2] = 0;
-        v_0a03[3] = 0;
+        player_active[2] = 0;
+        player_active[3] = 0;
         switch_player();
         wait_vbl_and_show();
         music_restart_if_enabled();
@@ -607,25 +607,25 @@ static void game_session_start(void)
     clear_palette();
     clear_screens_large();
     key_code = 0;
-    v_0a00 = 0;
-    v_0a01 = 0;
-    v_0414 = -1;
+    joy_stick = 0;
+    key_pressed = 0;
+    sfx_cmd = -1;
     v_0416 = -1;
-    v_0418 = -1;
+    sfx_cmd2 = -1;
     v_041a = -1;
-    v_0404 = vbl_count;
+    last_flip_vbl = vbl_count;
     title_credits();
     menu();
     clear_palette();
     v_8f94 = 1;
     v_8f96 = 0;
-    v_0e04 = 1;
-    v_8c41 = 0x31;
+    level_number = 1;
+    loading_level_digit = 0x31;
     level_load();
     init_level_state();
     level_start();
     v_8836[18] = 0x31;
-    if (v_0a03[0] == 0)
+    if (player_active[0] == 0)
         v_8836[18] = 0x32;
     v_8428 = 0xff;
     title_message(v_8836);
@@ -633,8 +633,8 @@ static void game_session_start(void)
     clear_palette();
     music_restart_if_enabled();
     wait_vbl_and_show();
-    v_0a00 = 0;
-    v_0a01 = 0;
+    joy_stick = 0;
+    key_pressed = 0;
 }
 
 /* orig $0076A0-$0077C4: interrupt vectors, CIAs, display (4 lowres bitplanes, 320x192, copper list), DMA */
@@ -700,22 +700,22 @@ void game_entry(void)
     for (int i = 0; i < 224; i++)
         exc_vectors_hi[i] = game_entry;
     clear_palette();
-    v_0404 = 0;
+    last_flip_vbl = 0;
     draw_screen = screen_b;
     show_screen = screen_a;
-    v_0414 = -1;
+    sfx_cmd = -1;
     v_0416 = -1;
-    v_0418 = -1;
+    sfx_cmd2 = -1;
     v_041a = -1;
-    v_0410 = 4;
+    min_vbl_per_frame = 4;
     music_paused = 0xff;
     if (!(CIAA_CRA & 0x80)) {
-        v_0410 = 5;
+        min_vbl_per_frame = 5;
         music_paused = 0;
     }
     hardware_init();
     /* SR = $2000: interrupts on */
-    v_09fc = 0xff;
+    music_switch = 0xff;
     v_041e = 1;
     v_09fd = 0;
     v_09fe = 0;

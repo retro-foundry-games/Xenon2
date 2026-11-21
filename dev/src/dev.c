@@ -16,8 +16,8 @@
  *   port.frame()                 the frames so far;  port.joy{up=,down=,left=,right=,fire=};  port.key(amiga_raw_code, down)
  *   port.ram()                   the memory as a string of 0x80000 bytes in the original's byte order (named members converted, raw buffers as they are)
  *   port.set_a6a(BYTE)           the byte the next update_all copies into v_0a6a (the original's)
- *   port.edge_defer(0|1)         the fire press the next interrupt sees is put into v_0a01 at the first poke_stick with the fire bit (1) or at the interrupt (0)
- *   port.poke_stick(BYTE)        sets v_0a00 (the stick byte the game decodes), as the original's interrupt does mid-frame
+ *   port.edge_defer(0|1)         the fire press the next interrupt sees is put into key_pressed at the first poke_stick with the fire bit (1) or at the interrupt (0)
+ *   port.poke_stick(BYTE)        sets joy_stick (the stick byte the game decodes), as the original's interrupt does mid-frame
  *   port.peek8/16/32(address)    from the same (cached until the game runs again)
  *   port.picture()               RGB, 3 bytes a pixel, 320 x 256;  port.picture_hash()
  *   port.load_high(str)          the original's memory from $80000 to $FFFFF (524288 bytes), read by the map masks of bobs above the screen
@@ -52,7 +52,7 @@ extern unsigned guest_code_entries(const void *function, uint32_t *out, unsigned
 extern void *guest_code(uint32_t address);
 extern void guest_set_stick(uint8_t value);
 extern void guest_set_stale(uint32_t value);   /* sdl/guest.c: d0 as the original's boss code finds it */
-extern void guest_load_high(const uint8_t *bytes);   /* sdl/guest.c: the original's memory from $80000 to $FFFFF */   /* sdl/guest.c: v_0a00, the stick byte the game decodes */
+extern void guest_load_high(const uint8_t *bytes);   /* sdl/guest.c: the original's memory from $80000 to $FFFFF */   /* sdl/guest.c: joy_stick, the stick byte the game decodes */
 
 static lua_State *L;
 static ucontext_t ctrl_ctx, game_ctx;

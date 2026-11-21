@@ -44,7 +44,7 @@ the level running with its blob at `$54E00`; 512 KB each).  Read tables and stri
       tab NAME 0xADDR uint16_t COUNT        ; constant data (a table the code only reads): its values come from the RAM dump
       type NAME SIZE                        ; a record type, `struct NAME` is in native/src/types_<module>.h (sizeof must match)
 
-  Types: `uint8_t int8_t uint16_t int16_t uint32_t int32_t`, `T *` (4 bytes), a declared record type.  Put `volatile` in front of the type (`var tick 0x0c30 volatile uint16_t`) for what an interrupt changes.  Name by what it is for; a provisional name is `v_` + the address (`v_0cd0`).  **An address that the
+  Types: `uint8_t int8_t uint16_t int16_t uint32_t int32_t`, `T *` (4 bytes), a declared record type.  Put `volatile` in front of the type (`var tick 0x0c30 volatile uint16_t`) for what an interrupt changes.  Name by what it is for; a provisional name is `v_` + the address (`scroll_pos`).  **An address that the
   code uses as a pointer is declared with a pointer type, and an address constant in the code is the name of what is at that address**
   (the SDL build keeps all memory in one struct, so pointers are translated when it loads; a longword that is an address and is typed
   `uint32_t` breaks it).  Records: `struct` with fields at the original offsets, `-fpack-struct=2`; no unions: one struct for each variant.

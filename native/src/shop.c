@@ -207,8 +207,8 @@ void shop_lights_draw(void)
 /* shop $56E44: the next line of text */
 void shop_text_newline(void)
 {
-    v_04f6 = 0x37;
-    v_04f8 += 7;
+    text_x = 0x37;
+    text_y += 7;
 }
 
 /* shop $56D8C: a character of the text at the text position (4 pixels wide: even positions write a byte, odd ones the low nibble) */
@@ -222,11 +222,11 @@ void shop_text_char(uint8_t ch)
         shop_text_newline();
         return;
     }
-    a0 = screen_b + (int16_t)row_offset[v_04f8];
-    a0 += (int16_t)(v_04f6 >> 1);
+    a0 = screen_b + (int16_t)row_offset[text_y];
+    a0 += (int16_t)(text_x >> 1);
     a1 = screen_a + (a0 - screen_b);
     a2 = (const uint8_t *)GPTR(SH_FONT) + (int16_t)((uint16_t)(ch - 0x20) << 5);
-    if (!(v_04f6 & 1)) {
+    if (!(text_x & 1)) {
         for (d7 = 7; d7 >= 0; d7--) {
             int p;
 
@@ -253,7 +253,7 @@ void shop_text_char(uint8_t ch)
             a1 += 0xa0;
         }
     }
-    v_04f6++;
+    text_x++;
 }
 
 
@@ -331,8 +331,8 @@ void shop_records_draw(void)
 
         if (st > 0) {
             if (st <= 2) {
-                if (st == 2 && (int16_t)v_0414 < 0)
-                    v_0418 = 0xb;
+                if (st == 2 && (int16_t)sfx_cmd < 0)
+                    sfx_cmd2 = 0xb;
                 shop_sparkle(a1);
             } else {
                 const uint8_t *a0 = GPTR(sh_r32(SH_TAB_PUFF + 4u * (cnt & 1)));
@@ -396,10 +396,10 @@ void shop_door_draw(void)
 {
     uint8_t *a1;
 
-    if (v_04ee == 0)
+    if (shop_door_right == 0)
         return;
-    a1 = shop_clear_columns(draw_screen + 0x475a, (uint16_t)(0x44 - v_04ee));
-    shop_put_rows(GPTR(SH_PIC_SLIDE), a1, (uint16_t)(v_04ee - 1));
+    a1 = shop_clear_columns(draw_screen + 0x475a, (uint16_t)(0x44 - shop_door_right));
+    shop_put_rows(GPTR(SH_PIC_SLIDE), a1, (uint16_t)(shop_door_right - 1));
 }
 
 /* shop $5662A: the room: its pictures, the keeper's lights, the doors */
@@ -412,7 +412,7 @@ void shop_room_draw(void)
     shop_put_rows(GPTR(SH_PIC_TOP), draw_screen + 0x5ba, 0x33);
     shop_put_rows(GPTR(SH_PIC_MID), draw_screen + 0x3b7a, 9);
     a0 = GPTR(SH_PIC_LOW);
-    if (v_04f0 != 0) {
+    if (shop_keeper_talking != 0) {
         uint32_t r = random_next();
         int16_t d1 = 3;
 
@@ -430,25 +430,25 @@ void shop_room_draw(void)
     shop_put_rows(a0, draw_screen + 0x263a, 0x21);
     shop_lights_draw();
     shop_keeper_blink();
-    if (v_04ec == 0)
+    if (shop_door_left == 0)
         return;
-    if ((int16_t)v_04ec <= 8) {
+    if ((int16_t)shop_door_left <= 8) {
         /* (the closed doors' pictures are drawn only when more than 8 rows have opened) */
     } else {
         a1 = draw_screen + 0x5ba;
-        a0 = (const uint8_t *)GPTR(SH_PIC_DOOR) + (int16_t)((uint16_t)(0x30 - v_04ec) * 0x38);
-        d0 = (uint16_t)(v_04ec - 9);
+        a0 = (const uint8_t *)GPTR(SH_PIC_DOOR) + (int16_t)((uint16_t)(0x30 - shop_door_left) * 0x38);
+        d0 = (uint16_t)(shop_door_left - 9);
         shop_put_rows(a0, a1, d0);
-        a1 = draw_screen + 0x46ba - (int16_t)((uint16_t)(v_04ec * 0xa0));
+        a1 = draw_screen + 0x46ba - (int16_t)((uint16_t)(shop_door_left * 0xa0));
         shop_put_rows(GPTR(SH_PIC_DOOR2), a1, d0);
     }
-    draw_bob_masked_at(0xd7, (uint16_t)(v_04ec + 1), GPTR(SH_GFX_BAR_1));
-    draw_bob_masked_at(0xf7, (uint16_t)(v_04ec + 1), GPTR(SH_GFX_BAR_2));
-    draw_bob_masked_at(0x117, (uint16_t)(v_04ec + 1), GPTR(SH_GFX_BAR_3));
-    draw_bob_masked_at(0xd7, (uint16_t)(0x70 - v_04ec), GPTR(SH_GFX_BAR_4));
-    draw_bob_masked_at(0xf7, (uint16_t)(0x70 - v_04ec), GPTR(SH_GFX_BAR_5));
-    draw_bob_masked_at(0x117, (uint16_t)(0x70 - v_04ec), GPTR(SH_GFX_BAR_6));
-    if ((int16_t)v_04ec >= 8)
+    draw_bob_masked_at(0xd7, (uint16_t)(shop_door_left + 1), GPTR(SH_GFX_BAR_1));
+    draw_bob_masked_at(0xf7, (uint16_t)(shop_door_left + 1), GPTR(SH_GFX_BAR_2));
+    draw_bob_masked_at(0x117, (uint16_t)(shop_door_left + 1), GPTR(SH_GFX_BAR_3));
+    draw_bob_masked_at(0xd7, (uint16_t)(0x70 - shop_door_left), GPTR(SH_GFX_BAR_4));
+    draw_bob_masked_at(0xf7, (uint16_t)(0x70 - shop_door_left), GPTR(SH_GFX_BAR_5));
+    draw_bob_masked_at(0x117, (uint16_t)(0x70 - shop_door_left), GPTR(SH_GFX_BAR_6));
+    if ((int16_t)shop_door_left >= 8)
         return;
     {
         uint8_t *dst = draw_screen + 0x1a, *dst2 = draw_screen + 0x41ba;
@@ -530,14 +530,14 @@ void shop_board_clear(void)
 void shop_text_home(void)
 {
     shop_board_clear();
-    v_04f6 = 0x37;
-    v_04f8 = 0x76;
+    text_x = 0x37;
+    text_y = 0x76;
 }
 
 /* shop $56CB2: the cash is drawn */
 void shop_cash_draw(void)
 {
-    draw_number(v_0c9a, screen_b + 0x6b91);
+    draw_number(player_money, screen_b + 0x6b91);
 }
 
 /* shop $56CC0: the text (words, $0D = a new line, 0 ends) is drawn a character at a time, the keeper talks at the start of each word, every second character
@@ -548,7 +548,7 @@ void shop_print(const uint8_t *a0)
         uint16_t d0;
         const uint8_t *a1;
 
-        v_04f0 = 0xff;
+        shop_keeper_talking = 0xff;
         do
             d0 = (uint16_t)random_next() & 3;
         while (d0 == 0);
@@ -556,22 +556,22 @@ void shop_print(const uint8_t *a0)
         d0 = 0;
         for (a1 = a0; *a1 != 0 && *a1 != 0x20 && *a1 != 0x0d; a1++)
             d0++;
-        d0 = (uint16_t)(d0 + v_04f6);
+        d0 = (uint16_t)(d0 + text_x);
         if ((int16_t)d0 > 0x4b)
             shop_text_newline();
         for (;;) {
             uint8_t ch = *a0++;
 
             if (ch == 0) {
-                v_04f0 = 0;
+                shop_keeper_talking = 0;
                 return;
             }
             if (ch == 0x20) {
                 for (;;) {
-                    v_04f6++;
+                    text_x++;
                     ch = *a0++;
                     if (ch == 0) {
-                        v_04f0 = 0;
+                        shop_keeper_talking = 0;
                         return;
                     }
                     if (ch != 0x20)
@@ -585,7 +585,7 @@ void shop_print(const uint8_t *a0)
                 break;
             }
             shop_text_char(ch);
-            if (v_04f6 & 1) {
+            if (text_x & 1) {
                 shop_records_tick();
                 shop_records_draw();
                 shop_room_draw();
@@ -598,7 +598,7 @@ void shop_print(const uint8_t *a0)
 /* shop $56D56: the number in d0 (a word, decimal) is drawn, a frame goes by */
 void shop_print_number(uint16_t d0)
 {
-    v_04f0 = 0xff;
+    shop_keeper_talking = 0xff;
     if ((int16_t)d0 >= 10) {
         uint32_t q = (uint32_t)(int32_t)(int16_t)d0;
         uint32_t d = (q / 10u) & 0xffff;
@@ -612,19 +612,19 @@ void shop_print_number(uint16_t d0)
     shop_records_tick();
     shop_records_draw();
     shop_room_draw();
-    v_04f0 = 0;
+    shop_keeper_talking = 0;
 }
 
 /* shop $56040 (the cursor drawn), $560A6 (the cursor taken away): the picture of the cursor at the item under it, or of the buttons below the grid */
 static void cursor_show(uint32_t on_item, uint32_t exit_a, uint32_t exit_b, uint32_t exit_c)
 {
-    uint16_t d0 = v_04f4, d1;
+    uint16_t d0 = shop_cursor_row, d1;
     const uint8_t *a0;
 
     if (d0 == 4) {
         d0 = 4;
         a0 = GPTR(exit_a);
-        if (v_04f2 != 0) {
+        if (shop_cursor_col != 0) {
             d0 = 0x2d;
             a0 = GPTR(exit_b);
             if (sh_r8(SH_SELLING) == 0)
@@ -633,7 +633,7 @@ static void cursor_show(uint32_t on_item, uint32_t exit_a, uint32_t exit_b, uint
         shop_draw_both(d0, 0xa8, a0);
         return;
     }
-    d0 = (uint16_t)((uint16_t)(d0 * 5 + v_04f2) * 0x10);
+    d0 = (uint16_t)((uint16_t)(d0 * 5 + shop_cursor_col) * 0x10);
     d1 = sh_r16(SH_RECS + (int16_t)d0 + 4);
     d0 = sh_r16(SH_RECS + (int16_t)d0 + 2);
     shop_draw_both((uint16_t)(d0 + 0xa), (uint16_t)(d1 + 0x1f), GPTR(on_item));
@@ -648,38 +648,38 @@ void shop_stick(void)
     for (;;) {
         if (sh_r16(SH_REPEAT) != 0) {
             sh_w16(SH_REPEAT, (uint16_t)(sh_r16(SH_REPEAT) - 1));
-        } else if (v_0a01 != 0) {
-            v_0a01 = 0;
-            v_0414 = 0xd;
+        } else if (key_pressed != 0) {
+            key_pressed = 0;
+            sfx_cmd = 0xd;
             return;
-        } else if (v_0a00 != 0) {
-            v_0414 = 0xc;
+        } else if (joy_stick != 0) {
+            sfx_cmd = 0xc;
             sh_w16(SH_REPEAT, 4);
             shop_cursor_erase();
-            if (v_0a00 & 4) {
-                if (v_04f4 == 4) {
-                    v_04f2 = (uint16_t)(v_04f2 == 0);
+            if (joy_stick & 4) {
+                if (shop_cursor_row == 4) {
+                    shop_cursor_col = (uint16_t)(shop_cursor_col == 0);
                 } else {
-                    v_04f2--;
-                    if ((int16_t)v_04f2 < 0)
-                        v_04f2 = 4;
+                    shop_cursor_col--;
+                    if ((int16_t)shop_cursor_col < 0)
+                        shop_cursor_col = 4;
                 }
-            } else if (v_0a00 & 8) {
-                if (v_04f4 == 4) {
-                    v_04f2 = (uint16_t)(v_04f2 == 0);
+            } else if (joy_stick & 8) {
+                if (shop_cursor_row == 4) {
+                    shop_cursor_col = (uint16_t)(shop_cursor_col == 0);
                 } else {
-                    v_04f2++;
-                    if ((int16_t)v_04f2 > 4)
-                        v_04f2 = 0;
+                    shop_cursor_col++;
+                    if ((int16_t)shop_cursor_col > 4)
+                        shop_cursor_col = 0;
                 }
-            } else if (v_0a00 & 1) {
-                v_04f4--;
-                if ((int16_t)v_04f4 < 0)
-                    v_04f4 = 4;
-            } else if (v_0a00 & 2) {
-                v_04f4++;
-                if ((int16_t)v_04f4 > 4)
-                    v_04f4 = 0;
+            } else if (joy_stick & 1) {
+                shop_cursor_row--;
+                if ((int16_t)shop_cursor_row < 0)
+                    shop_cursor_row = 4;
+            } else if (joy_stick & 2) {
+                shop_cursor_row++;
+                if ((int16_t)shop_cursor_row > 4)
+                    shop_cursor_row = 0;
             }
             shop_cursor_draw();
         }
@@ -707,41 +707,41 @@ int32_t shop_can_buy(void)
     case 6: return v_0ca2 != 0 ? 0 : -1;
     case 0xc:
         for (i = 0; i < 7; i++)
-            if (v_0c66[i].type != 0 && v_0c66[i].obj->v42 != v_0c66[i].obj->energy)
+            if (weapon_slots[i].type != 0 && weapon_slots[i].obj->v42 != weapon_slots[i].obj->energy)
                 return -1;
         return 0;
     case 0x10: return v_0ca0 != 0 ? 0 : -1;
-    case 0x16: return v_0cca == 9 ? 0 : -1;
+    case 0x16: return player_lives == 9 ? 0 : -1;
     case 0x18: return v_0d83 != 0 ? 0 : -1;
     case 0x19: return v_0c90 != 0 ? 0 : -1;
     }
     flags = sh_r8(SH_TAB_FLAGS + (uint16_t)(kind - 1));
     if (flags & 1) {
-        a1 = v_0c66[0].obj;
+        a1 = weapon_slots[0].obj;
         if (kind != (uint16_t)a1->kind) {
-            if (v_0c66[0].type == 0 || v_0c66[0].type == 0x94)
+            if (weapon_slots[0].type == 0 || weapon_slots[0].type == 0x94)
                 return -1;
             return 0;
         }
     } else if (flags & 2) {
         for (i = 1; i <= 4; i++)
-            if (v_0c66[i].type == 0)
+            if (weapon_slots[i].type == 0)
                 return -1;
         return 0;
     } else if (flags & 4) {
-        if (v_0c66[5].type == 0)
+        if (weapon_slots[5].type == 0)
             return -1;
-        a1 = v_0c66[5].obj;
+        a1 = weapon_slots[5].obj;
         if (kind != (uint16_t)a1->kind)
             return 0;
     } else if (flags & 0x10) {
-        if (v_0c66[6].type == 0 || v_0c66[5].type == 0)
+        if (weapon_slots[6].type == 0 || weapon_slots[5].type == 0)
             return -1;
         return 0;
     } else if (flags & 8) {
-        if (v_0c66[6].type == 0)
+        if (weapon_slots[6].type == 0)
             return -1;
-        a1 = v_0c66[6].obj;
+        a1 = weapon_slots[6].obj;
         if (kind != (uint16_t)a1->kind)
             return 0;
     } else {
@@ -760,7 +760,7 @@ void shop_item_advice(void)
 
     sh_w8(SH_BLINK_A, 0xc);
     shop_text_home();
-    d0 = (uint16_t)((uint16_t)(v_0e04 - 1) * 0x18 + v_0cf2);
+    d0 = (uint16_t)((uint16_t)(level_number - 1) * 0x18 + v_0cf2);
     if (v_0cf2 != 8 && v_0cf2 != 0x14)
         v_0cf2 += 4;
     shop_print((const uint8_t *)GPTR(sh_r32(SH_TAB_ADVICE + (int16_t)d0)));
@@ -768,7 +768,7 @@ void shop_item_advice(void)
 }
 
 void shop_item_c90(void) { v_0c90 = 0xdc; }
-void shop_item_cca(void) { v_0cca++; }
+void shop_item_cca(void) { player_lives++; }
 
 /* the routine the item is granted by (the table at $5573A: the pickup and weapon routines of the base game, and the four above) */
 static void item_grant(uint16_t kind)
@@ -824,7 +824,7 @@ void shop_price_text(uint8_t *rec)
     shop_print((const uint8_t *)GPTR(SH_TXT_COST));
     rec = (uint8_t *)GPTR(sh_r32(SH_REC));
     d0 = sh_r16(SH_TAB_PRICE + (uint16_t)(rd16(rec + 6) * 2) - 2);
-    if (v_0e04 == 5)
+    if (level_number == 5)
         d0 >>= 1;
     sh_w16(SH_PRICE, d0);
     shop_print_number(d0);
@@ -835,7 +835,7 @@ static uint16_t item_price_at(uint32_t table_entry)
 {
     uint16_t d = sh_r16(table_entry);
 
-    if (v_0e04 == 5)
+    if (level_number == 5)
         d >>= 1;
     return d;
 }
@@ -851,15 +851,15 @@ void shop_stock_update(void)
 
     d0 = (uint16_t)(sh_r16(SH_PAGE) * 2);
     d0 = sh_r16(SH_TAB_PRICE + 2 + (int16_t)d0);
-    if (v_0e04 == 5)
+    if (level_number == 5)
         d0 >>= 1;
-    if ((int32_t)(int16_t)d0 > (int32_t)v_0c9a)
+    if ((int32_t)(int16_t)d0 > (int32_t)player_money)
         sh_w16(SH_PAGE, 0);
     a0 = SH_RECS;
     d0 = (uint16_t)(sh_r16(SH_PAGE) + 2);
     a1 = SH_TAB_PRICE + (uint32_t)(int32_t)(int16_t)(uint16_t)((uint16_t)(d0 - 1) * 2);
     a2 = SH_TAB_ANIM + (uint32_t)(int32_t)(int16_t)(uint16_t)((uint16_t)(d0 - 1) * 4);
-    d1 = (int32_t)v_0c9a;
+    d1 = (int32_t)player_money;
     for (;;) {
         d2 = (int16_t)item_price_at(a1);
         if (d2 > (int16_t)v_09fa || d1 < (int32_t)d2) {
@@ -916,7 +916,7 @@ void shop_stock_sold_out(void)
 void shop_stock_recheck(void)
 {
     uint32_t a0 = SH_RECS;
-    int32_t d1 = (int32_t)v_0c9a;
+    int32_t d1 = (int32_t)player_money;
     int16_t n = 0x13;
 
     do {
@@ -931,7 +931,7 @@ void shop_stock_recheck(void)
             } else if ((int16_t)d2 < 0x1a) {
                 uint16_t d3 = sh_r16(SH_TAB_PRICE - 2 + (uint16_t)(d2 * 2));
 
-                if (v_0e04 == 5)
+                if (level_number == 5)
                     d3 >>= 1;
                 if (!(d1 >= (int32_t)(int16_t)d3))
                     sold = 1;
@@ -971,7 +971,7 @@ void shop_sell_list(void)
 /* the record under the cursor (the grid is 5 wide) */
 static uint8_t *cursor_record(void)
 {
-    uint16_t d0 = (uint16_t)(v_04f4 * 5 + v_04f2);
+    uint16_t d0 = (uint16_t)(shop_cursor_row * 5 + shop_cursor_col);
 
     return (uint8_t *)GPTR(SH_RECS + (int16_t)(uint16_t)(d0 * 0x10));
 }
@@ -1026,27 +1026,27 @@ void shop_sell_show(uint8_t *rec)
  * sells it (the cash is paid and the weapon goes); the button below the grid leaves */
 void shop_sell(void)
 {
-    v_04f2 = 0;
-    v_04f4 = 0;
+    shop_cursor_col = 0;
+    shop_cursor_row = 0;
     sh_w16(SH_LAST_X, 0xffff);
     shop_cursor_draw();
     sh_w16(SH_PRICE, 0xffff);
     for (;;) {
-        v_0a01 = 0;
+        key_pressed = 0;
         shop_stick();
-        if (v_04f4 == 4) {
-            if (v_04f2 == 0) {
+        if (shop_cursor_row == 4) {
+            if (shop_cursor_col == 0) {
                 shop_cursor_erase();
                 return;
             }
-        } else if (!(v_04f2 == sh_r16(SH_LAST_X) && v_04f4 == sh_r16(SH_LAST_Y))) {
+        } else if (!(shop_cursor_col == sh_r16(SH_LAST_X) && shop_cursor_row == sh_r16(SH_LAST_Y))) {
             uint8_t *rec = cursor_record();
             uint16_t kind = rd16(rec + 6);
 
             if (kind == 0)
                 continue;
-            sh_w16(SH_LAST_X, v_04f2);
-            sh_w16(SH_LAST_Y, v_04f4);
+            sh_w16(SH_LAST_X, shop_cursor_col);
+            sh_w16(SH_LAST_Y, shop_cursor_row);
             sh_w8(SH_BLINK_B, 0xff);
             shop_item_name(kind, (uint16_t)((const Object *)GPTR(rd32(rec + 0xc)))->v42);
             shop_sell_show(rec);
@@ -1056,7 +1056,7 @@ void shop_sell(void)
         sh_w16(SH_LAST_X, 0xffff);
         if ((int16_t)sh_r16(SH_PRICE) < 0)
             continue;
-        v_0c9a += (uint32_t)(int32_t)(int16_t)sh_r16(SH_PRICE);
+        player_money += (uint32_t)(int32_t)(int16_t)sh_r16(SH_PRICE);
         sh_w16(SH_PRICE, 0xffff);
         shop_cash_draw();
         {
@@ -1074,20 +1074,20 @@ void shop_sell(void)
  * counted down and the item is given); the button below the grid leaves */
 void shop_buy(void)
 {
-    v_04f2 = 0;
-    v_04f4 = 0;
+    shop_cursor_col = 0;
+    shop_cursor_row = 0;
     sh_w16(SH_LAST_X, 0xffff);
     shop_cursor_draw();
     sh_w16(SH_PRICE, 0xffff);
     for (;;) {
-        v_0a01 = 0;
+        key_pressed = 0;
         shop_stick();
-        if (v_04f4 == 4) {
-            if (v_04f2 == 0) {
+        if (shop_cursor_row == 4) {
+            if (shop_cursor_col == 0) {
                 shop_cursor_erase();
                 return;
             }
-        } else if (!(v_04f2 == sh_r16(SH_LAST_X) && v_04f4 == sh_r16(SH_LAST_Y))) {
+        } else if (!(shop_cursor_col == sh_r16(SH_LAST_X) && shop_cursor_row == sh_r16(SH_LAST_Y))) {
             uint8_t *rec = cursor_record();
             uint16_t kind = rd16(rec + 6);
 
@@ -1109,9 +1109,9 @@ void shop_buy(void)
                 sh_w16(SH_PRICE, 0xffff);
                 continue;
             }
-            sh_w16(SH_LAST_X, v_04f2);
-            sh_w16(SH_LAST_Y, v_04f4);
-            shop_item_name(kind, (uint16_t)(v_04f4 * 5));
+            sh_w16(SH_LAST_X, shop_cursor_col);
+            sh_w16(SH_LAST_Y, shop_cursor_row);
+            shop_item_name(kind, (uint16_t)(shop_cursor_row * 5));
             shop_price_text(rec);
             continue;
         }
@@ -1131,8 +1131,8 @@ void shop_buy(void)
             const uint8_t *rec;
 
             while (d0 >= 0x64) {
-                v_0414 = 0xd;
-                v_0c9a -= 0x64;
+                sfx_cmd = 0xd;
+                player_money -= 0x64;
                 d0 -= 0x64;
                 shop_cash_draw();
                 shop_room_draw();
@@ -1140,7 +1140,7 @@ void shop_buy(void)
                 shop_records_draw();
                 swap_screens_200();
             }
-            v_0c9a -= (uint32_t)d0;
+            player_money -= (uint32_t)d0;
             rec = (const uint8_t *)GPTR(sh_r32(SH_REC));
             item_grant(rd16(rec + 6));
             sh_w16(SH_PRICE, 0xffff);
@@ -1163,8 +1163,8 @@ static void pillars_draw(uint16_t y, uint16_t state)
     shop_draw_both(0x122, y, GPTR(gfx));
 }
 
-void shop_pillars_a(void) { pillars_draw(4, v_04ec); }
-void shop_pillars_b(void) { pillars_draw(0x6d, v_04ee); }
+void shop_pillars_a(void) { pillars_draw(4, shop_door_left); }
+void shop_pillars_b(void) { pillars_draw(0x6d, shop_door_right); }
 
 /* shop $5504E */
 void shop_delay(void)
@@ -1185,25 +1185,25 @@ void shop_slide_in(void)
 {
     do {
         swap_screens_200();
-        if (v_04ec != 0) {
-            v_04ec -= 4;
-            if ((int16_t)v_04ec < 0 || v_04ec == 0) {
+        if (shop_door_left != 0) {
+            shop_door_left -= 4;
+            if ((int16_t)shop_door_left < 0 || shop_door_left == 0) {
                 shop_sound_cmd(0x83);
-                v_04ec = 0;
+                shop_door_left = 0;
             }
         }
-        if (v_04ee != 0) {
-            v_04ee -= 4;
-            if (v_04ee == 0 || (int16_t)v_04ee < 0) {
-                if ((int16_t)v_04ee < 0)
-                    v_04ee = 0;
-                v_0414 = 0;
+        if (shop_door_right != 0) {
+            shop_door_right -= 4;
+            if (shop_door_right == 0 || (int16_t)shop_door_right < 0) {
+                if ((int16_t)shop_door_right < 0)
+                    shop_door_right = 0;
+                sfx_cmd = 0;
             }
         }
         shop_room_update();
         shop_pillars_a();
         shop_pillars_b();
-    } while (v_04ec != 0 || v_04ee != 0);
+    } while (shop_door_left != 0 || shop_door_right != 0);
     shop_board_clear();
 }
 
@@ -1213,20 +1213,20 @@ void shop_slide_out(void)
     shop_board_clear();
     do {
         swap_screens_200();
-        if (v_04ee != 0x44) {
-            v_04ee += 4;
-            if ((int16_t)v_04ee > 0x44)
-                v_04ee = 0x44;
+        if (shop_door_right != 0x44) {
+            shop_door_right += 4;
+            if ((int16_t)shop_door_right > 0x44)
+                shop_door_right = 0x44;
         }
-        if (v_04ec != 0x30) {
-            v_04ec += 4;
-            if ((int16_t)v_04ec > 0x30)
-                v_04ec = 0x30;
+        if (shop_door_left != 0x30) {
+            shop_door_left += 4;
+            if ((int16_t)shop_door_left > 0x30)
+                shop_door_left = 0x30;
         }
         shop_room_update();
         shop_pillars_b();
         shop_pillars_a();
-    } while (v_04ee != 0x44);
+    } while (shop_door_right != 0x44);
 }
 
 /* shop $564CE: the keeper walks to the counter, talks, and goes back */
@@ -1346,9 +1346,9 @@ static void latch_slots_all(uint16_t d2)
     int i;
 
     for (i = 0; i < 7; i++) {
-        *out++ = v_0c66[i].type;
-        if (v_0c66[i].type != 0)
-            d2 = (uint16_t)v_0c66[i].obj->v42;
+        *out++ = weapon_slots[i].type;
+        if (weapon_slots[i].type != 0)
+            d2 = (uint16_t)weapon_slots[i].obj->v42;
         *out++ = d2;
     }
 }
@@ -1381,16 +1381,16 @@ void shop_end_of_broadcast(void)
     shop_print((const uint8_t *)GPTR(SH_TXT_GOOD_ENOUGH));
     shop_wait(0x11);
     shop_close();
-    v_0414 = 0x16;
+    sfx_cmd = 0x16;
     shop_slide_out();
-    v_0414 = 8;
+    sfx_cmd = 8;
     swap_screens_200();
     shop_delay();
     shop_room_update();
     swap_screens_200();
     shop_room_update();
     palette_fade_out(2);
-    v_0414 = 0x12;
+    sfx_cmd = 0x12;
     for (n = 0x96; n != 0; n--) {
         uint32_t c[8];
         int i;
@@ -1451,12 +1451,12 @@ void shop_main(void)
     sh_w16(SH_PAGE, 0);
     for (a2 = SH_RECS, d0 = 0x13; d0 >= 0; d0--, a2 += 0x10)
         sh_w16(a2, 0xfff7);
-    v_04ec = 0x30;
-    v_04ee = 0x44;
-    v_04f0 = 0;
+    shop_door_left = 0x30;
+    shop_door_right = 0x44;
+    shop_keeper_talking = 0;
     v_04f1 = 0;
-    v_04f2 = 1;
-    v_04f4 = 4;
+    shop_cursor_col = 1;
+    shop_cursor_row = 4;
     shop_cursor_erase();
     shop_cash_draw();
     shop_room_update();
@@ -1469,9 +1469,9 @@ void shop_main(void)
             colors[d0] = sh_r16(SH_PALETTE + 2u * (uint16_t)d0);
         palette_fade_in(colors);
     }
-    v_0414 = 8;
+    sfx_cmd = 8;
     shop_delay();
-    v_0414 = 0x16;
+    sfx_cmd = 0x16;
     shop_slide_in();
     if (v_8fec)
         shop_stock_sold_out();
@@ -1485,7 +1485,7 @@ void shop_main(void)
     } else {
         const uint8_t *text = (const uint8_t *)GPTR(SH_TXT_SELL);
 
-        if (v_0e04 == 5) {
+        if (level_number == 5) {
             shop_print((const uint8_t *)GPTR(SH_TXT_WELCOME_A));
             shop_hold(0x11);
             shop_text_home();
@@ -1498,8 +1498,8 @@ void shop_main(void)
         shop_sell();
         shop_close();
         sh_w8(SH_SELLING, 0);
-        v_04f2 = 1;
-        v_04f4 = 4;
+        shop_cursor_col = 1;
+        shop_cursor_row = 4;
         shop_cursor_erase();
         shop_stock_update();
         shop_open();
@@ -1507,9 +1507,9 @@ void shop_main(void)
         shop_print((const uint8_t *)GPTR(SH_TXT_BUY));
         shop_buy();
         shop_close();
-        v_0414 = 0x16;
+        sfx_cmd = 0x16;
         shop_slide_out();
-        v_0414 = 8;
+        sfx_cmd = 8;
         swap_screens_200();
         shop_delay();
         shop_room_update();

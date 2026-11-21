@@ -122,7 +122,7 @@ void l3_hook(uint16_t d0, const uint8_t *a1, uint16_t d2)
  * spawner runs and when its flags say so the bonuses come once */
 void l3_scroll(void)
 {
-    if (v_0ce8 == 0xaf0 && v_0cd0 == 0xaf0) {
+    if (v_0ce8 == 0xaf0 && scroll_pos == 0xaf0) {
         v_0cea = 0xaf0;
         scroll_pos_update(v_0cda);
         stars_scroll(v_0cda);
@@ -132,7 +132,7 @@ void l3_scroll(void)
         else
             v_0ce8 = 0;
     }
-    if ((int16_t)v_0cd0 <= 0xd0) {
+    if ((int16_t)scroll_pos <= 0xd0) {
         if ((int16_t)v_0cea < 0x20)
             v_0cea = 0x20;
         if (B(0xd92) == 0 && B(0xd94) == 0)
@@ -173,10 +173,10 @@ void l3_init(void)
     a0->fn_update = (obj_fn)obj_nop_thunk;
     a0->fn_draw = FN(l3_end_draw);
     a0->flag60 = -1;
-    v_0d26[16] = 0xe496;
-    v_0d26[17] = 0xaa8a;
-    v_0d26[18] = 0x5274;
-    v_0d26[19] = 0xb949;
+    level_vars[16] = 0xe496;
+    level_vars[17] = 0xaa8a;
+    level_vars[18] = 0x5274;
+    level_vars[19] = 0xb949;
     sh_w8(0xd92, 0);
     sh_w8(0xd93, 0xff);
     sh_w8(0xd94, 0);
@@ -203,7 +203,7 @@ void l3_end_draw(Object *a0)
     if (B(0xd94) == 0 && B(0xd95) == 0)
         return;
     for (; sh_r32(t) != 0; t += 12) {
-        int16_t d2 = (int16_t)(W(t + 8) - v_0cd0);
+        int16_t d2 = (int16_t)(W(t + 8) - scroll_pos);
 
         if (d2 >= 0xc0 || d2 <= -0x30)
             continue;
@@ -225,7 +225,7 @@ void l3_worm_spawn(uint16_t d6)
         d0 = W(0xd64);
         sh_w16(0xd64, (uint16_t)(d0 + 1));
     } else {
-        uint16_t *seed = d6 == 0 ? &v_0d26[16] : &v_0d26[18];
+        uint16_t *seed = d6 == 0 ? &level_vars[16] : &level_vars[18];
 
         do {
             uint32_t r = ((uint32_t)seed[0] << 16) | seed[1];
@@ -238,7 +238,7 @@ void l3_worm_spawn(uint16_t d6)
     }
     path = sh_r32(0x6ef36 + 4 * (uint32_t)d0);
     x = (int16_t)W(path + 2);
-    y = (int16_t)(W(path + 4) - v_0cd0 - v_0cda);
+    y = (int16_t)(W(path + 4) - scroll_pos - v_0cda);
     count = W(t) + 1;
     t += 2;
     for (n = 0; n < count; n++) {
@@ -304,7 +304,7 @@ void l3_enemy_c(Object *a0)
 /* a snake's piece leaves the field at y $E8 */
 static int l3_snake_off(Object *a0)
 {
-    a0->y = (int16_t)(a0->y + v_0cd8);
+    a0->y = (int16_t)(a0->y + scroll_speed);
     if (a0->y >= 0xe8) {
         kill_thunk(a0);
         return 1;
@@ -391,7 +391,7 @@ void l3_spawn_snake(const uint8_t *a1)
 
     if (flag)
         d0 = (int16_t)(d0 + 0x20);
-    d1 = (int16_t)(rd16(a1 + 0xa) - v_0cd0);
+    d1 = (int16_t)(rd16(a1 + 0xa) - scroll_pos);
     a0 = alloc_in(LIST_C);
     a4 = a0;
     for (d7 = 7; d7 >= 0; d7--) {
@@ -479,8 +479,8 @@ void l3_diver_update(Object *a0)
     uint32_t a2;
     int flip;
 
-    a0->y = (int16_t)(a0->y + v_0cd8);
-    d0 = (int16_t)((int16_t)v_0cea + 0xd0 - v_0cd0);
+    a0->y = (int16_t)(a0->y + scroll_speed);
+    d0 = (int16_t)((int16_t)v_0cea + 0xd0 - scroll_pos);
     if (d0 < a0->y) {
         kill_thunk(a0);
         return;
@@ -564,7 +564,7 @@ void l3_spawn_diver(const uint8_t *a1)
     a0->fn_draw = draw_bob_masked;
     SET_V5E(a0, 0);
     a0->x = (int16_t)(rd16(a1 + 8) - 8);
-    a0->y = (int16_t)(rd16(a1 + 0xa) + 8 - v_0cd0);
+    a0->y = (int16_t)(rd16(a1 + 0xa) + 8 - scroll_pos);
     a0->v2a = 2;
     if (a0->x > 0xa0) {
         a2 = 0x5681c;
@@ -752,7 +752,7 @@ void l3_part_arm(Object *a0)
         bbox_from_frame(a0);
         return;
     }
-    v_0418 = 0xf;
+    sfx_cmd2 = 0xf;
     a0->v3e = 1;
     a0->v2e = 1;
     {
@@ -825,7 +825,7 @@ void l3_part_arm_tip(Object *a0)
     obj_script_run(a0);
     d0 = (uint16_t)(((uint16_t)a0->v2c >> 2) & 0x38);
     if (a0->v54 == 0xe)
-        v_0414 = 0xc;
+        sfx_cmd = 0xc;
     d1 = (uint16_t)(v_0cdc & 4);
     a0->gfx = GPTR(sh_r32(0x55dac + (uint16_t)(d0 + d1)));
     a0->anim_delay = 0;
@@ -882,7 +882,7 @@ void l3_gun_update(Object *a0)
     }
     a0->hit[0] = (int16_t)(a0->x + 2);
     a0->hit[2] = (int16_t)(a0->x + 0xe);
-    d0 = (int16_t)(a0->y - v_0cd0 + 2);
+    d0 = (int16_t)(a0->y - scroll_pos + 2);
     a0->hit[1] = d0;
     a0->hit[3] = (int16_t)(d0 + 0xc);
     if (a0->v28 == 0) {
@@ -899,7 +899,7 @@ void l3_gun_update(Object *a0)
     copy2(a0->v46, (const uint8_t *)GPTR(a2 + (uint16_t)(a0->v28 & ~1)));
     a0->v28++;
     if (a0->v28 == 8) {
-        int16_t x = (int16_t)(a0->x + 8), y = (int16_t)(a0->y - v_0cd0), angle = 0;
+        int16_t x = (int16_t)(a0->x + 8), y = (int16_t)(a0->y - scroll_pos), angle = 0;
 
         if (a0->type != 0xf0) {
             angle = 4;
@@ -962,7 +962,7 @@ void l3_boss_update(Object *a0)
     }
     a0->hit[0] = (int16_t)(a0->x + 0x10);
     a0->hit[2] = (int16_t)(a0->hit[0] + 0x1f);
-    d0 = (uint16_t)(a0->y - v_0cd0 + 0x40);
+    d0 = (uint16_t)(a0->y - scroll_pos + 0x40);
     a0->hit[1] = (int16_t)d0;
     a0->hit[3] = (int16_t)(d0 + 0x1a);
     d0 = (uint16_t)a0->v28;
@@ -996,7 +996,7 @@ void l3_boss_update(Object *a0)
             return;
         a0->v5e_b[0] = (uint8_t)(random_next() & 0x3f);
         x = (int16_t)(a0->x + 0x20);
-        y = (int16_t)(a0->y - v_0cd0 + 0x58);
+        y = (int16_t)(a0->y - scroll_pos + 0x58);
         gfx = sh_r32(sh_r32(0x6ee26 + 4 * (uint32_t)W(0x54e5c)));
         step = (uint16_t)(a0->v28 & ~1);
         if (step == 6)
@@ -1019,7 +1019,7 @@ void l3_boss_hit(Object *a0, Object *a1, uint16_t d0)
         a1->fn_draw = FN(l3_boss_flash);
         return;
     }
-    spawn_effect((int16_t)(a1->x + 0x20), (int16_t)(a1->y - v_0cd0 + 0x40), v_0f64, draw_bob_masked);
+    spawn_effect((int16_t)(a1->x + 0x20), (int16_t)(a1->y - scroll_pos + 0x40), big_explosion_anim, draw_bob_masked);
     m = a1->v46;
     wr32(m + 0x50, 0);
     wr32(m + 0x54, 0);
@@ -1035,13 +1035,13 @@ void l3_boss_hit(Object *a0, Object *a1, uint16_t d0)
     a1->hit[0] = 0x3e8;
     a1->hit[2] = 0x3e8;
     a1->v28 = 0;
-    v_0c92 += 0x1f4;
+    player_score += 0x1f4;
 }
 
 /* level3 $056A8C: the draw of the boss of tiles for the frame after a hit: its two grids as flashes */
 void l3_boss_flash(Object *a0)
 {
-    int16_t y = (int16_t)(a0->y - v_0cd0);
+    int16_t y = (int16_t)(a0->y - scroll_pos);
     uint32_t cells = 0x569a2 + 4 * (uint32_t)(a0->v28 & ~1);
 
     a0->fn_draw = (obj_fn)obj_nop_thunk;
@@ -1061,7 +1061,7 @@ void l3_boss2_update(Object *a0)
     }
     a0->hit[0] = (int16_t)(a0->x + 0x10);
     a0->hit[2] = (int16_t)(a0->hit[0] + 0x1f);
-    d0 = (uint16_t)(a0->y + 4 - v_0cd0);
+    d0 = (uint16_t)(a0->y + 4 - scroll_pos);
     a0->hit[1] = (int16_t)d0;
     a0->hit[3] = (int16_t)(d0 + 0x17);
     d0 = (uint16_t)a0->v28;
@@ -1082,7 +1082,7 @@ void l3_boss2_update(Object *a0)
         return;
     }
     if (a0->v28 == 4) {
-        int16_t x = (int16_t)(a0->x + 0x20), y = (int16_t)(a0->y - v_0cd0 + 0x18);
+        int16_t x = (int16_t)(a0->x + 0x20), y = (int16_t)(a0->y - scroll_pos + 0x18);
         int d7;
 
         for (d7 = 7; d7 >= 0; d7--) {
@@ -1105,13 +1105,13 @@ void l3_boss2_hit(Object *a0, Object *a1, uint16_t d0)
         a1->fn_draw = FN(l3_boss2_flash);
         return;
     }
-    spawn_effect((int16_t)(a1->x + 0x20), (int16_t)(a1->y - v_0cd0 + 0x10), v_0f64, draw_bob_masked);
+    spawn_effect((int16_t)(a1->x + 0x20), (int16_t)(a1->y - scroll_pos + 0x10), big_explosion_anim, draw_bob_masked);
     m = a1->v46;
     wr32(m, 0);
     wr32(m + 4, 0);
     wr32(m + 0x28, 0);
     wr32(m + 0x2c, 0);
-    v_0c92 += 0x1f4;
+    player_score += 0x1f4;
     kill_thunk(a1);
 }
 
@@ -1119,7 +1119,7 @@ void l3_boss2_hit(Object *a0, Object *a1, uint16_t d0)
 void l3_boss2_flash(Object *a0)
 {
     a0->fn_draw = (obj_fn)obj_nop_thunk;
-    draw_tile_grid_flash((const uint8_t *)GPTR(0x56d2c), 1, 1, (int16_t)(a0->y - v_0cd0), (uint16_t)(((uint16_t)(a0->x + 0x10) >> 1) & 0xfffc));
+    draw_tile_grid_flash((const uint8_t *)GPTR(0x56d2c), 1, 1, (int16_t)(a0->y - scroll_pos), (uint16_t)(((uint16_t)(a0->x + 0x10) >> 1) & 0xfffc));
 }
 
 /* level3 $0556F6: a walker ($DC) from a record: the direction w6 of the record gives its first place and picture */
@@ -1134,7 +1134,7 @@ void l3_spawn_walker(const uint8_t *a1)
     a0->v2a = (int16_t)i;
     SET_V5E(a0, 0);
     a0->x = (int16_t)(rd16(a1 + 8) - 8 + (int16_t)W(0x55790 + 2 * i));
-    a0->y = (int16_t)(rd16(a1 + 10) - 8 - v_0cd0 + (int16_t)W(0x557a0 + 2 * i));
+    a0->y = (int16_t)(rd16(a1 + 10) - 8 - scroll_pos + (int16_t)W(0x557a0 + 2 * i));
     set_anim(a0, sh_r32(0x557b0 + 4 * (uint32_t)i));
     a0->fn_hit = (void *)hit_enemy;
     a0->energy = (int16_t)W(0x54e44);
@@ -1154,8 +1154,8 @@ void l3_walker_update(Object *a0)
     int at_tile = 0, turn = 0;
 
     anim_step(a0);
-    a0->y = (int16_t)(a0->y + v_0cd8);
-    if ((int16_t)(v_0cea + 0xd0 - v_0cd0) < a0->y) {
+    a0->y = (int16_t)(a0->y + scroll_speed);
+    if ((int16_t)(v_0cea + 0xd0 - scroll_pos) < a0->y) {
         kill_thunk(a0);
         return;
     }
@@ -1167,7 +1167,7 @@ void l3_walker_update(Object *a0)
         int16_t step = (int16_t)W(0x562a0 + d2);
 
         a0->y = (int16_t)(a0->y + step);
-        d1 = (int16_t)(a0->y + v_0cd0);
+        d1 = (int16_t)(a0->y + scroll_pos);
         at_tile = step < 0 ? (d1 & 0xf) == 0xf : (d1 & 0xf) == 0;
     }
     if (at_tile) {
@@ -1175,7 +1175,7 @@ void l3_walker_update(Object *a0)
         if (d0 == 0 || (uint16_t)d0 >= 0x140) {
             turn = 1;
         } else {
-            uint16_t row = (uint16_t)((uint16_t)(a0->y + v_0cd0) >> 4);
+            uint16_t row = (uint16_t)((uint16_t)(a0->y + scroll_pos) >> 4);
             const uint8_t *a1 = level_init_src + (int16_t)(uint16_t)(row * 0x28) + (((uint16_t)d0 >> 3) & 0xfe);
 
             if (rd16(a1) != 0) {
@@ -1217,7 +1217,7 @@ void l3_walker_update(Object *a0)
 /* the picture of a worm's piece follows its phase v2c by a table of eight */
 static void l3_worm_follow(Object *a0, uint32_t table)
 {
-    a0->y = (int16_t)(a0->y + v_0cd8);
+    a0->y = (int16_t)(a0->y + scroll_speed);
     if (table == 0x55622)
         sh_w8(0xd94 + (uint16_t)a0->v30, 0xff);
     enemy_update_no_anim(a0);
@@ -1231,7 +1231,7 @@ void l3_worm_head(Object *a0)
     uint16_t old = (uint16_t)a0->v2c;
     uint16_t d0, d1, sum;
 
-    a0->y = (int16_t)(a0->y + v_0cd8);
+    a0->y = (int16_t)(a0->y + scroll_speed);
     enemy_update(a0);
     d0 = (uint16_t)((((uint16_t)a0->v2c + 0x10) >> 3) & 0x1c);
     d1 = (uint16_t)(((old + 0x10) >> 3) & 0x1c);
@@ -1290,6 +1290,6 @@ void l3_worm_hit(Object *a0, Object *a1, uint16_t d0)
         o = next;
     }
     kill_thunk(a1);
-    debris_burst(a0, 0x13, 0, 0, 0x140, 0xc0, v_0f64);
+    debris_burst(a0, 0x13, 0, 0, 0x140, 0xc0, big_explosion_anim);
     free_object_chain(LIST_C->prev);
 }

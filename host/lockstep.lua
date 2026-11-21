@@ -66,9 +66,9 @@ local STATE = args:match("state=(%S+)")   -- the original starts from local/save
 local ROOT = ami.script_dir .. "/.."
 
 -- members whose values depend on when the interrupts fall relative to the code, not on what the code does
-local IGNORE = { vbl_count = true, v_0404 = true, exc_vectors_lo = true, exc_vectors_hi = true }
+local IGNORE = { vbl_count = true, last_flip_vbl = true, exc_vectors_lo = true, exc_vectors_hi = true }
 if args:match("tolerant=1") then
-    for _, name in ipairs{ "music_accum", "music_channels", "hw_mirror", "random_a", "random_b", "sfx_channels", "sfx_request", "sfx_samples", "sfx_samples_ready", "v_0414", "v_0418", "irq_joy", "irq_joy_prev", "v_0a00", "v_0a01" } do IGNORE[name] = true end
+    for _, name in ipairs{ "music_accum", "music_channels", "hw_mirror", "random_a", "random_b", "sfx_channels", "sfx_request", "sfx_samples", "sfx_samples_ready", "sfx_cmd", "sfx_cmd2", "irq_joy", "irq_joy_prev", "joy_stick", "key_pressed" } do IGNORE[name] = true end
 end
 if args:match("play=1") or args:match("replay=") then IGNORE.key_table = true; IGNORE.key_code = true end   -- (the keys reach the original's keyboard when they are pressed, the port's at the next sync point)
 for name in (args:match("ignore=(%S+)") or ""):gmatch("[%w_]+") do IGNORE[name] = true end
@@ -581,9 +581,9 @@ local function service_gate()   -- the port waits inside its loader: it goes on 
     say("a disk load (emulator frame %d): the port took the original's memory at the end of its load and went on from there; the comparison starts again", ami.frame())
 end
 local desired_joy, port_joy   -- the stick the original has been given, and the one the port has
--- The original's interrupt decodes the stick into v_0a00 in the middle of a slow frame: the routines that read it before see the old stick, the ones after
+-- The original's interrupt decodes the stick into joy_stick in the middle of a slow frame: the routines that read it before see the old stick, the ones after
 -- the new.  The routines that read it are hooked on the original and the byte each saw is recorded in order, by the sync point before the interval;
--- the port is told the list and sets v_0a00 to each value as it enters the same routine.
+-- the port is told the list and sets joy_stick to each value as it enters the same routine.
 local STICK_READERS = { 0x56e56, 0x5de6, 0x68b0, 0x3b94, 0x3cdc, 0x3e2c, 0x4340, 0x6372, 0x6426, 0x7a56, 0x8ab0, 0x8aee }   -- the last two: the high-score name entry
 local reads = {}
 for _, a in ipairs(STICK_READERS) do
@@ -599,7 +599,7 @@ for _, a in ipairs(STICK_READERS) do
         r[#r + 1] = ("{0x%x,%d}"):format(a, value)
     end)
 end
--- the byte the routine sees is the one at its read of v_0a00, which can come after the entry (the interrupt decodes the stick in between): the entry's record takes it
+-- the byte the routine sees is the one at its read of joy_stick, which can come after the entry (the interrupt decodes the stick in between): the entry's record takes it
 for pc, a in pairs({ [0x5df8] = 0x5de6, [0x68f8] = 0x68b0, [0x690a] = 0x68b0, [0x3bb8] = 0x3b94, [0x3d0c] = 0x3cdc, [0x3e46] = 0x3e2c, [0x437a] = 0x4340, [0x7a5c] = 0x7a56 }) do
     ami.hook(pc, function()
         local r = reads[n]
@@ -647,7 +647,7 @@ local function apply_joy(snap)
     apply_joy0(snap)
     if SHIELD_FRAMES > 0 and snap.ram and snap.n <= SHIELD_FRAMES + 1 then port_call(("port.set_shield(%d)"):format(snap.ram:byte(0xcc9) * 256 + snap.ram:byte(0xcca))) end
     if snap.ram then port_call(("port.set_a6a(%d)"):format(snap.ram:byte(0xa6b))) end   -- the press the original's interrupt saw is in v_0a6a where it copied it
-    -- the interrupt that brings a fire press came after the routine that read the old stick: the press is in v_0a01 from there on
+    -- the interrupt that brings a fire press came after the routine that read the old stick: the press is in key_pressed from there on
     port_call(("port.edge_defer(%d)"):format(first and port_joy and first & 0x80 == 0 and stick_bits(port_joy) & 0x80 ~= 0 and 1 or 0))
 end
 local prev_orig_ram, prev_port_ram, last_orig_ram, last_port_ram

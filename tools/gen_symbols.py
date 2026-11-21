@@ -75,14 +75,17 @@ def write_state(types, syms):
     out += ['#include "%s"' % os.path.basename(h) for h in heads]
     out += ['_Static_assert(sizeof(struct %s) == %d, "struct %s has not the size game.symbols gives");' % (n, sz, n) for n, sz in sorted(types.items())]
     out.append('')
-    out += ['#define LAYOUT_ASSERT(member, address) _Static_assert(offsetof(struct Xenon2, member) == (address), #member " is not at its address")',
+    out += ['#define PAD_CAT2(a, b) a##b',
+            '#define PAD_CAT(a, b) PAD_CAT2(a, b)',
+            '#define PAD(n) uint8_t PAD_CAT(pad_, __LINE__)[n];   /* a gap between members, named by its line */',
+            '#define LAYOUT_ASSERT(member, address) _Static_assert(offsetof(struct Xenon2, member) == (address), #member " is not at its address")',
             '/* The game\'s memory, byte for byte: the members are at the offsets of the original\'s addresses, the gaps are padding.  The SDL port defines it (guest.c);',
             ' * the Amiga build links it at address 0 (game.ld). */',
             'struct Xenon2 {']
     pos, padn = 0, 0
     for s in syms:
         if s['addr'] > pos:
-            out.append('    uint8_t pad_0x%x[%d];' % (s['addr'], s['addr'] - pos)); padn += 1
+            out.append('    PAD(%d)' % (s['addr'] - pos)); padn += 1
         out.append('    %s;  /* $%06X %s */' % (decl(s), s['addr'], s['kind']))
         pos = s['addr'] + s['size']
     out += ['};', 'extern struct Xenon2 xenon2;']

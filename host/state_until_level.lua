@@ -1,4 +1,4 @@
--- A savestate made later from another: fire is tapped every 60 frames until v_0e04 is LEVEL and the machine has run FRAMES more frames, then the state is saved.
+-- A savestate made later from another: fire is tapped every 60 frames until level_number is LEVEL and the machine has run FRAMES more frames, then the state is saved.
 --   ami9000_host host/state_until_level.lua --headless --script-args "state=frame-5694 level=4 frames=100 out=level4-start"
 local args = ami.args or ""
 local state = args:match("state=(%S+)")
