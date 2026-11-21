@@ -27,28 +27,23 @@ _Static_assert(sizeof(struct SongHeader) == 10, "struct SongHeader has not the s
 _Static_assert(sizeof(struct SpawnKind) == 6, "struct SpawnKind has not the size game.symbols gives");
 _Static_assert(sizeof(struct Star) == 6, "struct Star has not the size game.symbols gives");
 
-#ifdef GAME_SDL
-/* The SDL port: the game's memory is one struct; with MATCH_MEMORY_LAYOUT its members are at the offsets of the original's addresses. */
-#ifdef MATCH_MEMORY_LAYOUT
-#define PAD(n, id) uint8_t pad_##id[n];
-#else
-#define PAD(n, id)
-#endif
-#define LAYOUT_ASSERT(member, address) _Static_assert(offsetof(struct Xenon, member) == (address), #member " is not at its address")
-struct Xenon {
-    PAD(2, 0x0)
+#define LAYOUT_ASSERT(member, address) _Static_assert(offsetof(struct Xenon2, member) == (address), #member " is not at its address")
+/* The game's memory, byte for byte: the members are at the offsets of the original's addresses, the gaps are padding.  The SDL port defines it (guest.c);
+ * the Amiga build links it at address 0 (game.ld). */
+struct Xenon2 {
+    uint8_t pad_0x2[2];
     uint16_t disk_retries;  /* $000002 var */
-    PAD(4, 0x1)
+    uint8_t pad_0x8[4];
     irq_fn exc_vectors_lo[23];  /* $000008 arr */
     irq_fn irq_vectors[7];  /* $000064 arr */
     irq_fn exc_vectors_hi[224];  /* $000080 arr */
-    PAD(4, 0x2)
+    uint8_t pad_0x404[4];
     uint16_t v_0404;  /* $000404 var */
     uint8_t * draw_screen;  /* $000406 var */
     uint8_t * show_screen;  /* $00040A var */
-    PAD(2, 0x3)
+    uint8_t pad_0x410[2];
     uint16_t v_0410;  /* $000410 var */
-    PAD(2, 0x4)
+    uint8_t pad_0x414[2];
     int16_t v_0414;  /* $000414 var */
     int16_t v_0416;  /* $000416 var */
     int16_t v_0418;  /* $000418 var */
@@ -71,7 +66,7 @@ struct Xenon {
     uint16_t v_045c;  /* $00045C var */
     uint16_t v_045e;  /* $00045E var */
     uint16_t hit_box[4];  /* $000460 arr */
-    PAD(4, 0x5)
+    uint8_t pad_0x46c[4];
     uint16_t v_046c[8];  /* $00046C arr */
     uint16_t v_047c[51];  /* $00047C arr */
     uint16_t v_04e2;  /* $0004E2 var */
@@ -102,7 +97,7 @@ struct Xenon {
     uint8_t v_0a6a;  /* $000A6A var */
     uint8_t v_0a6b;  /* $000A6B var */
     uint8_t v_0a6c;  /* $000A6C var */
-    PAD(9, 0x6)
+    uint8_t pad_0xa76[9];
     struct Object obj_list[5];  /* $000A76 arr */
     uint16_t v_0c60;  /* $000C60 var */
     uint16_t v_0c62;  /* $000C62 var */
@@ -148,7 +143,7 @@ struct Xenon {
     uint16_t v_0d5a;  /* $000D5A var */
     uint16_t v_0d5c;  /* $000D5C var */
     uint8_t v_0d5e;  /* $000D5E var */
-    PAD(29, 0x7)
+    uint8_t pad_0xd7c[29];
     uint8_t v_0d7c[7];  /* $000D7C arr */
     uint8_t v_0d83;  /* $000D83 var */
     uint8_t v_0d84;  /* $000D84 var */
@@ -160,203 +155,203 @@ struct Xenon {
     uint8_t v_0d8e;  /* $000D8E var */
     uint8_t v_0d8f;  /* $000D8F var */
     uint8_t v_0d90;  /* $000D90 var */
-    PAD(15, 0x8)
+    uint8_t pad_0xda0[15];
     struct Object level_obj;  /* $000DA0 var */
     uint16_t v_0e02;  /* $000E02 var */
     uint16_t v_0e04;  /* $000E04 var */
     uint16_t v_0e06;  /* $000E06 var */
     uint8_t * level_buf;  /* $000E08 var */
-    PAD(340, 0x9)
+    uint8_t pad_0xf60[340];
     int8_t * v_0f60;  /* $000F60 var */
     uint8_t * v_0f64;  /* $000F64 var */
-    PAD(172, 0xa)
+    uint8_t pad_0x1014[172];
     uint16_t copper_list_a[18];  /* $001014 arr */
     uint16_t copper_list_b[18];  /* $001038 arr */
-    PAD(1602, 0xb)
+    uint8_t pad_0x169e[1602];
     const uint32_t pow10[8];  /* $00169E tab */
-    PAD(2020, 0xc)
+    uint8_t pad_0x1ea2[2020];
     const uint8_t v_1ea2[32];  /* $001EA2 tab */
-    PAD(300, 0xd)
+    uint8_t pad_0x1fee[300];
     uint32_t random_a;  /* $001FEE var */
     uint32_t random_b;  /* $001FF2 var */
-    PAD(150, 0xe)
+    uint8_t pad_0x208c[150];
     uint16_t irq_div;  /* $00208C var */
     uint8_t irq_joy;  /* $00208E var */
     uint8_t irq_joy_prev;  /* $00208F var */
     irq_fn music_tick_fn;  /* $002090 var */
     irq_fn music_cmd_fn;  /* $002094 var */
-    PAD(512, 0xf)
+    uint8_t pad_0x2298[512];
     const uint16_t star_speed[34];  /* $002298 tab */
-    PAD(296, 0x10)
+    uint8_t pad_0x2404[296];
     const int16_t v_2404[8];  /* $002404 tab */
-    PAD(300, 0x11)
+    uint8_t pad_0x2540[300];
     const uint8_t anim_2540[6];  /* $002540 tab */
-    PAD(90, 0x12)
+    uint8_t pad_0x25a0[90];
     const uint8_t anim_25a0[6];  /* $0025A0 tab */
-    PAD(24, 0x13)
+    uint8_t pad_0x25be[24];
     const uint8_t anim_25be[6];  /* $0025BE tab */
-    PAD(30, 0x14)
+    uint8_t pad_0x25e2[30];
     const uint8_t anim_25e2[6];  /* $0025E2 tab */
-    PAD(42, 0x15)
+    uint8_t pad_0x2612[42];
     const uint8_t anim_2612[6];  /* $002612 tab */
-    PAD(54, 0x16)
+    uint8_t pad_0x264e[54];
     const uint8_t anim_264e[6];  /* $00264E tab */
-    PAD(90, 0x17)
+    uint8_t pad_0x26ae[90];
     const uint8_t anim_26ae[6];  /* $0026AE tab */
-    PAD(90, 0x18)
+    uint8_t pad_0x270e[90];
     const uint8_t anim_270e[6];  /* $00270E tab */
-    PAD(38, 0x19)
+    uint8_t pad_0x273a[38];
     const uint8_t anim_273a[6];  /* $00273A tab */
-    PAD(32, 0x1a)
+    uint8_t pad_0x2760[32];
     const uint8_t anim_2760[6];  /* $002760 tab */
-    PAD(48, 0x1b)
+    uint8_t pad_0x2796[48];
     const uint8_t anim_2796[6];  /* $002796 tab */
-    PAD(38, 0x1c)
+    uint8_t pad_0x27c2[38];
     uint8_t * v_27c2[12];  /* $0027C2 arr */
     const uint8_t anim_27f2[6];  /* $0027F2 tab */
-    PAD(18, 0x1d)
+    uint8_t pad_0x280a[18];
     const uint8_t anim_280a[6];  /* $00280A tab */
-    PAD(42, 0x1e)
+    uint8_t pad_0x283a[42];
     const uint8_t anim_283a[6];  /* $00283A tab */
-    PAD(78, 0x1f)
+    uint8_t pad_0x288e[78];
     const uint8_t anim_288e[6];  /* $00288E tab */
-    PAD(30, 0x20)
+    uint8_t pad_0x28b2[30];
     const uint8_t anim_28b2[6];  /* $0028B2 tab */
-    PAD(24, 0x21)
+    uint8_t pad_0x28d0[24];
     const uint8_t anim_28d0[6];  /* $0028D0 tab */
-    PAD(24, 0x22)
+    uint8_t pad_0x28ee[24];
     const uint8_t anim_28ee[6];  /* $0028EE tab */
-    PAD(30, 0x23)
+    uint8_t pad_0x2912[30];
     const uint8_t anim_2912[6];  /* $002912 tab */
     const uint8_t anim_2918[6];  /* $002918 tab */
-    PAD(18, 0x24)
+    uint8_t pad_0x2930[18];
     const uint8_t anim_2930[6];  /* $002930 tab */
     const uint8_t anim_2936[6];  /* $002936 tab */
-    PAD(18, 0x25)
+    uint8_t pad_0x294e[18];
     const uint8_t anim_294e[6];  /* $00294E tab */
     const uint8_t anim_2954[6];  /* $002954 tab */
-    PAD(18, 0x26)
+    uint8_t pad_0x296c[18];
     const uint8_t anim_296c[6];  /* $00296C tab */
     const uint8_t anim_2972[6];  /* $002972 tab */
-    PAD(18, 0x27)
+    uint8_t pad_0x298a[18];
     const uint8_t anim_298a[6];  /* $00298A tab */
     const uint8_t anim_2990[6];  /* $002990 tab */
-    PAD(18, 0x28)
+    uint8_t pad_0x29a8[18];
     const uint8_t anim_29a8[6];  /* $0029A8 tab */
     const uint8_t anim_29ae[6];  /* $0029AE tab */
-    PAD(18, 0x29)
+    uint8_t pad_0x29c6[18];
     const uint8_t anim_29c6[6];  /* $0029C6 tab */
     const uint8_t anim_29cc[6];  /* $0029CC tab */
-    PAD(18, 0x2a)
+    uint8_t pad_0x29e4[18];
     const uint8_t anim_29e4[6];  /* $0029E4 tab */
     const uint8_t anim_29ea[6];  /* $0029EA tab */
-    PAD(18, 0x2b)
+    uint8_t pad_0x2a02[18];
     const uint8_t anim_2a02[6];  /* $002A02 tab */
-    PAD(540, 0x2c)
+    uint8_t pad_0x2c24[540];
     const uint8_t anim_2c24[6];  /* $002C24 tab */
-    PAD(444, 0x2d)
+    uint8_t pad_0x2de6[444];
     const uint8_t mask_empty[160];  /* $002DE6 tab */
-    PAD(32, 0x2e)
+    uint8_t pad_0x2ea6[32];
     const uint8_t mask_full[160];  /* $002EA6 tab */
-    PAD(406, 0x2f)
+    uint8_t pad_0x30dc[406];
     uint16_t v_30dc;  /* $0030DC var */
-    PAD(398, 0x30)
+    uint8_t pad_0x326c[398];
     const uint8_t spawn_def_326c[26];  /* $00326C tab */
-    PAD(1186, 0x31)
+    uint8_t pad_0x3728[1186];
     const struct SpawnKind spawn_kinds[18];  /* $003728 tab */
-    PAD(318, 0x32)
+    uint8_t pad_0x38d2[318];
     const int16_t enemy_shot_dx[16];  /* $0038D2 tab */
     const int16_t enemy_shot_dy[16];  /* $0038F2 tab */
-    PAD(432, 0x33)
+    uint8_t pad_0x3ac2[432];
     const int16_t drill_dy[8];  /* $003AC2 tab */
     const int16_t drill_dx[8];  /* $003AD2 tab */
-    PAD(644, 0x34)
+    uint8_t pad_0x3d66[644];
     const int16_t v_3d66[99];  /* $003D66 tab */
-    PAD(2368, 0x35)
+    uint8_t pad_0x476c[2368];
     const int16_t v_476c[16];  /* $00476C tab */
-    PAD(5700, 0x36)
+    uint8_t pad_0x5dd0[5700];
     int16_t v_5dd0;  /* $005DD0 var */
-    PAD(766, 0x37)
+    uint8_t pad_0x60d0[766];
     uint8_t * v_60d0[13];  /* $0060D0 arr */
-    PAD(70, 0x38)
+    uint8_t pad_0x614a[70];
     uint8_t * v_614a[4];  /* $00614A arr */
-    PAD(476, 0x39)
+    uint8_t pad_0x6336[476];
     uint8_t * gauge_pics[10];  /* $006336 arr */
-    PAD(290, 0x3a)
+    uint8_t pad_0x6480[290];
     uint16_t beam_state[4];  /* $006480 arr */
     uint8_t * beam_heads[3];  /* $006488 arr */
     uint8_t * beam_bodies[3];  /* $006494 arr */
-    PAD(410, 0x3b)
+    uint8_t pad_0x663a[410];
     const uint32_t beam_pattern[15];  /* $00663A tab */
-    PAD(542, 0x3c)
+    uint8_t pad_0x6894[542];
     const int16_t v_6894[14];  /* $006894 tab */
-    PAD(1042, 0x3d)
+    uint8_t pad_0x6cc2[1042];
     const uint8_t ship_records[96];  /* $006CC2 tab */
-    PAD(748, 0x3e)
+    uint8_t pad_0x700e[748];
     uint16_t * copper_cur;  /* $00700E var */
     uint16_t palette_shadow[16];  /* $007012 arr */
-    PAD(2338, 0x3f)
+    uint8_t pad_0x7954[2338];
     const uint32_t key_table[4];  /* $007954 tab */
-    PAD(2, 0x40)
+    uint8_t pad_0x7966[2];
     const uint16_t weapon_damage[4];  /* $007966 tab */
     const uint16_t v_796e[1];  /* $00796E tab */
     const uint16_t v_7970[2];  /* $007970 tab */
     const uint16_t blast_damage[3];  /* $007974 tab */
-    PAD(1116, 0x41)
+    uint8_t pad_0x7dd6[1116];
     const uint8_t * title_text;  /* $007DD6 var */
     uint16_t title_scale;  /* $007DDA var */
     int16_t title_y;  /* $007DDC var */
     uint16_t title_phase;  /* $007DDE var */
     uint16_t title_index;  /* $007DE0 var */
-    PAD(1368, 0x42)
+    uint8_t pad_0x833a[1368];
     const uint16_t title_steps[21];  /* $00833A tab */
     const uint16_t title_script[75];  /* $008364 tab */
-    PAD(40, 0x43)
+    uint8_t pad_0x8422[40];
     uint16_t title_rows;  /* $008422 var */
     uint16_t * title_steps_ptr;  /* $008424 var */
     uint8_t v_8428;  /* $008428 var */
-    PAD(491, 0x44)
+    uint8_t pad_0x8614[491];
     const uint8_t star_colors[8];  /* $008614 tab */
-    PAD(150, 0x45)
+    uint8_t pad_0x86b2[150];
     const uint16_t title_palette[16];  /* $0086B2 tab */
     const uint8_t title_font_chars[42];  /* $0086D2 tab */
     const uint8_t text_chars[39];  /* $0086FC tab */
-    PAD(1, 0x46)
+    uint8_t pad_0x8724[1];
     const uint16_t squeeze_masks[17];  /* $008724 tab */
     const uint8_t title_lines[240];  /* $008746 tab */
     uint8_t v_8836[19];  /* $008836 arr */
-    PAD(1, 0x47)
+    uint8_t pad_0x884a[1];
     uint8_t v_884a[20];  /* $00884A arr */
-    PAD(192, 0x48)
+    uint8_t pad_0x891e[192];
     uint32_t hiscore_values[10];  /* $00891E arr */
     uint8_t hiscore_lines[150];  /* $008946 arr */
-    PAD(474, 0x49)
+    uint8_t pad_0x8bb6[474];
     const uint32_t decimal_powers[8];  /* $008BB6 tab */
     const uint16_t wipe_in[17];  /* $008BD6 tab */
     const uint16_t wipe_out[18];  /* $008BF8 tab */
     const uint8_t title_hiscore[20];  /* $008C1C tab */
     uint8_t loading_text[17];  /* $008C30 arr */
     uint8_t v_8c41;  /* $008C41 var */
-    PAD(2, 0x4a)
+    uint8_t pad_0x8c44[2];
     const uint8_t shop_text[20];  /* $008C44 tab */
-    PAD(380, 0x4b)
+    uint8_t pad_0x8dd4[380];
     const uint8_t menu_text[180];  /* $008DD4 tab */
-    PAD(166, 0x4c)
+    uint8_t pad_0x8f2e[166];
     uint8_t continue_text[40];  /* $008F2E arr */
-    PAD(32, 0x4d)
+    uint8_t pad_0x8f76[32];
     uint8_t credits_text[10];  /* $008F76 arr */
     const uint8_t insert_disk_text[20];  /* $008F80 tab */
     uint16_t v_8f94;  /* $008F94 var */
     uint16_t v_8f96;  /* $008F96 var */
     uint16_t loaded_level;  /* $008F98 var */
-    PAD(80, 0x4e)
+    uint8_t pad_0x8fea[80];
     uint8_t progress_text[2];  /* $008FEA arr */
     uint8_t v_8fec;  /* $008FEC var */
-    PAD(1, 0x4f)
+    uint8_t pad_0x8fee[1];
     uint8_t * saved_level_init;  /* $008FEE var */
-    PAD(364, 0x50)
+    uint8_t pad_0x915e[364];
     uint16_t level_palette_copy[16];  /* $00915E arr */
-    PAD(108, 0x51)
+    uint8_t pad_0x91ea[108];
     const uint16_t level_sectors[12];  /* $0091EA tab */
     int16_t disk_track;  /* $009202 var */
     uint16_t disk_want;  /* $009204 var */
@@ -365,39 +360,39 @@ struct Xenon {
     uint8_t disk_header[4];  /* $009208 arr */
     uint16_t disk_total;  /* $00920C var */
     uint8_t disk_seen[11];  /* $00920E arr */
-    PAD(167, 0x52)
+    uint8_t pad_0x92c0[167];
     uint8_t * disk_dest;  /* $0092C0 var */
     uint16_t disk_sector;  /* $0092C4 var */
     uint16_t disk_count;  /* $0092C6 var */
-    PAD(732, 0x53)
+    uint8_t pad_0x95a4[732];
     const uint32_t mfm_sync_a[8];  /* $0095A4 tab */
     const uint32_t mfm_sync_b[8];  /* $0095C4 tab */
-    PAD(90, 0x54)
+    uint8_t pad_0x963e[90];
     uint16_t work_area_users;  /* $00963E var */
     uint16_t palette_saved[16];  /* $009640 arr */
     uint32_t rand_saved[4];  /* $009660 arr */
-    PAD(646, 0x55)
+    uint8_t pad_0x98f6[646];
     const int8_t sine_table[320];  /* $0098F6 tab */
     const uint16_t title_font[3608];  /* $009A36 tab */
     const uint8_t font_gfx[4864];  /* $00B666 tab */
     const uint16_t title_gfx[2808];  /* $00C966 tab */
-    PAD(3212, 0x56)
+    uint8_t pad_0xebe2[3212];
     uint8_t player_gfx;  /* $00EBE2 var */
-    PAD(34291, 0x57)
+    uint8_t pad_0x171d6[34291];
     const uint8_t pic_171d6[2];  /* $0171D6 tab */
-    PAD(350, 0x58)
+    uint8_t pad_0x17336[350];
     const uint8_t pic_17336[2];  /* $017336 tab */
-    PAD(4004, 0x59)
+    uint8_t pad_0x182dc[4004];
     const uint8_t pic_182dc[2];  /* $0182DC tab */
-    PAD(174, 0x5a)
+    uint8_t pad_0x1838c[174];
     const uint8_t pic_1838c[2];  /* $01838C tab */
-    PAD(3884, 0x5b)
+    uint8_t pad_0x192ba[3884];
     const uint8_t v_192ba[2];  /* $0192BA tab */
-    PAD(1378, 0x5c)
+    uint8_t pad_0x1981e[1378];
     const uint8_t digit_gfx[640];  /* $01981E tab */
     const uint16_t v_19a9e[640];  /* $019A9E tab */
     uint8_t music_base[4];  /* $019F9E arr */
-    PAD(1504, 0x5d)
+    uint8_t pad_0x1a582[1504];
     uint16_t music_tempo_mul;  /* $01A582 var */
     uint8_t music_flag_1a584;  /* $01A584 var */
     uint8_t music_volume_lo;  /* $01A585 var */
@@ -406,7 +401,7 @@ struct Xenon {
     uint8_t music_accum;  /* $01A588 var */
     uint8_t music_fade_speed;  /* $01A589 var */
     uint8_t music_fade_count;  /* $01A58A var */
-    PAD(1, 0x5e)
+    uint8_t pad_0x1a58c[1];
     uint8_t music_enabled;  /* $01A58C var */
     uint8_t instruments_ready;  /* $01A58D var */
     uint8_t music_playing;  /* $01A58E var */
@@ -421,11 +416,11 @@ struct Xenon {
     struct Instrument instruments[20];  /* $01A738 arr */
     struct SongHeader song_headers[1];  /* $01A828 arr */
     const uint8_t music_data[2436];  /* $01A832 tab */
-    PAD(178, 0x5f)
+    uint8_t pad_0x1b268[178];
     uint8_t sfx_samples_ready;  /* $01B268 var */
-    PAD(233, 0x60)
+    uint8_t pad_0x1b352[233];
     struct SfxSample sfx_samples[18];  /* $01B352 arr */
-    PAD(606, 0x61)
+    uint8_t pad_0x1b6d0[606];
     struct SfxChannel sfx_channels[4];  /* $01B6D0 arr */
     uint16_t sfx_request;  /* $01B760 var */
     struct HwMirror hw_mirror[4];  /* $01B762 arr */
@@ -436,37 +431,37 @@ struct Xenon {
     const uint16_t music_vol_env_offsets[16];  /* $01BA5C tab */
     const uint8_t music_vol_env_data[260];  /* $01BA7C tab */
     uint8_t sample_bank[4];  /* $01BB80 arr */
-    PAD(127762, 0x62)
+    uint8_t pad_0x3ae96[127762];
     const uint32_t hit_mask_ptrs[16];  /* $03AE96 tab */
     const uint16_t hit_mask_data[1200];  /* $03AED6 tab */
-    PAD(1142, 0x63)
+    uint8_t pad_0x3bcac[1142];
     uint8_t v_3bcac[12000];  /* $03BCAC arr */
-    PAD(360, 0x64)
+    uint8_t pad_0x3ecf4[360];
     uint32_t v_3ecf4[202];  /* $03ECF4 arr */
     struct Object player;  /* $03F01C var */
     struct Object obj_pool[159];  /* $03F07E arr */
     struct Shot shots[80];  /* $042D5C arr */
     struct Star stars[48];  /* $042FDC arr */
-    PAD(288, 0x65)
+    uint8_t pad_0x4321c[288];
     uint16_t row_offset[200];  /* $04321C arr */
     uint16_t tile_mask_buf[75];  /* $0433AC arr */
-    PAD(3006, 0x66)
+    uint8_t pad_0x44000[3006];
     uint8_t screen_a[30720];  /* $044000 arr */
     uint8_t panel_a[1280];  /* $04B800 arr */
-    PAD(2560, 0x67)
+    uint8_t pad_0x4c700[2560];
     uint8_t screen_b[30720];  /* $04C700 arr */
     uint8_t panel_b[1280];  /* $053F00 arr */
-    PAD(2560, 0x68)
+    uint8_t pad_0x54e00[2560];
     uint8_t * map_image;  /* $054E00 var */
     uint8_t * level_init_src;  /* $054E04 var */
     uint8_t * tile_gfx;  /* $054E08 var */
-    PAD(8, 0x69)
+    uint8_t pad_0x54e14[8];
     uint8_t * level_events_b;  /* $054E14 var */
-    PAD(4, 0x6a)
+    uint8_t pad_0x54e1c[4];
     uint32_t * level_palette;  /* $054E1C var */
-    PAD(8, 0x6b)
+    uint8_t pad_0x54e28[8];
     uint8_t * enemy_shot_gfx;  /* $054E28 var */
-    PAD(4, 0x6c)
+    uint8_t pad_0x54e30[4];
     uint8_t * level_formations;  /* $054E30 var */
     uint8_t * level_data_start;  /* $054E34 var */
     uint8_t * level_events_a;  /* $054E38 var */
@@ -476,90 +471,89 @@ struct Xenon {
     const uint16_t level_54e58[2];  /* $054E58 tab */
     const uint16_t level_54e5c[3];  /* $054E5C tab */
     const uint16_t level_54e62[1];  /* $054E62 tab */
-    PAD(2, 0x6d)
+    uint8_t pad_0x54e66[2];
     const uint8_t level_54e66[2];  /* $054E66 tab */
-    PAD(24, 0x6e)
+    uint8_t pad_0x54e80[24];
     const uint8_t level_54e80[2];  /* $054E80 tab */
-    PAD(24, 0x6f)
+    uint8_t pad_0x54e9a[24];
     const uint8_t level_54e9a[2];  /* $054E9A tab */
-    PAD(24, 0x70)
+    uint8_t pad_0x54eb4[24];
     const uint8_t level_54eb4[2];  /* $054EB4 tab */
-    PAD(24, 0x71)
+    uint8_t pad_0x54ece[24];
     const uint8_t level_54ece[2];  /* $054ECE tab */
-    PAD(24, 0x72)
+    uint8_t pad_0x54ee8[24];
     const uint8_t level_54ee8[2];  /* $054EE8 tab */
-    PAD(24, 0x73)
+    uint8_t pad_0x54f02[24];
     const uint8_t level_54f02[2];  /* $054F02 tab */
-    PAD(48, 0x74)
+    uint8_t pad_0x54f34[48];
     const uint8_t level_54f34[2];  /* $054F34 tab */
-    PAD(24, 0x75)
+    uint8_t pad_0x54f4e[24];
     const uint8_t level_54f4e[2];  /* $054F4E tab */
-    PAD(24, 0x76)
+    uint8_t pad_0x54f68[24];
     const uint8_t level_54f68[2];  /* $054F68 tab */
-    PAD(618, 0x77)
+    uint8_t pad_0x551d4[618];
     const uint8_t anim_551d4[6];  /* $0551D4 tab */
-    PAD(30, 0x78)
+    uint8_t pad_0x551f8[30];
     const uint8_t anim_551f8[6];  /* $0551F8 tab */
-    PAD(20, 0x79)
+    uint8_t pad_0x55212[20];
     const uint8_t anim_55212[6];  /* $055212 tab */
-    PAD(30, 0x7a)
+    uint8_t pad_0x55236[30];
     const uint8_t anim_55236[6];  /* $055236 tab */
-    PAD(20, 0x7b)
+    uint8_t pad_0x55250[20];
     const uint8_t anim_55250[6];  /* $055250 tab */
-    PAD(30, 0x7c)
+    uint8_t pad_0x55274[30];
     const uint8_t anim_55274[6];  /* $055274 tab */
-    PAD(54, 0x7d)
+    uint8_t pad_0x552b0[54];
     const uint8_t anim_552b0[6];  /* $0552B0 tab */
-    PAD(252, 0x7e)
+    uint8_t pad_0x553b2[252];
     const uint8_t level_553b2[32];  /* $0553B2 tab */
     const uint8_t level_553d2[32];  /* $0553D2 tab */
     const uint8_t level_553f2[8];  /* $0553F2 tab */
     const uint8_t level_553fa[8];  /* $0553FA tab */
-    PAD(248, 0x7f)
+    uint8_t pad_0x554fa[248];
     const uint8_t level_554fa[80];  /* $0554FA tab */
     const uint8_t level_5554a[80];  /* $05554A tab */
     const uint8_t level_5559a[8];  /* $05559A tab */
-    PAD(234, 0x80)
+    uint8_t pad_0x5568c[234];
     const uint8_t level_5568c[32];  /* $05568C tab */
     const uint8_t level_556ac[32];  /* $0556AC tab */
     const uint8_t level_556cc[8];  /* $0556CC tab */
     const uint8_t level_556d4[8];  /* $0556D4 tab */
-    PAD(454, 0x81)
+    uint8_t pad_0x558a2[454];
     const uint16_t level_558a2[80];  /* $0558A2 tab */
-    PAD(402, 0x82)
+    uint8_t pad_0x55ad4[402];
     const uint8_t level_55ad4[8];  /* $055AD4 tab */
     const uint8_t level_55adc[8];  /* $055ADC tab */
-    PAD(514, 0x83)
+    uint8_t pad_0x55ce6[514];
     const uint16_t level_55ce6[1];  /* $055CE6 tab */
     struct LevelSeg level_segs[11];  /* $055CE8 arr */
     struct LevelSpawn level_spawns[16];  /* $055D6C arr */
-    PAD(840, 0x84)
+    uint8_t pad_0x56174[840];
     uint8_t * level_56174[16];  /* $056174 arr */
-    PAD(470, 0x85)
+    uint8_t pad_0x5638a[470];
     uint8_t * level_5638a[8];  /* $05638A arr */
-    PAD(1042, 0x86)
+    uint8_t pad_0x567bc[1042];
     const uint8_t level_567bc[2];  /* $0567BC tab */
-    PAD(60, 0x87)
+    uint8_t pad_0x567fa[60];
     uint8_t level_567fa[20];  /* $0567FA arr */
-    PAD(2, 0x88)
+    uint8_t pad_0x56810[2];
     const uint8_t level_56810[48];  /* $056810 tab */
-    PAD(13800, 0x89)
+    uint8_t pad_0x59e28[13800];
     const uint8_t level_59e28[2];  /* $059E28 tab */
-    PAD(8890, 0x8a)
+    uint8_t pad_0x5c0e4[8890];
     const uint8_t level_5c0e4[2];  /* $05C0E4 tab */
-    PAD(174, 0x8b)
+    uint8_t pad_0x5c194[174];
     const uint8_t level_5c194[2];  /* $05C194 tab */
-    PAD(174, 0x8c)
+    uint8_t pad_0x5c244[174];
     const uint8_t level_5c244[2];  /* $05C244 tab */
-    PAD(52474, 0x8d)
+    uint8_t pad_0x68f40[52474];
     uint8_t * level_68f40[5];  /* $068F40 arr */
-    PAD(22710, 0x8e)
+    uint8_t pad_0x6e80a[22710];
     uint8_t level_data_src[12000];  /* $06E80A arr */
-    PAD(47670, 0x8f)
+    uint8_t pad_0x7d120[47670];
     uint8_t level_data_dst[12000];  /* $07D120 arr */
 };
-extern struct Xenon xenon;
-#ifdef MATCH_MEMORY_LAYOUT
+extern struct Xenon2 xenon2;
 LAYOUT_ASSERT(disk_retries, 0x2);
 LAYOUT_ASSERT(exc_vectors_lo, 0x8);
 LAYOUT_ASSERT(irq_vectors, 0x64);
@@ -937,765 +931,384 @@ LAYOUT_ASSERT(level_5c244, 0x5c244);
 LAYOUT_ASSERT(level_68f40, 0x68f40);
 LAYOUT_ASSERT(level_data_src, 0x6e80a);
 LAYOUT_ASSERT(level_data_dst, 0x7d120);
-#endif
 #ifndef GAME_NO_MEMBER_MACROS   /* (the host files that name the members themselves define it) */
-#define disk_retries (xenon.disk_retries)
-#define exc_vectors_lo (xenon.exc_vectors_lo)
-#define irq_vectors (xenon.irq_vectors)
-#define exc_vectors_hi (xenon.exc_vectors_hi)
-#define v_0404 (xenon.v_0404)
-#define draw_screen (xenon.draw_screen)
-#define show_screen (xenon.show_screen)
-#define v_0410 (xenon.v_0410)
-#define v_0414 (xenon.v_0414)
-#define v_0416 (xenon.v_0416)
-#define v_0418 (xenon.v_0418)
-#define v_041a (xenon.v_041a)
-#define vbl_count (xenon.vbl_count)
-#define v_041e (xenon.v_041e)
-#define clip_bottom (xenon.clip_bottom)
-#define players (xenon.players)
-#define v_0424 (xenon.v_0424)
-#define v_0426 (xenon.v_0426)
-#define cur_player (xenon.cur_player)
-#define free_obj (xenon.free_obj)
-#define v_042e (xenon.v_042e)
-#define v_0430 (xenon.v_0430)
-#define v_0432 (xenon.v_0432)
-#define v_0434 (xenon.v_0434)
-#define v_0436 (xenon.v_0436)
-#define v_043a (xenon.v_043a)
-#define v_043c (xenon.v_043c)
-#define v_045c (xenon.v_045c)
-#define v_045e (xenon.v_045e)
-#define hit_box (xenon.hit_box)
-#define v_046c (xenon.v_046c)
-#define v_047c (xenon.v_047c)
-#define v_04e2 (xenon.v_04e2)
-#define v_04e4 (xenon.v_04e4)
-#define v_04e6 (xenon.v_04e6)
-#define v_04e8 (xenon.v_04e8)
-#define v_04ea (xenon.v_04ea)
-#define v_04ec (xenon.v_04ec)
-#define v_04ee (xenon.v_04ee)
-#define v_04f0 (xenon.v_04f0)
-#define v_04f1 (xenon.v_04f1)
-#define v_04f2 (xenon.v_04f2)
-#define v_04f4 (xenon.v_04f4)
-#define v_04f6 (xenon.v_04f6)
-#define v_04f8 (xenon.v_04f8)
-#define work_area (xenon.work_area)
-#define v_09fa (xenon.v_09fa)
-#define v_09fc (xenon.v_09fc)
-#define v_09fd (xenon.v_09fd)
-#define v_09fe (xenon.v_09fe)
-#define key_code (xenon.key_code)
-#define v_0a00 (xenon.v_0a00)
-#define v_0a01 (xenon.v_0a01)
-#define v_0a02 (xenon.v_0a02)
-#define v_0a03 (xenon.v_0a03)
-#define v_0a07 (xenon.v_0a07)
-#define v_0a08 (xenon.v_0a08)
-#define v_0a6a (xenon.v_0a6a)
-#define v_0a6b (xenon.v_0a6b)
-#define v_0a6c (xenon.v_0a6c)
-#define obj_list (xenon.obj_list)
-#define v_0c60 (xenon.v_0c60)
-#define v_0c62 (xenon.v_0c62)
-#define v_0c64 (xenon.v_0c64)
-#define v_0c66 (xenon.v_0c66)
-#define v_0c90 (xenon.v_0c90)
-#define v_0c92 (xenon.v_0c92)
-#define v_0c96 (xenon.v_0c96)
-#define v_0c9a (xenon.v_0c9a)
-#define v_0c9e (xenon.v_0c9e)
-#define v_0ca0 (xenon.v_0ca0)
-#define v_0ca2 (xenon.v_0ca2)
-#define v_0ca4 (xenon.v_0ca4)
-#define v_0ca6 (xenon.v_0ca6)
-#define v_0caa (xenon.v_0caa)
-#define v_0cc6 (xenon.v_0cc6)
-#define v_0cc8 (xenon.v_0cc8)
-#define v_0cca (xenon.v_0cca)
-#define v_0ccc (xenon.v_0ccc)
-#define v_0cce (xenon.v_0cce)
-#define v_0cd0 (xenon.v_0cd0)
-#define v_0cd2 (xenon.v_0cd2)
-#define v_0cd4 (xenon.v_0cd4)
-#define v_0cd6 (xenon.v_0cd6)
-#define v_0cd8 (xenon.v_0cd8)
-#define v_0cda (xenon.v_0cda)
-#define v_0cdc (xenon.v_0cdc)
-#define v_0cde (xenon.v_0cde)
-#define v_0ce0 (xenon.v_0ce0)
-#define v_0ce2 (xenon.v_0ce2)
-#define v_0ce4 (xenon.v_0ce4)
-#define v_0ce6 (xenon.v_0ce6)
-#define v_0ce8 (xenon.v_0ce8)
-#define v_0cea (xenon.v_0cea)
-#define v_0cec (xenon.v_0cec)
-#define v_0cee (xenon.v_0cee)
-#define v_0cf0 (xenon.v_0cf0)
-#define v_0cf2 (xenon.v_0cf2)
-#define v_0cf4 (xenon.v_0cf4)
-#define v_0cf8 (xenon.v_0cf8)
-#define v_0cfc (xenon.v_0cfc)
-#define v_0d26 (xenon.v_0d26)
-#define v_0d5a (xenon.v_0d5a)
-#define v_0d5c (xenon.v_0d5c)
-#define v_0d5e (xenon.v_0d5e)
-#define v_0d7c (xenon.v_0d7c)
-#define v_0d83 (xenon.v_0d83)
-#define v_0d84 (xenon.v_0d84)
-#define v_0d85 (xenon.v_0d85)
-#define v_0d86 (xenon.v_0d86)
-#define v_0d8b (xenon.v_0d8b)
-#define v_0d8c (xenon.v_0d8c)
-#define v_0d8d (xenon.v_0d8d)
-#define v_0d8e (xenon.v_0d8e)
-#define v_0d8f (xenon.v_0d8f)
-#define v_0d90 (xenon.v_0d90)
-#define level_obj (xenon.level_obj)
-#define v_0e02 (xenon.v_0e02)
-#define v_0e04 (xenon.v_0e04)
-#define v_0e06 (xenon.v_0e06)
-#define level_buf (xenon.level_buf)
-#define v_0f60 (xenon.v_0f60)
-#define v_0f64 (xenon.v_0f64)
-#define copper_list_a (xenon.copper_list_a)
-#define copper_list_b (xenon.copper_list_b)
-#define pow10 (xenon.pow10)
-#define v_1ea2 (xenon.v_1ea2)
-#define random_a (xenon.random_a)
-#define random_b (xenon.random_b)
-#define irq_div (xenon.irq_div)
-#define irq_joy (xenon.irq_joy)
-#define irq_joy_prev (xenon.irq_joy_prev)
-#define music_tick_fn (xenon.music_tick_fn)
-#define music_cmd_fn (xenon.music_cmd_fn)
-#define star_speed (xenon.star_speed)
-#define v_2404 (xenon.v_2404)
-#define anim_2540 (xenon.anim_2540)
-#define anim_25a0 (xenon.anim_25a0)
-#define anim_25be (xenon.anim_25be)
-#define anim_25e2 (xenon.anim_25e2)
-#define anim_2612 (xenon.anim_2612)
-#define anim_264e (xenon.anim_264e)
-#define anim_26ae (xenon.anim_26ae)
-#define anim_270e (xenon.anim_270e)
-#define anim_273a (xenon.anim_273a)
-#define anim_2760 (xenon.anim_2760)
-#define anim_2796 (xenon.anim_2796)
-#define v_27c2 (xenon.v_27c2)
-#define anim_27f2 (xenon.anim_27f2)
-#define anim_280a (xenon.anim_280a)
-#define anim_283a (xenon.anim_283a)
-#define anim_288e (xenon.anim_288e)
-#define anim_28b2 (xenon.anim_28b2)
-#define anim_28d0 (xenon.anim_28d0)
-#define anim_28ee (xenon.anim_28ee)
-#define anim_2912 (xenon.anim_2912)
-#define anim_2918 (xenon.anim_2918)
-#define anim_2930 (xenon.anim_2930)
-#define anim_2936 (xenon.anim_2936)
-#define anim_294e (xenon.anim_294e)
-#define anim_2954 (xenon.anim_2954)
-#define anim_296c (xenon.anim_296c)
-#define anim_2972 (xenon.anim_2972)
-#define anim_298a (xenon.anim_298a)
-#define anim_2990 (xenon.anim_2990)
-#define anim_29a8 (xenon.anim_29a8)
-#define anim_29ae (xenon.anim_29ae)
-#define anim_29c6 (xenon.anim_29c6)
-#define anim_29cc (xenon.anim_29cc)
-#define anim_29e4 (xenon.anim_29e4)
-#define anim_29ea (xenon.anim_29ea)
-#define anim_2a02 (xenon.anim_2a02)
-#define anim_2c24 (xenon.anim_2c24)
-#define mask_empty (xenon.mask_empty)
-#define mask_full (xenon.mask_full)
-#define v_30dc (xenon.v_30dc)
-#define spawn_def_326c (xenon.spawn_def_326c)
-#define spawn_kinds (xenon.spawn_kinds)
-#define enemy_shot_dx (xenon.enemy_shot_dx)
-#define enemy_shot_dy (xenon.enemy_shot_dy)
-#define drill_dy (xenon.drill_dy)
-#define drill_dx (xenon.drill_dx)
-#define v_3d66 (xenon.v_3d66)
-#define v_476c (xenon.v_476c)
-#define v_5dd0 (xenon.v_5dd0)
-#define v_60d0 (xenon.v_60d0)
-#define v_614a (xenon.v_614a)
-#define gauge_pics (xenon.gauge_pics)
-#define beam_state (xenon.beam_state)
-#define beam_heads (xenon.beam_heads)
-#define beam_bodies (xenon.beam_bodies)
-#define beam_pattern (xenon.beam_pattern)
-#define v_6894 (xenon.v_6894)
-#define ship_records (xenon.ship_records)
-#define copper_cur (xenon.copper_cur)
-#define palette_shadow (xenon.palette_shadow)
-#define key_table (xenon.key_table)
-#define weapon_damage (xenon.weapon_damage)
-#define v_796e (xenon.v_796e)
-#define v_7970 (xenon.v_7970)
-#define blast_damage (xenon.blast_damage)
-#define title_text (xenon.title_text)
-#define title_scale (xenon.title_scale)
-#define title_y (xenon.title_y)
-#define title_phase (xenon.title_phase)
-#define title_index (xenon.title_index)
-#define title_steps (xenon.title_steps)
-#define title_script (xenon.title_script)
-#define title_rows (xenon.title_rows)
-#define title_steps_ptr (xenon.title_steps_ptr)
-#define v_8428 (xenon.v_8428)
-#define star_colors (xenon.star_colors)
-#define title_palette (xenon.title_palette)
-#define title_font_chars (xenon.title_font_chars)
-#define text_chars (xenon.text_chars)
-#define squeeze_masks (xenon.squeeze_masks)
-#define title_lines (xenon.title_lines)
-#define v_8836 (xenon.v_8836)
-#define v_884a (xenon.v_884a)
-#define hiscore_values (xenon.hiscore_values)
-#define hiscore_lines (xenon.hiscore_lines)
-#define decimal_powers (xenon.decimal_powers)
-#define wipe_in (xenon.wipe_in)
-#define wipe_out (xenon.wipe_out)
-#define title_hiscore (xenon.title_hiscore)
-#define loading_text (xenon.loading_text)
-#define v_8c41 (xenon.v_8c41)
-#define shop_text (xenon.shop_text)
-#define menu_text (xenon.menu_text)
-#define continue_text (xenon.continue_text)
-#define credits_text (xenon.credits_text)
-#define insert_disk_text (xenon.insert_disk_text)
-#define v_8f94 (xenon.v_8f94)
-#define v_8f96 (xenon.v_8f96)
-#define loaded_level (xenon.loaded_level)
-#define progress_text (xenon.progress_text)
-#define v_8fec (xenon.v_8fec)
-#define saved_level_init (xenon.saved_level_init)
-#define level_palette_copy (xenon.level_palette_copy)
-#define level_sectors (xenon.level_sectors)
-#define disk_track (xenon.disk_track)
-#define disk_want (xenon.disk_want)
-#define disk_done (xenon.disk_done)
-#define disk_error (xenon.disk_error)
-#define disk_header (xenon.disk_header)
-#define disk_total (xenon.disk_total)
-#define disk_seen (xenon.disk_seen)
-#define disk_dest (xenon.disk_dest)
-#define disk_sector (xenon.disk_sector)
-#define disk_count (xenon.disk_count)
-#define mfm_sync_a (xenon.mfm_sync_a)
-#define mfm_sync_b (xenon.mfm_sync_b)
-#define work_area_users (xenon.work_area_users)
-#define palette_saved (xenon.palette_saved)
-#define rand_saved (xenon.rand_saved)
-#define sine_table (xenon.sine_table)
-#define title_font (xenon.title_font)
-#define font_gfx (xenon.font_gfx)
-#define title_gfx (xenon.title_gfx)
-#define player_gfx (xenon.player_gfx)
-#define pic_171d6 (xenon.pic_171d6)
-#define pic_17336 (xenon.pic_17336)
-#define pic_182dc (xenon.pic_182dc)
-#define pic_1838c (xenon.pic_1838c)
-#define v_192ba (xenon.v_192ba)
-#define digit_gfx (xenon.digit_gfx)
-#define v_19a9e (xenon.v_19a9e)
-#define music_base (xenon.music_base)
-#define music_tempo_mul (xenon.music_tempo_mul)
-#define music_flag_1a584 (xenon.music_flag_1a584)
-#define music_volume_lo (xenon.music_volume_lo)
-#define music_rate (xenon.music_rate)
-#define music_rate_copy (xenon.music_rate_copy)
-#define music_accum (xenon.music_accum)
-#define music_fade_speed (xenon.music_fade_speed)
-#define music_fade_count (xenon.music_fade_count)
-#define music_enabled (xenon.music_enabled)
-#define instruments_ready (xenon.instruments_ready)
-#define music_playing (xenon.music_playing)
-#define music_transpose (xenon.music_transpose)
-#define music_pause_count (xenon.music_pause_count)
-#define music_paused (xenon.music_paused)
-#define silence_ptr (xenon.silence_ptr)
-#define music_channels (xenon.music_channels)
-#define music_periods (xenon.music_periods)
-#define music_env_offsets (xenon.music_env_offsets)
-#define music_env_data (xenon.music_env_data)
-#define instruments (xenon.instruments)
-#define song_headers (xenon.song_headers)
-#define music_data (xenon.music_data)
-#define sfx_samples_ready (xenon.sfx_samples_ready)
-#define sfx_samples (xenon.sfx_samples)
-#define sfx_channels (xenon.sfx_channels)
-#define sfx_request (xenon.sfx_request)
-#define hw_mirror (xenon.hw_mirror)
-#define sfx_defs (xenon.sfx_defs)
-#define sfx_wave_base (xenon.sfx_wave_base)
-#define sfx_env_offsets (xenon.sfx_env_offsets)
-#define sfx_env_data (xenon.sfx_env_data)
-#define music_vol_env_offsets (xenon.music_vol_env_offsets)
-#define music_vol_env_data (xenon.music_vol_env_data)
-#define sample_bank (xenon.sample_bank)
-#define hit_mask_ptrs (xenon.hit_mask_ptrs)
-#define hit_mask_data (xenon.hit_mask_data)
-#define v_3bcac (xenon.v_3bcac)
-#define v_3ecf4 (xenon.v_3ecf4)
-#define player (xenon.player)
-#define obj_pool (xenon.obj_pool)
-#define shots (xenon.shots)
-#define stars (xenon.stars)
-#define row_offset (xenon.row_offset)
-#define tile_mask_buf (xenon.tile_mask_buf)
-#define screen_a (xenon.screen_a)
-#define panel_a (xenon.panel_a)
-#define screen_b (xenon.screen_b)
-#define panel_b (xenon.panel_b)
-#define map_image (xenon.map_image)
-#define level_init_src (xenon.level_init_src)
-#define tile_gfx (xenon.tile_gfx)
-#define level_events_b (xenon.level_events_b)
-#define level_palette (xenon.level_palette)
-#define enemy_shot_gfx (xenon.enemy_shot_gfx)
-#define level_formations (xenon.level_formations)
-#define level_data_start (xenon.level_data_start)
-#define level_events_a (xenon.level_events_a)
-#define v_54e3c (xenon.v_54e3c)
-#define v_54e3e (xenon.v_54e3e)
-#define level_54e40 (xenon.level_54e40)
-#define level_54e58 (xenon.level_54e58)
-#define level_54e5c (xenon.level_54e5c)
-#define level_54e62 (xenon.level_54e62)
-#define level_54e66 (xenon.level_54e66)
-#define level_54e80 (xenon.level_54e80)
-#define level_54e9a (xenon.level_54e9a)
-#define level_54eb4 (xenon.level_54eb4)
-#define level_54ece (xenon.level_54ece)
-#define level_54ee8 (xenon.level_54ee8)
-#define level_54f02 (xenon.level_54f02)
-#define level_54f34 (xenon.level_54f34)
-#define level_54f4e (xenon.level_54f4e)
-#define level_54f68 (xenon.level_54f68)
-#define anim_551d4 (xenon.anim_551d4)
-#define anim_551f8 (xenon.anim_551f8)
-#define anim_55212 (xenon.anim_55212)
-#define anim_55236 (xenon.anim_55236)
-#define anim_55250 (xenon.anim_55250)
-#define anim_55274 (xenon.anim_55274)
-#define anim_552b0 (xenon.anim_552b0)
-#define level_553b2 (xenon.level_553b2)
-#define level_553d2 (xenon.level_553d2)
-#define level_553f2 (xenon.level_553f2)
-#define level_553fa (xenon.level_553fa)
-#define level_554fa (xenon.level_554fa)
-#define level_5554a (xenon.level_5554a)
-#define level_5559a (xenon.level_5559a)
-#define level_5568c (xenon.level_5568c)
-#define level_556ac (xenon.level_556ac)
-#define level_556cc (xenon.level_556cc)
-#define level_556d4 (xenon.level_556d4)
-#define level_558a2 (xenon.level_558a2)
-#define level_55ad4 (xenon.level_55ad4)
-#define level_55adc (xenon.level_55adc)
-#define level_55ce6 (xenon.level_55ce6)
-#define level_segs (xenon.level_segs)
-#define level_spawns (xenon.level_spawns)
-#define level_56174 (xenon.level_56174)
-#define level_5638a (xenon.level_5638a)
-#define level_567bc (xenon.level_567bc)
-#define level_567fa (xenon.level_567fa)
-#define level_56810 (xenon.level_56810)
-#define level_59e28 (xenon.level_59e28)
-#define level_5c0e4 (xenon.level_5c0e4)
-#define level_5c194 (xenon.level_5c194)
-#define level_5c244 (xenon.level_5c244)
-#define level_68f40 (xenon.level_68f40)
-#define level_data_src (xenon.level_data_src)
-#define level_data_dst (xenon.level_data_dst)
-#endif
-#else
-/* The Amiga build: each variable is at its address (game.ld). */
-extern uint16_t disk_retries;
-extern irq_fn exc_vectors_lo[23];
-extern irq_fn irq_vectors[7];
-extern irq_fn exc_vectors_hi[224];
-extern uint16_t v_0404;
-extern uint8_t * draw_screen;
-extern uint8_t * show_screen;
-extern uint16_t v_0410;
-extern int16_t v_0414;
-extern int16_t v_0416;
-extern int16_t v_0418;
-extern int16_t v_041a;
-extern volatile uint16_t vbl_count;
-extern uint16_t v_041e;
-extern uint16_t clip_bottom;
-extern uint16_t players;
-extern uint16_t v_0424;
-extern uint16_t v_0426;
-extern uint16_t cur_player;
-extern Object * free_obj;
-extern uint16_t v_042e;
-extern uint16_t v_0430;
-extern uint16_t v_0432;
-extern uint16_t v_0434;
-extern uint32_t v_0436;
-extern uint16_t v_043a;
-extern uint16_t v_043c[16];
-extern uint16_t v_045c;
-extern uint16_t v_045e;
-extern uint16_t hit_box[4];
-extern uint16_t v_046c[8];
-extern uint16_t v_047c[51];
-extern uint16_t v_04e2;
-extern uint16_t v_04e4;
-extern uint16_t v_04e6;
-extern int16_t v_04e8;
-extern uint16_t v_04ea;
-extern uint16_t v_04ec;
-extern uint16_t v_04ee;
-extern uint8_t v_04f0;
-extern uint8_t v_04f1;
-extern uint16_t v_04f2;
-extern uint16_t v_04f4;
-extern uint16_t v_04f6;
-extern uint16_t v_04f8;
-extern uint8_t work_area[1280];
-extern uint16_t v_09fa;
-extern uint8_t v_09fc;
-extern uint8_t v_09fd;
-extern uint8_t v_09fe;
-extern volatile uint8_t key_code;
-extern uint8_t v_0a00;
-extern uint8_t v_0a01;
-extern uint8_t v_0a02;
-extern uint8_t v_0a03[4];
-extern uint8_t v_0a07;
-extern uint8_t v_0a08[98];
-extern uint8_t v_0a6a;
-extern uint8_t v_0a6b;
-extern uint8_t v_0a6c;
-extern struct Object obj_list[5];
-extern uint16_t v_0c60;
-extern uint16_t v_0c62;
-extern uint16_t v_0c64;
-extern struct Slot v_0c66[7];
-extern uint16_t v_0c90;
-extern uint32_t v_0c92;
-extern uint32_t v_0c96;
-extern uint32_t v_0c9a;
-extern uint16_t v_0c9e;
-extern uint16_t v_0ca0;
-extern uint16_t v_0ca2;
-extern uint16_t v_0ca4;
-extern uint32_t v_0ca6;
-extern uint16_t v_0caa[14];
-extern uint16_t v_0cc6;
-extern uint16_t v_0cc8;
-extern uint16_t v_0cca;
-extern uint16_t v_0ccc;
-extern uint16_t v_0cce;
-extern uint16_t v_0cd0;
-extern uint16_t v_0cd2;
-extern uint16_t v_0cd4;
-extern uint16_t v_0cd6;
-extern uint16_t v_0cd8;
-extern uint16_t v_0cda;
-extern uint16_t v_0cdc;
-extern int16_t v_0cde;
-extern uint16_t v_0ce0;
-extern uint16_t v_0ce2;
-extern uint16_t v_0ce4;
-extern uint16_t v_0ce6;
-extern uint16_t v_0ce8;
-extern uint16_t v_0cea;
-extern uint16_t v_0cec;
-extern uint16_t v_0cee;
-extern uint16_t v_0cf0;
-extern uint16_t v_0cf2;
-extern Object * v_0cf4;
-extern Object * v_0cf8;
-extern struct Slot v_0cfc[7];
-extern uint16_t v_0d26[26];
-extern uint16_t v_0d5a;
-extern uint16_t v_0d5c;
-extern uint8_t v_0d5e;
-extern uint8_t v_0d7c[7];
-extern uint8_t v_0d83;
-extern uint8_t v_0d84;
-extern uint8_t v_0d85;
-extern uint8_t v_0d86[5];
-extern uint8_t v_0d8b;
-extern uint8_t v_0d8c;
-extern uint8_t v_0d8d;
-extern uint8_t v_0d8e;
-extern uint8_t v_0d8f;
-extern uint8_t v_0d90;
-extern struct Object level_obj;
-extern uint16_t v_0e02;
-extern uint16_t v_0e04;
-extern uint16_t v_0e06;
-extern uint8_t * level_buf;
-extern int8_t * v_0f60;
-extern uint8_t * v_0f64;
-extern uint16_t copper_list_a[18];
-extern uint16_t copper_list_b[18];
-extern const uint32_t pow10[8];
-extern const uint8_t v_1ea2[32];
-extern uint32_t random_a;
-extern uint32_t random_b;
-extern uint16_t irq_div;
-extern uint8_t irq_joy;
-extern uint8_t irq_joy_prev;
-extern irq_fn music_tick_fn;
-extern irq_fn music_cmd_fn;
-extern const uint16_t star_speed[34];
-extern const int16_t v_2404[8];
-extern const uint8_t anim_2540[6];
-extern const uint8_t anim_25a0[6];
-extern const uint8_t anim_25be[6];
-extern const uint8_t anim_25e2[6];
-extern const uint8_t anim_2612[6];
-extern const uint8_t anim_264e[6];
-extern const uint8_t anim_26ae[6];
-extern const uint8_t anim_270e[6];
-extern const uint8_t anim_273a[6];
-extern const uint8_t anim_2760[6];
-extern const uint8_t anim_2796[6];
-extern uint8_t * v_27c2[12];
-extern const uint8_t anim_27f2[6];
-extern const uint8_t anim_280a[6];
-extern const uint8_t anim_283a[6];
-extern const uint8_t anim_288e[6];
-extern const uint8_t anim_28b2[6];
-extern const uint8_t anim_28d0[6];
-extern const uint8_t anim_28ee[6];
-extern const uint8_t anim_2912[6];
-extern const uint8_t anim_2918[6];
-extern const uint8_t anim_2930[6];
-extern const uint8_t anim_2936[6];
-extern const uint8_t anim_294e[6];
-extern const uint8_t anim_2954[6];
-extern const uint8_t anim_296c[6];
-extern const uint8_t anim_2972[6];
-extern const uint8_t anim_298a[6];
-extern const uint8_t anim_2990[6];
-extern const uint8_t anim_29a8[6];
-extern const uint8_t anim_29ae[6];
-extern const uint8_t anim_29c6[6];
-extern const uint8_t anim_29cc[6];
-extern const uint8_t anim_29e4[6];
-extern const uint8_t anim_29ea[6];
-extern const uint8_t anim_2a02[6];
-extern const uint8_t anim_2c24[6];
-extern const uint8_t mask_empty[160];
-extern const uint8_t mask_full[160];
-extern uint16_t v_30dc;
-extern const uint8_t spawn_def_326c[26];
-extern const struct SpawnKind spawn_kinds[18];
-extern const int16_t enemy_shot_dx[16];
-extern const int16_t enemy_shot_dy[16];
-extern const int16_t drill_dy[8];
-extern const int16_t drill_dx[8];
-extern const int16_t v_3d66[99];
-extern const int16_t v_476c[16];
-extern int16_t v_5dd0;
-extern uint8_t * v_60d0[13];
-extern uint8_t * v_614a[4];
-extern uint8_t * gauge_pics[10];
-extern uint16_t beam_state[4];
-extern uint8_t * beam_heads[3];
-extern uint8_t * beam_bodies[3];
-extern const uint32_t beam_pattern[15];
-extern const int16_t v_6894[14];
-extern const uint8_t ship_records[96];
-extern uint16_t * copper_cur;
-extern uint16_t palette_shadow[16];
-extern const uint32_t key_table[4];
-extern const uint16_t weapon_damage[4];
-extern const uint16_t v_796e[1];
-extern const uint16_t v_7970[2];
-extern const uint16_t blast_damage[3];
-extern const uint8_t * title_text;
-extern uint16_t title_scale;
-extern int16_t title_y;
-extern uint16_t title_phase;
-extern uint16_t title_index;
-extern const uint16_t title_steps[21];
-extern const uint16_t title_script[75];
-extern uint16_t title_rows;
-extern uint16_t * title_steps_ptr;
-extern uint8_t v_8428;
-extern const uint8_t star_colors[8];
-extern const uint16_t title_palette[16];
-extern const uint8_t title_font_chars[42];
-extern const uint8_t text_chars[39];
-extern const uint16_t squeeze_masks[17];
-extern const uint8_t title_lines[240];
-extern uint8_t v_8836[19];
-extern uint8_t v_884a[20];
-extern uint32_t hiscore_values[10];
-extern uint8_t hiscore_lines[150];
-extern const uint32_t decimal_powers[8];
-extern const uint16_t wipe_in[17];
-extern const uint16_t wipe_out[18];
-extern const uint8_t title_hiscore[20];
-extern uint8_t loading_text[17];
-extern uint8_t v_8c41;
-extern const uint8_t shop_text[20];
-extern const uint8_t menu_text[180];
-extern uint8_t continue_text[40];
-extern uint8_t credits_text[10];
-extern const uint8_t insert_disk_text[20];
-extern uint16_t v_8f94;
-extern uint16_t v_8f96;
-extern uint16_t loaded_level;
-extern uint8_t progress_text[2];
-extern uint8_t v_8fec;
-extern uint8_t * saved_level_init;
-extern uint16_t level_palette_copy[16];
-extern const uint16_t level_sectors[12];
-extern int16_t disk_track;
-extern uint16_t disk_want;
-extern volatile uint8_t disk_done;
-extern volatile uint8_t disk_error;
-extern uint8_t disk_header[4];
-extern uint16_t disk_total;
-extern uint8_t disk_seen[11];
-extern uint8_t * disk_dest;
-extern uint16_t disk_sector;
-extern uint16_t disk_count;
-extern const uint32_t mfm_sync_a[8];
-extern const uint32_t mfm_sync_b[8];
-extern uint16_t work_area_users;
-extern uint16_t palette_saved[16];
-extern uint32_t rand_saved[4];
-extern const int8_t sine_table[320];
-extern const uint16_t title_font[3608];
-extern const uint8_t font_gfx[4864];
-extern const uint16_t title_gfx[2808];
-extern uint8_t player_gfx;
-extern const uint8_t pic_171d6[2];
-extern const uint8_t pic_17336[2];
-extern const uint8_t pic_182dc[2];
-extern const uint8_t pic_1838c[2];
-extern const uint8_t v_192ba[2];
-extern const uint8_t digit_gfx[640];
-extern const uint16_t v_19a9e[640];
-extern uint8_t music_base[4];
-extern uint16_t music_tempo_mul;
-extern uint8_t music_flag_1a584;
-extern uint8_t music_volume_lo;
-extern uint8_t music_rate;
-extern uint8_t music_rate_copy;
-extern uint8_t music_accum;
-extern uint8_t music_fade_speed;
-extern uint8_t music_fade_count;
-extern uint8_t music_enabled;
-extern uint8_t instruments_ready;
-extern uint8_t music_playing;
-extern uint8_t music_transpose;
-extern uint8_t music_pause_count;
-extern uint8_t music_paused;
-extern uint8_t * silence_ptr;
-extern struct MusicChannel music_channels[4];
-extern const uint16_t music_periods[72];
-extern const uint16_t music_env_offsets[16];
-extern const uint8_t music_env_data[50];
-extern struct Instrument instruments[20];
-extern struct SongHeader song_headers[1];
-extern const uint8_t music_data[2436];
-extern uint8_t sfx_samples_ready;
-extern struct SfxSample sfx_samples[18];
-extern struct SfxChannel sfx_channels[4];
-extern uint16_t sfx_request;
-extern struct HwMirror hw_mirror[4];
-extern struct SfxDef sfx_defs[23];
-extern uint8_t * sfx_wave_base;
-extern const uint16_t sfx_env_offsets[11];
-extern const uint8_t sfx_env_data[136];
-extern const uint16_t music_vol_env_offsets[16];
-extern const uint8_t music_vol_env_data[260];
-extern uint8_t sample_bank[4];
-extern const uint32_t hit_mask_ptrs[16];
-extern const uint16_t hit_mask_data[1200];
-extern uint8_t v_3bcac[12000];
-extern uint32_t v_3ecf4[202];
-extern struct Object player;
-extern struct Object obj_pool[159];
-extern struct Shot shots[80];
-extern struct Star stars[48];
-extern uint16_t row_offset[200];
-extern uint16_t tile_mask_buf[75];
-extern uint8_t screen_a[30720];
-extern uint8_t panel_a[1280];
-extern uint8_t screen_b[30720];
-extern uint8_t panel_b[1280];
-extern uint8_t * map_image;
-extern uint8_t * level_init_src;
-extern uint8_t * tile_gfx;
-extern uint8_t * level_events_b;
-extern uint32_t * level_palette;
-extern uint8_t * enemy_shot_gfx;
-extern uint8_t * level_formations;
-extern uint8_t * level_data_start;
-extern uint8_t * level_events_a;
-extern uint16_t v_54e3c;
-extern uint16_t v_54e3e;
-extern const uint8_t level_54e40[24];
-extern const uint16_t level_54e58[2];
-extern const uint16_t level_54e5c[3];
-extern const uint16_t level_54e62[1];
-extern const uint8_t level_54e66[2];
-extern const uint8_t level_54e80[2];
-extern const uint8_t level_54e9a[2];
-extern const uint8_t level_54eb4[2];
-extern const uint8_t level_54ece[2];
-extern const uint8_t level_54ee8[2];
-extern const uint8_t level_54f02[2];
-extern const uint8_t level_54f34[2];
-extern const uint8_t level_54f4e[2];
-extern const uint8_t level_54f68[2];
-extern const uint8_t anim_551d4[6];
-extern const uint8_t anim_551f8[6];
-extern const uint8_t anim_55212[6];
-extern const uint8_t anim_55236[6];
-extern const uint8_t anim_55250[6];
-extern const uint8_t anim_55274[6];
-extern const uint8_t anim_552b0[6];
-extern const uint8_t level_553b2[32];
-extern const uint8_t level_553d2[32];
-extern const uint8_t level_553f2[8];
-extern const uint8_t level_553fa[8];
-extern const uint8_t level_554fa[80];
-extern const uint8_t level_5554a[80];
-extern const uint8_t level_5559a[8];
-extern const uint8_t level_5568c[32];
-extern const uint8_t level_556ac[32];
-extern const uint8_t level_556cc[8];
-extern const uint8_t level_556d4[8];
-extern const uint16_t level_558a2[80];
-extern const uint8_t level_55ad4[8];
-extern const uint8_t level_55adc[8];
-extern const uint16_t level_55ce6[1];
-extern struct LevelSeg level_segs[11];
-extern struct LevelSpawn level_spawns[16];
-extern uint8_t * level_56174[16];
-extern uint8_t * level_5638a[8];
-extern const uint8_t level_567bc[2];
-extern uint8_t level_567fa[20];
-extern const uint8_t level_56810[48];
-extern const uint8_t level_59e28[2];
-extern const uint8_t level_5c0e4[2];
-extern const uint8_t level_5c194[2];
-extern const uint8_t level_5c244[2];
-extern uint8_t * level_68f40[5];
-extern uint8_t level_data_src[12000];
-extern uint8_t level_data_dst[12000];
+#define disk_retries (xenon2.disk_retries)
+#define exc_vectors_lo (xenon2.exc_vectors_lo)
+#define irq_vectors (xenon2.irq_vectors)
+#define exc_vectors_hi (xenon2.exc_vectors_hi)
+#define v_0404 (xenon2.v_0404)
+#define draw_screen (xenon2.draw_screen)
+#define show_screen (xenon2.show_screen)
+#define v_0410 (xenon2.v_0410)
+#define v_0414 (xenon2.v_0414)
+#define v_0416 (xenon2.v_0416)
+#define v_0418 (xenon2.v_0418)
+#define v_041a (xenon2.v_041a)
+#define vbl_count (xenon2.vbl_count)
+#define v_041e (xenon2.v_041e)
+#define clip_bottom (xenon2.clip_bottom)
+#define players (xenon2.players)
+#define v_0424 (xenon2.v_0424)
+#define v_0426 (xenon2.v_0426)
+#define cur_player (xenon2.cur_player)
+#define free_obj (xenon2.free_obj)
+#define v_042e (xenon2.v_042e)
+#define v_0430 (xenon2.v_0430)
+#define v_0432 (xenon2.v_0432)
+#define v_0434 (xenon2.v_0434)
+#define v_0436 (xenon2.v_0436)
+#define v_043a (xenon2.v_043a)
+#define v_043c (xenon2.v_043c)
+#define v_045c (xenon2.v_045c)
+#define v_045e (xenon2.v_045e)
+#define hit_box (xenon2.hit_box)
+#define v_046c (xenon2.v_046c)
+#define v_047c (xenon2.v_047c)
+#define v_04e2 (xenon2.v_04e2)
+#define v_04e4 (xenon2.v_04e4)
+#define v_04e6 (xenon2.v_04e6)
+#define v_04e8 (xenon2.v_04e8)
+#define v_04ea (xenon2.v_04ea)
+#define v_04ec (xenon2.v_04ec)
+#define v_04ee (xenon2.v_04ee)
+#define v_04f0 (xenon2.v_04f0)
+#define v_04f1 (xenon2.v_04f1)
+#define v_04f2 (xenon2.v_04f2)
+#define v_04f4 (xenon2.v_04f4)
+#define v_04f6 (xenon2.v_04f6)
+#define v_04f8 (xenon2.v_04f8)
+#define work_area (xenon2.work_area)
+#define v_09fa (xenon2.v_09fa)
+#define v_09fc (xenon2.v_09fc)
+#define v_09fd (xenon2.v_09fd)
+#define v_09fe (xenon2.v_09fe)
+#define key_code (xenon2.key_code)
+#define v_0a00 (xenon2.v_0a00)
+#define v_0a01 (xenon2.v_0a01)
+#define v_0a02 (xenon2.v_0a02)
+#define v_0a03 (xenon2.v_0a03)
+#define v_0a07 (xenon2.v_0a07)
+#define v_0a08 (xenon2.v_0a08)
+#define v_0a6a (xenon2.v_0a6a)
+#define v_0a6b (xenon2.v_0a6b)
+#define v_0a6c (xenon2.v_0a6c)
+#define obj_list (xenon2.obj_list)
+#define v_0c60 (xenon2.v_0c60)
+#define v_0c62 (xenon2.v_0c62)
+#define v_0c64 (xenon2.v_0c64)
+#define v_0c66 (xenon2.v_0c66)
+#define v_0c90 (xenon2.v_0c90)
+#define v_0c92 (xenon2.v_0c92)
+#define v_0c96 (xenon2.v_0c96)
+#define v_0c9a (xenon2.v_0c9a)
+#define v_0c9e (xenon2.v_0c9e)
+#define v_0ca0 (xenon2.v_0ca0)
+#define v_0ca2 (xenon2.v_0ca2)
+#define v_0ca4 (xenon2.v_0ca4)
+#define v_0ca6 (xenon2.v_0ca6)
+#define v_0caa (xenon2.v_0caa)
+#define v_0cc6 (xenon2.v_0cc6)
+#define v_0cc8 (xenon2.v_0cc8)
+#define v_0cca (xenon2.v_0cca)
+#define v_0ccc (xenon2.v_0ccc)
+#define v_0cce (xenon2.v_0cce)
+#define v_0cd0 (xenon2.v_0cd0)
+#define v_0cd2 (xenon2.v_0cd2)
+#define v_0cd4 (xenon2.v_0cd4)
+#define v_0cd6 (xenon2.v_0cd6)
+#define v_0cd8 (xenon2.v_0cd8)
+#define v_0cda (xenon2.v_0cda)
+#define v_0cdc (xenon2.v_0cdc)
+#define v_0cde (xenon2.v_0cde)
+#define v_0ce0 (xenon2.v_0ce0)
+#define v_0ce2 (xenon2.v_0ce2)
+#define v_0ce4 (xenon2.v_0ce4)
+#define v_0ce6 (xenon2.v_0ce6)
+#define v_0ce8 (xenon2.v_0ce8)
+#define v_0cea (xenon2.v_0cea)
+#define v_0cec (xenon2.v_0cec)
+#define v_0cee (xenon2.v_0cee)
+#define v_0cf0 (xenon2.v_0cf0)
+#define v_0cf2 (xenon2.v_0cf2)
+#define v_0cf4 (xenon2.v_0cf4)
+#define v_0cf8 (xenon2.v_0cf8)
+#define v_0cfc (xenon2.v_0cfc)
+#define v_0d26 (xenon2.v_0d26)
+#define v_0d5a (xenon2.v_0d5a)
+#define v_0d5c (xenon2.v_0d5c)
+#define v_0d5e (xenon2.v_0d5e)
+#define v_0d7c (xenon2.v_0d7c)
+#define v_0d83 (xenon2.v_0d83)
+#define v_0d84 (xenon2.v_0d84)
+#define v_0d85 (xenon2.v_0d85)
+#define v_0d86 (xenon2.v_0d86)
+#define v_0d8b (xenon2.v_0d8b)
+#define v_0d8c (xenon2.v_0d8c)
+#define v_0d8d (xenon2.v_0d8d)
+#define v_0d8e (xenon2.v_0d8e)
+#define v_0d8f (xenon2.v_0d8f)
+#define v_0d90 (xenon2.v_0d90)
+#define level_obj (xenon2.level_obj)
+#define v_0e02 (xenon2.v_0e02)
+#define v_0e04 (xenon2.v_0e04)
+#define v_0e06 (xenon2.v_0e06)
+#define level_buf (xenon2.level_buf)
+#define v_0f60 (xenon2.v_0f60)
+#define v_0f64 (xenon2.v_0f64)
+#define copper_list_a (xenon2.copper_list_a)
+#define copper_list_b (xenon2.copper_list_b)
+#define pow10 (xenon2.pow10)
+#define v_1ea2 (xenon2.v_1ea2)
+#define random_a (xenon2.random_a)
+#define random_b (xenon2.random_b)
+#define irq_div (xenon2.irq_div)
+#define irq_joy (xenon2.irq_joy)
+#define irq_joy_prev (xenon2.irq_joy_prev)
+#define music_tick_fn (xenon2.music_tick_fn)
+#define music_cmd_fn (xenon2.music_cmd_fn)
+#define star_speed (xenon2.star_speed)
+#define v_2404 (xenon2.v_2404)
+#define anim_2540 (xenon2.anim_2540)
+#define anim_25a0 (xenon2.anim_25a0)
+#define anim_25be (xenon2.anim_25be)
+#define anim_25e2 (xenon2.anim_25e2)
+#define anim_2612 (xenon2.anim_2612)
+#define anim_264e (xenon2.anim_264e)
+#define anim_26ae (xenon2.anim_26ae)
+#define anim_270e (xenon2.anim_270e)
+#define anim_273a (xenon2.anim_273a)
+#define anim_2760 (xenon2.anim_2760)
+#define anim_2796 (xenon2.anim_2796)
+#define v_27c2 (xenon2.v_27c2)
+#define anim_27f2 (xenon2.anim_27f2)
+#define anim_280a (xenon2.anim_280a)
+#define anim_283a (xenon2.anim_283a)
+#define anim_288e (xenon2.anim_288e)
+#define anim_28b2 (xenon2.anim_28b2)
+#define anim_28d0 (xenon2.anim_28d0)
+#define anim_28ee (xenon2.anim_28ee)
+#define anim_2912 (xenon2.anim_2912)
+#define anim_2918 (xenon2.anim_2918)
+#define anim_2930 (xenon2.anim_2930)
+#define anim_2936 (xenon2.anim_2936)
+#define anim_294e (xenon2.anim_294e)
+#define anim_2954 (xenon2.anim_2954)
+#define anim_296c (xenon2.anim_296c)
+#define anim_2972 (xenon2.anim_2972)
+#define anim_298a (xenon2.anim_298a)
+#define anim_2990 (xenon2.anim_2990)
+#define anim_29a8 (xenon2.anim_29a8)
+#define anim_29ae (xenon2.anim_29ae)
+#define anim_29c6 (xenon2.anim_29c6)
+#define anim_29cc (xenon2.anim_29cc)
+#define anim_29e4 (xenon2.anim_29e4)
+#define anim_29ea (xenon2.anim_29ea)
+#define anim_2a02 (xenon2.anim_2a02)
+#define anim_2c24 (xenon2.anim_2c24)
+#define mask_empty (xenon2.mask_empty)
+#define mask_full (xenon2.mask_full)
+#define v_30dc (xenon2.v_30dc)
+#define spawn_def_326c (xenon2.spawn_def_326c)
+#define spawn_kinds (xenon2.spawn_kinds)
+#define enemy_shot_dx (xenon2.enemy_shot_dx)
+#define enemy_shot_dy (xenon2.enemy_shot_dy)
+#define drill_dy (xenon2.drill_dy)
+#define drill_dx (xenon2.drill_dx)
+#define v_3d66 (xenon2.v_3d66)
+#define v_476c (xenon2.v_476c)
+#define v_5dd0 (xenon2.v_5dd0)
+#define v_60d0 (xenon2.v_60d0)
+#define v_614a (xenon2.v_614a)
+#define gauge_pics (xenon2.gauge_pics)
+#define beam_state (xenon2.beam_state)
+#define beam_heads (xenon2.beam_heads)
+#define beam_bodies (xenon2.beam_bodies)
+#define beam_pattern (xenon2.beam_pattern)
+#define v_6894 (xenon2.v_6894)
+#define ship_records (xenon2.ship_records)
+#define copper_cur (xenon2.copper_cur)
+#define palette_shadow (xenon2.palette_shadow)
+#define key_table (xenon2.key_table)
+#define weapon_damage (xenon2.weapon_damage)
+#define v_796e (xenon2.v_796e)
+#define v_7970 (xenon2.v_7970)
+#define blast_damage (xenon2.blast_damage)
+#define title_text (xenon2.title_text)
+#define title_scale (xenon2.title_scale)
+#define title_y (xenon2.title_y)
+#define title_phase (xenon2.title_phase)
+#define title_index (xenon2.title_index)
+#define title_steps (xenon2.title_steps)
+#define title_script (xenon2.title_script)
+#define title_rows (xenon2.title_rows)
+#define title_steps_ptr (xenon2.title_steps_ptr)
+#define v_8428 (xenon2.v_8428)
+#define star_colors (xenon2.star_colors)
+#define title_palette (xenon2.title_palette)
+#define title_font_chars (xenon2.title_font_chars)
+#define text_chars (xenon2.text_chars)
+#define squeeze_masks (xenon2.squeeze_masks)
+#define title_lines (xenon2.title_lines)
+#define v_8836 (xenon2.v_8836)
+#define v_884a (xenon2.v_884a)
+#define hiscore_values (xenon2.hiscore_values)
+#define hiscore_lines (xenon2.hiscore_lines)
+#define decimal_powers (xenon2.decimal_powers)
+#define wipe_in (xenon2.wipe_in)
+#define wipe_out (xenon2.wipe_out)
+#define title_hiscore (xenon2.title_hiscore)
+#define loading_text (xenon2.loading_text)
+#define v_8c41 (xenon2.v_8c41)
+#define shop_text (xenon2.shop_text)
+#define menu_text (xenon2.menu_text)
+#define continue_text (xenon2.continue_text)
+#define credits_text (xenon2.credits_text)
+#define insert_disk_text (xenon2.insert_disk_text)
+#define v_8f94 (xenon2.v_8f94)
+#define v_8f96 (xenon2.v_8f96)
+#define loaded_level (xenon2.loaded_level)
+#define progress_text (xenon2.progress_text)
+#define v_8fec (xenon2.v_8fec)
+#define saved_level_init (xenon2.saved_level_init)
+#define level_palette_copy (xenon2.level_palette_copy)
+#define level_sectors (xenon2.level_sectors)
+#define disk_track (xenon2.disk_track)
+#define disk_want (xenon2.disk_want)
+#define disk_done (xenon2.disk_done)
+#define disk_error (xenon2.disk_error)
+#define disk_header (xenon2.disk_header)
+#define disk_total (xenon2.disk_total)
+#define disk_seen (xenon2.disk_seen)
+#define disk_dest (xenon2.disk_dest)
+#define disk_sector (xenon2.disk_sector)
+#define disk_count (xenon2.disk_count)
+#define mfm_sync_a (xenon2.mfm_sync_a)
+#define mfm_sync_b (xenon2.mfm_sync_b)
+#define work_area_users (xenon2.work_area_users)
+#define palette_saved (xenon2.palette_saved)
+#define rand_saved (xenon2.rand_saved)
+#define sine_table (xenon2.sine_table)
+#define title_font (xenon2.title_font)
+#define font_gfx (xenon2.font_gfx)
+#define title_gfx (xenon2.title_gfx)
+#define player_gfx (xenon2.player_gfx)
+#define pic_171d6 (xenon2.pic_171d6)
+#define pic_17336 (xenon2.pic_17336)
+#define pic_182dc (xenon2.pic_182dc)
+#define pic_1838c (xenon2.pic_1838c)
+#define v_192ba (xenon2.v_192ba)
+#define digit_gfx (xenon2.digit_gfx)
+#define v_19a9e (xenon2.v_19a9e)
+#define music_base (xenon2.music_base)
+#define music_tempo_mul (xenon2.music_tempo_mul)
+#define music_flag_1a584 (xenon2.music_flag_1a584)
+#define music_volume_lo (xenon2.music_volume_lo)
+#define music_rate (xenon2.music_rate)
+#define music_rate_copy (xenon2.music_rate_copy)
+#define music_accum (xenon2.music_accum)
+#define music_fade_speed (xenon2.music_fade_speed)
+#define music_fade_count (xenon2.music_fade_count)
+#define music_enabled (xenon2.music_enabled)
+#define instruments_ready (xenon2.instruments_ready)
+#define music_playing (xenon2.music_playing)
+#define music_transpose (xenon2.music_transpose)
+#define music_pause_count (xenon2.music_pause_count)
+#define music_paused (xenon2.music_paused)
+#define silence_ptr (xenon2.silence_ptr)
+#define music_channels (xenon2.music_channels)
+#define music_periods (xenon2.music_periods)
+#define music_env_offsets (xenon2.music_env_offsets)
+#define music_env_data (xenon2.music_env_data)
+#define instruments (xenon2.instruments)
+#define song_headers (xenon2.song_headers)
+#define music_data (xenon2.music_data)
+#define sfx_samples_ready (xenon2.sfx_samples_ready)
+#define sfx_samples (xenon2.sfx_samples)
+#define sfx_channels (xenon2.sfx_channels)
+#define sfx_request (xenon2.sfx_request)
+#define hw_mirror (xenon2.hw_mirror)
+#define sfx_defs (xenon2.sfx_defs)
+#define sfx_wave_base (xenon2.sfx_wave_base)
+#define sfx_env_offsets (xenon2.sfx_env_offsets)
+#define sfx_env_data (xenon2.sfx_env_data)
+#define music_vol_env_offsets (xenon2.music_vol_env_offsets)
+#define music_vol_env_data (xenon2.music_vol_env_data)
+#define sample_bank (xenon2.sample_bank)
+#define hit_mask_ptrs (xenon2.hit_mask_ptrs)
+#define hit_mask_data (xenon2.hit_mask_data)
+#define v_3bcac (xenon2.v_3bcac)
+#define v_3ecf4 (xenon2.v_3ecf4)
+#define player (xenon2.player)
+#define obj_pool (xenon2.obj_pool)
+#define shots (xenon2.shots)
+#define stars (xenon2.stars)
+#define row_offset (xenon2.row_offset)
+#define tile_mask_buf (xenon2.tile_mask_buf)
+#define screen_a (xenon2.screen_a)
+#define panel_a (xenon2.panel_a)
+#define screen_b (xenon2.screen_b)
+#define panel_b (xenon2.panel_b)
+#define map_image (xenon2.map_image)
+#define level_init_src (xenon2.level_init_src)
+#define tile_gfx (xenon2.tile_gfx)
+#define level_events_b (xenon2.level_events_b)
+#define level_palette (xenon2.level_palette)
+#define enemy_shot_gfx (xenon2.enemy_shot_gfx)
+#define level_formations (xenon2.level_formations)
+#define level_data_start (xenon2.level_data_start)
+#define level_events_a (xenon2.level_events_a)
+#define v_54e3c (xenon2.v_54e3c)
+#define v_54e3e (xenon2.v_54e3e)
+#define level_54e40 (xenon2.level_54e40)
+#define level_54e58 (xenon2.level_54e58)
+#define level_54e5c (xenon2.level_54e5c)
+#define level_54e62 (xenon2.level_54e62)
+#define level_54e66 (xenon2.level_54e66)
+#define level_54e80 (xenon2.level_54e80)
+#define level_54e9a (xenon2.level_54e9a)
+#define level_54eb4 (xenon2.level_54eb4)
+#define level_54ece (xenon2.level_54ece)
+#define level_54ee8 (xenon2.level_54ee8)
+#define level_54f02 (xenon2.level_54f02)
+#define level_54f34 (xenon2.level_54f34)
+#define level_54f4e (xenon2.level_54f4e)
+#define level_54f68 (xenon2.level_54f68)
+#define anim_551d4 (xenon2.anim_551d4)
+#define anim_551f8 (xenon2.anim_551f8)
+#define anim_55212 (xenon2.anim_55212)
+#define anim_55236 (xenon2.anim_55236)
+#define anim_55250 (xenon2.anim_55250)
+#define anim_55274 (xenon2.anim_55274)
+#define anim_552b0 (xenon2.anim_552b0)
+#define level_553b2 (xenon2.level_553b2)
+#define level_553d2 (xenon2.level_553d2)
+#define level_553f2 (xenon2.level_553f2)
+#define level_553fa (xenon2.level_553fa)
+#define level_554fa (xenon2.level_554fa)
+#define level_5554a (xenon2.level_5554a)
+#define level_5559a (xenon2.level_5559a)
+#define level_5568c (xenon2.level_5568c)
+#define level_556ac (xenon2.level_556ac)
+#define level_556cc (xenon2.level_556cc)
+#define level_556d4 (xenon2.level_556d4)
+#define level_558a2 (xenon2.level_558a2)
+#define level_55ad4 (xenon2.level_55ad4)
+#define level_55adc (xenon2.level_55adc)
+#define level_55ce6 (xenon2.level_55ce6)
+#define level_segs (xenon2.level_segs)
+#define level_spawns (xenon2.level_spawns)
+#define level_56174 (xenon2.level_56174)
+#define level_5638a (xenon2.level_5638a)
+#define level_567bc (xenon2.level_567bc)
+#define level_567fa (xenon2.level_567fa)
+#define level_56810 (xenon2.level_56810)
+#define level_59e28 (xenon2.level_59e28)
+#define level_5c0e4 (xenon2.level_5c0e4)
+#define level_5c194 (xenon2.level_5c194)
+#define level_5c244 (xenon2.level_5c244)
+#define level_68f40 (xenon2.level_68f40)
+#define level_data_src (xenon2.level_data_src)
+#define level_data_dst (xenon2.level_data_dst)
 #endif
 
 #include "amiga/hw.h"

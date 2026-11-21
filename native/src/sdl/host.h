@@ -6,7 +6,7 @@
 #include <stddef.h>
 #include <stdio.h>
 
-/* guest.c: the game's memory is struct Xenon (game.h); the chips' registers are objects of their own */
+/* guest.c: the game's memory is struct Xenon2 (game.h); the chips' registers are objects of their own */
 extern volatile uint8_t host_custom_raw[0x1000];   /* struct Custom (amiga/hw.h) */
 extern volatile uint8_t host_cia_raw[0x2000];      /* the CIAs, $BFD000 on */
 void *guest_ptr(uint32_t address);                  /* an address of the original's memory, or an address of the struct, as a pointer */

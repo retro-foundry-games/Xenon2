@@ -21,7 +21,7 @@ all $(MAKECMDGOALS):
 else
 
 # the same flags as the port's (native/Makefile `sdl`), plus the instrumentation of the game's own C
-GAME_CFLAGS := -m32 -fpack-struct=2 -std=gnu11 -O1 -g -fno-strict-aliasing -fno-pie -fno-stack-protector -ffunction-sections -fdata-sections -DGAME_SDL -DMATCH_MEMORY_LAYOUT -I$(SRC) -I$(SRC)/sdl -Wall -Wno-unused-function \
+GAME_CFLAGS := -m32 -fpack-struct=2 -std=gnu11 -O1 -g -fno-strict-aliasing -fno-pie -fno-stack-protector -ffunction-sections -fdata-sections -DGAME_SDL -I$(SRC) -I$(SRC)/sdl -Wall -Wno-unused-function \
                $(shell pkg-config --cflags sdl3)
 GAME_MODULES := $(filter-out runtime data,$(notdir $(basename $(wildcard $(SRC)/*.c))))
 GAME_OBJS  := $(GAME_MODULES:%=$(BUILD)/g_%.o)
