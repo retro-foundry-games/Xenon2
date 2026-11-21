@@ -532,12 +532,12 @@ void sfx_play(uint16_t request)
         r->pair_b = def->pair_b;
         r->reload_e = def->reload_e;
         r->reload_f = def->reload_f;
-        r->rot_a = def->b10;
-        r->rot_b = def->b11;
-        r->timer = def->b12;
-        r->env_speed = def->b13;
+        r->rot_a = def->rot_a;
+        r->rot_b = def->rot_b;
+        r->timer = def->timer;
+        r->env_speed = def->env_speed;
         r->env_index = def->env_index;
-        r->sample_id = def->b15;
+        r->sample_id = def->sample_id;
         r->length = def->length;
         hw->len = r->length;
         r->count_e = r->reload_e;
