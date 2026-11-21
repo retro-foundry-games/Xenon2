@@ -4,6 +4,8 @@
 #include "game_all.h"
 #include "weapon_util.h"
 #include "amiga/hw.h"
+#define SHELL_PHASE(o) ((o)->v28)
+#define DRILL_DIR(o)   ((o)->v2a)
 
 /* the scratch fields of Object, by the kind that uses them */
 
@@ -629,7 +631,7 @@ void weapon9c_update(Object *a0)
     n->x = PLAYER->x;
     d0 = PLAYER->y - 0xc;
     n->y = d0;
-    n->v28 = -(int16_t)(((uint16_t)d0 >> 4) + 4);
+    SHELL_PHASE(n) = -(int16_t)(((uint16_t)d0 >> 4) + 4);
     SET_V5E(n, 6);
 }
 
@@ -663,7 +665,7 @@ void weaponA0_update(Object *a0)
         set_anim(cur, drill_anim[cnt]);
         cur->x = PLAYER->x;
         cur->y = PLAYER->y;
-        cur->v2a = cnt;
+        DRILL_DIR(cur) = cnt;
         cur->v30 = 0;
         cur->energy = 0;
         cur->v28 = 0xd;
@@ -1724,7 +1726,7 @@ void weaponb0_update(Object *a0)
         set_anim(a1, anim_2796);
         a1->score = a0->score;
         a1->v30 = d7;
-        a1->v2a = (int8_t)random_next();
+        SHOT_SPEED_HI(a1) = (int8_t)random_next();
     }
 }
 
@@ -1995,8 +1997,8 @@ void weapon90_update(Object *a0)
         for (d7 = 1; d7 >= 0; d7--) {
             Object *a1 = alloc_b(a0);
 
-            a1->v2a = 0;
-            a1->v2e = -9;
+            SHOT_DX(a1) = 0;
+            SHOT_DY(a1) = -9;
             d6 = (int16_t)(d6 + a0->x);
             a1->x = d6;
             a1->y = (int16_t)(a0->y - 0x10);
