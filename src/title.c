@@ -512,7 +512,7 @@ void title_credits(void)
     for (i = 0; i < 16; i++)
         palette_saved[i] = palette_shadow[i];
     music_start(0);
-    music_flag_1a584 = 0x3f;
+    music_volume_hi = 0x3f;
     title_text = title_lines;
     title_index = 0;
     title_y = 0x78;

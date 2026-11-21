@@ -19,7 +19,7 @@
  *   ((byte - 0xDF) * music_tempo_mul ticks).
  * Channel state: music_channels[4] (MusicChannel, $1A596) and hw_mirror[4] (what was last written to each hardware channel; the
  *   sound effects use it to give a channel back); sound effects: sfx_channels[4] (SfxChannel, $1B6D0), sfx_request.
- *   Global: music_playing, music_enabled, music_paused, music_volume (word: music_flag_1a584 : music_volume_lo), music_rate,
+ *   Global: music_playing, music_enabled, music_paused, music_volume (word: music_volume_hi : music_volume_lo), music_rate,
  *   music_transpose, music_fade_speed, music_tempo_mul. */
 #include "sound.h"
 #include "game_all.h"
@@ -42,12 +42,12 @@ static uint32_t long_at(const uint8_t *p)
 
 static uint16_t get_volume(void)
 {
-    return (uint16_t)((music_flag_1a584 << 8) | music_volume_lo);
+    return (uint16_t)((music_volume_hi << 8) | music_volume_lo);
 }
 
 static void set_volume(uint16_t v)
 {
-    music_flag_1a584 = (uint8_t)(v >> 8);
+    music_volume_hi = (uint8_t)(v >> 8);
     music_volume_lo = (uint8_t)v;
 }
 

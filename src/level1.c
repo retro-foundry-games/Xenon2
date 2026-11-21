@@ -281,11 +281,11 @@ void level1_hook(uint16_t d0, const uint8_t *a1, uint16_t d2)
         note_spawn_record(a1, d2);   /* $EA2 */
         return;
     case 1:
-        a0 = level1_turret(flag ? 0xe8 : 0xec, a1, (void (*)(void))level1_turret_b_update, level_54e5c[0]);
+        a0 = level1_turret(flag ? 0xe8 : 0xec, a1, (void (*)(void))level1_turret_b_update, l1_turret_energy[0]);
         level1_turret_cells(a0, flag ? l1_turret_b_cells_e8 : l1_turret_b_cells_ec, flag ? l1_turret_b_anim_e8 : l1_turret_b_anim_ec);
         return;
     case 2:
-        a0 = level1_turret(flag ? 0xe0 : 0xe4, a1, (void (*)(void))level1_turret_a_update, level_54e58[1]);
+        a0 = level1_turret(flag ? 0xe0 : 0xe4, a1, (void (*)(void))level1_turret_a_update, l1_boss_energy[1]);
         if (flag) {
             a0->script += 2;
             a0->x = (int16_t)(a0->x + 0x10);
@@ -295,7 +295,7 @@ void level1_hook(uint16_t d0, const uint8_t *a1, uint16_t d2)
         level1_turret_cells(a0, flag ? l1_turret_a_cells_e0 : l1_turret_a_cells_e4, flag ? l1_turret_a_anim_e0 : l1_turret_a_anim_e4);
         return;
     case 3:
-        a0 = level1_turret(flag ? 0xd8 : 0xdc, a1, (void (*)(void))level1_turret_c_update, level_54e5c[1]);
+        a0 = level1_turret(flag ? 0xd8 : 0xdc, a1, (void (*)(void))level1_turret_c_update, l1_turret_energy[1]);
         level1_turret_cells(a0, flag ? l1_turret_c_cells_d8 : l1_turret_c_cells_dc, l1_turret_c_anim);
         return;
     case 4:
@@ -305,7 +305,7 @@ void level1_hook(uint16_t d0, const uint8_t *a1, uint16_t d2)
         a0->fn_update = FN(level1_launcher_update);
         a0->fn_draw = draw_bob_masked;
         a0->fn_hit = (void *)hit_enemy;
-        a0->energy = (int16_t)level_54e5c[2];
+        a0->energy = (int16_t)l1_turret_energy[2];
         a0->big = -1;
         a0->score = 0xfa;
         SET_V5E(a0, 0);
@@ -323,7 +323,7 @@ void level1_hook(uint16_t d0, const uint8_t *a1, uint16_t d2)
 /* orig $054E24 (-> $055806): the level's scroll events */
 void level1_scroll(void)
 {
-    const uint16_t *a1 = level_558a2;
+    const uint16_t *a1 = l1_level_patches;
     uint16_t *a4 = level_vars;
     int d7, i;
 
@@ -362,7 +362,7 @@ void level1_boss_update(Object *a0)
     int16_t d0, d5;
     int32_t l;
     const uint8_t *src;
-    static const uint8_t *const sources[4] = { level_56810, level_56810 + 16, level_56810 + 32, level_56810 + 16 };
+    static const uint8_t *const sources[4] = { l1_boss_draw_sources, l1_boss_draw_sources + 16, l1_boss_draw_sources + 32, l1_boss_draw_sources + 16 };
 
     if ((int16_t)scroll_pos > 0x1c0)
         goto hide;
@@ -390,7 +390,7 @@ void level1_boss_update(Object *a0)
             a1->fn_update = level1_boss_part_update;
             a1->fn_draw = draw_bob_masked;
             a1->fn_hit = (void *)hit_kill_shooter;
-            a1->gfx = level_59e28;
+            a1->gfx = l1_boss_part_picture;
             a1->anim_delay = 0;
             SET_V5E(a1, 0);
             a1->anim = (const uint8_t *)a2;
@@ -479,10 +479,10 @@ void level1_boss_update(Object *a0)
     l1_eyes_phase = (uint16_t)((l1_eyes_phase & 0xff00) | ((l1_eyes_phase + d0) & 0xff));
 draw_table:
     src = sources[(frame_tick & 0xc) >> 2];
-    copy_long(&level_567fa[0], src);
-    copy_long(&level_567fa[4], src + 4);
-    copy_long(&level_567fa[12], src + 8);
-    copy_long(&level_567fa[16], src + 12);
+    copy_long(&l1_boss_draw_table[0], src);
+    copy_long(&l1_boss_draw_table[4], src + 4);
+    copy_long(&l1_boss_draw_table[12], src + 8);
+    copy_long(&l1_boss_draw_table[16], src + 12);
     if (L1_BOSS_PHASE(a0) != 0)
         return;
 hide:
@@ -531,7 +531,7 @@ void level1_init(void)
     a0->persists = -1;
     a0->screen_fixed = -1;
     a0->y = 0x10;
-    a0->energy = level_54e58[0];
+    a0->energy = l1_boss_energy[0];
     L1_BOSS_PHASE(a0) = 0;
     a0->steps = 0;
     l1_boss_spawned = 0;
@@ -584,7 +584,7 @@ void level1_spawn_unit(uint16_t d6)
         level_vars[(uint16_t)s->index] = 0x14;
     d3 = s->flag;
     d2 = 0;
-    n = (int16_t)level_55ce6[0];
+    n = (int16_t)l1_unit_pieces_less_one[0];
     first = alloc_c();
     a0 = alloc_c();
     a0->type = 0x10c;
@@ -687,7 +687,7 @@ void level1_segment_update(Object *a0)
     if (a0->fn_draw == obj_nop_thunk && UNIT_WAIT(a0) >= 0)
         a0->fn_draw = draw_bob_masked;
     d2 = (uint16_t)(((uint16_t)(L1_ANGLE_LO(a0) + 0x10) >> 3) & 0x1c);
-    tab = &level_56174[a0->type == 0x110 ? 8 : 0];
+    tab = &l1_piece_pictures[a0->type == 0x110 ? 8 : 0];
     a0->gfx = tab[d2 / 4];
     bbox_from_frame(a0);
 }

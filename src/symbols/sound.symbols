@@ -8,7 +8,7 @@ type SfxDef 24
 type SfxChannel 36
 arr music_base 0x19f9e uint8_t 4                  ; the address the player's data offsets (words) are relative to
 var music_tempo_mul 0x1a582 uint16_t              ; note length unit (song header tempo)
-var music_volume_lo 0x1a585 uint8_t                ; master volume word = (music_flag_1a584 << 8) | music_volume_lo, 0x40 = full
+var music_volume_lo 0x1a585 uint8_t                ; master volume word = (music_volume_hi << 8) | music_volume_lo, 0x40 = full
 var music_rate 0x1a586 uint8_t                    ; added to music_accum each call; a carry skips the tick
 var music_rate_copy 0x1a587 uint8_t
 var music_accum 0x1a588 uint8_t
