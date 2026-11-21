@@ -14,7 +14,7 @@ Xenon 2 Megablast (Amiga, Image Works 1989) ported to C following the skill in `
 - `host/`: Lua for the emulator.  `lockstep.lua` runs the original and the dev build side by side (options at the top of the file).  `autoplay.lua` (a reactive
   autoplayer), `oracle.lua` + `cases/` (per-function original-vs-C check), `trace_steps.lua`, `trace_shop.lua` (exact instruction traces).
 - `tools/`: `check.py` (the oracle driver; scenarios load, level, shop), `show.py` (annotated listings; `ANALYSIS_DIR=analysis-shop` for the shop), `analyze.py`,
-  `gen_symbols.py`/`gen_records.py` (generated files, run by `make -C native`), `verify_port.sh` (headless acceptance).
+  `gen_symbols.py`/`gen_records.py` (generated files, run by `make -C native`).
 - `analysis/` (level/base code from the cold run), `analysis-shop/` (the shop's code: 61 functions from 12 traces).
 
 ## Not in git: bring it over
@@ -35,7 +35,6 @@ Xenon 2 Megablast (Amiga, Image Works 1989) ported to C following the skill in `
     make -C native sdl && native/build/sdl/xenon2-sdl --disks local        play the port (arrows = stick, Ctrl/Space/Return = fire)
     make -C dev                                                            the dev build
     make -C native blob BUILD=build/x && uv run tools/check.py --build build/x [--scenario shop] [NAMES]     the oracle
-    tools/verify_port.sh                                                   headless acceptance (title -> menu -> level 1 loaded -> running)
 
     AMI=../amiga_porting/ami9000/build/ami9000_host
     # lockstep, level 1, unattended (a replay of recorded input, memory + picture, stops at the first difference)

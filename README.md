@@ -58,7 +58,6 @@ Checking against the original (one emulator at a time):
 Routines that wait for the vertical blank or the disk cannot be called by the oracle (a watchdog reports them as HUNG); interrupt handlers neither.
 Code that never ran in the recorded run has no C: the port logs `the original's code at $XXXXXX has no C` when it is reached.
 
-    tools/verify_port.sh                                   headless acceptance: menu -> first level selected -> loaded -> running (exit 0 = verified)
 
 ## Lockstep (dev build)
 
@@ -76,8 +75,7 @@ stdin/stdout; lines of Lua in, the prompt as the end of a reply, `BIN LEN` and b
 
     python3 ../amiga_porting/ami9000/pidrun.py -- $AMI host/lockstep.lua --headless --script-args "syncs=150 tolerant=1 continue=1"
 
-From a savestate with the level running: `state=frame-8880` loads the emulator's `local/save/frame-8880.state`, the port plays itself to the level (fire on the schedule of
-`tools/verify_port.sh`) and takes the original's memory at the first sync point; the comparison is byte by byte against what already differed at that point.
+From a savestate with the level running: `state=frame-8880` loads the emulator's `local/save/frame-8880.state`, the port plays itself to the level and takes the original's memory at the first sync point; the comparison is byte by byte against what already differed at that point.
 
     python3 ../amiga_porting/ami9000/pidrun.py -- $AMI host/lockstep.lua --headless --script-args "state=frame-8880 syncs=200 tolerant=1 continue=1"
 

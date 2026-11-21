@@ -113,8 +113,6 @@ void host_state(host_state_visit visit, void *arg)
 {
     guest_state(visit, arg);
     sound_state(visit, arg);
-    files_state(visit, arg);
-    disk_state(visit, arg);
     visit(&frames, sizeof frames, arg);
     visit(&dmacon_state, sizeof dmacon_state, arg);
     visit(&intena_state, sizeof intena_state, arg);

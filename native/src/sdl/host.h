@@ -17,7 +17,6 @@ void host_irq_dispatch(int level);                  /* call the handler in the v
 unsigned host_vbl_count(void);                      /* the game's own frame counter ($41C) */
 void host_export_ram_buf(uint8_t *ram_0x80000);     /* the memory in the original's byte order, into a buffer of 0x80000 bytes */
 void host_import_ram_buf(const uint8_t *ram_0x80000);   /* and back: the memory of the original into the block (before the game starts) */
-extern int host_disk_swap_ask;                      /* the game's ask for sector 0 at which disk 2 is put in (1: the first, no prompt) */
 void host_set_headless(int on);                   /* before host_init */
 void host_game_start(void);                         /* call the game's entry (nothing if the C has none yet) */
 int guest_load_game_image(void);                    /* disk 1, tracks 82-159, from $70C00: the game's program and data, as the loader of disk 1 leaves them at $400 */
@@ -28,14 +27,10 @@ typedef void (*host_state_visit)(void *data, size_t size, void *arg);
 void host_state(host_state_visit visit, void *arg);   /* main.c: the memory, the chips, the disks, the sound, the input, the frame count */
 void guest_state(host_state_visit visit, void *arg);  /* guest.c */
 void sound_state(host_state_visit visit, void *arg);  /* sound.c */
-void files_state(host_state_visit visit, void *arg);  /* files.c: the disk in the drive */
-void disk_state(host_state_visit visit, void *arg);   /* disk.c */
 
 /* files.c: the disks (ADF images) */
 int files_open(const char *folder);
 int files_read_sectors(int disk, uint32_t first_sector, uint32_t count, void *dest);   /* raw sectors of 512 bytes; 0 = ok */
-int files_current_disk(void);                       /* the disk in the drive: 1 or 2 */
-void files_insert(int disk);
 
 /* display.c: the picture from the registers and the copper list the game leaves */
 #define DISPLAY_W 320

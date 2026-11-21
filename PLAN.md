@@ -34,7 +34,6 @@ Then: the SDL machine layer (`native/src/sdl/`: guest memory, files, irq, HLE di
 - Oracle (`tools/check.py`): 456 comparisons over 129 functions, no difference (the oracle waits for the blitter before its snapshot and ignores
   the disk DMA buffer).  Not compared: functions the oracle cannot call (they wait for the vertical blank or the disk, or are interrupt handlers) and
   functions the two scenarios never reach (many weapon, boss and turret routines: written carefully from the disassembly, unchecked).
-- Port: `tools/verify_port.sh` runs the port headless from the title through the menu, the first level selected, loaded (disk 2 asked for and
-  inserted) and running, and checks each stage.  Enemies move, shots kill them, the score rises.  Not looked at in the window by the author.
+- Port: checked by the lockstep against the original (`host/lockstep.lua`), headless or played in a window.
 - The shop (`shop_main`, shop.c and shop_sound.c): ported and checked by the oracle in the `shop` scenario, see DECOMPILING.md.  The shop's end-of-broadcast path (`v_8fec`) and the
   weapon-less corners listed in the commit messages are written from the dump.

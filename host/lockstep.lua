@@ -4,7 +4,7 @@
 --
 --   ami9000_host host/lockstep.lua --headless --script-args "[syncs=N] [tolerant=1] [continue=1] [mem=0] [pic=0] [ignore=NAME,NAME] [joy=SYNC:DIRS,...] [show=NAME,NAME] [strict=1] [report=FILE]"
 --     state=NAME    start from the emulator's savestate local/save/NAME.state (frame-8880: level 1 running) instead of the start of the game: the port plays to the level by itself
---                   (the fire button on the schedule of tools/verify_port.sh) and takes the original's memory at the first sync point
+--                   and takes the original's memory at the first sync point
 --     play=1        play it: ami9000_host host/lockstep.lua --script-args "play=1 state=frame-8880 tolerant=1"  (a window, not --headless): arrows = stick, Ctrl / Space / Return = fire;
 --                   the keys are applied to both sides at the sync points; the port's picture and the difference are shown beside the original; the first difference pauses both
 --     auto=1        the autoplayer (host/autoplay.lua) plays, headless or in the window: finds differences in a run no one has to play
