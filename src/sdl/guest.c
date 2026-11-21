@@ -1,6 +1,6 @@
 /* The game's memory and the chips' registers.
  *
- * The memory is one block, struct Xenon (game_state.h): with MATCH_MEMORY_LAYOUT the members sit at the offsets of the original's addresses, so
+ * The memory is one block, struct Xenon (game.h): with MATCH_MEMORY_LAYOUT the members sit at the offsets of the original's addresses, so
  * an address of the original is an offset into the block.  The registers of the custom chips and of the CIAs are objects of their own. */
 #include <stdint.h>
 #include <stdio.h>

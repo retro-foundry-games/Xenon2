@@ -21,9 +21,9 @@ static Object *list_insert(int list)
 }
 
 /* long $4A of an object: a pointer */
-static void set_ptr4a(Object *o, const uint8_t *p)
+static void set_cursor(Object *o, const uint8_t *p)
 {
-    o->ptr4a = p;
+    o->cursor = p;
 }
 
 /* the records of the level's data are raw bytes (big endian): read into a record of this machine */
@@ -460,17 +460,17 @@ Object *spawn_formation(Object *a0, const uint8_t *rec_raw, const uint8_t *a2)
                     a0->x = (int16_t)(a0->x + (int16_t)d6);
                 e += 6;
             }
-            set_ptr4a(a0, e);
+            set_cursor(a0, e);
             a0->v54 = (int16_t)a1->w0c;
             SET_V5E(a0, (int16_t)a1->y);
             d0 = (uint16_t)random_next();
             SET_V5E(a0, (int16_t)((V5E(a0) & 0x00ff) | ((d0 & 0xff) << 8)));
             a0->energy = (int16_t)v_0426;
-            a0->v44 = (int16_t)v_045e;
+            a0->kind = (int16_t)v_045e;
             a0->flag35 = (int8_t)a4->to_flag35;
             if (a4->to_flag35 == 0) {
                 a0->energy = (int16_t)v_0424;
-                a0->v44 = (int16_t)v_045c;
+                a0->kind = (int16_t)v_045c;
             }
             a0->flag34 = (int8_t)a4->to_flag34;
             bbox_from_frame(a0);
@@ -722,7 +722,7 @@ void update_all(void)
                 slot[0] = 0;
                 break;
             }
-            if ((uint16_t)a1->v44 == slot[0])
+            if ((uint16_t)a1->kind == slot[0])
                 break;
         }
     }
@@ -733,17 +733,16 @@ void update_all(void)
 void spawn_debris(Object *a0_unused, Object *a1, uint16_t d0_unused)
 {
     Object *a0 = list_insert(LIST_EFFECT);
-    const uint8_t *k;
+    const struct SpawnKind *k = &spawn_kinds[(uint16_t)a1->v30];
 
     a0->v30 = a1->v30;
-    k = spawn_kinds + (int16_t)(uint16_t)(6 * (uint16_t)a1->v30);
-    a0->type = rd16(k);
+    a0->type = k->kind;
     v_0414 = 0x11;
     a0->fn_update = (obj_fn)pickup_update;
     a0->fn_draw = (obj_fn)draw_bob_masked;
     a0->x = a1->x;
     a0->y = a1->y;
-    anim_header_set(a0, (const uint8_t *)GPTR(rd32(k + 2)));
+    anim_header_set(a0, (const uint8_t *)k->anim);
     a0->v28 = 7;
     kill_object(a1);
 }
@@ -756,7 +755,7 @@ Object *spawn_wave_326c(Object *a0, const uint8_t *a1)
     a0 = spawn_formation(a0, a1, spawn_def_326c);
     a0->v30 = a0->v54;
     a0->v54 = 3;
-    a0->v44 = 0;
+    a0->kind = 0;
     return a0;
 }
 

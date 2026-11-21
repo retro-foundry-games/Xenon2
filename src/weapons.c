@@ -223,7 +223,7 @@ Object *weapon_94(Object *a0, Object *a1)
     n->fn_draw = obj_nop;
     n->v42 = 0;
     n->energy = 2;
-    n->v44 = 1;
+    n->kind = 1;
     SET_V5E(n, -1);
     v_0c62 = 8;
     return n;
@@ -252,7 +252,7 @@ Object *weapon_c0(Object *a0, Object *a1)
     n->y = PLAYER->y;
     n->v42 = 0;
     n->energy = 2;
-    n->v44 = 0xe;
+    n->kind = 0xe;
     SET_V5E(n, -1);
     v_0c62 = 8;
     return n;
@@ -281,7 +281,7 @@ Object *weapon_98(Object *a0, Object *a1)
     n->fn_hit = s6;
     n->v42 = 0;
     n->energy = 2;
-    n->v44 = 0xa;
+    n->kind = 0xa;
     SET_V5E(n, -1);
     v_0c62 = 8;
     return n;
@@ -306,7 +306,7 @@ Object *weapon_28(Object *a0, Object *a1)
     n->fn_hit = s6;
     n->v42 = 0;
     n->energy = 0;
-    n->v44 = 0x15;
+    n->kind = 0x15;
     SET_V5E(n, -1);
     v_0c62 = 0xc;
     return n;
@@ -337,7 +337,7 @@ Object *weapon_48(Object *a0, Object *a1)
     n->fn_hit = a2;
     n->v42 = 0;
     n->energy = 0;
-    n->v44 = 0x17;
+    n->kind = 0x17;
     SET_V5E(n, -1);
     v_0c62 = 0x1e;
     return n;
@@ -365,7 +365,7 @@ Object *weapon_b0(Object *a0, Object *a1)
     n->y = PLAYER->y;
     n->v42 = 0;
     n->energy = 2;
-    n->v44 = 0x14;
+    n->kind = 0x14;
     SET_V5E(n, -1);
     v_0c62 = 8;
     return n;
@@ -390,7 +390,7 @@ static Object *weapon_slot5(Object *a0, uint16_t type, obj_fn update, const uint
     n->v28 = 0;
     n->v42 = v42;
     n->energy = energy;
-    n->v44 = kind;
+    n->kind = kind;
     SET_V5E(n, -1);
     return n;
 }
@@ -479,7 +479,7 @@ static Object *weapon_side(Object *a0, uint16_t type, obj_fn update, const uint8
         n->v28 = 0;
     n->v42 = 0;
     n->energy = energy;
-    n->v44 = kind;
+    n->kind = kind;
     SET_V5E(n, -1);
     return n;
 }
@@ -812,7 +812,7 @@ void enemy_killed(Object *a0, Object *a1)
     int16_t d0;
 
     explosion_at(a1, a1->flag35 ? anim_273a : anim_270e);
-    d0 = a1->v44;
+    d0 = a1->kind;
     if (d0 != 0) {
         for (i = 0; i < 8; i++) {
             if (e[2 * i] == (uint16_t)d0) {

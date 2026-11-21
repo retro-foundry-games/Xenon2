@@ -32,10 +32,10 @@ struct Object {
     int16_t v3e;
     int16_t v40;
     int16_t v42;                /* 42: score of the object */
-    int16_t v44;                /* 44: kind */
+    int16_t kind;               /* 44: the item or weapon kind (weapons, pickups, the shop's slots), 0 for most enemies */
     uint8_t *v46;
-    const uint8_t *ptr4a;       /* 4a: the next command of a path script (objects, menus: ObjMove cursor) */
-    uint16_t pad4e[3];          /* 4e: a long and 52: a word in the level 1 boss */
+    const uint8_t *cursor;      /* 4a: the next command of a path script (ObjMove cursor) */
+    uint16_t turn[3];           /* 4e: the angle change per step as two words (high, low), then the step (52): ObjMove turn_hi, turn_lo, turn_step */
     int16_t v54;
     Object *target;             /* 56 */
     Object *chain;              /* 5a */

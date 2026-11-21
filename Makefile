@@ -31,16 +31,16 @@ GAME_OBJS := $(GAME_MODULES:%=$(BUILD)/%.o) $(BUILD)/runtime.o
 .PHONY: all blob clean generate sdl sdl-run
 all: blob
 
-# game_state.h, game.ld, guest_members.h and data.c are made from the symbol files (tools/gen_symbols.py; the tables are read from XENON_RAM)
+# game.h, game.ld, guest_members.h and data.c are made from the symbol files (tools/gen_symbols.py; the tables are read from XENON_RAM)
 XENON_RAM ?= ../captures/trace-10000.bin
 SYMBOL_FILES := $(wildcard $(SRC)/game.symbols $(SRC)/symbols/*.symbols)
-$(SRC)/game_state.h $(SRC)/game.ld $(SRC)/guest_members.h $(SRC)/data.c: $(SYMBOL_FILES) ../tools/gen_symbols.py
+$(SRC)/game.h $(SRC)/game.ld $(SRC)/guest_members.h $(SRC)/data.c: $(SYMBOL_FILES) ../tools/gen_symbols.py
 	$(PYTHON) ../tools/gen_symbols.py --ram $(XENON_RAM)
-generate: $(SRC)/game_state.h
+generate: $(SRC)/game.h
 
 $(BUILD):
 	mkdir -p $@
-$(BUILD)/%.o: $(SRC)/%.c $(SRC)/game_state.h $(wildcard $(SRC)/*.h) | $(BUILD)
+$(BUILD)/%.o: $(SRC)/%.c $(SRC)/game.h $(wildcard $(SRC)/*.h) | $(BUILD)
 	$(CC) $(GAME_CFLAGS) $(WARN) -c $< -o $@
 $(BUILD)/runtime.o: $(SRC)/amiga/runtime.c | $(BUILD)
 	$(CC) $(GAME_CFLAGS) -fno-builtin -c $< -o $@
@@ -59,12 +59,12 @@ SDL_CFLAGS := -m32 -fpack-struct=2 -std=gnu11 -O1 -g -fno-strict-aliasing -DGAME
 SDL_GAME_MODULES := $(filter-out runtime data,$(GAME_MODULES))
 SDL_HOST_SOURCES := $(sort $(wildcard $(SRC)/sdl/*.c) $(SRC)/sdl/records.c)
 SDL_OBJS := $(SDL_GAME_MODULES:%=$(SDL_BUILD)/g_%.o) $(patsubst $(SRC)/sdl/%.c,$(SDL_BUILD)/h_%.o,$(SDL_HOST_SOURCES))
-$(SDL_BUILD)/g_%.o: $(SRC)/%.c $(SRC)/game_state.h $(wildcard $(SRC)/*.h) | $(SDL_BUILD)
+$(SDL_BUILD)/g_%.o: $(SRC)/%.c $(SRC)/game.h $(wildcard $(SRC)/*.h) | $(SDL_BUILD)
 	gcc $(SDL_CFLAGS) -c $< -o $@
 # (the files that include SDL's headers are built without -fpack-struct=2, which the game's structs need and SDL's must not have)
 $(SDL_BUILD)/h_main.o: $(SRC)/sdl/main.c $(wildcard $(SRC)/sdl/*.h $(SRC)/amiga/*.h) | $(SDL_BUILD)
 	gcc $(filter-out -fpack-struct=2,$(SDL_CFLAGS)) -c $< -o $@
-$(SDL_BUILD)/h_%.o: $(SRC)/sdl/%.c $(SRC)/game_state.h $(wildcard $(SRC)/*.h $(SRC)/sdl/*.h $(SRC)/amiga/*.h) | $(SDL_BUILD)
+$(SDL_BUILD)/h_%.o: $(SRC)/sdl/%.c $(SRC)/game.h $(wildcard $(SRC)/*.h $(SRC)/sdl/*.h $(SRC)/amiga/*.h) | $(SDL_BUILD)
 	gcc $(SDL_CFLAGS) -c $< -o $@
 $(SDL_BUILD):
 	mkdir -p $@
