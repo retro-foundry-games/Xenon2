@@ -3,6 +3,10 @@
 #include "weapons.h"
 #include "shop.h"
 #include "game_all.h"
+
+/* the scratch fields of Object, by the kind that uses them */
+#define SNAKE_STEP(o) ((o)->v2a)
+
 #define ARM_ANGLE_HI(o) ((o)->v2a)
 #define ARM_ANGLE_LO(o) ((o)->v2c)
 
@@ -337,7 +341,7 @@ void l3_snake_head(Object *a0)
     if (l3_snake_off(a0))
         return;
     a0->fn_draw = (obj_fn)obj_nop_thunk;
-    if (a0->v2a == 0) {
+    if (SNAKE_STEP(a0) == 0) {
         int16_t d0;
 
         if (SNAKE_LIMIT(a0) < 0) {
@@ -352,16 +356,16 @@ void l3_snake_head(Object *a0)
             bbox_from_frame(a0);
             return;
         }
-        a0->v2a = 2;
+        SNAKE_STEP(a0) = 2;
         SNAKE_LIMIT(a0) = (int16_t)((random_next() & 6) + 0xa);
     }
     a0->fn_draw = draw_bob_masked;
-    SNAKE_SWING(a0) = (int16_t)(a0->v2a + SNAKE_SWING(a0));
+    SNAKE_SWING(a0) = (int16_t)(SNAKE_STEP(a0) + SNAKE_SWING(a0));
     if (SNAKE_SWING(a0) == 0) {
-        a0->v2a = 0;
+        SNAKE_STEP(a0) = 0;
         SNAKE_LIMIT(a0) = -5;
     } else if (SNAKE_SWING(a0) == SNAKE_LIMIT(a0)) {
-        a0->v2a = (int16_t)-a0->v2a;
+        SNAKE_STEP(a0) = (int16_t)-SNAKE_STEP(a0);
     }
     bbox_from_frame(a0);
 }
@@ -376,7 +380,7 @@ void l3_snake_tail(Object *a0)
     anim_step(a0);
     a1 = a0->target;
     a0->x = (int16_t)((uint16_t)((uint16_t)SNAKE_LIMIT(a0) * (uint16_t)SNAKE_SWING(a1)) + (uint16_t)a0->v2e);
-    if (a1->v2a == 2 && SNAKE_SWING(a1) == 2) {
+    if (SNAKE_STEP(a1) == 2 && SNAKE_SWING(a1) == 2) {
         a0->anim_delay = 1;
     } else if (SNAKE_LIMIT(a1) > 0 && SNAKE_LIMIT(a1) == SNAKE_SWING(a1)) {
         a0->anim_delay = 1;
@@ -394,7 +398,7 @@ void l3_snake_body(Object *a0)
     a0->fn_draw = (obj_fn)obj_nop_thunk;
     a1 = a0->target;
     a0->x = (int16_t)((uint16_t)((uint16_t)SNAKE_LIMIT(a0) * (uint16_t)SNAKE_SWING(a1)) + (uint16_t)a0->v2e);
-    if (a1->v2a != 0)
+    if (SNAKE_STEP(a1) != 0)
         a0->fn_draw = draw_bob_masked;
     bbox_from_frame(a0);
 }
@@ -438,7 +442,7 @@ void l3_spawn_snake(const uint8_t *a1)
         a0->score = 0x190;
         a0->v28 = 0;
         a0->kind = 0;
-        a0->v2a = 0;
+        SNAKE_STEP(a0) = 0;
         d6 = (int16_t)(7 - d7);
         if (flag)
             d6 = (int16_t)-d6;
