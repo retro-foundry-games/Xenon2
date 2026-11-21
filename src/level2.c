@@ -730,6 +730,9 @@ void l2_front_update(Object *a0)
 }
 
 
+/* the turret's use of the scratch fields of Object */
+#define TURRET_STEP(o) ((o)->v28)
+
 /* level2 $0558E0: update of the turret $E8 / $EC: its box, the cells it opens and closes (v28 is the step), and at step 7 a shot */
 void l2_turret_update(Object *a0)
 {
@@ -746,16 +749,16 @@ void l2_turret_update(Object *a0)
     d0 = (int16_t)(a0->y - scroll_pos + 4);
     a0->hit[1] = d0;
     a0->hit[3] = (int16_t)(d0 + 8);
-    if (a0->v28 == 0) {
+    if (TURRET_STEP(a0) == 0) {
         if ((uint8_t)random_next() < B(0x54e47))
-            a0->v28 = 1;
+            TURRET_STEP(a0) = 1;
         return;
     }
-    copy2(a0->script, (const uint8_t *)GPTR((a0->type == 0xe8 ? 0x559c8 : 0x559e6) + 2 * (uint16_t)a0->v28));
-    a0->v28++;
-    if (a0->v28 != 7) {
-        if (a0->v28 == 0xf)
-            a0->v28 = 0;
+    copy2(a0->script, (const uint8_t *)GPTR((a0->type == 0xe8 ? 0x559c8 : 0x559e6) + 2 * (uint16_t)TURRET_STEP(a0)));
+    TURRET_STEP(a0)++;
+    if (TURRET_STEP(a0) != 7) {
+        if (TURRET_STEP(a0) == 0xf)
+            TURRET_STEP(a0) = 0;
         return;
     }
     d0 = (int16_t)(a0->x + 8);
@@ -990,6 +993,10 @@ void l2_piece_update(Object *a0)
 
 /* ---- the first fight: three gates and the boss ---- */
 
+/* the gate's use of the scratch fields of Object */
+#define GATE_STEP(o)   ((o)->v28)
+#define GATE_NUMBER(o) ((o)->v30)
+
 /* level2 $056A4A: update of a gate ($54, v30 its number): its box once the player can reach it, its cells open and close (v28 is the step);
  * the gate 2 also patches the map by the counters in level_vars (eight records at $56B58) */
 void l2_gate_update(Object *a0)
@@ -999,9 +1006,9 @@ void l2_gate_update(Object *a0)
 
     if ((int16_t)scroll_step_target < 0 && (int16_t)scroll_max <= 0xb40)
         scroll_max = 0xb40;
-    if (a0->v30 == 2)
+    if (GATE_NUMBER(a0) == 2)
         hide = l2_gates_left != 1;
-    else if (a0->v30 == 1)
+    else if (GATE_NUMBER(a0) == 1)
         hide = px >= 0xa0 || l2_walls_made == 3;
     else
         hide = px < 0xa0 || l2_walls_made == 3;
@@ -1016,15 +1023,15 @@ void l2_gate_update(Object *a0)
         d0 = (int16_t)((a0->y << 4) - scroll_pos);
         a0->hit[1] = d0;
         a0->hit[3] = (int16_t)(d0 + 0xf);
-        step = a0->v28 != 4 || l2_walls_made == 3;
+        step = GATE_STEP(a0) != 4 || l2_walls_made == 3;
     }
     if (step && !(frame_tick & 1))
-        a0->v28 = (int16_t)((a0->v28 + 1) & 7);
-    d0 = a0->v28;
+        GATE_STEP(a0) = (int16_t)((GATE_STEP(a0) + 1) & 7);
+    d0 = GATE_STEP(a0);
     if (d0 > 4)
         d0 = (int16_t)(8 - d0);
     copy2((uint8_t *)a0->gfx, (const uint8_t *)GPTR(0x56b4e + 2 * d0));
-    if (a0->v30 == 2) {
+    if (GATE_NUMBER(a0) == 2) {
         const uint8_t *a1 = (const uint8_t *)GPTR(0x56b58);
         uint16_t *a4 = level_vars;
         int i;
