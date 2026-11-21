@@ -4,6 +4,62 @@
 #include "game_all.h"
 #include <string.h>
 
+/* level 5: its data tables in the level blob, by the routine that reads them */
+#define L5_SPAWN_GUNNERS_TABLE 0x551dc
+#define L5_GUNNER_UPDATE_TABLE 0x552ba
+#define L5_SPAWN_CANNON_DATA 0x55516
+#define L5_SPAWN_CANNON_DATA_2 0x5553a
+#define L5_CANNON_UPDATE_DATA 0x5555e
+#define L5_CANNON_UPDATE_DATA_2 0x55582
+#define L5_SPAWN_PELLET_TABLE 0x557de
+#define L5_PELLET_UPDATE_WORDS 0x557fe
+#define L5_PELLET_UPDATE_WORDS_2 0x5580e
+#define L5_SPAWN_BOSS1_DATA 0x5594e
+#define L5_INIT_DATA 0x55964
+#define L5_BOSS_DRAW_TABLE_2 0x55f1a
+#define L5_BOSS_DRAW_TABLE 0x55f42
+#define L5_BOSS_UPDATE_DATA 0x55f7e
+#define L5_MISSILE_UPDATE_TABLE 0x5603e
+#define L5_HEART_HIT_TABLE 0x56276
+#define L5_SPAWN_BOSS2_DATA 0x5633a
+#define L5_INIT_DATA_2 0x563c8
+#define L5_WHEEL_UPDATE_TABLE 0x5650e
+#define L5_SPINNER_UPDATE_DATA 0x565c2
+#define L5_SPINNER_UPDATE_DATA_2 0x565d2
+#define L5_BOSS2_TURRET_TABLE 0x56658
+#define L5_BOSS2_DRAW_TABLE 0x5688c
+#define L5_BOSS2_DRAW_TABLE_2 0x56890
+#define L5_BOSS2_DRAW_TABLE_3 0x56894
+#define L5_BOSS2_FLASH_DATA 0x568f8
+#define L5_BOSS2_DRAW_DATA 0x56908
+#define L5_BOSS2_DRAW_DATA_2 0x56914
+#define L5_BOSS2_DRAW_DATA_3 0x56920
+#define L5_SPAWN_GATES_DATA 0x56b2c
+#define L5_GATE_UPDATE_DATA 0x56c30
+#define L5_WALL_UPDATE_DATA 0x56c94
+#define L5_WALL_UPDATE_DATA_2 0x56c9c
+#define L5_WALL_FLASH_A_DATA 0x56e3c
+#define L5_WALL_FLASH_B_DATA 0x56e3e
+#define L5_SPAWN_BRIDGE_DATA 0x56ea2
+#define L5_SPAWN_BRIDGE_DATA_2 0x56ea6
+#define L5_BRIDGE_UPDATE_DATA 0x56fb8
+#define L5_SPAWN_GROUP_DATA 0x5711e
+#define L5_SPAWN_GROUP_DATA_2 0x57122
+#define L5_UNIT_UPDATE_WORDS 0x572aa
+#define L5_UNIT_UPDATE_WORDS_2 0x572ac
+#define L5_UNIT_UPDATE_TABLE 0x572ca
+#define L5_SPAWN_GUN_DATA 0x57514
+#define L5_SPAWN_GUN_DATA_2 0x57524
+#define L5_SPAWN_GUN_DATA_4 0x57534
+#define L5_SPAWN_GUN_DATA_3 0x57536
+#define L5_GUN_UPDATE_DATA 0x57538
+#define L5_GUN_UPDATE_DATA_2 0x57550
+#define L5_SPAWN_BOSS1_DATA_2 0x57666
+#define L5_SPAWN_GUNNERS_DATA 0x5c1ea
+#define L5_BOSS2_DEAD_DATA 0x5df96
+#define L5_BEAM_DRAW_DATA 0x5f2fe
+#define L5_BEAM_DRAW_DATA_2 0x5f340
+
 /* level 5: its parameter block at E42 (energies, fire rates, shot steps), by the object that reads them */
 #define L5_GUNNERS_ENERGY 0x54e42
 #define L5_GUNNERS_PARAM 0x54e44
@@ -264,8 +320,8 @@ void l5_init(void)
     sh_w8(0xd9a, 0);
     sh_w16(0xd72, 0x1200);
     sh_w16(0xd76, 0x11a0);
-    sh_w8(0x55964, B(L5_INIT_PATCH));
-    sh_w16(0x563c8, W(L5_INIT_PATCH_2));
+    sh_w8(L5_INIT_DATA, B(L5_INIT_PATCH));
+    sh_w16(L5_INIT_DATA_2, W(L5_INIT_PATCH_2));
     sh_w8(0xd9b, 0);
     sh_w8(0xd9c, 0);
     difficulty_x1 = (uint16_t)(difficulty * 0xc);
@@ -277,7 +333,7 @@ void l5_init(void)
 /* level5 $0551E8: a formation of ten that fly the path of the table by the record's type */
 void l5_spawn_gunners(const uint8_t *a1)
 {
-    uint32_t a2 = sh_r32(0x551dc + 4 * (uint32_t)rd16(a1 + 6));
+    uint32_t a2 = sh_r32(L5_SPAWN_GUNNERS_TABLE + 4 * (uint32_t)rd16(a1 + 6));
     int16_t d6 = 0;
     int d7;
 
@@ -288,7 +344,7 @@ void l5_spawn_gunners(const uint8_t *a1)
         a0->fn_update = FN(l5_gunner_update);
         a0->fn_draw = (obj_fn)draw_bob_masked;
         a0->fn_hit = (void *)hit_enemy;
-        a0->gfx = GPTR(0x5c1ea);
+        a0->gfx = GPTR(L5_SPAWN_GUNNERS_DATA);
         a0->anim_delay = 0;
         a0->x = (int16_t)W(a2 + 2);
         a0->y = (int16_t)(W(a2 + 4) - scroll_pos);
@@ -327,7 +383,7 @@ void l5_gunner_update(Object *a0)
     d0 = (uint16_t)(((uint16_t)(GUNNER_PHASE(a0) + 0x10) >> 3) & 0x1c);
     d1 = (uint16_t)(((uint16_t)(old + 0x10) >> 3) & 0x1c);
     if (d0 != d1)
-        set_anim(a0, sh_r32(0x552ba + d0));
+        set_anim(a0, sh_r32(L5_GUNNER_UPDATE_TABLE + d0));
     if (add_carry(&a0->v5e_b[0], B(L5_GUNNER_FIRE_RATE))) {
         int d7;
 
@@ -345,7 +401,7 @@ void l5_spawn_cannon(const uint8_t *a1)
 {
     uint16_t d0 = rd16(a1 + 0xc) ? 0x104 : 0x100;
     Object *a0 = spawn_marker_enemy(d0, a1, (void (*)(void))FN(l5_cannon_update));
-    uint32_t a2 = 0x55516;
+    uint32_t a2 = L5_SPAWN_CANNON_DATA;
 
     a0->y = (int16_t)(a0->y - scroll_pos);
     a0->fn_draw = (obj_fn)draw_bob_masked;
@@ -357,7 +413,7 @@ void l5_spawn_cannon(const uint8_t *a1)
     a0->score = 0xfa;
     if (a0->type != 0x100) {
         a0->x = (int16_t)(a0->x + 0x10);
-        a2 = 0x5553a;
+        a2 = L5_SPAWN_CANNON_DATA_2;
     }
     set_anim(a0, a2);
     a0->kind = 0;
@@ -376,7 +432,7 @@ static void spawn_pellet(int16_t d0, int16_t d1, uint16_t d2)
     a1->x = d0;
     a1->y = d1;
     PELLET_DIR(a1) = (int16_t)d2;
-    set_anim(a1, sh_r32(0x557de + 4 * (uint32_t)d2));
+    set_anim(a1, sh_r32(L5_SPAWN_PELLET_TABLE + 4 * (uint32_t)d2));
     a1->energy = (int16_t)W(L5_PELLET_ENERGY);
     a1->big = 0;
     a1->score = 0x64;
@@ -405,14 +461,14 @@ void l5_cannon_update(Object *a0)
         d1 = (int16_t)(d1 + a0->y);
         if (d1 >= 0xf20) {
             CANNON_BOB(a0) = -1;
-            set_anim(a0, a0->type == 0x100 ? 0x5555e : 0x55582);
+            set_anim(a0, a0->type == 0x100 ? L5_CANNON_UPDATE_DATA : L5_CANNON_UPDATE_DATA_2);
         }
     } else {
         a0->y = (int16_t)(a0->y - 1);
         d1 = (int16_t)(d1 + a0->y);
         if (d1 <= 0xe30) {
             CANNON_BOB(a0) = 1;
-            set_anim(a0, a0->type == 0x100 ? 0x55516 : 0x5553a);
+            set_anim(a0, a0->type == 0x100 ? L5_SPAWN_CANNON_DATA : L5_SPAWN_CANNON_DATA_2);
         }
     }
     if (add_carry(&a0->v5e_b[0], B(L5_CANNON_FIRE_RATE))) {
@@ -449,11 +505,11 @@ void l5_pellet_update(Object *a0)
                 if (d0 >= 4 && (d0 != 4 || !((uint16_t)a0->x & 1)))
                     PELLET_DIR(a0) = (int16_t)(PELLET_DIR(a0) - 2);
                 PELLET_DIR(a0) = (int16_t)(PELLET_DIR(a0) & 7);
-                set_anim(a0, sh_r32(0x557de + 4 * (uint32_t)PELLET_DIR(a0)));
+                set_anim(a0, sh_r32(L5_SPAWN_PELLET_TABLE + 4 * (uint32_t)PELLET_DIR(a0)));
             }
         }
-        dx = (int16_t)W(0x557fe + 2 * (uint32_t)PELLET_DIR(a0));
-        dy = (int16_t)(W(0x5580e + 2 * (uint32_t)PELLET_DIR(a0)) + scroll_speed);
+        dx = (int16_t)W(L5_PELLET_UPDATE_WORDS + 2 * (uint32_t)PELLET_DIR(a0));
+        dy = (int16_t)(W(L5_PELLET_UPDATE_WORDS_2 + 2 * (uint32_t)PELLET_DIR(a0)) + scroll_speed);
         a0->x = (int16_t)(a0->x + dx);
         a0->y = (int16_t)(a0->y + dy);
         bbox_from_frame(a0);
@@ -476,7 +532,7 @@ void l5_pellet_update(Object *a0)
 void l5_spawn_boss1(uint16_t d2)
 {
     uint8_t *p;
-    uint32_t rec = 0x5594e;
+    uint32_t rec = L5_SPAWN_BOSS1_DATA;
     Object *a6 = 0;
     int d7, i;
 
@@ -498,8 +554,8 @@ void l5_spawn_boss1(uint16_t d2)
         memset(p, 0, 6);
         p += 6;
         for (i = 0; i < 15; i++) {
-            p[2 * i] = ((const uint8_t *)GPTR(0x57666 + 30 * (uint32_t)d7))[2 * i];
-            p[2 * i + 1] = ((const uint8_t *)GPTR(0x57666 + 30 * (uint32_t)d7))[2 * i + 1];
+            p[2 * i] = ((const uint8_t *)GPTR(L5_SPAWN_BOSS1_DATA_2 + 30 * (uint32_t)d7))[2 * i];
+            p[2 * i + 1] = ((const uint8_t *)GPTR(L5_SPAWN_BOSS1_DATA_2 + 30 * (uint32_t)d7))[2 * i + 1];
         }
         p += 30;
         memset(p, 0, 4);
@@ -540,7 +596,7 @@ void l5_spawn_boss1(uint16_t d2)
 void l5_boss_flash(Object *a0)
 {
     a0->fn_draw = FN(l5_boss_draw);
-    draw_tile_grid_flash((const uint8_t *)GPTR(0x57666), 0xe, 0x11, a0->y, (uint16_t)((uint16_t)a0->x >> 1));
+    draw_tile_grid_flash((const uint8_t *)GPTR(L5_SPAWN_BOSS1_DATA_2), 0xe, 0x11, a0->y, (uint16_t)((uint16_t)a0->x >> 1));
 }
 
 /* level5 $055D3C: a gun of the boss: it hangs on the boss and its box is a bar */
@@ -631,7 +687,7 @@ fire:
         a1->x = d0;
         a1->y = d1;
         MISSILE_DIR(a1) = 0;
-        set_anim(a1, 0x55f7e);
+        set_anim(a1, L5_BOSS_UPDATE_DATA);
         a1->energy = (int16_t)W(L5_BOSS_ENERGY);
         a1->big = 0;
         a1->score = 0x96;
@@ -660,12 +716,12 @@ void l5_boss_draw(Object *a0)
     d2 = (int16_t)(d2 & 0xfffc);
     d0 = (int16_t)(a0->x + 0x69);
     d1 = (int16_t)(d1 + a0->y);
-    draw_bob_masked_at((uint16_t)d0, (uint16_t)d1, (const uint8_t *)GPTR(sh_r32(0x55f42 + (uint32_t)(uint16_t)d2)));
+    draw_bob_masked_at((uint16_t)d0, (uint16_t)d1, (const uint8_t *)GPTR(sh_r32(L5_BOSS_DRAW_TABLE + (uint32_t)(uint16_t)d2)));
     if (d2 < 0x14 || d2 >= 0x28)
         return;
     d0 = (int16_t)(d0 + 0xe);
     d1 = (int16_t)(d1 + 0x10);
-    draw_bob_masked_at((uint16_t)d0, (uint16_t)d1, (const uint8_t *)GPTR(sh_r32(0x55f1a + (uint32_t)(uint16_t)d2)));
+    draw_bob_masked_at((uint16_t)d0, (uint16_t)d1, (const uint8_t *)GPTR(sh_r32(L5_BOSS_DRAW_TABLE_2 + (uint32_t)(uint16_t)d2)));
 }
 
 /* level5 $05605E: the missile of the boss: it turns to the player by eighths, and goes; it hits the player or the screen's edge */
@@ -686,11 +742,11 @@ void l5_missile_update(Object *a0)
             if (dir >= 4)
                 MISSILE_DIR(a0) = (int16_t)(MISSILE_DIR(a0) - 2);
             MISSILE_DIR(a0) = (int16_t)(MISSILE_DIR(a0) & 7);
-            set_anim(a0, sh_r32(0x5603e + 4 * (uint32_t)MISSILE_DIR(a0)));
+            set_anim(a0, sh_r32(L5_MISSILE_UPDATE_TABLE + 4 * (uint32_t)MISSILE_DIR(a0)));
         }
     }
-    d0 = (int16_t)W(0x557fe + 2 * (uint32_t)MISSILE_DIR(a0));
-    d1 = (int16_t)W(0x5580e + 2 * (uint32_t)MISSILE_DIR(a0));
+    d0 = (int16_t)W(L5_PELLET_UPDATE_WORDS + 2 * (uint32_t)MISSILE_DIR(a0));
+    d1 = (int16_t)W(L5_PELLET_UPDATE_WORDS_2 + 2 * (uint32_t)MISSILE_DIR(a0));
     if (sh_r16(0xd7a) == 0) {
         d0 = (int16_t)(d0 + d0);
         d1 = (int16_t)(d1 + d1);
@@ -758,9 +814,9 @@ void l5_heart_hit(Object *a0, Object *a1, uint16_t d0)
     a1->fn_draw = (obj_fn)draw_bob_or_first;
     a2->fn_draw = FN(l5_boss_flash);
     if (!dies(a2, d0)) {
-        uint32_t q = ((uint32_t)(uint16_t)a2->energy * 0xb) / B(0x55964);
+        uint32_t q = ((uint32_t)(uint16_t)a2->energy * 0xb) / B(L5_INIT_DATA);
 
-        a1->gfx = GPTR(sh_r32(0x56276 + 4 * (uint32_t)(uint16_t)q));
+        a1->gfx = GPTR(sh_r32(L5_HEART_HIT_TABLE + 4 * (uint32_t)(uint16_t)q));
         return;
     }
     memset(level_init_src + 0x1e0, 0, 720);
@@ -776,7 +832,7 @@ void l5_heart_hit(Object *a0, Object *a1, uint16_t d0)
 /* level5 $05642A: the second boss */
 void l5_spawn_boss2(const uint8_t *a1)
 {
-    uint32_t rec = 0x5633a;
+    uint32_t rec = L5_SPAWN_BOSS2_DATA;
     Object *a6 = 0;
     int16_t d1;
     int d7;
@@ -821,7 +877,7 @@ void l5_wheel_update(Object *a0)
     if (d0 >= 0x600)
         d0 = (int16_t)(d0 - 0x600);
     WHEEL_ANGLE(a0) = d0;
-    a0->gfx = GPTR(sh_r32(0x5650e + (uint32_t)(((uint16_t)d0 >> 6) & 0xfffc)));
+    a0->gfx = GPTR(sh_r32(L5_WHEEL_UPDATE_TABLE + (uint32_t)(((uint16_t)d0 >> 6) & 0xfffc)));
     bbox_from_frame(a0);
 }
 
@@ -845,7 +901,7 @@ void l5_wheel_hit(Object *a0, Object *a1, uint16_t d0)
 /* level5 $056594: a small turning part: its picture by the scroll */
 void l5_spinner_update(Object *a0)
 {
-    uint32_t t = a0->type == 0x118 ? 0x565c2 : 0x565d2;
+    uint32_t t = a0->type == 0x118 ? L5_SPINNER_UPDATE_DATA : L5_SPINNER_UPDATE_DATA_2;
 
     follow_target_offset(a0);
     a0->gfx = GPTR(sh_r32(t + 4 * (uint32_t)(uint16_t)((uint16_t)(a0->y + scroll_pos) & 3)));
@@ -859,7 +915,7 @@ void l5_boss2_turret(Object *a0)
     follow_target_offset(a0);
     d0 = direction8((int16_t)(PLAYER->x - a0->x), (int16_t)(PLAYER->y - a0->y));
     L5_TURRET_DIR(a0) = (int16_t)d0;
-    a0->gfx = GPTR(sh_r32(0x56658 + 4 * (uint32_t)d0));
+    a0->gfx = GPTR(sh_r32(L5_BOSS2_TURRET_TABLE + 4 * (uint32_t)d0));
     if (add_carry(&a0->v5e_b[0], B(L5_BOSS2_TURRET_FIRE_RATE))) {
         a0->v5e_b[0] = (uint8_t)(random_next() & 0x3f);
         spawn_enemy_shot((uint16_t)(a0->x + 8), (uint16_t)(a0->y + 8), (uint16_t)L5_TURRET_DIR(a0), W(L5_BOSS2_TURRET_SHOT_STEPS), shot_gfx(W(L5_BOSS2_TURRET_SHOT_STEPS_2)));
@@ -886,7 +942,7 @@ void l5_boss2_turret_hit(Object *a0, Object *a1, uint16_t d0)
 void l5_boss2_dead(Object *a0)
 {
     follow_target_offset(a0);
-    a0->gfx = GPTR(0x5df96);
+    a0->gfx = GPTR(L5_BOSS2_DEAD_DATA);
     a0->hit[0] = 0x3e8;
     a0->hit[2] = 0x3e8;
 }
@@ -956,7 +1012,7 @@ pellets:
 void l5_boss2_flash(Object *a0)
 {
     a0->fn_draw = FN(l5_boss2_draw);
-    draw_tile_grid_flash((const uint8_t *)GPTR(0x568f8), 5, 5, a0->y, 0x38);
+    draw_tile_grid_flash((const uint8_t *)GPTR(L5_BOSS2_FLASH_DATA), 5, 5, a0->y, 0x38);
 }
 
 #define MOVER_CELL(o) ((o)->v28)
@@ -966,10 +1022,10 @@ void l5_boss2_draw(Object *a0)
 {
     uint32_t d0 = (uint32_t)(uint16_t)MOVER_CELL(a0) * 0xc;
 
-    sh_w32(0x56908, sh_r32(0x5688c + d0));
-    sh_w32(0x56914, sh_r32(0x56890 + d0));
-    sh_w32(0x56920, sh_r32(0x56894 + d0));
-    draw_tile_grid((const uint8_t *)GPTR(0x568f8), 5, 5, a0->y, 0x38);
+    sh_w32(L5_BOSS2_DRAW_DATA, sh_r32(L5_BOSS2_DRAW_TABLE + d0));
+    sh_w32(L5_BOSS2_DRAW_DATA_2, sh_r32(L5_BOSS2_DRAW_TABLE_2 + d0));
+    sh_w32(L5_BOSS2_DRAW_DATA_3, sh_r32(L5_BOSS2_DRAW_TABLE_3 + d0));
+    draw_tile_grid((const uint8_t *)GPTR(L5_BOSS2_FLASH_DATA), 5, 5, a0->y, 0x38);
 }
 
 /* level5 $056940: the beam: it grows to its length, then it goes; it hurts the player */
@@ -1020,9 +1076,9 @@ void l5_beam_draw(Object *a0)
     int16_t d6, d7;
 
     if (BEAM_DY(a0) < 0 || BEAM_LENGTH(a0) == 0x30)
-        draw_bob_masked_at((uint16_t)a0->x, (uint16_t)a0->y, (const uint8_t *)GPTR(0x5f2fe));
+        draw_bob_masked_at((uint16_t)a0->x, (uint16_t)a0->y, (const uint8_t *)GPTR(L5_BEAM_DRAW_DATA));
     if (BEAM_DY(a0) >= 0 || BEAM_LENGTH(a0) == 0x30)
-        draw_bob_masked_at((uint16_t)a0->x, (uint16_t)(a0->y + BEAM_LENGTH(a0) - 1), (const uint8_t *)GPTR(0x5f340));
+        draw_bob_masked_at((uint16_t)a0->x, (uint16_t)(a0->y + BEAM_LENGTH(a0) - 1), (const uint8_t *)GPTR(L5_BEAM_DRAW_DATA_2));
     a1 = screen + (((uint16_t)a0->x >> 3) & 0xfffe);
     sh = (uint16_t)a0->x & 0xf;
     d0 >>= sh;
@@ -1081,7 +1137,7 @@ void l5_spawn_gates(const uint8_t *a1)
 {
     int16_t d0 = (int16_t)(rd16(a1 + 8) - 8), d1 = (int16_t)(rd16(a1 + 0xa) - 8);
     uint8_t *a2 = level_init_src + (uint16_t)(((uint16_t)d0 >> 3) & 0xfe) + (int16_t)(uint16_t)((uint32_t)((uint16_t)d1 >> 4) * 0x28);
-    uint32_t rec = 0x56b2c;
+    uint32_t rec = L5_SPAWN_GATES_DATA;
     int d7;
 
     wr16(a2, 0x8ad3);
@@ -1116,7 +1172,7 @@ void l5_gate_update(Object *a0)
     if (d0 >= 0x10)
         d0 = 0;
     L5_CELL(a0) = d0;
-    copy4(a0->script, (const uint8_t *)GPTR(0x56c30 + (uint32_t)d0));
+    copy4(a0->script, (const uint8_t *)GPTR(L5_GATE_UPDATE_DATA + (uint32_t)d0));
     a0->hit[0] = a0->x;
     a0->hit[2] = (int16_t)(a0->x + 0x20);
     a0->hit[1] = (int16_t)(a0->y - scroll_pos + 2);
@@ -1126,7 +1182,7 @@ void l5_gate_update(Object *a0)
 /* level5 $056C40: a gun in the wall: its cell by four */
 void l5_wall_update(Object *a0)
 {
-    uint32_t a2 = a0->type == 0x128 ? 0x56c94 : 0x56c9c;
+    uint32_t a2 = a0->type == 0x128 ? L5_WALL_UPDATE_DATA : L5_WALL_UPDATE_DATA_2;
 
     L5_CELL(a0) = (int16_t)((L5_CELL(a0) + 1) & 3);
     wr16(a0->script, W(a2 + 2 * (uint32_t)L5_CELL(a0)));
@@ -1186,14 +1242,14 @@ void l5_wall_hit_b(Object *a0, Object *a1, uint16_t d0)
 void l5_wall_flash_a(Object *a0)
 {
     a0->fn_draw = (obj_fn)obj_nop_thunk;
-    draw_tile_grid_flash((const uint8_t *)GPTR(0x56e3c), 0, 0, (int16_t)(a0->y - scroll_pos), (uint16_t)((uint16_t)a0->x >> 1));
+    draw_tile_grid_flash((const uint8_t *)GPTR(L5_WALL_FLASH_A_DATA), 0, 0, (int16_t)(a0->y - scroll_pos), (uint16_t)((uint16_t)a0->x >> 1));
 }
 
 /* level5 $056E1A: the flash of the gun on the right, one frame */
 void l5_wall_flash_b(Object *a0)
 {
     a0->fn_draw = (obj_fn)obj_nop_thunk;
-    draw_tile_grid_flash((const uint8_t *)GPTR(0x56e3e), 0, 0, (int16_t)(a0->y - scroll_pos), (uint16_t)((uint16_t)a0->x >> 1));
+    draw_tile_grid_flash((const uint8_t *)GPTR(L5_WALL_FLASH_B_DATA), 0, 0, (int16_t)(a0->y - scroll_pos), (uint16_t)((uint16_t)a0->x >> 1));
 }
 
 /* ---- the bridge pieces ($56E40) ---- */
@@ -1217,8 +1273,8 @@ void l5_spawn_bridge(const uint8_t *a1)
         wr16(c + 4, 0xc7);
         wr16(c + 0x2c, 0x177);
     }
-    copy4(c, (const uint8_t *)GPTR(0x56ea2));
-    copy4(c + 0x28, (const uint8_t *)GPTR(0x56ea6));
+    copy4(c, (const uint8_t *)GPTR(L5_SPAWN_BRIDGE_DATA));
+    copy4(c + 0x28, (const uint8_t *)GPTR(L5_SPAWN_BRIDGE_DATA_2));
 }
 
 #define BRIDGE_CELL(o) ((o)->v28)
@@ -1245,13 +1301,13 @@ void l5_bridge_update(Object *a0)
         for (d7 = 7; d7 >= 0; d7--) {
             Object *a1 = spawn_enemy_shot((uint16_t)(a0->x + 0x10), (uint16_t)(a0->y - scroll_pos + 0x10), (uint16_t)d7, W(L5_BRIDGE_SHOT_STEPS), 0);
 
-            set_anim(a1, 0x56fb8);
+            set_anim(a1, L5_BRIDGE_UPDATE_DATA);
         }
     }
     c = a0->script;
     d0 = (uint32_t)((uint16_t)BRIDGE_CELL(a0) & 0xe) * 4;
-    copy4(c, (const uint8_t *)GPTR(0x56ea2 + d0));
-    copy4(c + 0x28, (const uint8_t *)GPTR(0x56ea6 + d0));
+    copy4(c, (const uint8_t *)GPTR(L5_SPAWN_BRIDGE_DATA + d0));
+    copy4(c + 0x28, (const uint8_t *)GPTR(L5_SPAWN_BRIDGE_DATA_2 + d0));
 }
 
 /* level5 $056FDC: the hit of the piece: the burst, the cells go back, the score */
@@ -1283,7 +1339,7 @@ void l5_bridge_hit(Object *a0, Object *a1, uint16_t d0)
 void l5_bridge_flash(Object *a0)
 {
     a0->fn_draw = (obj_fn)obj_nop_thunk;
-    draw_tile_grid_flash((const uint8_t *)GPTR(0x56ea2), 1, 1, (int16_t)(a0->y - scroll_pos), (uint16_t)((uint16_t)a0->x >> 1));
+    draw_tile_grid_flash((const uint8_t *)GPTR(L5_SPAWN_BRIDGE_DATA), 1, 1, (int16_t)(a0->y - scroll_pos), (uint16_t)((uint16_t)a0->x >> 1));
 }
 
 /* ---- the units of eight directions ($570AA) ---- */
@@ -1320,8 +1376,8 @@ Object *l5_spawn_unit(const uint8_t *a1)
         wr16(c + 4, 0x8287);
         wr16(c + 0x2c, 0x8339);
     }
-    copy4(c, (const uint8_t *)GPTR(0x5711e + d0));
-    copy4(c + 0x28, (const uint8_t *)GPTR(0x57122 + d0));
+    copy4(c, (const uint8_t *)GPTR(L5_SPAWN_GROUP_DATA + d0));
+    copy4(c + 0x28, (const uint8_t *)GPTR(L5_SPAWN_GROUP_DATA_2 + d0));
     return a0;
 }
 
@@ -1364,18 +1420,18 @@ void l5_unit_update(Object *a0)
         uint16_t d3 = (uint16_t)((UNIT_DIR(a0) * 4) & 0x1c);
 
         a0->v5e_b[0] = (uint8_t)(random_next() & 0x3f);
-        x = (int16_t)(x + (int16_t)W(0x572aa + d3));
-        y = (int16_t)(y + (int16_t)W(0x572ac + d3));
+        x = (int16_t)(x + (int16_t)W(L5_UNIT_UPDATE_WORDS + d3));
+        y = (int16_t)(y + (int16_t)W(L5_UNIT_UPDATE_WORDS_2 + d3));
         d3 &= 0xc;
         if (!(frame_tick & 1))
             d3 += 0x10;
-        spawn_enemy_shot((uint16_t)x, (uint16_t)y, (uint16_t)UNIT_DIR(a0), W(L5_UNIT_SHOT_STEPS), GPTR(sh_r32(0x572ca + d3)));
+        spawn_enemy_shot((uint16_t)x, (uint16_t)y, (uint16_t)UNIT_DIR(a0), W(L5_UNIT_SHOT_STEPS), GPTR(sh_r32(L5_UNIT_UPDATE_TABLE + d3)));
     }
 cells:
     c = a0->script;
     d0 = (uint32_t)(uint16_t)UNIT_DIR(a0) << 3;
-    copy4(c, (const uint8_t *)GPTR(0x5711e + d0));
-    copy4(c + 0x28, (const uint8_t *)GPTR(0x57122 + d0));
+    copy4(c, (const uint8_t *)GPTR(L5_SPAWN_GROUP_DATA + d0));
+    copy4(c + 0x28, (const uint8_t *)GPTR(L5_SPAWN_GROUP_DATA_2 + d0));
 }
 
 /* level5 $0572EA: the hit of the unit: at the end the burst, its flag, the cells go back */
@@ -1409,7 +1465,7 @@ void l5_unit_hit(Object *a0, Object *a1, uint16_t d0)
 void l5_unit_flash(Object *a0)
 {
     a0->fn_draw = (obj_fn)obj_nop_thunk;
-    draw_tile_grid_flash((const uint8_t *)GPTR(0x5711e), 1, 1, (int16_t)(a0->y - scroll_pos), (uint16_t)((uint16_t)a0->x >> 1));
+    draw_tile_grid_flash((const uint8_t *)GPTR(L5_SPAWN_GROUP_DATA), 1, 1, (int16_t)(a0->y - scroll_pos), (uint16_t)((uint16_t)a0->x >> 1));
 }
 
 /* ---- the guns of cells ($573AC) ---- */
@@ -1419,7 +1475,7 @@ void l5_spawn_gun(const uint8_t *a1)
 {
     int right = rd16(a1 + 0xc) != 0;
     Object *a0 = spawn_marker_enemy(right ? 0x10c : 0x108, a1, (void (*)(void))FN(l5_gun_update));
-    uint32_t a2 = right ? 0x57514 : 0x57524, a4 = right ? 0x57536 : 0x57534;
+    uint32_t a2 = right ? L5_SPAWN_GUN_DATA : L5_SPAWN_GUN_DATA_2, a4 = right ? L5_SPAWN_GUN_DATA_3 : L5_SPAWN_GUN_DATA_4;
 
     a0->fn_hit = (void *)hit_tile;
     a0->energy = (int16_t)W(L5_GUN_ENERGY);
@@ -1452,7 +1508,7 @@ void l5_gun_update(Object *a0)
         a0->v5e_b[0] = (uint8_t)(random_next() & 0x3f);
     }
     L5_CELL(a0) = (int16_t)(L5_CELL(a0) + 1);
-    a2 = a0->type == 0x108 ? 0x57524 : 0x57514;
+    a2 = a0->type == 0x108 ? L5_SPAWN_GUN_DATA_2 : L5_SPAWN_GUN_DATA;
     wr16(a0->script, W(a2 + 2 * (uint32_t)(uint16_t)L5_CELL(a0)));
     if (L5_CELL(a0) == 3) {
         int16_t d0 = (int16_t)(a0->x + 0x18), d1 = (int16_t)(a0->y - scroll_pos + 8);
@@ -1464,7 +1520,7 @@ void l5_gun_update(Object *a0)
             d0 = (int16_t)(d0 - 0x18);
         }
         a1 = spawn_enemy_shot((uint16_t)d0, (uint16_t)d1, d2, W(L5_GUN_SHOT_STEPS), 0);
-        set_anim(a1, a0->type == 0x108 ? 0x57538 : 0x57550);
+        set_anim(a1, a0->type == 0x108 ? L5_GUN_UPDATE_DATA : L5_GUN_UPDATE_DATA_2);
         return;
     }
     if (L5_CELL(a0) == 7)
