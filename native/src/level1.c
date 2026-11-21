@@ -5,6 +5,8 @@
 #include "game_all.h"
 #include "weapon_util.h"
 #include "amiga/hw.h"
+#define TILE_COLS(o) ((o)->v3e)
+#define TILE_ROWS(o) ((o)->v40)
 
 /* the scratch fields of Object, by the kind that uses them */
 #define L1_ANGLE_HI(o) ((o)->v2a)
@@ -263,8 +265,8 @@ static void level1_turret_cells(Object *a0, const uint8_t *a2, const uint8_t *a4
     copy4(a3, a2);
     copy4(a3 + 0x28, a2 + 4);
     a0->score = 0x64;
-    a0->v3e = 1;
-    a0->v40 = 1;
+    TILE_COLS(a0) = 1;
+    TILE_ROWS(a0) = 1;
 }
 
 /* orig $054E18 (-> $055942): level hooks by d0 (a1 = the record that fired, d2 its scroll value): 0 remembers the record, 1 to 3 put
@@ -311,7 +313,7 @@ void level1_hook(uint16_t d0, const uint8_t *a1, uint16_t d2)
         a0->y = (int16_t)(rd16(a1 + 10) - 8 - scroll_pos);
         LAUNCHER_STEP(a0) = -1;
         LAUNCHER_RANGE(a0) = (int16_t)(rd16(a1 + 6) << 4);
-        LAUNCHER_POS(a0) = a0->v2a;
+        LAUNCHER_POS(a0) = LAUNCHER_RANGE(a0);
         a0->kind = 0;
         bbox_from_frame(a0);
         return;

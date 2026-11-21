@@ -4,6 +4,8 @@
 #include "game_all.h"
 #include "weapon_util.h"
 #include "amiga/hw.h"
+#define PICKUP_DIR(o) ((o)->v2a)
+#define PICKUP_KIND(o) ((o)->v30)
 
 /* a weapon object sits at its offset from the player */
 #define WEAPON_DX(o) ((o)->v3e)
@@ -700,7 +702,7 @@ void shot_fixed_update(Object *a0)
         shot_gone(a0);
         return;
     }
-    if (a0->v30 == 0)
+    if (PICKUP_KIND(a0) == 0)
         return;
     a1 = collide_enemies(a0);
     if (a1 == 0)
@@ -1144,7 +1146,7 @@ void pickup_update(Object *a0)
         if (PICKUP_MODE(a0) > 0) {
             PICKUP_MODE(a0) &= 7;
             if (PICKUP_MODE(a0) == 0)
-                a0->v2a = (int16_t)direction8((int16_t)(0xa0 - a0->x), (int16_t)(0x64 - a0->y));
+                PICKUP_DIR(a0) = (int16_t)direction8((int16_t)(0xa0 - a0->x), (int16_t)(0x64 - a0->y));
             PICKUP_MODE(a0)++;
             d0 = (int16_t)(0xa0 - a0->x);
             d1 = (int16_t)(0x64 - a0->y);
@@ -1153,11 +1155,11 @@ void pickup_update(Object *a0)
         } else {
             PICKUP_MODE(a0)++;
             if ((PICKUP_MODE(a0) & 3) == 0) {
-                a0->v2a++;
-                a0->v2a &= 7;
+                PICKUP_DIR(a0)++;
+                PICKUP_DIR(a0) &= 7;
             }
         }
-        idx = (a0->v2a << 2) & 0x1c;
+        idx = (PICKUP_DIR(a0) << 2) & 0x1c;
         a0->x += pickup_circle_steps[idx >> 1];
         a0->y += pickup_circle_steps[(idx >> 1) + 1];
     }
@@ -1169,7 +1171,7 @@ void pickup_update(Object *a0)
     if (d0 != 0x18) {
         d7 = 0x32;
         if (d0 != 0x60) {
-            idx = a0->v30;
+            idx = PICKUP_KIND(a0);
             kill_object(a0);
             pickup_call(idx, a0);
             return;

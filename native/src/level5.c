@@ -1256,7 +1256,7 @@ Object *l5_spawn_unit(const uint8_t *a1)
     a0->hit[0] = 0x3e8;
     a0->hit[2] = 0x3e8;
     c = a0->script;
-    d0 = (uint32_t)(uint16_t)a0->v2a << 3;
+    d0 = (uint32_t)(uint16_t)UNIT_DIR(a0) << 3;
     UNIT_GROUP(a0) = -1;
     if (rd16(c - 2) == 0x867d) {
         wr16(c - 2, 0x80d7);
