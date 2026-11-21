@@ -8,8 +8,8 @@ var fire_press 0xa6a uint8_t
 var v_0d5a 0xd5a uint16_t
 arr level_vars 0xd26 uint16_t 26                      ; level 1 boss state, cleared by the level's init
 arr unit_live 0xd86 uint8_t 5
-var v_0d8b 0xd8b uint8_t
-var v_0d8c 0xd8c uint8_t
+var l1_boss_spawned 0xd8b uint8_t
+var l1_boss_zone_entered 0xd8c uint8_t
 var difficulty_x1 0x424 uint16_t
 var difficulty_x2 0x426 uint16_t
 tab weapon_slot_offsets 0x2404 int16_t 8                       ; x/y offsets of the four weapon slots

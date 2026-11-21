@@ -299,9 +299,9 @@ void level1_scroll(void)
     uint16_t *a4 = level_vars;
     int d7, i;
 
-    if (v_0d8c == 0 && (int16_t)(scroll_pos + PLAYER->y) < 0xa80) {
+    if (l1_boss_zone_entered == 0 && (int16_t)(scroll_pos + PLAYER->y) < 0xa80) {
         level_over = 0xff;
-        v_0d8c = 0xff;
+        l1_boss_zone_entered = 0xff;
         scroll_pos = 0x9c0;
         scroll_max = 0x9c0;
         map_row_offset = 0x1860;
@@ -338,8 +338,8 @@ void level1_boss_update(Object *a0)
 
     if ((int16_t)scroll_pos > 0x1c0)
         goto hide;
-    if (v_0d8b == 0) {
-        v_0d8b = 0xff;
+    if (l1_boss_spawned == 0) {
+        l1_boss_spawned = 0xff;
         a2 = a0;
         for (d7 = 7; d7 >= 0; d7--) {
             a1 = obj_free_pop();
@@ -506,10 +506,10 @@ void level1_init(void)
     a0->energy = level_54e58[0];
     a0->v28 = 0;
     a0->v54 = 0;
-    v_0d8b = 0;
+    l1_boss_spawned = 0;
     for (i = 0; i < 5; i++)
         unit_live[i] = 0;
-    v_0d8c = 0;
+    l1_boss_zone_entered = 0;
     for (i = 0; i < 16; i++)
         level_vars[i] = 0;
     level_vars[16] = 0x45d2; level_vars[17] = 0x72ba;
@@ -743,7 +743,7 @@ void level1_boss_hit(Object *a0, Object *a1, uint16_t d0)
     uint16_t old;
     int16_t y;
 
-    if (v_0d8b == 0)
+    if (l1_boss_spawned == 0)
         return;
     y = (int16_t)(a1->y - scroll_pos + 0x44);
     if (!box_overlap((int16_t)hit_box[0], (int16_t)hit_box[1], (int16_t)hit_box[2], (int16_t)hit_box[3], 0x98, y, 0xa7, (int16_t)(y + 0xe)))
@@ -753,7 +753,7 @@ void level1_boss_hit(Object *a0, Object *a1, uint16_t d0)
     a1->energy = (int16_t)(old - d0);
     if (old > d0)
         return;
-    v_0d8b = 0;
+    l1_boss_spawned = 0;
     kill_object_thunk(a1);
     spawn_bonuses(8);
     debris_burst(a0, 0x13, 0, 0, 0x140, 0xc0, big_explosion_anim);
@@ -768,7 +768,7 @@ void level1_boss_part_update(Object *a0)
     ObjMove *m = (ObjMove *)a0;
     Object *a1;
 
-    if (v_0d8b == 0) {
+    if (l1_boss_spawned == 0) {
         kill_object_thunk(a0);
         return;
     }
