@@ -2,6 +2,11 @@
 #include "shop.h"
 #include "game_all.h"
 
+/* the path script view of an object (ObjMove) */
+#define PATH_WAIT(o) ((o)->v28)
+#define PATH_ANGLE_HI(o) ((o)->v2a)
+#define PATH_ANGLE_LO(o) ((o)->v2c)
+
 /* the scratch fields of Object, by the kind that uses them */
 #define DEBRIS_KIND(o) ((o)->v30)
 #define ENEMY_SHOT_DIR(o) ((o)->v2a)
@@ -442,18 +447,18 @@ Object *spawn_formation(Object *a0, const uint8_t *rec_raw, const uint8_t *a2)
             a0->x_frac = 0;
             a0->y = 0;
             a0->y_frac = 0;
-            a0->v2a = 0;
-            a0->v2c = 0;
+            PATH_ANGLE_HI(a0) = 0;
+            PATH_ANGLE_LO(a0) = 0;
             a0->score = (int16_t)a4->w2;
-            a0->v28 = 0;
+            PATH_WAIT(a0) = 0;
             if ((int16_t)a1->x < 100) {
                 d6 = (uint16_t)(0 - d6);
-                a0->v28 = (int16_t)d6;
+                PATH_WAIT(a0) = (int16_t)d6;
                 d6 = (uint16_t)(0 - d6);
                 a0->x = 0;
             }
             if (a5 != a0)
-                a0->v28 = (int16_t)(a0->v28 - (int16_t)a4->w2);
+                PATH_WAIT(a0) = (int16_t)(PATH_WAIT(a0) - (int16_t)a4->w2);
             e = (const uint8_t *)GPTR(rd32(level_formations + (int16_t)(uint16_t)((a1->index - 1) * 4)));
             if ((const void *)e < (const void *)level_data_start || (const void *)e >= (const void *)level_events_a)
                 return a0;
