@@ -28,7 +28,7 @@ tab key_table 0x7954 uint32_t 4                    ; key code << 24 | handler ad
 var loading_level_digit 0x8c41 uint8_t                          ; level digit in the loading text
 var v_8f94 0x8f94 uint16_t
 var v_8f96 0x8f96 uint16_t
-var v_8fec 0x8fec uint8_t
+var shop_closing 0x8fec uint8_t
 arr game_over_text 0x884a uint8_t 20                       ; "GAME OVER" text
 var shop_money_early 0x54e3c uint16_t
 var shop_money_late 0x54e3e uint16_t

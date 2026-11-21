@@ -531,10 +531,10 @@ static void main_loop(void)
                 }
             }
             protection = 0;
-            v_8fec = 0;
+            shop_closing = 0;
             other = cur_player ^ 1;
             if ((int16_t)scroll_pos > 0x3c0 || level_number != 5 ||
-                (v_8fec = 0xff, players != 2) || player_active[other] == 0 || player_active[other + 2] != 0) {
+                (shop_closing = 0xff, players != 2) || player_active[other] == 0 || player_active[other + 2] != 0) {
                 shop_run();
                 draw_status_digit();
             }
