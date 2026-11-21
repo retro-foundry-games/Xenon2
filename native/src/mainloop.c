@@ -483,7 +483,8 @@ static void main_loop(void)
                 hiscore_enter();
                 clear_palette();
                 v_0cf0--;
-                if (v_0cf0 == 0 || continue_screen()) {
+                if (v_0cf0 == 0 || continue_screen() == 0) {
+                    title_message(v_884a);
                     v_0a03[cur_player] = 0;
                     if (v_0a03[cur_player ^ 1] == 0)
                         return;

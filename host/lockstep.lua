@@ -74,6 +74,7 @@ if args:match("play=1") or args:match("replay=") then IGNORE.key_table = true; I
 for name in (args:match("ignore=(%S+)") or ""):gmatch("[%w_]+") do IGNORE[name] = true end
 local SHOW = {}
 for name in (args:match("show=(%S+)") or ""):gmatch("[%w_]+") do SHOW[#SHOW + 1] = name end
+local SHOWFROM = tonumber(args:match("showfrom=(%d+)") or "1000000000")
 
 local RECORD = args:match("record=(%S+)") or "captures/input/play-latest.txt"   -- where the applied input of a played or auto-played run is written
 local REPLAY = args:match("replay=(%S+)")   -- the input of a played run (captures/input/play-latest.txt), as it was applied: the same run again, e.g. headless
@@ -694,7 +695,7 @@ while not done do
             if TRACEMEM and snap.n >= TRACEMEM[3] and snap.n <= TRACEMEM[4] then
                 say("tracemem sync %d: original %s port %s", snap.n, hex(snap.ram, TRACEMEM[1] + 1, TRACEMEM[2]), hex(port_ram, TRACEMEM[1] + 1, TRACEMEM[2]))
             end
-            if #SHOW > 0 and snap.n <= 8 then
+            if #SHOW > 0 and (snap.n <= 8 or snap.n >= SHOWFROM) then
                 for _, m in ipairs(members) do
                     for _, want in ipairs(SHOW) do
                         if m[3] == want then say("   sync %d %-16s original %s port %s", snap.n, want, hex(snap.ram, m[1] + 1, math.min(m[2], 8)), hex(port_ram, m[1] + 1, math.min(m[2], 8))) end
