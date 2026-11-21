@@ -51,6 +51,9 @@ void l3_spawn_snake(const uint8_t *a1);
 void l3_spawn_diver(const uint8_t *a1);
 void l3_worm_spawn(uint16_t d6);
 void l3_end_draw(Object *a0);
+void l3_spawn_gun(const uint8_t *a1);
+void l3_spawn_boss(const uint8_t *a1);
+void l3_spawn_walker(const uint8_t *a1);
 
 
 /* ---- the entries the engine calls ($54E0C..$54E2C) ---- */
@@ -101,6 +104,15 @@ void l3_hook(uint16_t d0, const uint8_t *a1, uint16_t d2)
         break;
     case 3:
         l3_spawn_parts();
+        break;
+    case 4:
+        l3_spawn_gun(a1);
+        break;
+    case 5:
+        l3_spawn_boss(a1);
+        break;
+    case 6:
+        l3_spawn_walker(a1);
         break;
     }
 }
@@ -781,5 +793,363 @@ void l3_enemy_enter(Object *a0)
     }
     set_anim(a0, sh_r32(0x5513e + d0));
     a0->fn_update = FN(enemy_update);
+    bbox_from_frame(a0);
+}
+
+/* ---- the guns, the boss of tiles and the walker ---- */
+
+static void copy2(uint8_t *dst, const uint8_t *src)
+{
+    dst[0] = src[0];
+    dst[1] = src[1];
+}
+
+static void copy4(uint8_t *dst, const uint8_t *src)
+{
+    copy2(dst, src);
+    copy2(dst + 2, src + 2);
+}
+
+/* level3 $056DF6: a gun of tiles ($F0 or $F4): its tiles open in turn (v28), at the eighth it fires */
+void l3_gun_update(Object *a0)
+{
+    int16_t d0;
+    uint32_t a2;
+
+    if ((int16_t)(v_0cea + 0xd0) < a0->y) {
+        kill_thunk(a0);
+        return;
+    }
+    a0->hit[0] = (int16_t)(a0->x + 2);
+    a0->hit[2] = (int16_t)(a0->x + 0xe);
+    d0 = (int16_t)(a0->y - v_0cd0 + 2);
+    a0->hit[1] = d0;
+    a0->hit[3] = (int16_t)(d0 + 0xc);
+    if (a0->v28 == 0) {
+        uint16_t sum = (uint16_t)(a0->v5e_b[0] + B(0x54e67));
+
+        a0->v5e_b[0] = (uint8_t)sum;
+        if (sum > 0xff) {
+            a0->v5e_b[0] = (uint8_t)(random_next() & 0x3f);
+            a0->v28 = 1;
+        }
+        return;
+    }
+    a2 = a0->type == 0xf0 ? 0x56eda : 0x56ee8;
+    copy2(a0->v46, (const uint8_t *)GPTR(a2 + (uint16_t)(a0->v28 & ~1)));
+    a0->v28++;
+    if (a0->v28 == 8) {
+        int16_t x = (int16_t)(a0->x + 8), y = (int16_t)(a0->y - v_0cd0), angle = 0;
+
+        if (a0->type != 0xf0) {
+            angle = 4;
+            y = (int16_t)(y + 0xa);
+        }
+        spawn_enemy_shot((uint16_t)x, (uint16_t)y, (uint16_t)angle, W(0x54e68), GPTR(0x5e69e));
+        return;
+    }
+    if (a0->v28 == 0xe)
+        a0->v28 = 0;
+}
+
+/* level3 $056220: a gun of tiles from a record ($F0, $F4 when w0c is set) */
+void l3_spawn_gun(const uint8_t *a1)
+{
+    int flag = rd16(a1 + 0xc) != 0;
+    Object *a0 = spawn_marker_enemy(flag ? 0xf4 : 0xf0, a1, (void (*)(void))l3_gun_update);
+    uint32_t a2 = flag ? 0x56ee8 : 0x56eda;
+
+    a0->fn_hit = (void *)hit_tile;
+    a0->energy = (int16_t)W(0x54e5e);
+    a0->hit[0] = 0x3e8;
+    a0->hit[2] = 0x3e8;
+    a0->gfx = GPTR(a2);
+    a0->anim = (const uint8_t *)GPTR(flag ? 0x56ef8 : 0x56ef6);
+    copy2(a0->v46, (const uint8_t *)GPTR(a2));
+    a0->v42 = 0x64;
+    a0->v3e = 0;
+    a0->v40 = 0;
+}
+
+/* level3 $0561A6: the boss of tiles ($F8) from a record: six rows of its tiles are put into the map */
+void l3_spawn_boss(const uint8_t *a1)
+{
+    Object *a0 = spawn_marker_enemy(0xf8, a1, (void (*)(void))l3_boss_update);
+    uint8_t *m = a0->v46;
+    int i;
+
+    a0->fn_draw = (obj_fn)obj_nop_thunk;
+    a0->fn_hit = (void *)l3_boss_hit;
+    a0->energy = (int16_t)W(0x54e4c);
+    a0->hit[0] = 0x3e8;
+    a0->hit[2] = 0x3e8;
+    for (i = 0; i < 6; i++) {
+        copy4(m, (const uint8_t *)GPTR(0x561f0 + 8 * i));
+        copy4(m + 4, (const uint8_t *)GPTR(0x561f0 + 8 * i + 4));
+        m += 0x28;
+    }
+}
+
+/* level3 $05686A: the boss of tiles, first form: it opens and closes its mouth (v28, the cells of the table at $569A2) and fires from the sixth step on */
+void l3_boss_update(Object *a0)
+{
+    uint16_t d0;
+    uint8_t *m;
+
+    if ((int16_t)(v_0cea + 0xd0) < a0->y) {
+        kill_thunk(a0);
+        return;
+    }
+    a0->hit[0] = (int16_t)(a0->x + 0x10);
+    a0->hit[2] = (int16_t)(a0->hit[0] + 0x1f);
+    d0 = (uint16_t)(a0->y - v_0cd0 + 0x40);
+    a0->hit[1] = (int16_t)d0;
+    a0->hit[3] = (int16_t)(d0 + 0x1a);
+    d0 = (uint16_t)a0->v28;
+    if (d0 == 0) {
+        if ((uint8_t)random_next() >= B(0x54e57))
+            return;
+    }
+    m = a0->v46;
+    copy4(m + 0xa2, (const uint8_t *)GPTR(0x569a2 + 4 * (d0 & ~1u)));
+    copy4(m + 0xca, (const uint8_t *)GPTR(0x569a2 + 4 * (d0 & ~1u) + 4));
+    a0->v28++;
+    if (a0->v28 == 0x12) {
+        a0->v28 = 0;
+        return;
+    }
+    if (a0->v28 < 4)
+        return;
+    if (a0->v28 > 0xb) {
+        if (a0->v28 == 0xc && (uint8_t)random_next() < B(0x54e59))
+            a0->v28 = 4;
+        return;
+    }
+    {
+        uint16_t sum = (uint16_t)(a0->v5e_b[0] + B(0x54e5b));
+        int16_t x, y;
+        uint16_t angle = 4, step;
+        uint32_t gfx;
+
+        a0->v5e_b[0] = (uint8_t)sum;
+        if (sum <= 0xff)
+            return;
+        a0->v5e_b[0] = (uint8_t)(random_next() & 0x3f);
+        x = (int16_t)(a0->x + 0x20);
+        y = (int16_t)(a0->y - v_0cd0 + 0x58);
+        gfx = sh_r32(sh_r32(0x6ee26 + 4 * (uint32_t)W(0x54e5c)));
+        step = (uint16_t)(a0->v28 & ~1);
+        if (step == 6)
+            angle = 3;
+        if (step == 8)
+            angle = 5;
+        spawn_enemy_shot((uint16_t)x, (uint16_t)y, angle, W(0x54e5e), GPTR(gfx));
+    }
+}
+
+/* level3 $0569EA: the hit of the boss of tiles, first form: it flashes; when the energy is gone it bursts, its tiles go and it goes on in the second form */
+void l3_boss_hit(Object *a0, Object *a1, uint16_t d0)
+{
+    uint16_t old = (uint16_t)a1->energy;
+    uint8_t *m;
+
+    (void)a0;
+    a1->energy = (int16_t)(old - d0);
+    if (old > d0) {
+        a1->fn_draw = FN(l3_boss_flash);
+        return;
+    }
+    spawn_effect((int16_t)(a1->x + 0x20), (int16_t)(a1->y - v_0cd0 + 0x40), v_0f64, draw_bob_masked);
+    m = a1->v46;
+    wr32(m + 0x50, 0);
+    wr32(m + 0x54, 0);
+    wr32(m + 0x78, 0);
+    wr32(m + 0x7c, 0);
+    wr32(m + 0xa0, 0);
+    wr32(m + 0xa4, 0);
+    wr32(m + 0xca, 0);
+    a1->fn_update = FN(l3_boss2_update);
+    a1->fn_draw = (obj_fn)obj_nop_thunk;
+    a1->fn_hit = (void *)l3_boss2_hit;
+    a1->energy = (int16_t)W(0x54e60);
+    a1->hit[0] = 0x3e8;
+    a1->hit[2] = 0x3e8;
+    a1->v28 = 0;
+    v_0c92 += 0x1f4;
+}
+
+/* level3 $056A8C: the draw of the boss of tiles for the frame after a hit: its two grids as flashes */
+void l3_boss_flash(Object *a0)
+{
+    int16_t y = (int16_t)(a0->y - v_0cd0);
+    uint32_t cells = 0x569a2 + 4 * (uint32_t)(a0->v28 & ~1);
+
+    a0->fn_draw = (obj_fn)obj_nop_thunk;
+    draw_tile_grid_flash((const uint8_t *)GPTR(0x56a74), 3, 2, (int16_t)(y + 0x20), (uint16_t)(((uint16_t)a0->x >> 1) & 0xfffc));
+    draw_tile_grid_flash((const uint8_t *)GPTR(cells), 1, 1, (int16_t)(y + 0x40), (uint16_t)(((uint16_t)(a0->x + 0x10) >> 1) & 0xfffc));
+}
+
+/* level3 $056AF8: the boss of tiles, second form: the cells of the table at $56D2C in turn (v28), and at the fourth step eight shots */
+void l3_boss2_update(Object *a0)
+{
+    uint16_t d0;
+    uint8_t *m;
+
+    if ((int16_t)(v_0cea + 0xd0) < a0->y) {
+        kill_thunk(a0);
+        return;
+    }
+    a0->hit[0] = (int16_t)(a0->x + 0x10);
+    a0->hit[2] = (int16_t)(a0->hit[0] + 0x1f);
+    d0 = (uint16_t)(a0->y + 4 - v_0cd0);
+    a0->hit[1] = (int16_t)d0;
+    a0->hit[3] = (int16_t)(d0 + 0x17);
+    d0 = (uint16_t)a0->v28;
+    if (d0 == 0) {
+        uint16_t sum = (uint16_t)(a0->v5e_b[0] + B(0x54e63));
+
+        a0->v5e_b[0] = (uint8_t)sum;
+        if (sum <= 0xff)
+            return;
+        a0->v5e_b[0] = (uint8_t)(random_next() & 0x3f);
+    }
+    m = a0->v46;
+    copy4(m + 2, (const uint8_t *)GPTR(0x56d2c + 4 * (d0 & ~1u)));
+    copy4(m + 0x2a, (const uint8_t *)GPTR(0x56d2c + 4 * (d0 & ~1u) + 4));
+    a0->v28++;
+    if (a0->v28 == 0xa) {
+        a0->v28 = 0;
+        return;
+    }
+    if (a0->v28 == 4) {
+        int16_t x = (int16_t)(a0->x + 0x20), y = (int16_t)(a0->y - v_0cd0 + 0x18);
+        int d7;
+
+        for (d7 = 7; d7 >= 0; d7--) {
+            Object *s = spawn_enemy_shot((uint16_t)x, (uint16_t)y, (uint16_t)d7, W(0x54e64), 0);
+
+            set_anim(s, sh_r32(0x56bec + 4 * (uint32_t)(7 - d7)));
+        }
+    }
+}
+
+/* level3 $056D54: the hit of the boss of tiles, second form: it flashes; when the energy is gone it bursts and goes */
+void l3_boss2_hit(Object *a0, Object *a1, uint16_t d0)
+{
+    uint16_t old = (uint16_t)a1->energy;
+    uint8_t *m;
+
+    (void)a0;
+    a1->energy = (int16_t)(old - d0);
+    if (old > d0) {
+        a1->fn_draw = FN(l3_boss2_flash);
+        return;
+    }
+    spawn_effect((int16_t)(a1->x + 0x20), (int16_t)(a1->y - v_0cd0 + 0x10), v_0f64, draw_bob_masked);
+    m = a1->v46;
+    wr32(m, 0);
+    wr32(m + 4, 0);
+    wr32(m + 0x28, 0);
+    wr32(m + 0x2c, 0);
+    v_0c92 += 0x1f4;
+    kill_thunk(a1);
+}
+
+/* level3 $056DC4: the draw of the boss of tiles, second form, for the frame after a hit */
+void l3_boss2_flash(Object *a0)
+{
+    a0->fn_draw = (obj_fn)obj_nop_thunk;
+    draw_tile_grid_flash((const uint8_t *)GPTR(0x56d2c), 1, 1, (int16_t)(a0->y - v_0cd0), (uint16_t)(((uint16_t)(a0->x + 0x10) >> 1) & 0xfffc));
+}
+
+/* level3 $0556F6: a walker ($DC) from a record: the direction w6 of the record gives its first place and picture */
+void l3_spawn_walker(const uint8_t *a1)
+{
+    Object *a0 = alloc_in(LIST_C);
+    uint16_t i = rd16(a1 + 6);
+
+    a0->type = 0xdc;
+    a0->fn_update = FN(l3_walker_update);
+    a0->fn_draw = draw_bob_masked;
+    a0->v2a = (int16_t)i;
+    SET_V5E(a0, 0);
+    a0->x = (int16_t)(rd16(a1 + 8) - 8 + (int16_t)W(0x55790 + 2 * i));
+    a0->y = (int16_t)(rd16(a1 + 10) - 8 - v_0cd0 + (int16_t)W(0x557a0 + 2 * i));
+    set_anim(a0, sh_r32(0x557b0 + 4 * (uint32_t)i));
+    a0->fn_hit = (void *)hit_enemy;
+    a0->energy = (int16_t)W(0x54e44);
+    a0->flag35 = 0;
+    a0->v42 = 0x64;
+    a0->v28 = 0;
+    a0->v44 = 0;
+    bbox_from_frame(a0);
+}
+
+/* level3 $0562B0: the walker: it goes on in its direction (v2a, 8 of them) by the steps of the tables at $56290 / $562A0 and at each tile of the map looks at
+ * the cell ahead: a wall turns it by the tables at $56460, a free cell ahead lets it go on; now and then it fires at the player */
+void l3_walker_update(Object *a0)
+{
+    uint32_t d2 = 2 * (uint32_t)(uint16_t)a0->v2a;
+    int16_t d0, d1;
+    int at_tile = 0, turn = 0;
+
+    anim_step(a0);
+    a0->y = (int16_t)(a0->y + v_0cd8);
+    if ((int16_t)(v_0cea + 0xd0 - v_0cd0) < a0->y) {
+        kill_thunk(a0);
+        return;
+    }
+    d0 = (int16_t)W(0x56290 + d2);
+    if (d0 != 0) {
+        a0->x = (int16_t)(a0->x + d0);
+        at_tile = d0 < 0 ? (a0->x & 0xf) == 0xf : (a0->x & 0xf) == 0;
+    } else {
+        int16_t step = (int16_t)W(0x562a0 + d2);
+
+        a0->y = (int16_t)(a0->y + step);
+        d1 = (int16_t)(a0->y + v_0cd0);
+        at_tile = step < 0 ? (d1 & 0xf) == 0xf : (d1 & 0xf) == 0;
+    }
+    if (at_tile) {
+        d0 = a0->x;
+        if (d0 == 0 || (uint16_t)d0 >= 0x140) {
+            turn = 1;
+        } else {
+            uint16_t row = (uint16_t)((uint16_t)(a0->y + v_0cd0) >> 4);
+            const uint8_t *a1 = level_init_src + (int16_t)(uint16_t)(row * 0x28) + (((uint16_t)d0 >> 3) & 0xfe);
+
+            if (rd16(a1) != 0) {
+                a0->x = (int16_t)(a0->x - (int16_t)W(0x56290 + d2));
+                a0->y = (int16_t)(a0->y - (int16_t)W(0x562a0 + d2));
+                turn = 1;
+            } else {
+                int16_t d3 = (int16_t)W(0x56450 + d2);
+
+                turn = rd16(a1 + d3) == 0;
+            }
+        }
+        if (turn) {
+            uint16_t ni;
+
+            a0->x = (int16_t)(a0->x + (int16_t)W(0x56460 + d2));
+            a0->y = (int16_t)(a0->y + (int16_t)W(0x56470 + d2));
+            ni = W(0x56480 + d2);
+            a0->v2a = (int16_t)ni;
+            set_anim(a0, sh_r32(0x557b0 + 4 * (uint32_t)ni));
+        }
+    }
+    {
+        uint16_t sum = (uint16_t)(a0->v5e_b[0] + B(0x54e4f));
+
+        a0->v5e_b[0] = (uint8_t)sum;
+        if (sum > 0xff) {
+            uint32_t gfx = sh_r32(sh_r32(0x6ee26 + 4 * (uint32_t)W(0x54e50)));
+            uint16_t angle;
+
+            a0->v5e_b[0] = (uint8_t)(random_next() & 0x3f);
+            angle = direction8((int16_t)(PLAYER_X - a0->x), (int16_t)(PLAYER_Y - a0->y));
+            spawn_enemy_shot((uint16_t)a0->x, (uint16_t)a0->y, angle, W(0x54e52), GPTR(gfx));
+        }
+    }
     bbox_from_frame(a0);
 }
