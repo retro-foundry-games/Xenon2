@@ -5,6 +5,10 @@
 #include "game_all.h"
 
 /* the scratch fields of Object, by the kind that uses them */
+#define WALKER_STATE(o) ((o)->v28)
+
+
+/* the scratch fields of Object, by the kind that uses them */
 #define DIVER_SIDE(o) ((o)->v2a)
 #define L3_PICTURE_PHASE(o) ((o)->v2c)
 #define WORM_PHASE(o) ((o)->v2c)
@@ -1165,7 +1169,7 @@ void l3_spawn_walker(const uint8_t *a1)
     a0->energy = (int16_t)W(0x54e44);
     a0->big = 0;
     a0->score = 0x64;
-    a0->v28 = 0;
+    WALKER_STATE(a0) = 0;
     a0->kind = 0;
     bbox_from_frame(a0);
 }
@@ -1300,7 +1304,7 @@ void l3_worm_c(Object *a0)
 void l3_worm_hit(Object *a0, Object *a1, uint16_t d0)
 {
     Object *o;
-    uint32_t w = 0xd66 + 2 * (uint32_t)(uint16_t)a1->v30;
+    uint32_t w = 0xd66 + 2 * (uint32_t)(uint16_t)WORM_SIDE(a1);
     uint16_t old = W(w);
 
     for (o = a1; o; o = o->chain)
@@ -1308,8 +1312,8 @@ void l3_worm_hit(Object *a0, Object *a1, uint16_t d0)
     sh_w16(w, (uint16_t)(old - d0));
     if (old > d0)
         return;
-    sh_w8(0xd92 + (uint16_t)a1->v30, 0xff);
-    sh_w8(0xd94 + (uint16_t)a1->v30, 0);
+    sh_w8(0xd92 + (uint16_t)WORM_SIDE(a1), 0xff);
+    sh_w8(0xd94 + (uint16_t)WORM_SIDE(a1), 0);
     for (o = a1->chain; o;) {
         Object *next = o->chain;
 

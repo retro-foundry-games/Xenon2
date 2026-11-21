@@ -7,6 +7,9 @@
 #include "amiga/hw.h"
 
 /* the scratch fields of Object, by the kind that uses them */
+
+
+/* the scratch fields of Object, by the kind that uses them */
 #define L1_BOSS_MOVE(o) ((o)->v2e)
 #define L1_BOSS_PHASE(o) ((o)->v28)
 #define L1_BOSS_WAIT(o) ((o)->v30)
@@ -519,7 +522,7 @@ void level1_init(void)
     a0->screen_fixed = -1;
     a0->y = 0x10;
     a0->energy = level_54e58[0];
-    a0->v28 = 0;
+    L1_BOSS_PHASE(a0) = 0;
     a0->steps = 0;
     l1_boss_spawned = 0;
     for (i = 0; i < 5; i++)
