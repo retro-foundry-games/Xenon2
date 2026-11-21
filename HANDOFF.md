@@ -83,8 +83,8 @@ memory at the stop, `LS.hex(...)`.  `gdb -p` on the `xenon2-sdl-dev` process sho
 7. **Starfield stops after a level reload** (seen in the lockstep play, 2026-11-20): when the port reloads level 1 (after the shop / `level_load`), the stars no longer animate.  Not investigated; start from `stars_init_dots`/`stars_update` use at level start and the state they leave (`stars`, `scroll_speed`).
 8. **Shop input latency** (fixed in the lockstep 2026-11-20): `inlag=auto` gives the port the stick one sync later at sync points called from shop code; the shop replay `play-shop2.txt` from `frame-45589` is then clean to sync 758 with the random generator compared.  The port itself still acts a frame earlier than the original in the shop's stick check (HLE swap always waits a vertical blank): real play on the port is unaffected, only the comparison needed it.  Syncs 759-775 (first after the shop, before the level reload) differ in the `$54E00` level-header members: the shop's code is still there; not a bug.  `player_history` (102 bytes) differs at later syncs: not looked at.
 
-13. **Naming left in `struct Xenon2`** (2026-11-21): 21 variables are still `v_XXXX` because the code only resets them or never reads them:
-   `v_0416 v_041a v_09fa v_09fd v_09fe v_8f94 v_8f96 v_8fec v_54e3c v_54e3e v_04f1 v_04e8 v_04ea v_0d5a v_5dd0 v_192ba v_043a v_04e2 v_0d85 v_19a9e v_796e`.
+13. **Naming left in `struct Xenon2`** (2026-11-21): 18 variables are still `v_XXXX` because the code only resets them or never reads them:
+   `v_0416 v_041a v_09fa v_09fd v_09fe v_8f94 v_8f96 v_8fec v_54e3c v_54e3e v_04f1 v_0d5a v_5dd0 v_192ba v_04e2 v_0d85 v_19a9e v_796e`.
    `Object` scratch fields `v28 v2a v2c v2e v30 v3e v40 flag60 flag61` mean different things per enemy kind (`ObjMove` is the path-script view); naming them needs one view per kind.
    `spawn_def_326c` stays raw bytes (shared big-endian format with the level blobs).
 

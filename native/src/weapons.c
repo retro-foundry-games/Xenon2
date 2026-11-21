@@ -422,7 +422,7 @@ Object *weapon_38(Object *a0, Object *a1)
         return grow_weapon(SLOT(5));
     dismiss_slot5();
     n = weapon_slot5(a0, 0x38, weapon38_update, anim_28b2, 1, 0, 9, 0x19);
-    v_04e8 = -100;
+    trail_x = -100;
     return n;
 }
 
@@ -435,7 +435,7 @@ Object *weapon_3c(Object *a0, Object *a1)
         return grow_weapon(SLOT(5));
     dismiss_slot5();
     n = weapon_slot5(a0, 0x3c, weapon38_update, anim_28d0, 1, 1, 0xd, 0x19);
-    v_04e8 = -100;
+    trail_x = -100;
     return n;
 }
 
@@ -2106,20 +2106,20 @@ void weapon38_update(Object *a0)
                 d0 = 0xbf;
         }
         a0->y = d0;
-        if (v_043a == 10)
+        if (trail_count == 10)
             return;
-        d0 = (int16_t)(v_04e8 - a0->x);
+        d0 = (int16_t)(trail_x - a0->x);
         if (d0 < 0)
             d0 = (int16_t)-d0;
         if (d0 < 0x20) {
-            d0 = (int16_t)(v_04ea - a0->y);
+            d0 = (int16_t)(trail_y - a0->y);
             if (d0 < 0)
                 d0 = (int16_t)-d0;
             if (d0 < 0x20)
                 return;
         }
-        v_04e8 = a0->x;
-        v_04ea = a0->y;
+        trail_x = a0->x;
+        trail_y = a0->y;
         {
             Object *a1 = alloc_b(a0);
 
@@ -2130,8 +2130,8 @@ void weapon38_update(Object *a0)
             a1->x = a0->x;
             a1->y = a0->y;
             a1->score = a0->score;
-            v_043a++;
-            a1->v28 = (int16_t)(-(int16_t)(v_043a * 4));
+            trail_count++;
+            a1->v28 = (int16_t)(-(int16_t)(trail_count * 4));
         }
         return;
     }

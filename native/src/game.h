@@ -64,7 +64,7 @@ struct Xenon2 {
     uint16_t dive_step;  /* $000432 var */
     uint16_t dive_timer;  /* $000434 var */
     uint32_t background_scroll;  /* $000436 var */
-    uint16_t v_043a;  /* $00043A var */
+    uint16_t trail_count;  /* $00043A var */
     uint16_t pickup_groups[16];  /* $00043C arr */
     uint16_t pickup_kind_a;  /* $00045C var */
     uint16_t pickup_kind_b;  /* $00045E var */
@@ -75,8 +75,8 @@ struct Xenon2 {
     uint16_t v_04e2;  /* $0004E2 var */
     uint16_t player_x_prev;  /* $0004E4 var */
     uint16_t player_y_prev;  /* $0004E6 var */
-    int16_t v_04e8;  /* $0004E8 var */
-    uint16_t v_04ea;  /* $0004EA var */
+    int16_t trail_x;  /* $0004E8 var */
+    uint16_t trail_y;  /* $0004EA var */
     uint16_t shop_door_left;  /* $0004EC var */
     uint16_t shop_door_right;  /* $0004EE var */
     uint8_t shop_keeper_talking;  /* $0004F0 var */
@@ -582,7 +582,7 @@ LAYOUT_ASSERT(dive_phase, 0x430);
 LAYOUT_ASSERT(dive_step, 0x432);
 LAYOUT_ASSERT(dive_timer, 0x434);
 LAYOUT_ASSERT(background_scroll, 0x436);
-LAYOUT_ASSERT(v_043a, 0x43a);
+LAYOUT_ASSERT(trail_count, 0x43a);
 LAYOUT_ASSERT(pickup_groups, 0x43c);
 LAYOUT_ASSERT(pickup_kind_a, 0x45c);
 LAYOUT_ASSERT(pickup_kind_b, 0x45e);
@@ -592,8 +592,8 @@ LAYOUT_ASSERT(player_history, 0x47c);
 LAYOUT_ASSERT(v_04e2, 0x4e2);
 LAYOUT_ASSERT(player_x_prev, 0x4e4);
 LAYOUT_ASSERT(player_y_prev, 0x4e6);
-LAYOUT_ASSERT(v_04e8, 0x4e8);
-LAYOUT_ASSERT(v_04ea, 0x4ea);
+LAYOUT_ASSERT(trail_x, 0x4e8);
+LAYOUT_ASSERT(trail_y, 0x4ea);
 LAYOUT_ASSERT(shop_door_left, 0x4ec);
 LAYOUT_ASSERT(shop_door_right, 0x4ee);
 LAYOUT_ASSERT(shop_keeper_talking, 0x4f0);
@@ -960,7 +960,7 @@ LAYOUT_ASSERT(level_data_dst, 0x7d120);
 #define dive_step (xenon2.dive_step)
 #define dive_timer (xenon2.dive_timer)
 #define background_scroll (xenon2.background_scroll)
-#define v_043a (xenon2.v_043a)
+#define trail_count (xenon2.trail_count)
 #define pickup_groups (xenon2.pickup_groups)
 #define pickup_kind_a (xenon2.pickup_kind_a)
 #define pickup_kind_b (xenon2.pickup_kind_b)
@@ -970,8 +970,8 @@ LAYOUT_ASSERT(level_data_dst, 0x7d120);
 #define v_04e2 (xenon2.v_04e2)
 #define player_x_prev (xenon2.player_x_prev)
 #define player_y_prev (xenon2.player_y_prev)
-#define v_04e8 (xenon2.v_04e8)
-#define v_04ea (xenon2.v_04ea)
+#define trail_x (xenon2.trail_x)
+#define trail_y (xenon2.trail_y)
 #define shop_door_left (xenon2.shop_door_left)
 #define shop_door_right (xenon2.shop_door_right)
 #define shop_keeper_talking (xenon2.shop_keeper_talking)

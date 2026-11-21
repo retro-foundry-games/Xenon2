@@ -731,7 +731,7 @@ void level_start(void)
         other_player_level[i] = a0[i];
     background_scroll = 0;
     v_04e2 = 0;
-    v_043a = 0;
+    trail_count = 0;
     for (i = 0; i < 16; i++)
         pickup_groups[i] = 0;
     level_over = 0;
