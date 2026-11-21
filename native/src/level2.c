@@ -7,57 +7,57 @@
 #include "game_all.h"
 
 /* level 2: its data tables in the level blob, by the routine that reads them */
-#define L2_FLYER_UPDATE_DATA_3 0x5501a
-#define L2_FLYER_UPDATE_DATA 0x55032
-#define L2_FLYER_UPDATE_DATA_4 0x5504a
-#define L2_FLYER_UPDATE_DATA_2 0x55050
-#define L2_HIT_A_DATA 0x55062
-#define L2_HIT_B_DATA 0x5509e
-#define L2_HIT_C_DATA 0x550da
+#define L2_FLYER_ANIM2_E0 0x5501a
+#define L2_FLYER_ANIM_E0 0x55032
+#define L2_FLYER_ANIM2_OTHER 0x5504a
+#define L2_FLYER_ANIM_OTHER 0x55050
+#define L2_WRECK_A 0x55062
+#define L2_WRECK_B 0x5509e
+#define L2_WRECK_C 0x550da
 #define L2_BOSS_UPDATE_DATA_4 0x55116
-#define L2_ROAMER_UPDATE_DATA 0x5513a
-#define L2_MARKER_F8_UPDATE_DATA 0x554c6
+#define L2_ROAMER_ANIM 0x5513a
+#define L2_MARKER_F8_CELLS 0x554c6
 #define L2_HOOK_DATA_11 0x5567a
-#define L2_FRONT_UPDATE_DATA_3 0x557a8
-#define L2_FRONT_UPDATE_DATA 0x557e8
-#define L2_FRONT_UPDATE_DATA_2 0x5583c
-#define L2_HOOK_DATA_5 0x55890
-#define L2_HOOK_DATA_7 0x55894
-#define L2_HOOK_DATA_6 0x558b8
-#define L2_HOOK_DATA_8 0x558bc
-#define L2_HOOK_DATA_3 0x559c4
-#define L2_HOOK_DATA_4 0x559c6
-#define L2_HOOK_DATA 0x559c8
-#define L2_HOOK_DATA_2 0x559e6
-#define L2_HOOK_DATA_10 0x55cd0
-#define L2_LAUNCHER_UPDATE_DATA_2 0x55d00
-#define L2_HOOK_DATA_9 0x55d12
-#define L2_LAUNCHER_UPDATE_DATA 0x55d42
+#define L2_FRONT_ENTRIES 0x557a8
+#define L2_FRONT_TABLE_F0 0x557e8
+#define L2_FRONT_TABLE_OTHER 0x5583c
+#define L2_HOOK_CELLS_A 0x55890
+#define L2_HOOK_CELLS2_A 0x55894
+#define L2_HOOK_CELLS_B 0x558b8
+#define L2_HOOK_CELLS2_B 0x558bc
+#define L2_HOOK_ANIM_A 0x559c4
+#define L2_HOOK_ANIM_B 0x559c6
+#define L2_HOOK_PICTURE_A 0x559c8
+#define L2_HOOK_PICTURE_B 0x559e6
+#define L2_HOOK_FIRE_ANIM_B 0x55cd0
+#define L2_LAUNCHER_ANIM_OTHER 0x55d00
+#define L2_HOOK_FIRE_ANIM_A 0x55d12
+#define L2_LAUNCHER_ANIM_100 0x55d42
 #define L2_DEBRIS_WALL_DATA_2 0x55ec4
-#define L2_DEBRIS_WALL_DATA 0x55f56
-#define L2_ROAMER_SHOT_UPDATE_TABLE 0x563c0
-#define L2_ROAMER_SHOT_UPDATE_DATA 0x56526
-#define L2_FRONT_PIECE_UPDATE_TABLE 0x56576
-#define L2_PIECE_UPDATE_DATA_3 0x567fa
-#define L2_PIECE_UPDATE_DATA 0x5681a
-#define L2_PIECE_UPDATE_DATA_2 0x5683a
-#define L2_GATE_FLASH_DATA_2 0x5691a
-#define L2_GATE_FLASH_DATA 0x56926
-#define L2_GATE_FLASH_DATA_3 0x56932
-#define L2_GATE_UPDATE_DATA 0x56b4e
-#define L2_GATE_UPDATE_DATA_2 0x56b58
-#define L2_BOSS_UPDATE_TABLE 0x56c44
-#define L2_BOSS_MOVE_TABLE 0x56e46
-#define L2_BOSS_MOVE_TABLE_2 0x56e4e
+#define L2_DEBRIS_WALL_RECORDS 0x55f56
+#define L2_BOLT_ANIMS_BY_DIR 0x563c0
+#define L2_ROAMER_SHOT_ENTRIES 0x56526
+#define L2_FRONT_ANIMS_BY_DIR 0x56576
+#define L2_PIECE_PICTURES_OTHER 0x567fa
+#define L2_PIECE_PICTURES_118 0x5681a
+#define L2_PIECE_PICTURES_11C 0x5683a
+#define L2_GATE_FLASH_CELLS_B 0x5691a
+#define L2_GATE_FLASH_CELLS_A 0x56926
+#define L2_GATE_FLASH_CELLS_C 0x56932
+#define L2_GATE_NUMBER_CELLS 0x56b4e
+#define L2_GATE_CELLS 0x56b58
+#define L2_BOSS_CELLS_BY_CELL 0x56c44
+#define L2_BOSS_MOVE_PATHS_A 0x56e46
+#define L2_BOSS_MOVE_PATHS_B 0x56e4e
 #define L2_BOSS_UPDATE_DATA 0x56e8e
 #define L2_BOSS_UPDATE_DATA_2 0x56eac
-#define L2_ROR5_TABLE 0x56f24
-#define L2_BOSS_DRAW_DATA 0x5725e
+#define L2_BLOCK_GROUP_OFFSETS 0x56f24
+#define L2_BOSS_GRID 0x5725e
 #define L2_BOSS_UPDATE_DATA_3 0x572aa
-#define L2_BOSS_MOVE_DATA 0x572b2
-#define L2_BOSS_MOVE_DATA_2 0x572ba
-#define L2_ROAMER_UPDATE_DATA_2 0x5b5d6
-#define L2_LAUNCHER_UPDATE_DATA_3 0x5ccf6
+#define L2_BOSS_MOVE_SLOT_A 0x572b2
+#define L2_BOSS_MOVE_SLOT_B 0x572ba
+#define L2_ROAMER_PICTURE 0x5b5d6
+#define L2_LAUNCHER_SHOT_PICTURE 0x5ccf6
 
 /* level 2: its parameter block at E42 (energies, fire rates, shot steps), by the object that reads them */
 #define L2_MARKER_F8_ENERGY 0x54e42
@@ -184,7 +184,7 @@ Object *l2_collision_hook(int16_t d0, int16_t d1, int16_t d2, int16_t d3)
         d4 |= 4;
     if (d0 <= 0x80)
         d4 |= 8;
-    a1 = l2_block_table + sh_r32(L2_ROR5_TABLE + d4);
+    a1 = l2_block_table + sh_r32(L2_BLOCK_GROUP_OFFSETS + d4);
     n = rd16(a1);
     a1 += 2;
     for (; n != 0; n--, a1 += 8) {
@@ -247,8 +247,8 @@ void l2_hook(uint16_t d0, const uint8_t *a1, uint16_t d2)
         a0->energy = (int16_t)W(L2_HOOK_ENERGY);
         a0->hit[0] = 0x3e8;
         a0->hit[2] = 0x3e8;
-        a0->gfx = GPTR(flag ? L2_HOOK_DATA : L2_HOOK_DATA_2);
-        a0->anim = (const uint8_t *)GPTR(flag ? L2_HOOK_DATA_3 : L2_HOOK_DATA_4);
+        a0->gfx = GPTR(flag ? L2_HOOK_PICTURE_A : L2_HOOK_PICTURE_B);
+        a0->anim = (const uint8_t *)GPTR(flag ? L2_HOOK_ANIM_A : L2_HOOK_ANIM_B);
         copy2(a0->script, (const uint8_t *)a0->gfx);
         a0->score = 0x64;
         TILE_COLS(a0) = 0;
@@ -256,15 +256,15 @@ void l2_hook(uint16_t d0, const uint8_t *a1, uint16_t d2)
         return;
     case 2:
         a0 = spawn_marker_front(flag ? 0xf0 : 0xf4, a1, (void (*)(void))l2_front_update);
-        copy4(a0->script, (const uint8_t *)GPTR(flag ? L2_HOOK_DATA_5 : L2_HOOK_DATA_6));
-        copy4(a0->script + 0x28, (const uint8_t *)GPTR(flag ? L2_HOOK_DATA_7 : L2_HOOK_DATA_8));
+        copy4(a0->script, (const uint8_t *)GPTR(flag ? L2_HOOK_CELLS_A : L2_HOOK_CELLS_B));
+        copy4(a0->script + 0x28, (const uint8_t *)GPTR(flag ? L2_HOOK_CELLS2_A : L2_HOOK_CELLS2_B));
         return;
     case 3:
         a0 = alloc_in(LIST_C);
         a0->type = flag ? 0x100 : 0x104;
         a0->fn_update = FN(l2_launcher_update);
         a0->fn_draw = draw_bob_masked;
-        set_anim(a0, flag ? L2_HOOK_DATA_9 : L2_HOOK_DATA_10);
+        set_anim(a0, flag ? L2_HOOK_FIRE_ANIM_A : L2_HOOK_FIRE_ANIM_B);
         SET_V5E(a0, 0);
         a0->fn_hit = (void *)hit_enemy;
         a0->energy = (int16_t)W(L2_HOOK_ENERGY_2);
@@ -429,7 +429,7 @@ void l2_front_piece_update(Object *a0)
             uint16_t d = direction8((int16_t)(PLAYER_X - a0->x), (int16_t)(PLAYER_Y - a0->y));
 
             FRONT_DIR(a0) = (int16_t)(~d & 7);
-            set_anim(a0, sh_r32(L2_FRONT_PIECE_UPDATE_TABLE + ((uint16_t)FRONT_DIR(a0) << 2)));
+            set_anim(a0, sh_r32(L2_FRONT_ANIMS_BY_DIR + ((uint16_t)FRONT_DIR(a0) << 2)));
         }
         x = (int16_t)(dx[FRONT_DIR(a0)] + a0->x);
         if ((uint16_t)x >= 0x140) {
@@ -486,7 +486,7 @@ void l2_flyer_update(Object *a0)
             d0 = (int16_t)-d0;
         if (d0 < 10) {
             FLYER_DIVE(a0) = 1;
-            set_anim(a0, a0->type == 0xe0 ? L2_FLYER_UPDATE_DATA : L2_FLYER_UPDATE_DATA_2);
+            set_anim(a0, a0->type == 0xe0 ? L2_FLYER_ANIM_E0 : L2_FLYER_ANIM_OTHER);
             bbox_from_frame(a0);
             return;
         }
@@ -501,7 +501,7 @@ void l2_flyer_update(Object *a0)
     a0->y += 0xc;
     if (a0->y >= 0xa0) {
         FLYER_DIVE(a0) = 0;
-        set_anim(a0, a0->type == 0xe0 ? L2_FLYER_UPDATE_DATA_3 : L2_FLYER_UPDATE_DATA_4);
+        set_anim(a0, a0->type == 0xe0 ? L2_FLYER_ANIM2_E0 : L2_FLYER_ANIM2_OTHER);
     }
     bbox_from_frame(a0);
 }
@@ -538,7 +538,7 @@ void l2_marker_f8_update(Object *a0)
         else if ((frame_tick & 3) == 0)
             MARKER_F8_BLINK(a0) ^= 1;
     }
-    a2 = (const uint8_t *)GPTR(L2_MARKER_F8_UPDATE_DATA + ((uint16_t)MARKER_F8_BLINK(a0) << 3));
+    a2 = (const uint8_t *)GPTR(L2_MARKER_F8_CELLS + ((uint16_t)MARKER_F8_BLINK(a0) << 3));
     copy4(a0->script, a2);
     copy4(a0->script + 0x28, a2 + 4);
     if ((uint16_t)MARKER_F8_BLINK(a0) < 2)
@@ -555,7 +555,7 @@ void l2_marker_f8_update(Object *a0)
         s->fn_update = (obj_fn)l2_flyer_update;
         s->fn_draw = draw_bob_masked;
         s->fn_hit = (void *)hit_enemy;
-        set_anim(s, L2_FLYER_UPDATE_DATA_3);
+        set_anim(s, L2_FLYER_ANIM2_E0);
         SET_V5E(s, 0);
         s->x = (int16_t)(a0->x + 0x10);
         s->y = (int16_t)(a0->y - scroll_pos + 0x10);
@@ -612,7 +612,7 @@ void l2_marker_fc_update(Object *a0)
         s->fn_update = (obj_fn)l2_flyer_update;
         s->fn_draw = draw_bob_masked;
         s->fn_hit = (void *)hit_enemy;
-        set_anim(s, L2_FLYER_UPDATE_DATA_4);
+        set_anim(s, L2_FLYER_ANIM2_OTHER);
         SET_V5E(s, 0);
         s->x = a0->x;
         s->y = (int16_t)(a0->y - scroll_pos);
@@ -638,7 +638,7 @@ static void l2_restore_blocks(Object *a0)
         d4 |= 4;
     if (d0 <= 0x80)
         d4 |= 8;
-    a1 = l2_block_table + sh_r32(L2_ROR5_TABLE + d4);
+    a1 = l2_block_table + sh_r32(L2_BLOCK_GROUP_OFFSETS + d4);
     n = rd16(a1);
     a1 += 2;
     for (; n != 0; n--, a1 += 8) {
@@ -683,7 +683,7 @@ void l2_roamer_shot_update(Object *a0)
             if (d0 < 0)
                 d0 += 8;
             BOLT_DIR(a0) = (int16_t)((BOLT_DIR(a0) + (d0 > 4 ? -1 : 1)) & 7);
-            set_anim(a0, sh_r32(L2_ROAMER_SHOT_UPDATE_TABLE + ((uint16_t)BOLT_DIR(a0) << 2)));
+            set_anim(a0, sh_r32(L2_BOLT_ANIMS_BY_DIR + ((uint16_t)BOLT_DIR(a0) << 2)));
             bbox_from_frame(a0);
             return;
         }
@@ -711,7 +711,7 @@ void l2_roamer_shot_update(Object *a0)
     a0->y = y;
     y = (int16_t)(y + scroll_pos);
     for (n = 0; n < 8; n++) {
-        uint32_t entry = L2_ROAMER_SHOT_UPDATE_DATA + (uint32_t)n * 10;
+        uint32_t entry = L2_ROAMER_SHOT_ENTRIES + (uint32_t)n * 10;
 
         if ((int16_t)W(entry) == x && (int16_t)W(entry + 2) == y) {
             uint16_t r;
@@ -772,11 +772,11 @@ void l2_roamer_update(Object *a0)
     if (ROAMER_STATE(a0) == 1) {
         if ((random_next() & 7) == 0) {
             ROAMER_STATE(a0) = 2;
-            set_anim(a0, L2_ROAMER_UPDATE_DATA);
+            set_anim(a0, L2_ROAMER_ANIM);
         }
         return;
     }
-    if (a0->gfx == GPTR(L2_ROAMER_UPDATE_DATA_2)) {
+    if (a0->gfx == GPTR(L2_ROAMER_PICTURE)) {
         Object *s = alloc_in(LIST_C);
 
         s->type = 0x110;
@@ -788,7 +788,7 @@ void l2_roamer_update(Object *a0)
         SET_V5E(s, 0);
         s->score = 0x1e;
         s->kind = 0;
-        set_anim(s, sh_r32(L2_ROAMER_SHOT_UPDATE_TABLE + ((uint16_t)ROAMER_DIR(a0) << 2)));
+        set_anim(s, sh_r32(L2_BOLT_ANIMS_BY_DIR + ((uint16_t)ROAMER_DIR(a0) << 2)));
         s->x = a0->x;
         s->y = a0->y;
         ROAMER_DIR(s) = ROAMER_DIR(a0);
@@ -812,7 +812,7 @@ void l2_front_update(Object *a0)
         return;
     }
     {
-        uint32_t table = a0->type == 0xf0 ? L2_FRONT_UPDATE_DATA : L2_FRONT_UPDATE_DATA_2;
+        uint32_t table = a0->type == 0xf0 ? L2_FRONT_TABLE_F0 : L2_FRONT_TABLE_OTHER;
         const uint8_t *a2 = (const uint8_t *)GPTR(sh_r32(table + ((uint16_t)FRONT_STEP(a0) << 2)));
 
         copy4(a0->script, a2);
@@ -822,7 +822,7 @@ void l2_front_update(Object *a0)
     if (FRONT_STEP(a0) < 0x15)
         return;
     for (i = 7; i >= 0; i--) {
-        uint32_t entry = L2_FRONT_UPDATE_DATA_3 + (uint32_t)(7 - i) * 8;
+        uint32_t entry = L2_FRONT_ENTRIES + (uint32_t)(7 - i) * 8;
         Object *s = alloc_in(LIST_C);
 
         s->type = 0x108;
@@ -869,7 +869,7 @@ void l2_turret_update(Object *a0)
             TURRET_STEP(a0) = 1;
         return;
     }
-    copy2(a0->script, (const uint8_t *)GPTR((a0->type == 0xe8 ? L2_HOOK_DATA : L2_HOOK_DATA_2) + 2 * (uint16_t)TURRET_STEP(a0)));
+    copy2(a0->script, (const uint8_t *)GPTR((a0->type == 0xe8 ? L2_HOOK_PICTURE_A : L2_HOOK_PICTURE_B) + 2 * (uint16_t)TURRET_STEP(a0)));
     TURRET_STEP(a0)++;
     if (TURRET_STEP(a0) != 7) {
         if (TURRET_STEP(a0) == 0xf)
@@ -914,7 +914,7 @@ void l2_launcher_update(Object *a0)
         a0->prev = tail;
         a0->next = LIST_B;
         tail->next = a0;
-        set_anim(a0, a0->type == 0x100 ? L2_LAUNCHER_UPDATE_DATA : L2_LAUNCHER_UPDATE_DATA_2);
+        set_anim(a0, a0->type == 0x100 ? L2_LAUNCHER_ANIM_100 : L2_LAUNCHER_ANIM_OTHER);
         d0 = (int16_t)(a0->x + 0xb);
         d1 = (int16_t)(a0->y + 7);
         d2 = 6;
@@ -922,7 +922,7 @@ void l2_launcher_update(Object *a0)
             d2 = 2;
             d0 = (int16_t)(d0 - 8);
         }
-        spawn_enemy_shot((uint16_t)d0, (uint16_t)d1, (uint16_t)d2, W(L2_LAUNCHER_SHOT_STEPS), GPTR(L2_LAUNCHER_UPDATE_DATA_3));
+        spawn_enemy_shot((uint16_t)d0, (uint16_t)d1, (uint16_t)d2, W(L2_LAUNCHER_SHOT_STEPS), GPTR(L2_LAUNCHER_SHOT_PICTURE));
         return;
     }
     d0 = LAUNCHER_STEP(a0);
@@ -959,7 +959,7 @@ void l2_hit_a(Object *a0, Object *a1, uint16_t d0)
         return;
     }
     l2_walls_made &= (uint8_t)~(1 << (PIECE_WALL(a1) & 7));
-    l2_wreck(a1, L2_HIT_A_DATA);
+    l2_wreck(a1, L2_WRECK_A);
 }
 
 /* level2 $055E0E: hit routine of a piece */
@@ -970,7 +970,7 @@ void l2_hit_b(Object *a0, Object *a1, uint16_t d0)
         hit_enemy(a0, a1, d0);
         return;
     }
-    l2_wreck(a1, L2_HIT_B_DATA);
+    l2_wreck(a1, L2_WRECK_B);
 }
 
 /* level2 $055E28: hit routine of a piece */
@@ -981,7 +981,7 @@ void l2_hit_c(Object *a0, Object *a1, uint16_t d0)
         hit_enemy(a0, a1, d0);
         return;
     }
-    l2_wreck(a1, L2_HIT_C_DATA);
+    l2_wreck(a1, L2_WRECK_C);
 }
 
 /* ---- the walls of debris ---- */
@@ -1003,7 +1003,7 @@ static void l2_debris_wall(uint16_t d6)
     } else {
         r = (ror5(&level_vars[d6 ? 18 : 16]) & 6) + 8;
     }
-    a1 = (const uint8_t *)GPTR(L2_DEBRIS_WALL_DATA + (uint16_t)(((uint16_t)r + d6) * 12));
+    a1 = (const uint8_t *)GPTR(L2_DEBRIS_WALL_RECORDS + (uint16_t)(((uint16_t)r + d6) * 12));
     d0 = rd16(a1);
     d1 = (uint16_t)(rd16(a1 + 2) - scroll_step - scroll_pos);
     d2 = rd16(a1 + 4);
@@ -1105,7 +1105,7 @@ void l2_piece_update(Object *a0)
         a0->fn_draw = draw_bob_behind_map;
     }
     d2 = (uint16_t)(((uint16_t)(PIECE_DIR(a0) + 0x10) >> 3) & 0x1c);
-    a0->gfx = GPTR(sh_r32((a0->type == 0x118 ? L2_PIECE_UPDATE_DATA : a0->type == 0x11c ? L2_PIECE_UPDATE_DATA_2 : L2_PIECE_UPDATE_DATA_3) + d2));
+    a0->gfx = GPTR(sh_r32((a0->type == 0x118 ? L2_PIECE_PICTURES_118 : a0->type == 0x11c ? L2_PIECE_PICTURES_11C : L2_PIECE_PICTURES_OTHER) + d2));
     bbox_from_frame(a0);
 }
 
@@ -1148,9 +1148,9 @@ void l2_gate_update(Object *a0)
     d0 = GATE_STEP(a0);
     if (d0 > 4)
         d0 = (int16_t)(8 - d0);
-    copy2((uint8_t *)a0->gfx, (const uint8_t *)GPTR(L2_GATE_UPDATE_DATA + 2 * d0));
+    copy2((uint8_t *)a0->gfx, (const uint8_t *)GPTR(L2_GATE_NUMBER_CELLS + 2 * d0));
     if (GATE_NUMBER(a0) == 2) {
-        const uint8_t *a1 = (const uint8_t *)GPTR(L2_GATE_UPDATE_DATA_2);
+        const uint8_t *a1 = (const uint8_t *)GPTR(L2_GATE_CELLS);
         uint16_t *a4 = level_vars;
         int i;
 
@@ -1172,7 +1172,7 @@ void l2_gate_update(Object *a0)
 /* level2 $0568C6: the draw of a gate that was hit: its cells (by its number) flash once */
 void l2_gate_flash(Object *a0)
 {
-    const uint8_t *cells = (const uint8_t *)GPTR(L2_GATE_FLASH_DATA);
+    const uint8_t *cells = (const uint8_t *)GPTR(L2_GATE_FLASH_CELLS_A);
     uint16_t rows = 1;
     int16_t d2 = (int16_t)((a0->y << 4) - scroll_pos - 0x10);
     uint16_t d3 = (uint16_t)((a0->x << 3) - 0x10);
@@ -1180,9 +1180,9 @@ void l2_gate_flash(Object *a0)
     a0->fn_draw = (obj_fn)obj_nop_thunk;
     if (GATE_NUMBER(a0) != 0) {
         d3 = (uint16_t)(d3 + 0x10);
-        cells = (const uint8_t *)GPTR(L2_GATE_FLASH_DATA_2);
+        cells = (const uint8_t *)GPTR(L2_GATE_FLASH_CELLS_B);
         if (GATE_NUMBER(a0) != 1) {
-            cells = (const uint8_t *)GPTR(L2_GATE_FLASH_DATA_3);
+            cells = (const uint8_t *)GPTR(L2_GATE_FLASH_CELLS_C);
             rows = 2;
             d2 = (int16_t)(d2 - 0x10);
             d3 = (uint16_t)(d3 - 8);
@@ -1262,7 +1262,7 @@ void l2_boss_draw(Object *a0)
 {
     if ((int16_t)scroll_pos >= 0x160)
         return;
-    draw_tile_grid((const uint8_t *)GPTR(L2_BOSS_DRAW_DATA), 5, 8, (int16_t)(a0->y - scroll_pos), 0x38);
+    draw_tile_grid((const uint8_t *)GPTR(L2_BOSS_GRID), 5, 8, (int16_t)(a0->y - scroll_pos), 0x38);
 }
 
 /* level2 $056EF6: the draw of the boss for the frame after a hit */
@@ -1271,7 +1271,7 @@ void l2_boss_flash(Object *a0)
     a0->fn_draw = FN(l2_boss_draw);
     if ((int16_t)scroll_pos >= 0x160)
         return;
-    draw_tile_grid_flash((const uint8_t *)GPTR(L2_BOSS_DRAW_DATA), 5, 8, (int16_t)(a0->y - scroll_pos), 0x38);
+    draw_tile_grid_flash((const uint8_t *)GPTR(L2_BOSS_GRID), 5, 8, (int16_t)(a0->y - scroll_pos), 0x38);
 }
 
 uint32_t l2_stale_d0;
@@ -1326,10 +1326,10 @@ static void l2_boss_move(Object *a0)
     }
     a0->y = d0;
     d0 = (int16_t)((frame_tick & 1) * 4);
-    copy4((uint8_t *)GPTR(L2_BOSS_MOVE_DATA), (const uint8_t *)GPTR(sh_r32(L2_BOSS_MOVE_TABLE + d0)));
-    copy4((uint8_t *)GPTR(L2_BOSS_MOVE_DATA + 0xc), (const uint8_t *)GPTR(sh_r32(L2_BOSS_MOVE_TABLE + d0)) + 4);
-    copy4((uint8_t *)GPTR(L2_BOSS_MOVE_DATA_2), (const uint8_t *)GPTR(sh_r32(L2_BOSS_MOVE_TABLE_2 + d0)));
-    copy4((uint8_t *)GPTR(L2_BOSS_MOVE_DATA_2 + 0xc), (const uint8_t *)GPTR(sh_r32(L2_BOSS_MOVE_TABLE_2 + d0)) + 4);
+    copy4((uint8_t *)GPTR(L2_BOSS_MOVE_SLOT_A), (const uint8_t *)GPTR(sh_r32(L2_BOSS_MOVE_PATHS_A + d0)));
+    copy4((uint8_t *)GPTR(L2_BOSS_MOVE_SLOT_A + 0xc), (const uint8_t *)GPTR(sh_r32(L2_BOSS_MOVE_PATHS_A + d0)) + 4);
+    copy4((uint8_t *)GPTR(L2_BOSS_MOVE_SLOT_B), (const uint8_t *)GPTR(sh_r32(L2_BOSS_MOVE_PATHS_B + d0)));
+    copy4((uint8_t *)GPTR(L2_BOSS_MOVE_SLOT_B + 0xc), (const uint8_t *)GPTR(sh_r32(L2_BOSS_MOVE_PATHS_B + d0)) + 4);
 }
 
 #define L2_BOSS_WAIT(o) ((o)->v28)
@@ -1397,7 +1397,7 @@ void l2_boss_update(Object *a0)
         const uint8_t *a2;
 
         L2_BOSS_CELL(a0) = (int16_t)((L2_BOSS_CELL(a0) + 4) & 0xc);
-        a2 = (const uint8_t *)GPTR(sh_r32(L2_BOSS_UPDATE_TABLE + (uint16_t)L2_BOSS_CELL(a0)));
+        a2 = (const uint8_t *)GPTR(sh_r32(L2_BOSS_CELLS_BY_CELL + (uint16_t)L2_BOSS_CELL(a0)));
         copy4((uint8_t *)GPTR(L2_BOSS_UPDATE_DATA_3), a2);
         copy4((uint8_t *)GPTR(L2_BOSS_UPDATE_DATA_3 + 0xc), a2 + 4);
         L2_BOSS_FLASH(a0)--;
