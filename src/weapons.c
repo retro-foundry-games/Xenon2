@@ -14,7 +14,7 @@ static void kill_object(Object *o)
     o->fn_update = free_object;
     o->fn_draw = obj_nop;
     o->fn_hit = (void *)obj_nop;
-    o->flag34 = 0;
+    o->is_part = 0;
     o->flag60 = 0;
 }
 
@@ -750,11 +750,11 @@ void hit_part(Object *a0, Object *a1, uint16_t d0)
         return;
     for (next = a1->chain; next != 0; next = a2->chain) {
         a2 = next;
-        if (a2->flag34 >= 0) {
+        if (a2->is_part >= 0) {
             int16_t x, y;
 
             centre(a2, &x, &y);
-            spawn_effect(x, y, a1->flag35 ? anim_273a : anim_270e, draw_bob_masked);
+            spawn_effect(x, y, a1->big ? anim_273a : anim_270e, draw_bob_masked);
         }
         kill_object(a2);
     }
@@ -811,7 +811,7 @@ void enemy_killed(Object *a0, Object *a1)
     int i, found = 0;
     int16_t d0;
 
-    explosion_at(a1, a1->flag35 ? anim_273a : anim_270e);
+    explosion_at(a1, a1->big ? anim_273a : anim_270e);
     d0 = a1->kind;
     if (d0 != 0) {
         for (i = 0; i < 8; i++) {
@@ -825,7 +825,7 @@ void enemy_killed(Object *a0, Object *a1)
             n = alloc_b(a0);
             a2 = anim_26ae;
             n->type = 0x60;
-            if (a1->flag35) {
+            if (a1->big) {
                 a2 = anim_264e;
                 n->type = 0x18;
             }
@@ -845,7 +845,7 @@ void enemy_killed(Object *a0, Object *a1)
 /* orig $EA8, $005B16: hit routine: the object explodes and dies at once */
 void hit_explode(Object *a0, Object *a1, uint16_t d0)
 {
-    explosion_at(a1, a1->flag35 ? anim_273a : anim_270e);
+    explosion_at(a1, a1->big ? anim_273a : anim_270e);
     kill_object(a1);
 }
 
@@ -1013,7 +1013,7 @@ void pickup_bomb(Object *a0)
             a1->fn_update = free_object;
             a1->fn_draw = obj_nop;
             a1->fn_hit = (void *)obj_nop;
-            a1->flag34 = 0;
+            a1->is_part = 0;
             a1->flag60 = 0;
         }
         a1 = next;
@@ -1318,7 +1318,7 @@ void player_update(Object *a0)
             if (a1->type == 0)
                 goto after_hit;
             a0->fn_draw = draw_bob_or_first;
-            player_damage(a0, a1->flag35 ? 0x10 : 8);
+            player_damage(a0, a1->big ? 0x10 : 8);
             if (player_dead)
                 return;
         }

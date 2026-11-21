@@ -22,8 +22,8 @@ struct SpawnDef {
     void (*hit)(void);          /* c */
     const uint8_t *anim;        /* 10: animation header: picture (long), delay, script */
     uint16_t pad14;
-    uint8_t to_flag35;          /* 16: becomes byte $35 of the object */
-    uint8_t to_flag34;          /* 17: becomes byte $34 of the object */
+    uint8_t to_big;          /* 16: becomes byte $35 of the object */
+    uint8_t to_is_part;          /* 17: becomes byte $34 of the object */
 };
 
 /* the kinds of pieces an object breaks into (6 bytes) */

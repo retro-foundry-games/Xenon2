@@ -26,8 +26,8 @@ struct Object {
     int16_t v2e;
     int16_t v30;
     int16_t energy;             /* 32 */
-    int8_t flag34;
-    int8_t flag35;
+    int8_t is_part;
+    int8_t big;
     int16_t hit[4];             /* 36: the box x0 y0 x1 y1 */
     int16_t v3e;
     int16_t v40;

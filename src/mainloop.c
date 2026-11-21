@@ -177,7 +177,7 @@ steal:
     next->prev = prev;
     prev->next = next;
 clear:
-    a0->flag34 = 0;
+    a0->is_part = 0;
     a0->flag60 = 0;
     a0->flag61 = 0;
     return a0;

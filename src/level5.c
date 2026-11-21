@@ -35,7 +35,7 @@ static void kill_thunk(Object *o)
     o->fn_update = (obj_fn)free_object;
     o->fn_draw = (obj_fn)obj_nop_thunk;
     o->fn_hit = (void *)obj_nop_thunk;
-    o->flag34 = 0;
+    o->is_part = 0;
     o->flag60 = 0;
 }
 
@@ -206,7 +206,7 @@ void l5_spawn_gunners(const uint8_t *a1)
         a0->x = (int16_t)W(a2 + 2);
         a0->y = (int16_t)(W(a2 + 4) - scroll_pos);
         a0->energy = (int16_t)W(0x54e42);
-        a0->flag35 = 0;
+        a0->big = 0;
         a0->v2a = 0;
         a0->v2c = 0;
         a0->turn[0] = 0;
@@ -264,7 +264,7 @@ void l5_spawn_cannon(const uint8_t *a1)
     a0->fn_draw = (obj_fn)draw_bob_masked;
     a0->fn_hit = (void *)hit_enemy;
     a0->energy = (int16_t)W(0x54e48);
-    a0->flag35 = 0xff;
+    a0->big = 0xff;
     a0->hit[0] = 0x3e8;
     a0->hit[2] = 0x3e8;
     a0->score = 0xfa;
@@ -291,7 +291,7 @@ static void spawn_pellet(int16_t d0, int16_t d1, uint16_t d2)
     a1->v2a = (int16_t)d2;
     set_anim(a1, sh_r32(0x557de + 4 * (uint32_t)d2));
     a1->energy = (int16_t)W(0x54e4c);
-    a1->flag35 = 0;
+    a1->big = 0;
     a1->score = 0x64;
     a1->v28 = (int16_t)(random_next() & 0x1f);
     a1->kind = 0;
@@ -438,7 +438,7 @@ void l5_spawn_boss1(uint16_t d2)
         a0->flag60 = 0xff;
         a0->v2a = 4;
         a0->energy = B(rec + 22);
-        a0->flag35 = B(rec + 23);
+        a0->big = B(rec + 23);
         a0->hit[0] = 0x3e8;
         a0->hit[2] = 0x3e8;
         a0->target = a6;
@@ -465,7 +465,7 @@ void l5_boss_gun(Object *a0)
     a0->hit[0] = d0;
     a0->hit[1] = d1;
     d0 = (int16_t)(d0 + a0->energy);
-    d1 = (int16_t)((d1 & 0xff00) | (uint8_t)((uint8_t)d1 + a0->flag35));
+    d1 = (int16_t)((d1 & 0xff00) | (uint8_t)((uint8_t)d1 + a0->big));
     a0->hit[2] = d0;
     a0->hit[3] = d1;
 }
@@ -544,7 +544,7 @@ fire:
         a1->v2a = 0;
         set_anim(a1, 0x55f7e);
         a1->energy = (int16_t)W(0x54e52);
-        a1->flag35 = 0;
+        a1->big = 0;
         a1->score = 0x96;
         a1->v28 = 1;
         a1->kind = 0;
@@ -648,7 +648,7 @@ void l5_piece_hit(Object *a0, Object *a1, uint16_t d0)
         return;
     sh_w16(0xd7a, (uint16_t)(sh_r16(0xd7a) - 1));
     player_score += 0xc8;
-    explode_at(a1, a1->flag35 ? big_explosion_anim : anim_270e);
+    explode_at(a1, a1->big ? big_explosion_anim : anim_270e);
     if (a1->type != 0x114) {
         kill_thunk(a1);
     } else {

@@ -46,8 +46,8 @@ static void spawndef_load(struct SpawnDef *d, const uint8_t *p)
     d->draw = (void (*)(void))GFN(rd32(p + 8));
     d->hit = (void (*)(void))GFN(rd32(p + 12));
     d->anim = (const uint8_t *)GPTR(rd32(p + 0x10));
-    d->to_flag35 = p[0x16];
-    d->to_flag34 = p[0x17];
+    d->to_big = p[0x16];
+    d->to_is_part = p[0x17];
 }
 
 /* an object that does nothing any more */
@@ -57,7 +57,7 @@ static void kill_object(Object *o)
     o->fn_update = (obj_fn)free_object;
     o->fn_draw = (obj_fn)obj_nop;
     o->fn_hit = (void *)obj_nop;
-    o->flag34 = 0;
+    o->is_part = 0;
     o->flag60 = 0;
 }
 
@@ -105,7 +105,7 @@ void anim_op_free(Object *o, const uint8_t *a1)
     Object *p;
     Object *next;
 
-    if (o->flag34 == 0) {
+    if (o->is_part == 0) {
         kill_object(o);
         return;
     }
@@ -388,11 +388,11 @@ Object *owner_chain_next(Object *a1)
 {
     Object *a2 = OBJ_FWD(a1);
 
-    if (a1->flag34 != 0) {
+    if (a1->is_part != 0) {
         a2 = a1->target;
         for (;;) {
             a2 = OBJ_FWD(a2);
-            if (a2->type == 0 || a2->flag34 == 0 || a2->target != a1)
+            if (a2->type == 0 || a2->is_part == 0 || a2->target != a1)
                 break;
         }
     }
@@ -467,12 +467,12 @@ Object *spawn_formation(Object *a0, const uint8_t *rec_raw, const uint8_t *a2)
             SET_V5E(a0, (int16_t)((V5E(a0) & 0x00ff) | ((d0 & 0xff) << 8)));
             a0->energy = (int16_t)difficulty_x2;
             a0->kind = (int16_t)pickup_kind_b;
-            a0->flag35 = (int8_t)a4->to_flag35;
-            if (a4->to_flag35 == 0) {
+            a0->big = (int8_t)a4->to_big;
+            if (a4->to_big == 0) {
                 a0->energy = (int16_t)difficulty_x1;
                 a0->kind = (int16_t)pickup_kind_a;
             }
-            a0->flag34 = (int8_t)a4->to_flag34;
+            a0->is_part = (int8_t)a4->to_is_part;
             bbox_from_frame(a0);
             a0->target = a5;
             a4raw += 0x18;
@@ -499,7 +499,7 @@ Object *spawn_formation(Object *a0, const uint8_t *rec_raw, const uint8_t *a2)
         a0->chain = 0;
     }
     d1 = pickup_kind_b;
-    if (a0->flag35 == 0)
+    if (a0->big == 0)
         d1 = pickup_kind_a;
     slot = pickup_groups;
     for (i = 0; i < 8; i++, slot += 2) {
