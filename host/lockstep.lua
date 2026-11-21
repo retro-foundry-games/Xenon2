@@ -629,6 +629,7 @@ local function apply_joy(snap)
     local r = reads[snap.n - 1]
     local first = r and r.first
     apply_joy0(snap)
+    if snap.ram then port_call(("port.set_a6a(%d)"):format(snap.ram:byte(0xa6b))) end   -- the press the original's interrupt saw is in v_0a6a where it copied it
     -- the interrupt that brings a fire press came after the routine that read the old stick: the press is in v_0a01 from there on
     port_call(("port.edge_defer(%d)"):format(first and port_joy and first & 0x80 == 0 and stick_bits(port_joy) & 0x80 ~= 0 and 1 or 0))
 end

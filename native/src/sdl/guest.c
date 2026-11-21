@@ -251,6 +251,24 @@ void guest_set_stick(uint8_t value)
     guest_edge_apply(value);
 }
 
+static int a6a_set;
+static uint8_t a6a_value;
+
+/* The lockstep gives the byte the original's update_all copied into v_0a6a: the press its interrupt saw lands in a different place of the frame than the port's. */
+void guest_set_a6a(uint8_t value)
+{
+    a6a_set = 1;
+    a6a_value = value;
+}
+
+uint8_t guest_a6a(uint8_t a01)
+{
+    if (!a6a_set)
+        return a01;
+    a6a_set = 0;
+    return a6a_value;
+}
+
 void guest_stick_restore(void)
 {
     if (stick_poked)
