@@ -5,6 +5,27 @@
 #include "weapons.h"
 #include "shop.h"
 #include "game_all.h"
+
+/* level 2: its parameter block at E42 (energies, fire rates, shot steps), by the object that reads them */
+#define L2_MARKER_F8_ENERGY 0x54e42
+#define L2_MARKER_FC_ENERGY 0x54e44
+#define L2_TURRET_CHANCE 0x54e47
+#define L2_TURRET_PARAM 0x54e48
+#define L2_TURRET_SHOT_STEPS 0x54e4a
+#define L2_LAUNCHER_SHOT_STEPS 0x54e4c
+#define L2_HOOK_ENERGY 0x54e4e
+#define L2_HOOK_ENERGY_2 0x54e50
+#define L2_DEBRIS_WALL_ENERGY 0x54e52
+#define L2_DEBRIS_WALL_STEPS 0x54e54
+#define L2_ROAMER_ENERGY 0x54e56
+#define L2_ROAMER_SHOT_FIRE_RATE 0x54e59
+#define L2_ROAMER_SHOT_PARAM 0x54e5a
+#define L2_ROAMER_SHOT_SHOT_STEPS 0x54e5c
+#define L2_INIT_ENERGY 0x54e5e
+#define L2_INIT_ENERGY_2 0x54e60
+#define L2_FRONT_PARAM 0x54e62
+#define L2_BOSS_FIRE_RATE 0x54e65
+#define L2_BOSS_SHOT_STEPS 0x54e66
 #define PIECE_DIR_HI(o) ((o)->v2a)
 #define PIECE_VAR(o)  ((o)->v2e)
 #define GATE_STEP(o) ((o)->v28)
@@ -170,7 +191,7 @@ void l2_hook(uint16_t d0, const uint8_t *a1, uint16_t d2)
     case 1:
         a0 = spawn_marker_enemy(flag ? 0xe8 : 0xec, a1, (void (*)(void))l2_turret_update);
         a0->fn_hit = (void *)hit_tile;
-        a0->energy = (int16_t)W(0x54e4e);
+        a0->energy = (int16_t)W(L2_HOOK_ENERGY);
         a0->hit[0] = 0x3e8;
         a0->hit[2] = 0x3e8;
         a0->gfx = GPTR(flag ? 0x559c8 : 0x559e6);
@@ -193,7 +214,7 @@ void l2_hook(uint16_t d0, const uint8_t *a1, uint16_t d2)
         set_anim(a0, flag ? 0x55d12 : 0x55cd0);
         SET_V5E(a0, 0);
         a0->fn_hit = (void *)hit_enemy;
-        a0->energy = (int16_t)W(0x54e50);
+        a0->energy = (int16_t)W(L2_HOOK_ENERGY_2);
         a0->big = 0;
         a0->score = 0xc8;
         a0->x = (int16_t)(rd16(a1 + 8) - 8);
@@ -276,7 +297,7 @@ void l2_init(void)
     a0->persists = -1;
     a0->screen_fixed = -1;
     a0->y = 0x60;
-    a0->energy = (int16_t)W(0x54e5e);
+    a0->energy = (int16_t)W(L2_INIT_ENERGY);
     L2_BOSS_WAIT(a0) = -1;
     L2_BOSS_FRAMES(a0) = 0;
     L2_BOSS_FLASH(a0) = 0;
@@ -290,7 +311,7 @@ void l2_init(void)
         a0->fn_update = FN(l2_gate_update);
         a0->fn_draw = (obj_fn)obj_nop_thunk;
         a0->fn_hit = (void *)l2_gate_hit;
-        a0->energy = (int16_t)W(0x54e60);
+        a0->energy = (int16_t)W(L2_INIT_ENERGY_2);
         a0->persists = -1;
         a0->screen_fixed = -1;
         SET_V5E(a0, 0);
@@ -485,7 +506,7 @@ void l2_marker_f8_update(Object *a0)
         SET_V5E(s, 0);
         s->x = (int16_t)(a0->x + 0x10);
         s->y = (int16_t)(a0->y - scroll_pos + 0x10);
-        s->energy = (int16_t)W(0x54e42);
+        s->energy = (int16_t)W(L2_MARKER_F8_ENERGY);
         s->big = (int8_t)0xff;
         s->score = 0x12c;
         MARKER_F8_BLINK(s) = 0;
@@ -542,7 +563,7 @@ void l2_marker_fc_update(Object *a0)
         SET_V5E(s, 0);
         s->x = a0->x;
         s->y = (int16_t)(a0->y - scroll_pos);
-        s->energy = (int16_t)W(0x54e44);
+        s->energy = (int16_t)W(L2_MARKER_FC_ENERGY);
         s->big = 0;
         s->score = 0x96;
         MARKER_FC_STEP(s) = 0;
@@ -616,19 +637,19 @@ void l2_roamer_shot_update(Object *a0)
         BOLT_TARGET(a0) = -1;
     }
     if ((uint16_t)a0->y < 0xc0) {
-        uint16_t sum = (uint16_t)(a0->v5e_b[0] + B(0x54e59));
+        uint16_t sum = (uint16_t)(a0->v5e_b[0] + B(L2_ROAMER_SHOT_FIRE_RATE));
 
         a0->v5e_b[0] = (uint8_t)sum;
         carry = sum > 0xff;
         if (carry) {
-            uint16_t d3 = W(0x54e5a);
+            uint16_t d3 = W(L2_ROAMER_SHOT_PARAM);
             uint16_t angle;
             const void *gfx;
 
             a0->v5e_b[0] = (uint8_t)(random_next() & 0x3f);
             gfx = GPTR(sh_r32(sh_r32(0x6c89c + (uint32_t)d3 * 4)));
             angle = direction8((int16_t)(PLAYER_X - a0->x), (int16_t)(PLAYER_Y - a0->y));
-            spawn_enemy_shot((uint16_t)a0->x, (uint16_t)a0->y, angle, W(0x54e5c), gfx);
+            spawn_enemy_shot((uint16_t)a0->x, (uint16_t)a0->y, angle, W(L2_ROAMER_SHOT_SHOT_STEPS), gfx);
         }
     }
     x = (int16_t)(a0->x + dx[BOLT_DIR(a0)]);
@@ -709,7 +730,7 @@ void l2_roamer_update(Object *a0)
         s->fn_update = (obj_fn)l2_roamer_shot_update;
         s->fn_draw = draw_bob_masked;
         s->fn_hit = (void *)hit_enemy;
-        s->energy = (int16_t)W(0x54e56);
+        s->energy = (int16_t)W(L2_ROAMER_ENERGY);
         s->big = 0;
         SET_V5E(s, 0);
         s->score = 0x1e;
@@ -733,7 +754,7 @@ void l2_front_update(Object *a0)
     int i;
 
     if (FRONT_STEP(a0) == 0) {
-        if ((int16_t)(a0->y - scroll_pos) >= (int16_t)W(0x54e62))
+        if ((int16_t)(a0->y - scroll_pos) >= (int16_t)W(L2_FRONT_PARAM))
             FRONT_STEP(a0) = 1;
         return;
     }
@@ -791,7 +812,7 @@ void l2_turret_update(Object *a0)
     a0->hit[1] = d0;
     a0->hit[3] = (int16_t)(d0 + 8);
     if (TURRET_STEP(a0) == 0) {
-        if ((uint8_t)random_next() < B(0x54e47))
+        if ((uint8_t)random_next() < B(L2_TURRET_CHANCE))
             TURRET_STEP(a0) = 1;
         return;
     }
@@ -804,9 +825,9 @@ void l2_turret_update(Object *a0)
     }
     d0 = (int16_t)(a0->x + 8);
     d1 = (int16_t)(a0->y - scroll_pos + 8);
-    pic = sh_r32(sh_r32(0x6c89c + 4 * (uint32_t)W(0x54e48)));
+    pic = sh_r32(sh_r32(0x6c89c + 4 * (uint32_t)W(L2_TURRET_PARAM)));
     d2 = a0->type == 0xec ? 2 : 6;
-    spawn_enemy_shot((uint16_t)d0, (uint16_t)d1, (uint16_t)d2, W(0x54e4a), GPTR(pic));
+    spawn_enemy_shot((uint16_t)d0, (uint16_t)d1, (uint16_t)d2, W(L2_TURRET_SHOT_STEPS), GPTR(pic));
 }
 
 /* the launcher's use of the scratch fields of Object */
@@ -848,7 +869,7 @@ void l2_launcher_update(Object *a0)
             d2 = 2;
             d0 = (int16_t)(d0 - 8);
         }
-        spawn_enemy_shot((uint16_t)d0, (uint16_t)d1, (uint16_t)d2, W(0x54e4c), GPTR(0x5ccf6));
+        spawn_enemy_shot((uint16_t)d0, (uint16_t)d1, (uint16_t)d2, W(L2_LAUNCHER_SHOT_STEPS), GPTR(0x5ccf6));
         return;
     }
     d0 = LAUNCHER_STEP(a0);
@@ -948,7 +969,7 @@ static void l2_debris_wall(uint16_t d6)
         a0->gfx = GPTR(rd32(a2 + 6));
         a0->score = (int16_t)rd16(a2 + 10);
         PIECE_VAR(a0) = (int16_t)d3;
-        a0->energy = (int16_t)W(0x54e52);
+        a0->energy = (int16_t)W(L2_DEBRIS_WALL_ENERGY);
         SET_V5E(a0, 0);
         a0->big = 0;
         a0->anim_delay = 0;
@@ -958,7 +979,7 @@ static void l2_debris_wall(uint16_t d6)
         a0->y = (int16_t)d1;
         a0->kind = 0;
         PIECE_WAIT(a0) = (int16_t)d2;
-        a0->steps = (int16_t)W(0x54e54);
+        a0->steps = (int16_t)W(L2_DEBRIS_WALL_STEPS);
         PIECE_WALL(a0) = (int16_t)d6;
         d2 = (uint16_t)(d2 - 0xa);
         bbox_from_frame(a0);
@@ -1294,20 +1315,20 @@ void l2_boss_update(Object *a0)
             L2_BOSS_STEP(a0) = -3;
         }
     }
-    sum = (uint16_t)(a0->v5e_b[0] + B(0x54e65));
+    sum = (uint16_t)(a0->v5e_b[0] + B(L2_BOSS_FIRE_RATE));
     a0->v5e_b[0] = (uint8_t)sum;
     if (sum > 0xff) {
         int16_t y = (int16_t)(a0->y - scroll_pos + 0x70);
 
         a0->v5e_b[0] = (uint8_t)(random_next() & 0x3f);
         if ((random_next() & 3) != 0) {
-            s = spawn_enemy_shot(0xa0, (uint16_t)y, 4, W(0x54e66), 0);
+            s = spawn_enemy_shot(0xa0, (uint16_t)y, 4, W(L2_BOSS_SHOT_STEPS), 0);
             set_anim(s, 0x56e8e);
         } else {
             int d7;
 
             for (d7 = 15; d7 >= 0; d7--) {
-                s = spawn_enemy_shot(0xa0, (uint16_t)y, (uint16_t)d7, W(0x54e66), 0);
+                s = spawn_enemy_shot(0xa0, (uint16_t)y, (uint16_t)d7, W(L2_BOSS_SHOT_STEPS), 0);
                 set_anim(s, 0x56eac);
             }
         }

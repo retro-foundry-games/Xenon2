@@ -3,6 +3,36 @@
 #include "weapons.h"
 #include "shop.h"
 #include "game_all.h"
+
+/* level 3: its parameter block at E42 (energies, fire rates, shot steps), by the object that reads them */
+#define L3_WORM_SPAWN_STEPS 0x54e42
+#define L3_WALKER_ENERGY 0x54e44
+#define L3_PARTS_STEPS 0x54e46
+#define L3_SNAKE_ENERGY 0x54e48
+#define L3_DIVER_ENERGY 0x54e4a
+#define L3_BOSS_ENERGY 0x54e4c
+#define L3_WALKER_FIRE_RATE 0x54e4f
+#define L3_WALKER_PARAM 0x54e50
+#define L3_WALKER_SHOT_STEPS 0x54e52
+#define L3_DIVER_STEPS 0x54e54
+#define L3_BOSS_CHANCE 0x54e57
+#define L3_BOSS_CHANCE_2 0x54e59
+#define L3_BOSS_FIRE_RATE 0x54e5b
+#define L3_BOSS_PARAM 0x54e5c
+#define L3_GUN_ENERGY 0x54e5e
+#define L3_BOSS_ENERGY_2 0x54e60
+#define L3_BOSS2_FIRE_RATE 0x54e63
+#define L3_BOSS2_SHOT_STEPS 0x54e64
+#define L3_GUN_FIRE_RATE 0x54e67
+#define L3_GUN_SHOT_STEPS 0x54e68
+#define L3_INIT_PATCH 0x54e6a
+#define L3_INIT_PATCH_2 0x54e6c
+#define L3_WORM_HEAD_FIRE_RATE 0x54e6f
+#define L3_WORM_HEAD_SHOT_STEPS 0x54e70
+#define L3_PART_CORE_FIRE_RATE 0x54e75
+#define L3_PART_CORE_SHOT_STEPS 0x54e76
+#define L3_PART_GUN_FIRE_RATE 0x54e79
+#define L3_EVENT_PARAM 0x54e7a
 #define PART_SLOT(o) ((o)->v30)
 #define TILE_COLS(o) ((o)->v3e)
 #define TILE_ROWS(o) ((o)->v40)
@@ -112,7 +142,7 @@ void l3_event(uint16_t d0, const uint8_t *a1)
         break;
     case 3:
         saved = difficulty_x2;
-        difficulty_x2 = W(0x54e7a);
+        difficulty_x2 = W(L3_EVENT_PARAM);
         spawn_formation(0, a1, (const uint8_t *)GPTR(0x54eb2));
         difficulty_x2 = saved;
         break;
@@ -218,12 +248,12 @@ void l3_init(void)
     sh_w8(0xd94, 0);
     sh_w8(0xd95, 0);
     sh_w16(0xd64, 0);
-    sh_w16(0xd66, W(0x54e6a));
-    sh_w16(0xd68, W(0x54e6a));
+    sh_w16(0xd66, W(L3_INIT_PATCH));
+    sh_w16(0xd68, W(L3_INIT_PATCH));
     sh_w8(0xd96, 0);
     sh_w16(0xd6a, 2);
-    sh_w16(0xd60, W(0x54e6c));
-    sh_w16(0xd62, W(0x54e6c));
+    sh_w16(0xd60, W(L3_INIT_PATCH_2));
+    sh_w16(0xd62, W(L3_INIT_PATCH_2));
     difficulty_x1 = (uint16_t)(difficulty * 2);
     difficulty_x2 = (uint16_t)(difficulty * 3);
 }
@@ -302,7 +332,7 @@ void l3_worm_spawn(uint16_t d6)
         a0->x = x;
         a0->y = y;
         a0->kind = 0;
-        a0->steps = (int16_t)W(0x54e42);
+        a0->steps = (int16_t)W(L3_WORM_SPAWN_STEPS);
         WORM_SIDE(a0) = (int16_t)d6;
         bbox_from_frame(a0);
         a0->target = head;
@@ -453,7 +483,7 @@ void l3_spawn_snake(const uint8_t *a1)
         a0->y = d1;
         a0->fn_hit = (void *)hit_part;
         a0->is_part = 1;
-        a0->energy = (int16_t)W(0x54e48);
+        a0->energy = (int16_t)W(L3_SNAKE_ENERGY);
         a0->big = 0;
         a0->score = 0x190;
         SNAKE_SWING(a0) = 0;
@@ -580,7 +610,7 @@ void l3_diver_update(Object *a0)
             s->x = sx;
             s->y = sy;
             DIVER_STATE(s) = 0;
-            s->steps = (int16_t)W(0x54e54);
+            s->steps = (int16_t)W(L3_DIVER_STEPS);
             DIVER_SIDE(s) = 3;
             if (a0->x >= 0xa0)
                 DIVER_SIDE(s) = 5;
@@ -613,7 +643,7 @@ void l3_spawn_diver(const uint8_t *a1)
     }
     set_anim(a0, a2);
     a0->fn_hit = (void *)hit_enemy;
-    a0->energy = (int16_t)W(0x54e4a);
+    a0->energy = (int16_t)W(L3_DIVER_ENERGY);
     a0->big = -1;
     a0->score = 0x12c;
     DIVER_STATE(a0) = 0;
@@ -669,7 +699,7 @@ void l3_spawn_parts(void)
         PATH_ANGLE_LO(a0) = 0;
         a0->turn[2] = 0;
         a0->kind = 0;
-        a0->steps = (int16_t)W(0x54e46);
+        a0->steps = (int16_t)W(L3_PARTS_STEPS);
         bbox_from_frame(a0);
         a0->target = first;
         a0->chain = 0;
@@ -689,7 +719,7 @@ void l3_part_core(Object *a0)
 
     sh_w8(0xd96, 0xff);
     enemy_update(a0);
-    sum = (uint16_t)(a0->v5e_b[0] + B(0x54e75));
+    sum = (uint16_t)(a0->v5e_b[0] + B(L3_PART_CORE_FIRE_RATE));
     a0->v5e_b[0] = (uint8_t)sum;
     if (sum > 0xff) {
         Object *s;
@@ -697,7 +727,7 @@ void l3_part_core(Object *a0)
 
         a0->v5e_b[0] = (uint8_t)(random_next() & 0x3f);
         angle = direction8((int16_t)(PLAYER_X - a0->x), (int16_t)(PLAYER_Y - a0->y));
-        s = spawn_enemy_shot((uint16_t)(a0->x + 0x10), (uint16_t)(a0->y + 0x3c), angle, W(0x54e76), 0);
+        s = spawn_enemy_shot((uint16_t)(a0->x + 0x10), (uint16_t)(a0->y + 0x3c), angle, W(L3_PART_CORE_SHOT_STEPS), 0);
         set_anim(s, 0x55b14);
     }
 }
@@ -736,7 +766,7 @@ void l3_part_gun(Object *a0)
         return;
     }
     {
-        uint16_t sum = (uint16_t)(a0->v5e_b[0] + B(0x54e79));
+        uint16_t sum = (uint16_t)(a0->v5e_b[0] + B(L3_PART_GUN_FIRE_RATE));
 
         a0->v5e_b[0] = (uint8_t)sum;
         if (sum > 0xff) {
@@ -936,7 +966,7 @@ void l3_gun_update(Object *a0)
     a0->hit[1] = d0;
     a0->hit[3] = (int16_t)(d0 + 0xc);
     if (L3_GUN_OPEN(a0) == 0) {
-        uint16_t sum = (uint16_t)(a0->v5e_b[0] + B(0x54e67));
+        uint16_t sum = (uint16_t)(a0->v5e_b[0] + B(L3_GUN_FIRE_RATE));
 
         a0->v5e_b[0] = (uint8_t)sum;
         if (sum > 0xff) {
@@ -955,7 +985,7 @@ void l3_gun_update(Object *a0)
             angle = 4;
             y = (int16_t)(y + 0xa);
         }
-        spawn_enemy_shot((uint16_t)x, (uint16_t)y, (uint16_t)angle, W(0x54e68), GPTR(0x5e69e));
+        spawn_enemy_shot((uint16_t)x, (uint16_t)y, (uint16_t)angle, W(L3_GUN_SHOT_STEPS), GPTR(0x5e69e));
         return;
     }
     if (L3_GUN_OPEN(a0) == 0xe)
@@ -970,7 +1000,7 @@ void l3_spawn_gun(const uint8_t *a1)
     uint32_t a2 = flag ? 0x56ee8 : 0x56eda;
 
     a0->fn_hit = (void *)hit_tile;
-    a0->energy = (int16_t)W(0x54e5e);
+    a0->energy = (int16_t)W(L3_GUN_ENERGY);
     a0->hit[0] = 0x3e8;
     a0->hit[2] = 0x3e8;
     a0->gfx = GPTR(a2);
@@ -990,7 +1020,7 @@ void l3_spawn_boss(const uint8_t *a1)
 
     a0->fn_draw = (obj_fn)obj_nop_thunk;
     a0->fn_hit = (void *)l3_boss_hit;
-    a0->energy = (int16_t)W(0x54e4c);
+    a0->energy = (int16_t)W(L3_BOSS_ENERGY);
     a0->hit[0] = 0x3e8;
     a0->hit[2] = 0x3e8;
     for (i = 0; i < 6; i++) {
@@ -1019,7 +1049,7 @@ void l3_boss_update(Object *a0)
     a0->hit[3] = (int16_t)(d0 + 0x1a);
     d0 = (uint16_t)L3_BOSS_CELL(a0);
     if (d0 == 0) {
-        if ((uint8_t)random_next() >= B(0x54e57))
+        if ((uint8_t)random_next() >= B(L3_BOSS_CHANCE))
             return;
     }
     m = a0->script;
@@ -1033,12 +1063,12 @@ void l3_boss_update(Object *a0)
     if (L3_BOSS_CELL(a0) < 4)
         return;
     if (L3_BOSS_CELL(a0) > 0xb) {
-        if (L3_BOSS_CELL(a0) == 0xc && (uint8_t)random_next() < B(0x54e59))
+        if (L3_BOSS_CELL(a0) == 0xc && (uint8_t)random_next() < B(L3_BOSS_CHANCE_2))
             L3_BOSS_CELL(a0) = 4;
         return;
     }
     {
-        uint16_t sum = (uint16_t)(a0->v5e_b[0] + B(0x54e5b));
+        uint16_t sum = (uint16_t)(a0->v5e_b[0] + B(L3_BOSS_FIRE_RATE));
         int16_t x, y;
         uint16_t angle = 4, step;
         uint32_t gfx;
@@ -1049,13 +1079,13 @@ void l3_boss_update(Object *a0)
         a0->v5e_b[0] = (uint8_t)(random_next() & 0x3f);
         x = (int16_t)(a0->x + 0x20);
         y = (int16_t)(a0->y - scroll_pos + 0x58);
-        gfx = sh_r32(sh_r32(0x6ee26 + 4 * (uint32_t)W(0x54e5c)));
+        gfx = sh_r32(sh_r32(0x6ee26 + 4 * (uint32_t)W(L3_BOSS_PARAM)));
         step = (uint16_t)(L3_BOSS_CELL(a0) & ~1);
         if (step == 6)
             angle = 3;
         if (step == 8)
             angle = 5;
-        spawn_enemy_shot((uint16_t)x, (uint16_t)y, angle, W(0x54e5e), GPTR(gfx));
+        spawn_enemy_shot((uint16_t)x, (uint16_t)y, angle, W(L3_GUN_ENERGY), GPTR(gfx));
     }
 }
 
@@ -1083,7 +1113,7 @@ void l3_boss_hit(Object *a0, Object *a1, uint16_t d0)
     a1->fn_update = FN(l3_boss2_update);
     a1->fn_draw = (obj_fn)obj_nop_thunk;
     a1->fn_hit = (void *)l3_boss2_hit;
-    a1->energy = (int16_t)W(0x54e60);
+    a1->energy = (int16_t)W(L3_BOSS_ENERGY_2);
     a1->hit[0] = 0x3e8;
     a1->hit[2] = 0x3e8;
     L3_BOSS_CELL(a1) = 0;
@@ -1120,7 +1150,7 @@ void l3_boss2_update(Object *a0)
     a0->hit[3] = (int16_t)(d0 + 0x17);
     d0 = (uint16_t)L3_BOSS2_CELL(a0);
     if (d0 == 0) {
-        uint16_t sum = (uint16_t)(a0->v5e_b[0] + B(0x54e63));
+        uint16_t sum = (uint16_t)(a0->v5e_b[0] + B(L3_BOSS2_FIRE_RATE));
 
         a0->v5e_b[0] = (uint8_t)sum;
         if (sum <= 0xff)
@@ -1140,7 +1170,7 @@ void l3_boss2_update(Object *a0)
         int d7;
 
         for (d7 = 7; d7 >= 0; d7--) {
-            Object *s = spawn_enemy_shot((uint16_t)x, (uint16_t)y, (uint16_t)d7, W(0x54e64), 0);
+            Object *s = spawn_enemy_shot((uint16_t)x, (uint16_t)y, (uint16_t)d7, W(L3_BOSS2_SHOT_STEPS), 0);
 
             set_anim(s, sh_r32(0x56bec + 4 * (uint32_t)(7 - d7)));
         }
@@ -1191,7 +1221,7 @@ void l3_spawn_walker(const uint8_t *a1)
     a0->y = (int16_t)(rd16(a1 + 10) - 8 - scroll_pos + (int16_t)W(0x557a0 + 2 * i));
     set_anim(a0, sh_r32(0x557b0 + 4 * (uint32_t)i));
     a0->fn_hit = (void *)hit_enemy;
-    a0->energy = (int16_t)W(0x54e44);
+    a0->energy = (int16_t)W(L3_WALKER_ENERGY);
     a0->big = 0;
     a0->score = 0x64;
     WALKER_STATE(a0) = 0;
@@ -1255,16 +1285,16 @@ void l3_walker_update(Object *a0)
         }
     }
     {
-        uint16_t sum = (uint16_t)(a0->v5e_b[0] + B(0x54e4f));
+        uint16_t sum = (uint16_t)(a0->v5e_b[0] + B(L3_WALKER_FIRE_RATE));
 
         a0->v5e_b[0] = (uint8_t)sum;
         if (sum > 0xff) {
-            uint32_t gfx = sh_r32(sh_r32(0x6ee26 + 4 * (uint32_t)W(0x54e50)));
+            uint32_t gfx = sh_r32(sh_r32(0x6ee26 + 4 * (uint32_t)W(L3_WALKER_PARAM)));
             uint16_t angle;
 
             a0->v5e_b[0] = (uint8_t)(random_next() & 0x3f);
             angle = direction8((int16_t)(PLAYER_X - a0->x), (int16_t)(PLAYER_Y - a0->y));
-            spawn_enemy_shot((uint16_t)a0->x, (uint16_t)a0->y, angle, W(0x54e52), GPTR(gfx));
+            spawn_enemy_shot((uint16_t)a0->x, (uint16_t)a0->y, angle, W(L3_WALKER_SHOT_STEPS), GPTR(gfx));
         }
     }
     bbox_from_frame(a0);
@@ -1293,13 +1323,13 @@ void l3_worm_head(Object *a0)
     d1 = (uint16_t)(((old + 0x10) >> 3) & 0x1c);
     if (d1 != d0)
         set_anim(a0, sh_r32(0x55400 + d0));
-    sum = (uint16_t)(a0->v5e_b[0] + B(0x54e6f));
+    sum = (uint16_t)(a0->v5e_b[0] + B(L3_WORM_HEAD_FIRE_RATE));
     a0->v5e_b[0] = (uint8_t)sum;
     if (sum > 0xff) {
         int d2;
 
         for (d2 = 7; d2 >= 0; d2--) {
-            Object *s = spawn_enemy_shot((uint16_t)a0->x, (uint16_t)a0->y, (uint16_t)d2, W(0x54e70), 0);
+            Object *s = spawn_enemy_shot((uint16_t)a0->x, (uint16_t)a0->y, (uint16_t)d2, W(L3_WORM_HEAD_SHOT_STEPS), 0);
 
             set_anim(s, 0x5549e);
         }
