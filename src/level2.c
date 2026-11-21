@@ -5,6 +5,9 @@
 #include "weapons.h"
 #include "shop.h"
 #include "game_all.h"
+#define L2_BOSS_WAIT(o)  ((o)->v28)
+#define L2_BOSS_FLASH(o) ((o)->v3e)
+#define GATE_NUMBER(o)   ((o)->v30)
 #define LAUNCHER_STEP(o)  ((o)->v28)
 #define LAUNCHER_POS(o)   ((o)->v30)
 #define LAUNCHER_RANGE(o) ((o)->v2a)
