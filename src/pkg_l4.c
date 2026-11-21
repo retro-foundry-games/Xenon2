@@ -256,7 +256,7 @@ void l4_scroll(void)
         uint16_t d0 = (random_next() & 1) ? 0xc : 0;
         uint32_t a2;
 
-        if (sh_r8(0xcdd) & 0x20)
+        if (v_0cdc & 0x20)
             d0 += 0x18;
         a2 = 0x5515a + d0;
         a0->type = (int16_t)W(a2);
