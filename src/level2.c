@@ -5,6 +5,15 @@
 #include "weapons.h"
 #include "shop.h"
 #include "game_all.h"
+#define L2_BOSS_STEP(o)   ((o)->v2a)
+#define L2_BOSS_FRAMES(o) ((o)->v2e)
+
+#define PIECE_WAIT(o) ((o)->v28)
+#define PIECE_DIR(o)  ((o)->v2c)
+
+/* the scratch fields of Object, by the kind that uses them */
+#define FLYER_DIVE(o) ((o)->v28)
+
 
 #define FN(f) ((obj_fn)(f))
 #define W(a) sh_r16(a)
@@ -372,7 +381,7 @@ void l2_flyer_update(Object *a0)
     int16_t d0;
 
     anim_step(a0);
-    if (a0->v28 == 0) {
+    if (FLYER_DIVE(a0) == 0) {
         if (a0->y > 0x32) {
             a0->y -= 5;
             a0->x = (int16_t)(a0->x + wobble[(phase >> 2) & 7]);
@@ -383,7 +392,7 @@ void l2_flyer_update(Object *a0)
         if (d0 < 0)
             d0 = (int16_t)-d0;
         if (d0 < 10) {
-            a0->v28 = 1;
+            FLYER_DIVE(a0) = 1;
             set_anim(a0, a0->type == 0xe0 ? 0x55032 : 0x55050);
             bbox_from_frame(a0);
             return;
@@ -398,7 +407,7 @@ void l2_flyer_update(Object *a0)
     }
     a0->y += 0xc;
     if (a0->y >= 0xa0) {
-        a0->v28 = 0;
+        FLYER_DIVE(a0) = 0;
         set_anim(a0, a0->type == 0xe0 ? 0x5501a : 0x5504a);
     }
     bbox_from_frame(a0);
@@ -842,9 +851,9 @@ static void l2_wreck(Object *a1, uint32_t a2)
     n->x = a1->x;
     n->y = a1->y;
     set_anim(n, a2);
-    n->v28 = (int16_t)0x8000;
+    PIECE_WAIT(n) = (int16_t)0x8000;
     n->v2a = 0;
-    n->v2c = (int16_t)(random_next() & 0xff);
+    PIECE_DIR(n) = (int16_t)(random_next() & 0xff);
     kill_thunk(a1);
 }
 
@@ -929,7 +938,7 @@ static void l2_debris_wall(uint16_t d6)
         a0->x = (int16_t)d0;
         a0->y = (int16_t)d1;
         a0->kind = 0;
-        a0->v28 = (int16_t)d2;
+        PIECE_WAIT(a0) = (int16_t)d2;
         a0->steps = (int16_t)W(0x54e54);
         a0->v30 = (int16_t)d6;
         d2 = (uint16_t)(d2 - 0xa);
@@ -1076,10 +1085,10 @@ void l2_gate_flash(Object *a0)
     uint16_t d3 = (uint16_t)((a0->x << 3) - 0x10);
 
     a0->fn_draw = (obj_fn)obj_nop_thunk;
-    if (a0->v30 != 0) {
+    if (GATE_NUMBER(a0) != 0) {
         d3 = (uint16_t)(d3 + 0x10);
         cells = (const uint8_t *)GPTR(0x5691a);
-        if (a0->v30 != 1) {
+        if (GATE_NUMBER(a0) != 1) {
             cells = (const uint8_t *)GPTR(0x56932);
             rows = 2;
             d2 = (int16_t)(d2 - 0x10);
@@ -1193,8 +1202,8 @@ void l2_boss_rest(Object *a0)
         l2_stale_d0_set = 0;
     }
     d1 = (r & 0x4000) ? -3 : 3;
-    a0->v2e = (int16_t)((r & 7) + 8);
-    a0->v2a = d1;
+    L2_BOSS_FRAMES(a0) = (int16_t)((r & 7) + 8);
+    L2_BOSS_STEP(a0) = d1;
 }
 
 /* the boss's use of the scratch fields of Object */
@@ -1244,7 +1253,7 @@ void l2_boss_update(Object *a0)
 
     if ((int16_t)scroll_max <= 0x120)
         scroll_max = 0x120;
-    if (a0->v2e == 0) {
+    if (L2_BOSS_FRAMES(a0) == 0) {
         if (L2_BOSS_WAIT(a0) < 0) {
             a0->hit[0] = 0x3e8;
             a0->hit[2] = 0x3e8;
@@ -1254,16 +1263,16 @@ void l2_boss_update(Object *a0)
             d0 = PLAYER_X;
             if (d0 < 0 || d0 > 0x13f)
                 return;
-            a0->v2e = 0x3e8;
-            a0->v2a = 3;
+            L2_BOSS_FRAMES(a0) = 0x3e8;
+            L2_BOSS_STEP(a0) = 3;
             L2_BOSS_WAIT(a0) = 0x154;
             return;
         }
         L2_BOSS_WAIT(a0)--;
         if (L2_BOSS_WAIT(a0) < 0) {
             L2_BOSS_FLASH(a0) = 0;
-            a0->v2e = 0x3e8;
-            a0->v2a = -3;
+            L2_BOSS_FRAMES(a0) = 0x3e8;
+            L2_BOSS_STEP(a0) = -3;
         }
     }
     sum = (uint16_t)(a0->v5e_b[0] + B(0x54e65));
@@ -1312,7 +1321,7 @@ void l2_boss_update(Object *a0)
         s->y = (int16_t)(a0->y - scroll_pos + 0x80);
         set_anim(s, 0x55116);
         L2_BOSS_WAIT(s) = 0;
-        s->v2a = (int16_t)(random_next() & 7);
+        L2_BOSS_STEP(s) = (int16_t)(random_next() & 7);
         return;
     }
     l2_boss_move(a0);

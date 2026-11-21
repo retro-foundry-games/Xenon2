@@ -4,6 +4,13 @@
 #include "shop.h"
 #include "game_all.h"
 
+/* the scratch fields of Object, by the kind that uses them */
+#define DIVER_SIDE(o) ((o)->v2a)
+#define L3_PICTURE_PHASE(o) ((o)->v2c)
+#define WORM_PHASE(o) ((o)->v2c)
+#define WORM_SIDE(o) ((o)->v30)
+
+
 #define FN(f) ((obj_fn)(f))
 #define W(a) sh_r16(a)
 #define B(a) sh_r8(a)
@@ -279,7 +286,7 @@ void l3_worm_spawn(uint16_t d6)
 static void l3_enemy(Object *a0, uint32_t table)
 {
     enemy_update_no_anim(a0);
-    a0->gfx = GPTR(sh_r32(table + ((((uint16_t)a0->v2c + 0x10) >> 3) & 0x1c)));
+    a0->gfx = GPTR(sh_r32(table + ((((uint16_t)L3_PICTURE_PHASE(a0) + 0x10) >> 3) & 0x1c)));
     bbox_from_frame(a0);
 }
 
@@ -359,10 +366,10 @@ void l3_snake_tail(Object *a0)
         return;
     anim_step(a0);
     a1 = a0->target;
-    a0->x = (int16_t)((uint16_t)((uint16_t)a0->v30 * (uint16_t)a1->v28) + (uint16_t)a0->v2e);
-    if (a1->v2a == 2 && a1->v28 == 2) {
+    a0->x = (int16_t)((uint16_t)((uint16_t)SNAKE_LIMIT(a0) * (uint16_t)SNAKE_SWING(a1)) + (uint16_t)a0->v2e);
+    if (a1->v2a == 2 && SNAKE_SWING(a1) == 2) {
         a0->anim_delay = 1;
-    } else if (a1->v30 > 0 && a1->v30 == a1->v28) {
+    } else if (SNAKE_LIMIT(a1) > 0 && SNAKE_LIMIT(a1) == SNAKE_SWING(a1)) {
         a0->anim_delay = 1;
     }
     bbox_from_frame(a0);
@@ -377,7 +384,7 @@ void l3_snake_body(Object *a0)
         return;
     a0->fn_draw = (obj_fn)obj_nop_thunk;
     a1 = a0->target;
-    a0->x = (int16_t)((uint16_t)((uint16_t)a0->v30 * (uint16_t)a1->v28) + (uint16_t)a0->v2e);
+    a0->x = (int16_t)((uint16_t)((uint16_t)SNAKE_LIMIT(a0) * (uint16_t)SNAKE_SWING(a1)) + (uint16_t)a0->v2e);
     if (a1->v2a != 0)
         a0->fn_draw = draw_bob_masked;
     bbox_from_frame(a0);
@@ -465,11 +472,11 @@ void l3_diver_shot(Object *a0)
     if (a0->type != 0x14)
         return;
     if (a0->x < 0x80) {
-        a0->v2a = 3;
+        DIVER_SIDE(a0) = 3;
         a0->gfx = GPTR(0x5b330);
     }
     if (a0->x >= 0xc0) {
-        a0->v2a = 5;
+        DIVER_SIDE(a0) = 5;
         a0->gfx = GPTR(0x5b386);
     }
 }
@@ -492,7 +499,7 @@ void l3_diver_update(Object *a0)
     }
     anim_step(a0);
     if (DIVER_STATE(a0) == 0) {
-        d0 = (int16_t)(a0->v2a + a0->x);
+        d0 = (int16_t)(DIVER_SIDE(a0) + a0->x);
         a0->x = d0;
         if (d0 <= -0x20) {
             a0->x = 0;
@@ -545,15 +552,15 @@ void l3_diver_update(Object *a0)
             s->y = sy;
             DIVER_STATE(s) = 0;
             s->steps = (int16_t)W(0x54e54);
-            s->v2a = 3;
+            DIVER_SIDE(s) = 3;
             if (a0->x >= 0xa0)
-                s->v2a = 5;
+                DIVER_SIDE(s) = 5;
         }
         bbox_from_frame(a0);
         return;
     }
     if (flip)
-        a0->v2a = (int16_t)-a0->v2a;
+        DIVER_SIDE(a0) = (int16_t)-DIVER_SIDE(a0);
     set_anim(a0, a2);
     bbox_from_frame(a0);
 }
@@ -716,7 +723,7 @@ void l3_part_gun(Object *a0)
 void l3_part_hit(Object *a0, Object *a1, uint16_t d0)
 {
     Object *a2;
-    uint32_t w = a1->v30 == 0x40 ? 0xd60 : 0xd62;
+    uint32_t w = GUN_SIDE(a1) == 0x40 ? 0xd60 : 0xd62;
     uint16_t old = W(w);
     int16_t x, y;
 
@@ -1050,7 +1057,7 @@ void l3_boss_hit(Object *a0, Object *a1, uint16_t d0)
     a1->energy = (int16_t)W(0x54e60);
     a1->hit[0] = 0x3e8;
     a1->hit[2] = 0x3e8;
-    a1->v28 = 0;
+    L3_BOSS_CELL(a1) = 0;
     player_score += 0x1f4;
 }
 
@@ -1058,7 +1065,7 @@ void l3_boss_hit(Object *a0, Object *a1, uint16_t d0)
 void l3_boss_flash(Object *a0)
 {
     int16_t y = (int16_t)(a0->y - scroll_pos);
-    uint32_t cells = 0x569a2 + 4 * (uint32_t)(a0->v28 & ~1);
+    uint32_t cells = 0x569a2 + 4 * (uint32_t)(L3_BOSS_CELL(a0) & ~1);
 
     a0->fn_draw = (obj_fn)obj_nop_thunk;
     draw_tile_grid_flash((const uint8_t *)GPTR(0x56a74), 3, 2, (int16_t)(y + 0x20), (uint16_t)(((uint16_t)a0->x >> 1) & 0xfffc));
@@ -1239,21 +1246,21 @@ static void l3_worm_follow(Object *a0, uint32_t table)
 {
     a0->y = (int16_t)(a0->y + scroll_speed);
     if (table == 0x55622)
-        sh_w8(0xd94 + (uint16_t)a0->v30, 0xff);
+        sh_w8(0xd94 + (uint16_t)WORM_SIDE(a0), 0xff);
     enemy_update_no_anim(a0);
-    a0->gfx = GPTR(sh_r32(table + ((((uint16_t)a0->v2c + 0x10) >> 3) & 0x1c)));
+    a0->gfx = GPTR(sh_r32(table + ((((uint16_t)WORM_PHASE(a0) + 0x10) >> 3) & 0x1c)));
     bbox_from_frame(a0);
 }
 
 /* level3 $055420: the worm's head: its picture follows its phase and now and then it fires eight shots round it */
 void l3_worm_head(Object *a0)
 {
-    uint16_t old = (uint16_t)a0->v2c;
+    uint16_t old = (uint16_t)WORM_PHASE(a0);
     uint16_t d0, d1, sum;
 
     a0->y = (int16_t)(a0->y + scroll_speed);
     enemy_update(a0);
-    d0 = (uint16_t)((((uint16_t)a0->v2c + 0x10) >> 3) & 0x1c);
+    d0 = (uint16_t)((((uint16_t)WORM_PHASE(a0) + 0x10) >> 3) & 0x1c);
     d1 = (uint16_t)(((old + 0x10) >> 3) & 0x1c);
     if (d1 != d0)
         set_anim(a0, sh_r32(0x55400 + d0));
