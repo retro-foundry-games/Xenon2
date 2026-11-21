@@ -5,6 +5,10 @@
 #include <string.h>
 
 /* the scratch fields of Object, by the kind that uses them */
+#define BEAM_DY(o) ((o)->v2a)
+
+
+/* the scratch fields of Object, by the kind that uses them */
 #define BEAM_LENGTH(o) ((o)->v28)
 #define BOSS_PHASE(o) ((o)->v28)
 #define GUNNER_PHASE(o) ((o)->v2c)
@@ -917,12 +921,12 @@ void l5_beam_update(Object *a0)
         if (BEAM_LENGTH(a0) > 0x30)
             BEAM_LENGTH(a0) = 0x30;
         a0->y = (int16_t)(a0->y + scroll_speed);
-        if (a0->v2a < 0)
+        if (BEAM_DY(a0) < 0)
             a0->y = (int16_t)(a0->y - (int16_t)W(0x54e5c));
     } else {
-        a0->y = (int16_t)(a0->y + a0->v2a);
+        a0->y = (int16_t)(a0->y + BEAM_DY(a0));
         d0 = a0->y;
-        if (a0->v2a >= 0) {
+        if (BEAM_DY(a0) >= 0) {
             if (d0 >= 0xc0)
                 goto gone;
         } else {
@@ -952,9 +956,9 @@ void l5_beam_draw(Object *a0)
     uint32_t r0, r1, r2, r3, r4, r5;
     int16_t d6, d7;
 
-    if (a0->v2a < 0 || BEAM_LENGTH(a0) == 0x30)
+    if (BEAM_DY(a0) < 0 || BEAM_LENGTH(a0) == 0x30)
         draw_bob_masked_at((uint16_t)a0->x, (uint16_t)a0->y, (const uint8_t *)GPTR(0x5f2fe));
-    if (a0->v2a >= 0 || BEAM_LENGTH(a0) == 0x30)
+    if (BEAM_DY(a0) >= 0 || BEAM_LENGTH(a0) == 0x30)
         draw_bob_masked_at((uint16_t)a0->x, (uint16_t)(a0->y + BEAM_LENGTH(a0) - 1), (const uint8_t *)GPTR(0x5f340));
     a1 = screen + (((uint16_t)a0->x >> 3) & 0xfffe);
     sh = (uint16_t)a0->x & 0xf;
