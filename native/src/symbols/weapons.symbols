@@ -18,31 +18,31 @@ arr player_pictures 0x60d0 uint8_t * 13                     ; the player's pictu
 arr dive_pictures 0x614a uint8_t * 4                      ; the player's pictures while dive_phase is 1..4
 tab kill_scores 0x7970 uint16_t 2                      ; score added when a shot kills ($7972: when the pod shot does)
 arr player_shot_pictures 0x27c2 uint8_t * 12                     ; pictures of the player's shots (three each)
-tab anim_2540 0x2540 uint8_t 6                   ; animation headers: picture (long), delay, then the script
-tab anim_25a0 0x25a0 uint8_t 6
-tab anim_25be 0x25be uint8_t 6
-tab anim_25e2 0x25e2 uint8_t 6
-tab anim_2612 0x2612 uint8_t 6
-tab anim_264e 0x264e uint8_t 6
-tab anim_26ae 0x26ae uint8_t 6
-tab anim_270e 0x270e uint8_t 6
-tab anim_273a 0x273a uint8_t 6
-tab anim_2760 0x2760 uint8_t 6
-tab anim_280a 0x280a uint8_t 6
-tab anim_283a 0x283a uint8_t 6
-tab anim_28b2 0x28b2 uint8_t 6
-tab anim_28d0 0x28d0 uint8_t 6
-tab anim_28ee 0x28ee uint8_t 6
-tab anim_2912 0x2912 uint8_t 6
-tab anim_2930 0x2930 uint8_t 6
-tab anim_294e 0x294e uint8_t 6
-tab anim_296c 0x296c uint8_t 6
-tab anim_298a 0x298a uint8_t 6
-tab anim_29a8 0x29a8 uint8_t 6
-tab anim_29c6 0x29c6 uint8_t 6
-tab anim_29e4 0x29e4 uint8_t 6
-tab anim_2a02 0x2a02 uint8_t 6
-tab anim_2c24 0x2c24 uint8_t 6
+tab anim_weaponb0 0x2540 uint8_t 6                   ; animation headers: picture (long), delay, then the script
+tab anim_spinner 0x25a0 uint8_t 6
+tab anim_weapon2c 0x25be uint8_t 6
+tab anim_shell_9c 0x25e2 uint8_t 6
+tab anim_weapon20 0x2612 uint8_t 6
+tab anim_bonus_big 0x264e uint8_t 6
+tab anim_bonus_small 0x26ae uint8_t 6
+tab anim_explosion 0x270e uint8_t 6
+tab anim_explosion_big 0x273a uint8_t 6
+tab anim_player_death 0x2760 uint8_t 6
+tab anim_weapon34 0x280a uint8_t 6
+tab anim_weapon44 0x283a uint8_t 6
+tab anim_weapon38 0x28b2 uint8_t 6
+tab anim_weapon3c 0x28d0 uint8_t 6
+tab anim_pod_decoration 0x28ee uint8_t 6
+tab anim_drill_0 0x2912 uint8_t 6
+tab anim_drill_1 0x2930 uint8_t 6
+tab anim_drill_2 0x294e uint8_t 6
+tab anim_drill_3 0x296c uint8_t 6
+tab anim_drill_4 0x298a uint8_t 6
+tab anim_drill_5 0x29a8 uint8_t 6
+tab anim_drill_6 0x29c6 uint8_t 6
+tab anim_drill_7 0x29e4 uint8_t 6
+tab anim_weapon4c 0x2a02 uint8_t 6
+tab anim_weapon90 0x2c24 uint8_t 6
 tab level_54e58 0x54e58 uint16_t 2                ; level 1: energy of the boss ($54E58) and of a second object ($54E5A)
 var player_vx_prev 0x5dd0 int16_t                         ; a copy of player_vx the code area holds
 tab level_558a2 0x558a2 uint16_t 80               ; level 1: sixteen records (offset, four words) the scroll patches the level data with
@@ -69,14 +69,14 @@ tab level_54f68 0x54f68 uint8_t 2
 ; --- code that never ran in the recorded run ---
 type LevelSpawn 12                                ; a record of the table at $55D6C (struct LevelSpawn in types_weapons.h)
 type LevelSeg 12                                  ; an entry of the table at $55CE8 (struct LevelSeg)
-tab anim_2796 0x2796 uint8_t 6
-tab anim_27f2 0x27f2 uint8_t 6
-tab anim_288e 0x288e uint8_t 6
-tab anim_2918 0x2918 uint8_t 6
-tab pic_17336 0x17336 uint8_t 2                   ; pictures of the pod ($34) the update tells apart
-tab pic_171d6 0x171d6 uint8_t 2
-tab pic_1838c 0x1838c uint8_t 2                   ; and of the twin gun ($90)
-tab pic_182dc 0x182dc uint8_t 2
+tab anim_weaponb0_shot 0x2796 uint8_t 6
+tab anim_weapon34_fire 0x27f2 uint8_t 6
+tab anim_pod_trail 0x288e uint8_t 6
+tab anim_drill_head_0 0x2918 uint8_t 6
+tab pic_weapon34_idle 0x17336 uint8_t 2                   ; pictures of the pod ($34) the update tells apart
+tab pic_weapon34_fire 0x171d6 uint8_t 2
+tab pic_weapon90_twin 0x1838c uint8_t 2                   ; and of the twin gun ($90)
+tab pic_weapon90_idle 0x182dc uint8_t 2
 tab weapon2c_patterns 0x3d66 int16_t 99                      ; shot patterns of weapon $2C: count - 1, then (dx, dy, speed x, speed y) of each shot; three tables of 17, 33 and 49 words
 tab weapon_damage 0x7966 uint16_t 4               ; damage: $7966 bomb pieces, $7968 beam of weapon $4C, $796A the pod's trail, $796C
 tab blast_damage 0x7974 uint16_t 3                ; $7974 per level of the $34 beam, $7976 the shell, $7978 the blast of weapon $38/$3C
@@ -84,21 +84,21 @@ var area_damage_kept 0x30dc uint16_t                        ; the damage $3096 k
 var piece_directions 0xf60 int8_t *                         ; table of the pieces' directions (two bytes each, 64 apart)
 var big_explosion_anim 0xf64 uint8_t *                        ; the big explosion's animation header
 tab level_54e62 0x54e62 uint16_t 1                ; level 1: word the units get as $54
-tab anim_55250 0x55250 uint8_t 6
-tab anim_55274 0x55274 uint8_t 6
-tab anim_552b0 0x552b0 uint8_t 6
+tab anim_l1_piece_a 0x55250 uint8_t 6
+tab anim_l1_piece_b 0x55274 uint8_t 6
+tab anim_l1_shot 0x552b0 uint8_t 6
 tab level_55ce6 0x55ce6 uint16_t 1                ; level 1: pieces of a unit - 1
 arr level_segs 0x55ce8 LevelSeg 11                ; level 1: type, hit routine, picture and score of each piece of a unit
 arr level_spawns 0x55d6c LevelSpawn 16            ; level 1: where and with which path a unit starts
 arr level_56174 0x56174 uint8_t * 16              ; level 1: the pictures of the pieces by direction (8 for $10C-$110 pieces, 8 for the others)
 arr level_5638a 0x5638a uint8_t * 8               ; level 1: the pictures of the boss's parts by direction
-tab anim_2936 0x2936 uint8_t 6
-tab anim_2954 0x2954 uint8_t 6
-tab anim_2972 0x2972 uint8_t 6
-tab anim_2990 0x2990 uint8_t 6
-tab anim_29ae 0x29ae uint8_t 6
-tab anim_29cc 0x29cc uint8_t 6
-tab anim_29ea 0x29ea uint8_t 6
+tab anim_drill_head_1 0x2936 uint8_t 6
+tab anim_drill_head_2 0x2954 uint8_t 6
+tab anim_drill_head_3 0x2972 uint8_t 6
+tab anim_drill_head_4 0x2990 uint8_t 6
+tab anim_drill_head_5 0x29ae uint8_t 6
+tab anim_drill_head_6 0x29cc uint8_t 6
+tab anim_drill_head_7 0x29ea uint8_t 6
 tab drill_dy 0x3ac2 int16_t 8                     ; step of a drill bit by direction
 tab drill_dx 0x3ad2 int16_t 8
 arr beam_state 0x6480 uint16_t 4                  ; the beam being drawn: x, y, length, level ($6480..$6486)
@@ -121,8 +121,8 @@ tab level_556cc 0x556cc uint8_t 8
 tab level_556d4 0x556d4 uint8_t 8
 tab level_55ad4 0x55ad4 uint8_t 8
 tab level_55adc 0x55adc uint8_t 8
-tab anim_551d4 0x551d4 uint8_t 6
-tab anim_551f8 0x551f8 uint8_t 6
-tab anim_55212 0x55212 uint8_t 6
-tab anim_55236 0x55236 uint8_t 6
+tab anim_l1_launcher_d0 0x551d4 uint8_t 6
+tab anim_l1_launcher_d0_fire 0x551f8 uint8_t 6
+tab anim_l1_launcher_d4 0x55212 uint8_t 6
+tab anim_l1_launcher_d4_fire 0x55236 uint8_t 6
 arr level_68f40 0x68f40 uint8_t * 5               ; level 1: addresses of longs that hold the picture of an enemy shot

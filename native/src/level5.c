@@ -412,7 +412,7 @@ void l5_pellet_update(Object *a0)
             return;
         }
     }
-    explode_at(a0, anim_270e);
+    explode_at(a0, anim_explosion);
     kill_thunk(a0);
 }
 
@@ -685,7 +685,7 @@ void l5_piece_hit(Object *a0, Object *a1, uint16_t d0)
         return;
     sh_w16(0xd7a, (uint16_t)(sh_r16(0xd7a) - 1));
     player_score += 0xc8;
-    explode_at(a1, a1->big ? big_explosion_anim : anim_270e);
+    explode_at(a1, a1->big ? big_explosion_anim : anim_explosion);
     if (a1->type != 0x114) {
         kill_thunk(a1);
     } else {
@@ -825,7 +825,7 @@ void l5_boss2_turret_hit(Object *a0, Object *a1, uint16_t d0)
     a1->hit[2] = 0x3e8;
     a1->fn_hit = (void *)obj_nop_thunk;
     player_score += 0xc8;
-    spawn_effect((int16_t)(a1->x + 8), (int16_t)(a1->y + 8), anim_270e, draw_bob_masked);
+    spawn_effect((int16_t)(a1->x + 8), (int16_t)(a1->y + 8), anim_explosion, draw_bob_masked);
 }
 
 /* level5 $0566CE: the part that is dead */
@@ -1092,7 +1092,7 @@ void l5_wall_hit_a(Object *a0, Object *a1, uint16_t d0)
     a1->fn_draw = GFN(0x56e14);
     if (!dies(a1, d0))
         return;
-    spawn_effect((int16_t)(a1->x + 8), (int16_t)(a1->y - scroll_pos + 8), anim_270e, draw_bob_masked);
+    spawn_effect((int16_t)(a1->x + 8), (int16_t)(a1->y - scroll_pos + 8), anim_explosion, draw_bob_masked);
     c = a1->script;
     wr16(c, 0x87b5);
     wr32(c + 2, 0);
@@ -1115,7 +1115,7 @@ void l5_wall_hit_b(Object *a0, Object *a1, uint16_t d0)
     a1->fn_draw = GFN(0x56e1a);
     if (!dies(a1, d0))
         return;
-    spawn_effect((int16_t)(a1->x + 8), (int16_t)(a1->y - scroll_pos + 8), anim_270e, draw_bob_masked);
+    spawn_effect((int16_t)(a1->x + 8), (int16_t)(a1->y - scroll_pos + 8), anim_explosion, draw_bob_masked);
     c = a1->script;
     wr16(c, 0x87ab);
     wr32(c - 4, 0);

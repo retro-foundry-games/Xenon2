@@ -188,70 +188,70 @@ struct Xenon2 {
     PAD(296)
     const int16_t weapon_slot_offsets[8];  /* $002404 tab */
     PAD(300)
-    const uint8_t anim_2540[6];  /* $002540 tab */
+    const uint8_t anim_weaponb0[6];  /* $002540 tab */
     PAD(90)
-    const uint8_t anim_25a0[6];  /* $0025A0 tab */
+    const uint8_t anim_spinner[6];  /* $0025A0 tab */
     PAD(24)
-    const uint8_t anim_25be[6];  /* $0025BE tab */
+    const uint8_t anim_weapon2c[6];  /* $0025BE tab */
     PAD(30)
-    const uint8_t anim_25e2[6];  /* $0025E2 tab */
+    const uint8_t anim_shell_9c[6];  /* $0025E2 tab */
     PAD(42)
-    const uint8_t anim_2612[6];  /* $002612 tab */
+    const uint8_t anim_weapon20[6];  /* $002612 tab */
     PAD(54)
-    const uint8_t anim_264e[6];  /* $00264E tab */
+    const uint8_t anim_bonus_big[6];  /* $00264E tab */
     PAD(90)
-    const uint8_t anim_26ae[6];  /* $0026AE tab */
+    const uint8_t anim_bonus_small[6];  /* $0026AE tab */
     PAD(90)
-    const uint8_t anim_270e[6];  /* $00270E tab */
+    const uint8_t anim_explosion[6];  /* $00270E tab */
     PAD(38)
-    const uint8_t anim_273a[6];  /* $00273A tab */
+    const uint8_t anim_explosion_big[6];  /* $00273A tab */
     PAD(32)
-    const uint8_t anim_2760[6];  /* $002760 tab */
+    const uint8_t anim_player_death[6];  /* $002760 tab */
     PAD(48)
-    const uint8_t anim_2796[6];  /* $002796 tab */
+    const uint8_t anim_weaponb0_shot[6];  /* $002796 tab */
     PAD(38)
     uint8_t * player_shot_pictures[12];  /* $0027C2 arr */
-    const uint8_t anim_27f2[6];  /* $0027F2 tab */
+    const uint8_t anim_weapon34_fire[6];  /* $0027F2 tab */
     PAD(18)
-    const uint8_t anim_280a[6];  /* $00280A tab */
+    const uint8_t anim_weapon34[6];  /* $00280A tab */
     PAD(42)
-    const uint8_t anim_283a[6];  /* $00283A tab */
+    const uint8_t anim_weapon44[6];  /* $00283A tab */
     PAD(78)
-    const uint8_t anim_288e[6];  /* $00288E tab */
+    const uint8_t anim_pod_trail[6];  /* $00288E tab */
     PAD(30)
-    const uint8_t anim_28b2[6];  /* $0028B2 tab */
+    const uint8_t anim_weapon38[6];  /* $0028B2 tab */
     PAD(24)
-    const uint8_t anim_28d0[6];  /* $0028D0 tab */
+    const uint8_t anim_weapon3c[6];  /* $0028D0 tab */
     PAD(24)
-    const uint8_t anim_28ee[6];  /* $0028EE tab */
+    const uint8_t anim_pod_decoration[6];  /* $0028EE tab */
     PAD(30)
-    const uint8_t anim_2912[6];  /* $002912 tab */
-    const uint8_t anim_2918[6];  /* $002918 tab */
+    const uint8_t anim_drill_0[6];  /* $002912 tab */
+    const uint8_t anim_drill_head_0[6];  /* $002918 tab */
     PAD(18)
-    const uint8_t anim_2930[6];  /* $002930 tab */
-    const uint8_t anim_2936[6];  /* $002936 tab */
+    const uint8_t anim_drill_1[6];  /* $002930 tab */
+    const uint8_t anim_drill_head_1[6];  /* $002936 tab */
     PAD(18)
-    const uint8_t anim_294e[6];  /* $00294E tab */
-    const uint8_t anim_2954[6];  /* $002954 tab */
+    const uint8_t anim_drill_2[6];  /* $00294E tab */
+    const uint8_t anim_drill_head_2[6];  /* $002954 tab */
     PAD(18)
-    const uint8_t anim_296c[6];  /* $00296C tab */
-    const uint8_t anim_2972[6];  /* $002972 tab */
+    const uint8_t anim_drill_3[6];  /* $00296C tab */
+    const uint8_t anim_drill_head_3[6];  /* $002972 tab */
     PAD(18)
-    const uint8_t anim_298a[6];  /* $00298A tab */
-    const uint8_t anim_2990[6];  /* $002990 tab */
+    const uint8_t anim_drill_4[6];  /* $00298A tab */
+    const uint8_t anim_drill_head_4[6];  /* $002990 tab */
     PAD(18)
-    const uint8_t anim_29a8[6];  /* $0029A8 tab */
-    const uint8_t anim_29ae[6];  /* $0029AE tab */
+    const uint8_t anim_drill_5[6];  /* $0029A8 tab */
+    const uint8_t anim_drill_head_5[6];  /* $0029AE tab */
     PAD(18)
-    const uint8_t anim_29c6[6];  /* $0029C6 tab */
-    const uint8_t anim_29cc[6];  /* $0029CC tab */
+    const uint8_t anim_drill_6[6];  /* $0029C6 tab */
+    const uint8_t anim_drill_head_6[6];  /* $0029CC tab */
     PAD(18)
-    const uint8_t anim_29e4[6];  /* $0029E4 tab */
-    const uint8_t anim_29ea[6];  /* $0029EA tab */
+    const uint8_t anim_drill_7[6];  /* $0029E4 tab */
+    const uint8_t anim_drill_head_7[6];  /* $0029EA tab */
     PAD(18)
-    const uint8_t anim_2a02[6];  /* $002A02 tab */
+    const uint8_t anim_weapon4c[6];  /* $002A02 tab */
     PAD(540)
-    const uint8_t anim_2c24[6];  /* $002C24 tab */
+    const uint8_t anim_weapon90[6];  /* $002C24 tab */
     PAD(444)
     const uint8_t mask_empty[160];  /* $002DE6 tab */
     PAD(32)
@@ -382,13 +382,13 @@ struct Xenon2 {
     PAD(3212)
     uint8_t player_gfx;  /* $00EBE2 var */
     PAD(34291)
-    const uint8_t pic_171d6[2];  /* $0171D6 tab */
+    const uint8_t pic_weapon34_fire[2];  /* $0171D6 tab */
     PAD(350)
-    const uint8_t pic_17336[2];  /* $017336 tab */
+    const uint8_t pic_weapon34_idle[2];  /* $017336 tab */
     PAD(4004)
-    const uint8_t pic_182dc[2];  /* $0182DC tab */
+    const uint8_t pic_weapon90_idle[2];  /* $0182DC tab */
     PAD(174)
-    const uint8_t pic_1838c[2];  /* $01838C tab */
+    const uint8_t pic_weapon90_twin[2];  /* $01838C tab */
     PAD(3884)
     const uint8_t weaponc0_picture[2];  /* $0192BA tab */
     PAD(1378)
@@ -495,19 +495,19 @@ struct Xenon2 {
     PAD(24)
     const uint8_t level_54f68[2];  /* $054F68 tab */
     PAD(618)
-    const uint8_t anim_551d4[6];  /* $0551D4 tab */
+    const uint8_t anim_l1_launcher_d0[6];  /* $0551D4 tab */
     PAD(30)
-    const uint8_t anim_551f8[6];  /* $0551F8 tab */
+    const uint8_t anim_l1_launcher_d0_fire[6];  /* $0551F8 tab */
     PAD(20)
-    const uint8_t anim_55212[6];  /* $055212 tab */
+    const uint8_t anim_l1_launcher_d4[6];  /* $055212 tab */
     PAD(30)
-    const uint8_t anim_55236[6];  /* $055236 tab */
+    const uint8_t anim_l1_launcher_d4_fire[6];  /* $055236 tab */
     PAD(20)
-    const uint8_t anim_55250[6];  /* $055250 tab */
+    const uint8_t anim_l1_piece_a[6];  /* $055250 tab */
     PAD(30)
-    const uint8_t anim_55274[6];  /* $055274 tab */
+    const uint8_t anim_l1_piece_b[6];  /* $055274 tab */
     PAD(54)
-    const uint8_t anim_552b0[6];  /* $0552B0 tab */
+    const uint8_t anim_l1_shot[6];  /* $0552B0 tab */
     PAD(252)
     const uint8_t level_553b2[32];  /* $0553B2 tab */
     const uint8_t level_553d2[32];  /* $0553D2 tab */
@@ -693,43 +693,43 @@ LAYOUT_ASSERT(music_tick_fn, 0x2090);
 LAYOUT_ASSERT(music_cmd_fn, 0x2094);
 LAYOUT_ASSERT(star_speed, 0x2298);
 LAYOUT_ASSERT(weapon_slot_offsets, 0x2404);
-LAYOUT_ASSERT(anim_2540, 0x2540);
-LAYOUT_ASSERT(anim_25a0, 0x25a0);
-LAYOUT_ASSERT(anim_25be, 0x25be);
-LAYOUT_ASSERT(anim_25e2, 0x25e2);
-LAYOUT_ASSERT(anim_2612, 0x2612);
-LAYOUT_ASSERT(anim_264e, 0x264e);
-LAYOUT_ASSERT(anim_26ae, 0x26ae);
-LAYOUT_ASSERT(anim_270e, 0x270e);
-LAYOUT_ASSERT(anim_273a, 0x273a);
-LAYOUT_ASSERT(anim_2760, 0x2760);
-LAYOUT_ASSERT(anim_2796, 0x2796);
+LAYOUT_ASSERT(anim_weaponb0, 0x2540);
+LAYOUT_ASSERT(anim_spinner, 0x25a0);
+LAYOUT_ASSERT(anim_weapon2c, 0x25be);
+LAYOUT_ASSERT(anim_shell_9c, 0x25e2);
+LAYOUT_ASSERT(anim_weapon20, 0x2612);
+LAYOUT_ASSERT(anim_bonus_big, 0x264e);
+LAYOUT_ASSERT(anim_bonus_small, 0x26ae);
+LAYOUT_ASSERT(anim_explosion, 0x270e);
+LAYOUT_ASSERT(anim_explosion_big, 0x273a);
+LAYOUT_ASSERT(anim_player_death, 0x2760);
+LAYOUT_ASSERT(anim_weaponb0_shot, 0x2796);
 LAYOUT_ASSERT(player_shot_pictures, 0x27c2);
-LAYOUT_ASSERT(anim_27f2, 0x27f2);
-LAYOUT_ASSERT(anim_280a, 0x280a);
-LAYOUT_ASSERT(anim_283a, 0x283a);
-LAYOUT_ASSERT(anim_288e, 0x288e);
-LAYOUT_ASSERT(anim_28b2, 0x28b2);
-LAYOUT_ASSERT(anim_28d0, 0x28d0);
-LAYOUT_ASSERT(anim_28ee, 0x28ee);
-LAYOUT_ASSERT(anim_2912, 0x2912);
-LAYOUT_ASSERT(anim_2918, 0x2918);
-LAYOUT_ASSERT(anim_2930, 0x2930);
-LAYOUT_ASSERT(anim_2936, 0x2936);
-LAYOUT_ASSERT(anim_294e, 0x294e);
-LAYOUT_ASSERT(anim_2954, 0x2954);
-LAYOUT_ASSERT(anim_296c, 0x296c);
-LAYOUT_ASSERT(anim_2972, 0x2972);
-LAYOUT_ASSERT(anim_298a, 0x298a);
-LAYOUT_ASSERT(anim_2990, 0x2990);
-LAYOUT_ASSERT(anim_29a8, 0x29a8);
-LAYOUT_ASSERT(anim_29ae, 0x29ae);
-LAYOUT_ASSERT(anim_29c6, 0x29c6);
-LAYOUT_ASSERT(anim_29cc, 0x29cc);
-LAYOUT_ASSERT(anim_29e4, 0x29e4);
-LAYOUT_ASSERT(anim_29ea, 0x29ea);
-LAYOUT_ASSERT(anim_2a02, 0x2a02);
-LAYOUT_ASSERT(anim_2c24, 0x2c24);
+LAYOUT_ASSERT(anim_weapon34_fire, 0x27f2);
+LAYOUT_ASSERT(anim_weapon34, 0x280a);
+LAYOUT_ASSERT(anim_weapon44, 0x283a);
+LAYOUT_ASSERT(anim_pod_trail, 0x288e);
+LAYOUT_ASSERT(anim_weapon38, 0x28b2);
+LAYOUT_ASSERT(anim_weapon3c, 0x28d0);
+LAYOUT_ASSERT(anim_pod_decoration, 0x28ee);
+LAYOUT_ASSERT(anim_drill_0, 0x2912);
+LAYOUT_ASSERT(anim_drill_head_0, 0x2918);
+LAYOUT_ASSERT(anim_drill_1, 0x2930);
+LAYOUT_ASSERT(anim_drill_head_1, 0x2936);
+LAYOUT_ASSERT(anim_drill_2, 0x294e);
+LAYOUT_ASSERT(anim_drill_head_2, 0x2954);
+LAYOUT_ASSERT(anim_drill_3, 0x296c);
+LAYOUT_ASSERT(anim_drill_head_3, 0x2972);
+LAYOUT_ASSERT(anim_drill_4, 0x298a);
+LAYOUT_ASSERT(anim_drill_head_4, 0x2990);
+LAYOUT_ASSERT(anim_drill_5, 0x29a8);
+LAYOUT_ASSERT(anim_drill_head_5, 0x29ae);
+LAYOUT_ASSERT(anim_drill_6, 0x29c6);
+LAYOUT_ASSERT(anim_drill_head_6, 0x29cc);
+LAYOUT_ASSERT(anim_drill_7, 0x29e4);
+LAYOUT_ASSERT(anim_drill_head_7, 0x29ea);
+LAYOUT_ASSERT(anim_weapon4c, 0x2a02);
+LAYOUT_ASSERT(anim_weapon90, 0x2c24);
 LAYOUT_ASSERT(mask_empty, 0x2de6);
 LAYOUT_ASSERT(mask_full, 0x2ea6);
 LAYOUT_ASSERT(area_damage_kept, 0x30dc);
@@ -817,10 +817,10 @@ LAYOUT_ASSERT(title_font, 0x9a36);
 LAYOUT_ASSERT(font_gfx, 0xb666);
 LAYOUT_ASSERT(title_gfx, 0xc966);
 LAYOUT_ASSERT(player_gfx, 0xebe2);
-LAYOUT_ASSERT(pic_171d6, 0x171d6);
-LAYOUT_ASSERT(pic_17336, 0x17336);
-LAYOUT_ASSERT(pic_182dc, 0x182dc);
-LAYOUT_ASSERT(pic_1838c, 0x1838c);
+LAYOUT_ASSERT(pic_weapon34_fire, 0x171d6);
+LAYOUT_ASSERT(pic_weapon34_idle, 0x17336);
+LAYOUT_ASSERT(pic_weapon90_idle, 0x182dc);
+LAYOUT_ASSERT(pic_weapon90_twin, 0x1838c);
 LAYOUT_ASSERT(weaponc0_picture, 0x192ba);
 LAYOUT_ASSERT(digit_gfx, 0x1981e);
 LAYOUT_ASSERT(panel_words, 0x19a9e);
@@ -898,13 +898,13 @@ LAYOUT_ASSERT(level_54f02, 0x54f02);
 LAYOUT_ASSERT(level_54f34, 0x54f34);
 LAYOUT_ASSERT(level_54f4e, 0x54f4e);
 LAYOUT_ASSERT(level_54f68, 0x54f68);
-LAYOUT_ASSERT(anim_551d4, 0x551d4);
-LAYOUT_ASSERT(anim_551f8, 0x551f8);
-LAYOUT_ASSERT(anim_55212, 0x55212);
-LAYOUT_ASSERT(anim_55236, 0x55236);
-LAYOUT_ASSERT(anim_55250, 0x55250);
-LAYOUT_ASSERT(anim_55274, 0x55274);
-LAYOUT_ASSERT(anim_552b0, 0x552b0);
+LAYOUT_ASSERT(anim_l1_launcher_d0, 0x551d4);
+LAYOUT_ASSERT(anim_l1_launcher_d0_fire, 0x551f8);
+LAYOUT_ASSERT(anim_l1_launcher_d4, 0x55212);
+LAYOUT_ASSERT(anim_l1_launcher_d4_fire, 0x55236);
+LAYOUT_ASSERT(anim_l1_piece_a, 0x55250);
+LAYOUT_ASSERT(anim_l1_piece_b, 0x55274);
+LAYOUT_ASSERT(anim_l1_shot, 0x552b0);
 LAYOUT_ASSERT(level_553b2, 0x553b2);
 LAYOUT_ASSERT(level_553d2, 0x553d2);
 LAYOUT_ASSERT(level_553f2, 0x553f2);
@@ -1071,43 +1071,43 @@ LAYOUT_ASSERT(level_data_dst, 0x7d120);
 #define music_cmd_fn (xenon2.music_cmd_fn)
 #define star_speed (xenon2.star_speed)
 #define weapon_slot_offsets (xenon2.weapon_slot_offsets)
-#define anim_2540 (xenon2.anim_2540)
-#define anim_25a0 (xenon2.anim_25a0)
-#define anim_25be (xenon2.anim_25be)
-#define anim_25e2 (xenon2.anim_25e2)
-#define anim_2612 (xenon2.anim_2612)
-#define anim_264e (xenon2.anim_264e)
-#define anim_26ae (xenon2.anim_26ae)
-#define anim_270e (xenon2.anim_270e)
-#define anim_273a (xenon2.anim_273a)
-#define anim_2760 (xenon2.anim_2760)
-#define anim_2796 (xenon2.anim_2796)
+#define anim_weaponb0 (xenon2.anim_weaponb0)
+#define anim_spinner (xenon2.anim_spinner)
+#define anim_weapon2c (xenon2.anim_weapon2c)
+#define anim_shell_9c (xenon2.anim_shell_9c)
+#define anim_weapon20 (xenon2.anim_weapon20)
+#define anim_bonus_big (xenon2.anim_bonus_big)
+#define anim_bonus_small (xenon2.anim_bonus_small)
+#define anim_explosion (xenon2.anim_explosion)
+#define anim_explosion_big (xenon2.anim_explosion_big)
+#define anim_player_death (xenon2.anim_player_death)
+#define anim_weaponb0_shot (xenon2.anim_weaponb0_shot)
 #define player_shot_pictures (xenon2.player_shot_pictures)
-#define anim_27f2 (xenon2.anim_27f2)
-#define anim_280a (xenon2.anim_280a)
-#define anim_283a (xenon2.anim_283a)
-#define anim_288e (xenon2.anim_288e)
-#define anim_28b2 (xenon2.anim_28b2)
-#define anim_28d0 (xenon2.anim_28d0)
-#define anim_28ee (xenon2.anim_28ee)
-#define anim_2912 (xenon2.anim_2912)
-#define anim_2918 (xenon2.anim_2918)
-#define anim_2930 (xenon2.anim_2930)
-#define anim_2936 (xenon2.anim_2936)
-#define anim_294e (xenon2.anim_294e)
-#define anim_2954 (xenon2.anim_2954)
-#define anim_296c (xenon2.anim_296c)
-#define anim_2972 (xenon2.anim_2972)
-#define anim_298a (xenon2.anim_298a)
-#define anim_2990 (xenon2.anim_2990)
-#define anim_29a8 (xenon2.anim_29a8)
-#define anim_29ae (xenon2.anim_29ae)
-#define anim_29c6 (xenon2.anim_29c6)
-#define anim_29cc (xenon2.anim_29cc)
-#define anim_29e4 (xenon2.anim_29e4)
-#define anim_29ea (xenon2.anim_29ea)
-#define anim_2a02 (xenon2.anim_2a02)
-#define anim_2c24 (xenon2.anim_2c24)
+#define anim_weapon34_fire (xenon2.anim_weapon34_fire)
+#define anim_weapon34 (xenon2.anim_weapon34)
+#define anim_weapon44 (xenon2.anim_weapon44)
+#define anim_pod_trail (xenon2.anim_pod_trail)
+#define anim_weapon38 (xenon2.anim_weapon38)
+#define anim_weapon3c (xenon2.anim_weapon3c)
+#define anim_pod_decoration (xenon2.anim_pod_decoration)
+#define anim_drill_0 (xenon2.anim_drill_0)
+#define anim_drill_head_0 (xenon2.anim_drill_head_0)
+#define anim_drill_1 (xenon2.anim_drill_1)
+#define anim_drill_head_1 (xenon2.anim_drill_head_1)
+#define anim_drill_2 (xenon2.anim_drill_2)
+#define anim_drill_head_2 (xenon2.anim_drill_head_2)
+#define anim_drill_3 (xenon2.anim_drill_3)
+#define anim_drill_head_3 (xenon2.anim_drill_head_3)
+#define anim_drill_4 (xenon2.anim_drill_4)
+#define anim_drill_head_4 (xenon2.anim_drill_head_4)
+#define anim_drill_5 (xenon2.anim_drill_5)
+#define anim_drill_head_5 (xenon2.anim_drill_head_5)
+#define anim_drill_6 (xenon2.anim_drill_6)
+#define anim_drill_head_6 (xenon2.anim_drill_head_6)
+#define anim_drill_7 (xenon2.anim_drill_7)
+#define anim_drill_head_7 (xenon2.anim_drill_head_7)
+#define anim_weapon4c (xenon2.anim_weapon4c)
+#define anim_weapon90 (xenon2.anim_weapon90)
 #define mask_empty (xenon2.mask_empty)
 #define mask_full (xenon2.mask_full)
 #define area_damage_kept (xenon2.area_damage_kept)
@@ -1195,10 +1195,10 @@ LAYOUT_ASSERT(level_data_dst, 0x7d120);
 #define font_gfx (xenon2.font_gfx)
 #define title_gfx (xenon2.title_gfx)
 #define player_gfx (xenon2.player_gfx)
-#define pic_171d6 (xenon2.pic_171d6)
-#define pic_17336 (xenon2.pic_17336)
-#define pic_182dc (xenon2.pic_182dc)
-#define pic_1838c (xenon2.pic_1838c)
+#define pic_weapon34_fire (xenon2.pic_weapon34_fire)
+#define pic_weapon34_idle (xenon2.pic_weapon34_idle)
+#define pic_weapon90_idle (xenon2.pic_weapon90_idle)
+#define pic_weapon90_twin (xenon2.pic_weapon90_twin)
 #define weaponc0_picture (xenon2.weaponc0_picture)
 #define digit_gfx (xenon2.digit_gfx)
 #define panel_words (xenon2.panel_words)
@@ -1276,13 +1276,13 @@ LAYOUT_ASSERT(level_data_dst, 0x7d120);
 #define level_54f34 (xenon2.level_54f34)
 #define level_54f4e (xenon2.level_54f4e)
 #define level_54f68 (xenon2.level_54f68)
-#define anim_551d4 (xenon2.anim_551d4)
-#define anim_551f8 (xenon2.anim_551f8)
-#define anim_55212 (xenon2.anim_55212)
-#define anim_55236 (xenon2.anim_55236)
-#define anim_55250 (xenon2.anim_55250)
-#define anim_55274 (xenon2.anim_55274)
-#define anim_552b0 (xenon2.anim_552b0)
+#define anim_l1_launcher_d0 (xenon2.anim_l1_launcher_d0)
+#define anim_l1_launcher_d0_fire (xenon2.anim_l1_launcher_d0_fire)
+#define anim_l1_launcher_d4 (xenon2.anim_l1_launcher_d4)
+#define anim_l1_launcher_d4_fire (xenon2.anim_l1_launcher_d4_fire)
+#define anim_l1_piece_a (xenon2.anim_l1_piece_a)
+#define anim_l1_piece_b (xenon2.anim_l1_piece_b)
+#define anim_l1_shot (xenon2.anim_l1_shot)
 #define level_553b2 (xenon2.level_553b2)
 #define level_553d2 (xenon2.level_553d2)
 #define level_553f2 (xenon2.level_553f2)
