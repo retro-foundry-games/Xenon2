@@ -511,8 +511,8 @@ static void main_loop(void)
 
             music_silence();
             if ((int16_t)scroll_pos <= 0x1e0) {
-                d1 = v_54e3c;
-                v_09fa = (uint16_t)d1;
+                d1 = shop_money_early;
+                shop_price_cap = (uint16_t)d1;
                 d1 = (uint16_t)(d1 + 0x190);
                 if ((int32_t)d1 > (int32_t)player_money) {
                     uint16_t r = (uint16_t)((random_next() & 3) * 0x32);
@@ -521,8 +521,8 @@ static void main_loop(void)
                     player_money = d1;
                 }
             } else {
-                d1 = v_54e3e;
-                v_09fa = (uint16_t)d1;
+                d1 = shop_money_late;
+                shop_price_cap = (uint16_t)d1;
                 if ((int32_t)d1 > (int32_t)player_money) {
                     uint16_t r = (uint16_t)((random_next() & 3) * 0x32);
 

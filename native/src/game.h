@@ -86,7 +86,7 @@ struct Xenon2 {
     uint16_t text_x;  /* $0004F6 var */
     uint16_t text_y;  /* $0004F8 var */
     uint8_t work_area[1280];  /* $0004FA arr */
-    uint16_t v_09fa;  /* $0009FA var */
+    uint16_t shop_price_cap;  /* $0009FA var */
     uint8_t music_switch;  /* $0009FC var */
     uint8_t v_09fd;  /* $0009FD var */
     uint8_t v_09fe;  /* $0009FE var */
@@ -468,8 +468,8 @@ struct Xenon2 {
     uint8_t * level_formations;  /* $054E30 var */
     uint8_t * level_data_start;  /* $054E34 var */
     uint8_t * level_events_a;  /* $054E38 var */
-    uint16_t v_54e3c;  /* $054E3C var */
-    uint16_t v_54e3e;  /* $054E3E var */
+    uint16_t shop_money_early;  /* $054E3C var */
+    uint16_t shop_money_late;  /* $054E3E var */
     const uint8_t level_54e40[24];  /* $054E40 tab */
     const uint16_t level_54e58[2];  /* $054E58 tab */
     const uint16_t level_54e5c[3];  /* $054E5C tab */
@@ -603,7 +603,7 @@ LAYOUT_ASSERT(shop_cursor_row, 0x4f4);
 LAYOUT_ASSERT(text_x, 0x4f6);
 LAYOUT_ASSERT(text_y, 0x4f8);
 LAYOUT_ASSERT(work_area, 0x4fa);
-LAYOUT_ASSERT(v_09fa, 0x9fa);
+LAYOUT_ASSERT(shop_price_cap, 0x9fa);
 LAYOUT_ASSERT(music_switch, 0x9fc);
 LAYOUT_ASSERT(v_09fd, 0x9fd);
 LAYOUT_ASSERT(v_09fe, 0x9fe);
@@ -882,8 +882,8 @@ LAYOUT_ASSERT(enemy_shot_gfx, 0x54e28);
 LAYOUT_ASSERT(level_formations, 0x54e30);
 LAYOUT_ASSERT(level_data_start, 0x54e34);
 LAYOUT_ASSERT(level_events_a, 0x54e38);
-LAYOUT_ASSERT(v_54e3c, 0x54e3c);
-LAYOUT_ASSERT(v_54e3e, 0x54e3e);
+LAYOUT_ASSERT(shop_money_early, 0x54e3c);
+LAYOUT_ASSERT(shop_money_late, 0x54e3e);
 LAYOUT_ASSERT(level_54e40, 0x54e40);
 LAYOUT_ASSERT(level_54e58, 0x54e58);
 LAYOUT_ASSERT(level_54e5c, 0x54e5c);
@@ -981,7 +981,7 @@ LAYOUT_ASSERT(level_data_dst, 0x7d120);
 #define text_x (xenon2.text_x)
 #define text_y (xenon2.text_y)
 #define work_area (xenon2.work_area)
-#define v_09fa (xenon2.v_09fa)
+#define shop_price_cap (xenon2.shop_price_cap)
 #define music_switch (xenon2.music_switch)
 #define v_09fd (xenon2.v_09fd)
 #define v_09fe (xenon2.v_09fe)
@@ -1260,8 +1260,8 @@ LAYOUT_ASSERT(level_data_dst, 0x7d120);
 #define level_formations (xenon2.level_formations)
 #define level_data_start (xenon2.level_data_start)
 #define level_events_a (xenon2.level_events_a)
-#define v_54e3c (xenon2.v_54e3c)
-#define v_54e3e (xenon2.v_54e3e)
+#define shop_money_early (xenon2.shop_money_early)
+#define shop_money_late (xenon2.shop_money_late)
 #define level_54e40 (xenon2.level_54e40)
 #define level_54e58 (xenon2.level_54e58)
 #define level_54e5c (xenon2.level_54e5c)

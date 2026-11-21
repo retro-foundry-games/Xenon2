@@ -862,7 +862,7 @@ void shop_stock_update(void)
     d1 = (int32_t)player_money;
     for (;;) {
         d2 = (int16_t)item_price_at(a1);
-        if (d2 > (int16_t)v_09fa || d1 < (int32_t)d2) {
+        if (d2 > (int16_t)shop_price_cap || d1 < (int32_t)d2) {
 sold:
             sh_w16(a0 + 6, 0x1a);
             sh_w32(a0 + 8, SH_LIST_SOLD_OUT);
@@ -891,7 +891,7 @@ sold:
             return;
         if (sh_r16(SH_PAGE) == 0) {
             d2 = (int16_t)item_price_at(a1);
-            if (d2 > (int16_t)v_09fa || d1 < (int32_t)d2)
+            if (d2 > (int16_t)shop_price_cap || d1 < (int32_t)d2)
                 goto sold;
         }
         break;
