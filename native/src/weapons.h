@@ -5,7 +5,6 @@
 /* a hit routine (an object's fn_hit): a0 = the shooter's object, a1 = the object that was hit, d0 = the damage */
 typedef void (*hit_fn)(Object *a0, Object *a1, uint16_t d0);
 
-extern uint32_t random_next(void);                                         /* $1F50 */
 void weapon_shield_draw(Object *a0);
 void area_damage(Object *a0, int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_t dmg);
 void debris_burst(Object *a0, int16_t d7, uint16_t x, uint16_t y, uint16_t w, uint16_t h, const uint8_t *a2);

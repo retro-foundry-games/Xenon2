@@ -15,7 +15,6 @@ void stars_draw(void);
 uint16_t box_overlap(int16_t d0, int16_t d1, int16_t d2, int16_t d3, int16_t d4, int16_t d5, int16_t d6, int16_t d7);
 Object *obj_free_pop(void);
 
-extern uint32_t random_next(void);
 
 void irq_keyboard(void);
 #endif

@@ -2,6 +2,7 @@
 #ifndef GAME_ALL_H
 #define GAME_ALL_H
 #include "game.h"
+#include "random.h"
 #include "draw.h"
 #include "mainloop.h"
 #include "objects.h"

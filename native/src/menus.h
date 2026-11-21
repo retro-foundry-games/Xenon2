@@ -61,6 +61,5 @@ extern void stars_draw(void);
 extern uint32_t swap_screens_200(void);
 extern void irq_vblank(void);
 extern void irq_vblank_hooked(void);
-extern uint32_t random_next(void);
 extern void clear_palette(void);
 #endif
