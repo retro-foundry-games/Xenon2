@@ -3,6 +3,11 @@
 #include "shop.h"
 #include "game_all.h"
 #include <string.h>
+
+/* the scratch fields of Object, by the kind that uses them */
+#define L4_SIZE(o) ((o)->v28)
+#define WALKER_DY(o) ((o)->v2e)
+
 #define BAR_STEP(o) ((o)->v2a)
 
 /* the scratch fields of Object, by the kind that uses them */
@@ -710,7 +715,7 @@ void l4_b1_head(Object *a0)
     a0->y = (int16_t)(a0->y + W(0xd70));
     l4_pose(a0);
     L4_ANGLE_LO(a0) = (int16_t)(L4_ANGLE_LO(a0) ^ 0x80);
-    d0 = a0->target->v28;
+    d0 = L4_SIZE(a0->target);
     if (d0 > 8) {
         d0 = (int16_t)(0x80 - d0);
         if (d0 > 8)
@@ -805,7 +810,7 @@ static void follow_chain(Object *a0)
     a0->turn[1] = a1->turn[1];
     a0->turn[2] = a1->turn[2];
     a0->steps = a1->steps;
-    a0->v28 = 0x64;
+    L4_SIZE(a0) = 0x64;
     obj_script_run(a0);
 }
 
@@ -1190,12 +1195,12 @@ void l4_walker_update(Object *a0)
     if (WALKER_STATE(a0) == 1) {
         if (a0->anim_delay == 0) {
             WALKER_STATE(a0) = 2;
-            a0->v2e = (int16_t)(PLAYER->y - a0->y + scroll_pos);
+            WALKER_DY(a0) = (int16_t)(PLAYER->y - a0->y + scroll_pos);
         }
         goto box;
     }
     if (a0->x >= 0x28 && a0->x <= 0x118) {
-        if (a0->v2e >= 0)
+        if (WALKER_DY(a0) >= 0)
             a0->y = (int16_t)(a0->y + W(0x54e64));
         else
             a0->y = (int16_t)(a0->y - W(0x54e64));
