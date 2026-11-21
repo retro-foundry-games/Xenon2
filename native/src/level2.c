@@ -5,6 +5,7 @@
 #include "weapons.h"
 #include "shop.h"
 #include "game_all.h"
+#define L2_BOSS_CELL(o) ((o)->v30)
 #define MARKER_LAUNCHES(o) ((o)->v30)
 #define TILE_COLS(o) ((o)->v3e)
 #define TILE_ROWS(o) ((o)->v40)
@@ -754,7 +755,7 @@ void l2_front_update(Object *a0)
         SET_V5E(s, 0);
         s->x = (int16_t)(a0->x + 0x10 + (int16_t)W(entry + 4));
         s->y = (int16_t)(a0->y - scroll_pos + 0x10 + (int16_t)W(entry + 6));
-        s->v2a = (int16_t)i;
+        FRONT_DIR(s) = (int16_t)i;
         s->energy = 1;
         s->big = 0;
         s->score = 0x14;
@@ -1208,7 +1209,7 @@ void l2_boss_rest(Object *a0)
     if ((int16_t)target_count < 0x10) {
         r = random_next();
         if (!(r & 0x2000)) {
-            a0->v3e = (int16_t)((r & 7) + 2);
+            L2_BOSS_FLASH(a0) = (int16_t)((r & 7) + 2);
             return;
         }
     } else {
@@ -1317,8 +1318,8 @@ void l2_boss_update(Object *a0)
     if (L2_BOSS_FLASH(a0) != 0) {
         const uint8_t *a2;
 
-        a0->v30 = (int16_t)((a0->v30 + 4) & 0xc);
-        a2 = (const uint8_t *)GPTR(sh_r32(0x56c44 + (uint16_t)a0->v30));
+        L2_BOSS_CELL(a0) = (int16_t)((L2_BOSS_CELL(a0) + 4) & 0xc);
+        a2 = (const uint8_t *)GPTR(sh_r32(0x56c44 + (uint16_t)L2_BOSS_CELL(a0)));
         copy4((uint8_t *)GPTR(0x572aa), a2);
         copy4((uint8_t *)GPTR(0x572aa + 0xc), a2 + 4);
         L2_BOSS_FLASH(a0)--;

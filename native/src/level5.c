@@ -666,8 +666,8 @@ void l5_turret_update(Object *a0)
         a1->fn_draw = GFN(0x56a10);
         a1->x = (int16_t)(a0->x - 2);
         a1->y = (int16_t)(a0->y - 0x18);
-        a1->v28 = 0;
-        a1->v2a = (int16_t)-(int16_t)W(0x54e5c);
+        BEAM_LENGTH(a1) = 0;
+        BEAM_DY(a1) = (int16_t)-(int16_t)W(0x54e5c);
     }
     if (a0->anim_delay == 0 && a0->y >= 0 && add_carry(&a0->v5e_b[0], B(0x54e55))) {
         a0->v5e_b[0] = (uint8_t)(random_next() & 0x3f);
