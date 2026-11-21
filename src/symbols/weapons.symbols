@@ -3,7 +3,7 @@ type Object 98                                    ; an object (struct Object in 
 type Slot 6                                       ; a weapon slot: type word, the object
 var player_x_prev 0x4e4 uint16_t                         ; the player's x, one frame old
 var player_y_prev 0x4e6 uint16_t
-var v_04e8 0x4e8 int16_t
+var trail_x 0x4e8 int16_t
 var fire_press 0xa6a uint8_t
 var v_0d5a 0xd5a uint16_t
 arr level_vars 0xd26 uint16_t 26                      ; level 1 boss state, cleared by the level's init
@@ -105,7 +105,7 @@ arr beam_state 0x6480 uint16_t 4                  ; the beam being drawn: x, y, 
 arr beam_heads 0x6488 uint8_t * 3                 ; the pictures of the beam's head by level
 arr beam_bodies 0x6494 uint8_t * 3                ; the pictures of its tip
 tab beam_pattern 0x663a uint32_t 15               ; by level: the mask and the four planes of the beam's slice (a long each, shifted by x & 15)
-var v_04ea 0x4ea uint16_t
+var trail_y 0x4ea uint16_t
 tab level_54e40 0x54e40 uint8_t 24                ; level 1: bytes and words (big endian) the turrets are tuned by: $54E43, $54E44, $54E46, $54E49, $54E4A, $54E4C, $54E4F, $54E50, $54E52, $54E54, $54E56
 tab level_54e5c 0x54e5c uint16_t 3                ; level 1: energy of the three turrets ($54E5C, $54E5E, $54E60)
 tab level_553b2 0x553b2 uint8_t 32                ; level 1: map cells of the turret $E0 / $E4, four steps of two longs

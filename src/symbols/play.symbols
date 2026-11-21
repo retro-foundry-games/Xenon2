@@ -10,7 +10,7 @@ var dive_phase 0x430 uint16_t
 var dive_step 0x432 uint16_t
 var dive_timer 0x434 uint16_t
 var background_scroll 0x436 uint32_t
-var v_043a 0x43a uint16_t
+var trail_count 0x43a uint16_t
 arr pickup_groups 0x43c uint16_t 16
 arr player_trail 0x46c uint16_t 8
 arr player_history 0x47c uint16_t 51
