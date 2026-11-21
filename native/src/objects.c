@@ -501,14 +501,14 @@ Object *spawn_formation(Object *a0, const uint8_t *rec_raw, const uint8_t *a2)
     d1 = pickup_kind_b;
     if (a0->flag35 == 0)
         d1 = pickup_kind_a;
-    slot = v_043c;
+    slot = pickup_groups;
     for (i = 0; i < 8; i++, slot += 2) {
         if (slot[0] == d1) {
             slot[1] = (uint16_t)(slot[1] + a1->count);
             return a0;
         }
     }
-    slot = v_043c;
+    slot = pickup_groups;
     for (i = 0; i < 8; i++, slot += 2) {
         if (slot[0] == 0) {
             slot[0] = d1;
@@ -607,7 +607,7 @@ void note_spawn_record(const uint8_t *a1, uint16_t d2)
     latch_slots(d2);
 }
 
-/* orig $F4A, $00352E: copy the type and the score ($42) of the object of each of the 7 weapon slots to slot_snapshot unless extras_timer is set
+/* orig $F4A, $00352E: copy the type and the score ($42) of the object of each of the 7 weapon slots to slot_snapshot unless nashwan_timer is set
  * (d2 is what an empty slot gets after the first one that was not: the caller's register) */
 void latch_slots(uint16_t d2)
 {
@@ -615,7 +615,7 @@ void latch_slots(uint16_t d2)
     uint16_t *out = slot_snapshot;
     int i;
 
-    if (extras_timer != 0)
+    if (nashwan_timer != 0)
         return;
     for (i = 0; i < 7; i++, s++) {
         *out++ = s->type;
@@ -698,9 +698,9 @@ void update_all(void)
     run_updates(LIST_HEAD(LIST_PLAYER));
     run_updates(LIST_HEAD(LIST_ENEMY));
 #ifdef GAME_SDL
-    v_0a6a = guest_a6a(key_pressed);
+    fire_press = guest_a6a(key_pressed);
 #else
-    v_0a6a = key_pressed;
+    fire_press = key_pressed;
 #endif
     key_pressed = 0;
     run_updates(LIST_HEAD(LIST_MISC));
@@ -711,7 +711,7 @@ void update_all(void)
     run_draws(LIST_HEAD(LIST_ENEMY));
     run_draws(LIST_HEAD(LIST_EFFECT));
     run_draws(LIST_HEAD(LIST_FRONT));
-    slot = v_043c;
+    slot = pickup_groups;
     for (i = 0; i < 8; i++, slot += 2) {
         Object *a1;
 

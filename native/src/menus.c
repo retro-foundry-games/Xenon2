@@ -504,7 +504,7 @@ void shop_run(void)
     for (i = 0; i < 8; i++) {
         uint32_t v = rd32(&level_palette[i]);
 
-        if (v_0c90 != 0)
+        if (shades_timer != 0)
             v >>= 1;
         level_palette_copy[2 * i] = (uint16_t)(v >> 16);
         level_palette_copy[2 * i + 1] = (uint16_t)v;
@@ -916,9 +916,9 @@ next_command:
 
             if (o->id != 0) {
                 for (i = 0; i < 8; i++) {
-                    if (v_043c[2 * i] == o->id) {
-                        v_043c[2 * i] = 0;
-                        v_043c[2 * i + 1] = 0;
+                    if (pickup_groups[2 * i] == o->id) {
+                        pickup_groups[2 * i] = 0;
+                        pickup_groups[2 * i + 1] = 0;
                         break;
                     }
                 }

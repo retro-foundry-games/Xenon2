@@ -15,7 +15,7 @@
  *   port.trace(n)                prints the original address of the next n functions the game enters (on stderr)
  *   port.frame()                 the frames so far;  port.joy{up=,down=,left=,right=,fire=};  port.key(amiga_raw_code, down)
  *   port.ram()                   the memory as a string of 0x80000 bytes in the original's byte order (named members converted, raw buffers as they are)
- *   port.set_a6a(BYTE)           the byte the next update_all copies into v_0a6a (the original's)
+ *   port.set_a6a(BYTE)           the byte the next update_all copies into fire_press (the original's)
  *   port.edge_defer(0|1)         the fire press the next interrupt sees is put into key_pressed at the first poke_stick with the fire bit (1) or at the interrupt (0)
  *   port.poke_stick(BYTE)        sets joy_stick (the stick byte the game decodes), as the original's interrupt does mid-frame
  *   port.peek8/16/32(address)    from the same (cached until the game runs again)

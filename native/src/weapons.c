@@ -73,7 +73,7 @@ int player_hits(Object *a0)
 {
     const Object *p = PLAYER;
 
-    if (hide_phase)
+    if (dive_phase)
         return 0;
     return !(p->hit[2] < a0->hit[0] || p->hit[0] > a0->hit[2] || p->hit[3] < a0->hit[1] || p->hit[1] > a0->hit[3]);
 }
@@ -83,7 +83,7 @@ int point_in_player_box(int16_t d0, int16_t d1)
 {
     const Object *p = PLAYER;
 
-    if (hide_phase)
+    if (dive_phase)
         return 0;
     return !(p->hit[0] > d0 || p->hit[2] < d0 || p->hit[1] > d1 || p->hit[3] < d1);
 }
@@ -546,18 +546,18 @@ Object *weapon_select(uint16_t d1, Object *a0, Object *a1)
 /* orig $005592: update of weapon $94 */
 void weapon94_update(Object *a0)
 {
-    if (hide_phase)
+    if (dive_phase)
         return;
-    if (v_0a6a)
+    if (fire_press)
         spawn_shot_object(a0, 0, -9, 0, -6, (void *const *)&player_shot_pictures[3]);
 }
 
 /* orig $0055B2: update of weapon $98 */
 void weapon98_update(Object *a0)
 {
-    if (hide_phase)
+    if (dive_phase)
         return;
-    if (v_0a6a) {
+    if (fire_press) {
         spawn_shot_object(a0, -9, 0, -2, -3, (void *const *)&player_shot_pictures[0]);
         spawn_shot_object(a0, 9, 0, 2, -3, (void *const *)&player_shot_pictures[6]);
     }
@@ -574,7 +574,7 @@ void weapon44_update(Object *a0)
         return;
     }
     a0->fn_draw = draw_bob_masked;
-    if (v_0a6a) {
+    if (fire_press) {
         a0->anim_delay = 1;
         spawn_shot_object(a0, 0, 9, 0, 0x12, (void *const *)&player_shot_pictures[9]);
     }
@@ -586,11 +586,11 @@ void weapon9c_update(Object *a0)
     Object *a1, *n;
     int16_t d0;
 
-    if (hide_phase)
+    if (dive_phase)
         return;
     if (V5E(a0) >= 0)
         SET_V5E(a0, V5E(a0) - 1);
-    if (v_0a6a == 0 || V5E(a0) >= 0)
+    if (fire_press == 0 || V5E(a0) >= 0)
         return;
     for (a1 = LIST_B->prev; a1->type != 0; a1 = a1->prev)
         if (a1->type == 0x28)
@@ -618,11 +618,11 @@ void weaponA0_update(Object *a0)
     Object *a1, *cur;
     int16_t cnt;
 
-    if (hide_phase)
+    if (dive_phase)
         return;
     if (V5E(a0) >= 0)
         SET_V5E(a0, V5E(a0) - 1);
-    if (v_0a6a == 0 || V5E(a0) >= 0)
+    if (fire_press == 0 || V5E(a0) >= 0)
         return;
     for (a1 = LIST_B->prev; a1->type != 0; a1 = a1->prev)
         if (a1->type == 0x48)
@@ -805,7 +805,7 @@ static void explosion_at(Object *a1, const uint8_t *anim)
 /* orig $EE4, $005A1A: an enemy a1 dies: explosion, maybe a bonus, its score */
 void enemy_killed(Object *a0, Object *a1)
 {
-    uint16_t *e = v_043c;
+    uint16_t *e = pickup_groups;
     Object *n;
     const uint8_t *a2;
     int i, found = 0;
@@ -930,27 +930,27 @@ void pickup_grow_weakest(Object *a0)
 /* orig $0048F6 */
 void pickup_speed(Object *a0)
 {
-    if ((int16_t)v_0c64 < 4)
-        v_0c64++;
+    if ((int16_t)autofire_level < 4)
+        autofire_level++;
 }
 
 /* orig $004906 */
 void pickup_move(Object *a0)
 {
-    if (v_0c9e != 2)
-        v_0c9e++;
+    if (speed_level != 2)
+        speed_level++;
 }
 
 /* orig $004914 */
 void pickup_flag_d83(Object *a0)
 {
-    v_0d83 = 0xff;
+    protection = 0xff;
 }
 
 /* orig $00491A */
 void pickup_ca0(Object *a0)
 {
-    hide_charges += 3;
+    dive_charges += 3;
 }
 
 /* orig $004920 */
@@ -1019,7 +1019,7 @@ void pickup_bomb(Object *a0)
         a1 = next;
     }
     for (i = 0; i < 16; i++)
-        v_043c[i] = 0;
+        pickup_groups[i] = 0;
 }
 
 /* orig $004A94: a pickup that makes a spinning object */
@@ -1045,8 +1045,8 @@ void init_weapons(Object *a0)
     Object *a1 = 0;
     int i;
 
-    v_0cf4 = LIST_A->prev;
-    v_0cf8 = LIST_A->next;
+    list_a_prev_saved = LIST_A->prev;
+    list_a_next_saved = LIST_A->next;
     for (i = 0; i < 7; i++) {
         weapon_slots_saved[i] = weapon_slots[i];
         weapon_slots[i].type = 0;
@@ -1179,8 +1179,8 @@ void player_dies(Object *a0)
     energy_dirty = 0xff;
     sfx_cmd = 10;
     sfx_cmd2 = 10;
-    hide_phase = 1;
-    hide_timer = 0;
+    dive_phase = 1;
+    dive_timer = 0;
     set_anim(PLAYER, a2);
     PLAYER->fn_draw = draw_bob_masked;
     a1 = LIST_A->prev;
@@ -1202,7 +1202,7 @@ void player_damage(Object *a0, uint16_t d0)
 
     if (level_end_items != 0)
         return;
-    if (v_0d83 != 0)
+    if (protection != 0)
         d0 >>= 1;
     energy_dirty = 0xff;
     old = player_energy;
@@ -1244,12 +1244,12 @@ void player_move(Object *a0)
             goto side;
         }
         a0->y -= 3;
-        a0->y -= v_0c9e;
+        a0->y -= speed_level;
     }
     if (joy_stick & 2) {
         if (a0->y < 0xb0) {
             a0->y += 3;
-            a0->y += v_0c9e;
+            a0->y += speed_level;
         } else if (scroll_pos != scroll_max) {
             scroll_step = 0xffff;
             a0->y = 0xb0;
@@ -1265,9 +1265,9 @@ side:
             d0 = 6;
         }
     }
-    if (v_0c9e == 0)
+    if (speed_level == 0)
         d0 >>= 1;
-    if ((int16_t)v_0c9e >= 2)
+    if ((int16_t)speed_level >= 2)
         d0 += d0 >> 1;
     a0->x += d0;
     if (a0->x < 0xe)
@@ -1294,9 +1294,9 @@ void player_update(Object *a0)
         }
         return;
     }
-    if (hide_phase == 0) {
+    if (dive_phase == 0) {
         a1 = 0;
-        if (v_0c90 == 0) {
+        if (shades_timer == 0) {
             bbox_from_frame(a0);   /* $5F42: the box of the player's picture, then the test */
             a1 = collide_enemies(a0);
             if (a1 == 0)
@@ -1339,9 +1339,9 @@ after_hit:
         }
         crush_timer--;
         scroll_step = scroll_step_target;
-        d0 = (int16_t)(v_047c[3] - scroll_pos);
-        a0->x = v_047c[4];
-        d0 += v_047c[5];
+        d0 = (int16_t)(player_history[3] - scroll_pos);
+        a0->x = player_history[4];
+        d0 += player_history[5];
         if (d0 > 0xb0) {
             d0 -= 0xb0;
             scroll_step -= d0;
@@ -1354,45 +1354,45 @@ after_hit:
         }
         a0->y = d0;
         for (i = 0; i < 48; i++)
-            v_047c[i] = v_047c[i + 3];
+            player_history[i] = player_history[i + 3];
         if (crush_timer == 0)
             crush_timer = 0xffff;
     } else {
 move:
         player_move(a0);
         for (i = 50; i >= 3; i--)
-            v_047c[i] = v_047c[i - 3];
-        v_047c[0] = scroll_pos;
-        v_047c[1] = a0->x;
-        v_047c[2] = a0->y;
-        if (hide_phase == 0 && (int16_t)crush_timer >= 0 && player_tile_hit(a0)) {
+            player_history[i] = player_history[i - 3];
+        player_history[0] = scroll_pos;
+        player_history[1] = a0->x;
+        player_history[2] = a0->y;
+        if (dive_phase == 0 && (int16_t)crush_timer >= 0 && player_tile_hit(a0)) {
             crush_timer = v_041e;
             player_vx = 0;
-            d0 = (int16_t)(scroll_pos + v_0cee);
+            d0 = (int16_t)(scroll_pos + scroll_margin);
             if (d0 > (int16_t)scroll_max)
                 scroll_max = d0;
         }
     }
     for (i = 0; i < 6; i++)
-        v_046c[i] = v_046c[i + 2];
-    v_046c[6] = player_x_prev;
-    v_046c[7] = player_y_prev;
-    if (hide_phase == 0) {
+        player_trail[i] = player_trail[i + 2];
+    player_trail[6] = player_x_prev;
+    player_trail[7] = player_y_prev;
+    if (dive_phase == 0) {
         a0->gfx = (const void *)player_pictures[player_vx + 6];
         return;
     }
-    a0->gfx = (const void *)hide_pictures[hide_phase - 1];
+    a0->gfx = (const void *)dive_pictures[dive_phase - 1];
     a0->fn_draw = draw_bob_masked;
-    hide_phase += hide_step;
-    if (hide_phase == 0) {
-        hide_step = 0;
+    dive_phase += dive_step;
+    if (dive_phase == 0) {
+        dive_step = 0;
         crush_timer = 0xfff1;
         return;
     }
-    if (hide_phase == 4) {
-        if (hide_step == 0)
+    if (dive_phase == 4) {
+        if (dive_step == 0)
             a0->fn_draw = draw_bob_behind_map;
-        hide_step = 0;
+        dive_step = 0;
     }
 }
 
@@ -1481,7 +1481,7 @@ void area_damage(Object *a0, int16_t x0, int16_t y0, int16_t x1, int16_t y1, uin
 {
     Object *a1 = LIST_HEAD(LIST_ENEMY);
 
-    v_30dc = dmg;
+    area_damage_kept = dmg;
     hit_box[0] = (uint16_t)x0;
     hit_box[1] = (uint16_t)y0;
     hit_box[2] = (uint16_t)x1;
@@ -1498,7 +1498,7 @@ void area_damage(Object *a0, int16_t x0, int16_t y0, int16_t x1, int16_t y1, uin
             return;
         }
         a2 = owner_chain_next(a1);
-        apply_damage(a0, a1, v_30dc);
+        apply_damage(a0, a1, area_damage_kept);
         a1 = a2;
         if (a0->type == 4 || level_end_items != 0)
             return;
@@ -1652,7 +1652,7 @@ void weaponc0_update(Object *a0)
         return;
     }
     a0->fn_draw = draw_bob_masked;
-    if (v_0a6a) {
+    if (fire_press) {
         spawn_shot_object(a0, 0, (uint16_t)-9, (uint16_t)-5, (uint16_t)-12, (void *const *)&player_shot_pictures[3]);
         spawn_shot_object(a0, 0, (uint16_t)-9, 6, (uint16_t)-12, (void *const *)&player_shot_pictures[3]);
     }
@@ -1732,8 +1732,8 @@ void weapon2c_update(Object *a0)
     int16_t d7, d6;
 
     anim_step(a0);
-    a0->x = (int16_t)v_046c[0];
-    a0->y = (int16_t)(v_046c[1] + 0x19);
+    a0->x = (int16_t)player_trail[0];
+    a0->y = (int16_t)(player_trail[1] + 0x19);
     if (respawn_shield) {
         weapon_shield_draw(a0);
         return;
@@ -1774,8 +1774,8 @@ void weapon4c_update(Object *a0)
     a0->fn_draw = draw_bob_masked;
     if (a0->v28 == 0) {
         if (!(joy_stick & 0x80)) {
-            a0->x = (int16_t)v_046c[0];
-            a0->y = (int16_t)(v_046c[1] + 0x19);
+            a0->x = (int16_t)player_trail[0];
+            a0->y = (int16_t)(player_trail[1] + 0x19);
             return;
         }
         a0->v28 = 1;
@@ -1797,19 +1797,19 @@ void weapon4c_update(Object *a0)
             d0 = 0xbf;
         a0->y = d0;
     } else {
-        d0 = (int16_t)(v_046c[0] - a0->x);
+        d0 = (int16_t)(player_trail[0] - a0->x);
         if (d0 > 8)
             d0 = 8;
         if (d0 < -8)
             d0 = -8;
         a0->x = (int16_t)(a0->x + d0);
-        d0 = (int16_t)(v_046c[1] + 0x19 - a0->y);
+        d0 = (int16_t)(player_trail[1] + 0x19 - a0->y);
         if (d0 > 8)
             d0 = 8;
         if (d0 < -8)
             d0 = -8;
         a0->y = (int16_t)(a0->y + d0);
-        if ((int16_t)v_046c[0] == a0->x && (int16_t)(v_046c[1] + 0x19) == a0->y)
+        if ((int16_t)player_trail[0] == a0->x && (int16_t)(player_trail[1] + 0x19) == a0->y)
             a0->v28 = 0;
         return;
     }
@@ -1836,7 +1836,7 @@ void weapon20_update(Object *a0)
     a0->fn_draw = draw_bob_masked;
     if (V5E(a0) >= 0)
         SET_V5E(a0, V5E(a0) - 1);
-    if (v_0a6a && V5E(a0) < 0) {
+    if (fire_press && V5E(a0) < 0) {
         sfx_cmd = 6;
         a1 = alloc_b(a0);
         a1->type = 0x24;
@@ -1918,7 +1918,7 @@ void weapon34_update(Object *a0)
         a1->v28 = 0;
         return;
     }
-    if (v_0a6a && a0->gfx == (const void *)pic_171d6) {
+    if (fire_press && a0->gfx == (const void *)pic_171d6) {
         sfx_cmd = 0x80;
         set_anim(a0, anim_27f2);
     }
@@ -1978,7 +1978,7 @@ void weapon90_update(Object *a0)
         }
         return;
     }
-    if (v_0a6a && a0->gfx == (const void *)pic_182dc)
+    if (fire_press && a0->gfx == (const void *)pic_182dc)
         a0->anim_delay = 1;
 }
 

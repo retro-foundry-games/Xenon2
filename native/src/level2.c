@@ -201,7 +201,7 @@ void l2_scroll(void)
         scroll_fine = 0;
     }
     l2_left_wall_made = 0;
-    v_0d8e = 0;
+    l2_right_wall_made = 0;
 }
 
 /* level2 $054E2C, $054E68: a change of players: the table of blocks and the second player's copy exchange */
@@ -276,7 +276,7 @@ void l2_init(void)
     l2_walls_made = 0;
     sh_w8(0xd5f, 0);
     l2_left_wall_made = 0;
-    v_0d8e = 0;
+    l2_right_wall_made = 0;
     l2_debris_waves = 2;
     for (i = 0; i < 8; i++)
         level_vars[i] = 0;
@@ -918,7 +918,7 @@ static void l2_debris_wall(uint16_t d6)
     l2_walls_made |= (uint8_t)(1 << (d6 & 7));
 }
 
-/* level2 $056016: the walls of debris that are not in the field (l2_left_wall_made, v_0d8e say a piece of each moved this frame) are made */
+/* level2 $056016: the walls of debris that are not in the field (l2_left_wall_made, l2_right_wall_made say a piece of each moved this frame) are made */
 void l2_debris_walls(void)
 {
     if (l2_first_fight_won != 0)
@@ -927,9 +927,9 @@ void l2_debris_walls(void)
         l2_debris_wall(0);
         l2_left_wall_made = 0xff;
     }
-    if (v_0d8e == 0) {
+    if (l2_right_wall_made == 0) {
         l2_debris_wall(1);
-        v_0d8e = 0xff;
+        l2_right_wall_made = 0xff;
     }
 }
 
@@ -1101,9 +1101,9 @@ void l2_gate_hit(Object *a0, Object *a1, uint16_t d0)
         e = next;
     }
     l2_left_wall_made = 0;
-    v_0d8e = 0;
+    l2_right_wall_made = 0;
     for (i = 0; i < 16; i++)
-        v_043c[i] = 0;
+        pickup_groups[i] = 0;
     debris_burst(a0, 0x27, 0, 0, 0x140, 0xc0, big_explosion_anim);
     spawn_bonuses(4);
     scroll_min = 0;

@@ -16,7 +16,7 @@ tab insert_disk_text 0x8f80 uint8_t 20             ; "  INSERT GAME DISK  "
 var loaded_level 0x8f98 uint16_t                   ; the level whose code is loaded
 arr progress_text 0x8fea uint8_t 2                 ; the digit shown while a track is read
 var saved_level_init 0x8fee uint8_t *              ; level_init_src kept while the shop is loaded
-arr level_palette_copy 0x915e uint16_t 16          ; the level's palette, dimmed if v_0c90
+arr level_palette_copy 0x915e uint16_t 16          ; the level's palette, dimmed if shades_timer
 tab level_sectors 0x91ea uint16_t 12               ; first sector and count of the code of each level (and the shop)
 var disk_track 0x9202 int16_t                      ; the track the head is on (negative: unknown)
 var disk_want 0x9204 uint16_t                      ; the track being read

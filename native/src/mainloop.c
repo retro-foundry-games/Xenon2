@@ -298,7 +298,7 @@ void irq_vblank_hooked(void)
 }
 
 /* The palette of the level (level_palette, 8 longwords of 12-bit colour pairs) goes to palette_shadow (halved per component when
- * v_0c90 is set) and, doubled, to the colour registers 0-15. */
+ * shades_timer is set) and, doubled, to the colour registers 0-15. */
 static void apply_palette(void)
 {
     const uint32_t *pal = level_palette;
@@ -306,7 +306,7 @@ static void apply_palette(void)
     for (int i = 0; i < 8; i++) {
         uint32_t v = rd32(&pal[i]);
 
-        if (v_0c90)
+        if (shades_timer)
             v = (v >> 1) & 0x07770777u;
         palette_shadow[2 * i] = (uint16_t)(v >> 16);
         palette_shadow[2 * i + 1] = (uint16_t)v;
@@ -331,7 +331,7 @@ void camera_limit(uint16_t d7, uint16_t d3) __attribute__((noinline));
 void camera_limit(uint16_t d7, uint16_t d3)
 {
     if (d7 != scroll_max || (joy_stick & 2) == 0)
-        d3 += v_0cee;
+        d3 += scroll_margin;
     if (!((int16_t)d3 > (int16_t)scroll_max))
         scroll_max = d3;
 }
@@ -404,16 +404,16 @@ static int key_command(uint8_t key)
         key_pressed = 0;
     } else if (target == KEY_FIRE) {
         if (player_dead == 0) {
-            if (hide_phase == 0) {
-                if (hide_charges != 0) {
-                    hide_step = 1;
+            if (dive_phase == 0) {
+                if (dive_charges != 0) {
+                    dive_step = 1;
                     sfx_cmd = 0x10;
-                    hide_phase = 1;
-                    hide_charges--;
-                    hide_timer = 0x88;
+                    dive_phase = 1;
+                    dive_charges--;
+                    dive_timer = 0x88;
                 }
             } else {
-                hide_timer = 1;
+                dive_timer = 1;
             }
         }
     }
@@ -473,7 +473,7 @@ static void main_loop(void)
         apply_palette();
         if (player_died) {
             player_died = 0;
-            v_0c64 = 1;
+            autofire_level = 1;
             player_energy = 0x27;
             energy_dirty = 0xff;
             player_lives--;
@@ -530,7 +530,7 @@ static void main_loop(void)
                     player_money = d1;
                 }
             }
-            v_0d83 = 0;
+            protection = 0;
             v_8fec = 0;
             other = cur_player ^ 1;
             if ((int16_t)scroll_pos > 0x3c0 || level_number != 5 ||
@@ -539,7 +539,7 @@ static void main_loop(void)
                 draw_status_digit();
             }
             level_over = 0;
-            if (extras_timer)
+            if (nashwan_timer)
                 init_weapons(0);
             if (v_0a07 == 0) {
                 if (music_switch)
@@ -590,7 +590,7 @@ static void main_loop(void)
         loading_level_digit = (uint8_t)(level_number + 0x30);
         level_load();
         create_queued_objects();
-        if (extras_timer)
+        if (nashwan_timer)
             init_weapons(0);
         level_start();
         player_active[2] = 0;
@@ -624,11 +624,11 @@ static void game_session_start(void)
     level_load();
     init_level_state();
     level_start();
-    v_8836[18] = 0x31;
+    ready_text[18] = 0x31;
     if (player_active[0] == 0)
-        v_8836[18] = 0x32;
+        ready_text[18] = 0x32;
     text_wait_key = 0xff;
-    title_message(v_8836);
+    title_message(ready_text);
     text_wait_key = 0;
     clear_palette();
     music_restart_if_enabled();

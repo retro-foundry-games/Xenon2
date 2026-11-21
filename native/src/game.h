@@ -60,18 +60,18 @@ struct Xenon2 {
     uint16_t cur_player;  /* $000428 var */
     Object * free_obj;  /* $00042A var */
     uint16_t crush_timer;  /* $00042E var */
-    uint16_t hide_phase;  /* $000430 var */
-    uint16_t hide_step;  /* $000432 var */
-    uint16_t hide_timer;  /* $000434 var */
+    uint16_t dive_phase;  /* $000430 var */
+    uint16_t dive_step;  /* $000432 var */
+    uint16_t dive_timer;  /* $000434 var */
     uint32_t background_scroll;  /* $000436 var */
     uint16_t v_043a;  /* $00043A var */
-    uint16_t v_043c[16];  /* $00043C arr */
+    uint16_t pickup_groups[16];  /* $00043C arr */
     uint16_t pickup_kind_a;  /* $00045C var */
     uint16_t pickup_kind_b;  /* $00045E var */
     uint16_t hit_box[4];  /* $000460 arr */
     PAD(4)
-    uint16_t v_046c[8];  /* $00046C arr */
-    uint16_t v_047c[51];  /* $00047C arr */
+    uint16_t player_trail[8];  /* $00046C arr */
+    uint16_t player_history[51];  /* $00047C arr */
     uint16_t v_04e2;  /* $0004E2 var */
     uint16_t player_x_prev;  /* $0004E4 var */
     uint16_t player_y_prev;  /* $0004E6 var */
@@ -96,23 +96,23 @@ struct Xenon2 {
     uint8_t player_died;  /* $000A02 var */
     uint8_t player_active[4];  /* $000A03 arr */
     uint8_t v_0a07;  /* $000A07 var */
-    uint8_t v_0a08[98];  /* $000A08 arr */
-    uint8_t v_0a6a;  /* $000A6A var */
+    uint8_t other_player_object[98];  /* $000A08 arr */
+    uint8_t fire_press;  /* $000A6A var */
     uint8_t energy_dirty;  /* $000A6B var */
     uint8_t level_over;  /* $000A6C var */
     PAD(9)
     struct Object obj_list[5];  /* $000A76 arr */
     uint16_t autofire_counter;  /* $000C60 var */
     uint16_t autofire_period;  /* $000C62 var */
-    uint16_t v_0c64;  /* $000C64 var */
+    uint16_t autofire_level;  /* $000C64 var */
     struct Slot weapon_slots[7];  /* $000C66 arr */
-    uint16_t v_0c90;  /* $000C90 var */
+    uint16_t shades_timer;  /* $000C90 var */
     uint32_t player_score;  /* $000C92 var */
     uint32_t score_shown;  /* $000C96 var */
     uint32_t player_money;  /* $000C9A var */
-    uint16_t v_0c9e;  /* $000C9E var */
-    uint16_t hide_charges;  /* $000CA0 var */
-    uint16_t extras_timer;  /* $000CA2 var */
+    uint16_t speed_level;  /* $000C9E var */
+    uint16_t dive_charges;  /* $000CA0 var */
+    uint16_t nashwan_timer;  /* $000CA2 var */
     uint16_t level_end_items;  /* $000CA4 var */
     uint32_t player_money_saved;  /* $000CA6 var */
     uint16_t slot_snapshot[14];  /* $000CAA arr */
@@ -136,11 +136,11 @@ struct Xenon2 {
     uint16_t scroll_min;  /* $000CE8 var */
     uint16_t scroll_max;  /* $000CEA var */
     uint16_t pickup_cycle;  /* $000CEC var */
-    uint16_t v_0cee;  /* $000CEE var */
+    uint16_t scroll_margin;  /* $000CEE var */
     uint16_t continues_left;  /* $000CF0 var */
-    uint16_t v_0cf2;  /* $000CF2 var */
-    Object * v_0cf4;  /* $000CF4 var */
-    Object * v_0cf8;  /* $000CF8 var */
+    uint16_t advice_hints;  /* $000CF2 var */
+    Object * list_a_prev_saved;  /* $000CF4 var */
+    Object * list_a_next_saved;  /* $000CF8 var */
     struct Slot weapon_slots_saved[7];  /* $000CFC arr */
     uint16_t level_vars[26];  /* $000D26 arr */
     uint16_t v_0d5a;  /* $000D5A var */
@@ -148,14 +148,14 @@ struct Xenon2 {
     uint8_t l2_walls_made;  /* $000D5E var */
     PAD(29)
     uint8_t score_digits[7];  /* $000D7C arr */
-    uint8_t v_0d83;  /* $000D83 var */
+    uint8_t protection;  /* $000D83 var */
     uint8_t player_dead;  /* $000D84 var */
     uint8_t v_0d85;  /* $000D85 var */
     uint8_t unit_live[5];  /* $000D86 arr */
     uint8_t v_0d8b;  /* $000D8B var */
     uint8_t v_0d8c;  /* $000D8C var */
     uint8_t l2_left_wall_made;  /* $000D8D var */
-    uint8_t v_0d8e;  /* $000D8E var */
+    uint8_t l2_right_wall_made;  /* $000D8E var */
     uint8_t l2_debris_waves;  /* $000D8F var */
     uint8_t l2_first_fight_won;  /* $000D90 var */
     PAD(15)
@@ -257,7 +257,7 @@ struct Xenon2 {
     PAD(32)
     const uint8_t mask_full[160];  /* $002EA6 tab */
     PAD(406)
-    uint16_t v_30dc;  /* $0030DC var */
+    uint16_t area_damage_kept;  /* $0030DC var */
     PAD(398)
     const uint8_t spawn_def_326c[26];  /* $00326C tab */
     PAD(1186)
@@ -277,7 +277,7 @@ struct Xenon2 {
     PAD(766)
     uint8_t * player_pictures[13];  /* $0060D0 arr */
     PAD(70)
-    uint8_t * hide_pictures[4];  /* $00614A arr */
+    uint8_t * dive_pictures[4];  /* $00614A arr */
     PAD(476)
     uint8_t * gauge_pics[10];  /* $006336 arr */
     PAD(290)
@@ -322,7 +322,7 @@ struct Xenon2 {
     PAD(1)
     const uint16_t squeeze_masks[17];  /* $008724 tab */
     const uint8_t title_lines[240];  /* $008746 tab */
-    uint8_t v_8836[19];  /* $008836 arr */
+    uint8_t ready_text[19];  /* $008836 arr */
     PAD(1)
     uint8_t game_over_text[20];  /* $00884A arr */
     PAD(192)
@@ -438,9 +438,9 @@ struct Xenon2 {
     const uint32_t hit_mask_ptrs[16];  /* $03AE96 tab */
     const uint16_t hit_mask_data[1200];  /* $03AED6 tab */
     PAD(1142)
-    uint8_t v_3bcac[12000];  /* $03BCAC arr */
+    uint8_t other_player_level[12000];  /* $03BCAC arr */
     PAD(360)
-    uint32_t v_3ecf4[202];  /* $03ECF4 arr */
+    uint32_t other_player_block[202];  /* $03ECF4 arr */
     struct Object player;  /* $03F01C var */
     struct Object obj_pool[159];  /* $03F07E arr */
     struct Shot shots[80];  /* $042D5C arr */
@@ -578,17 +578,17 @@ LAYOUT_ASSERT(difficulty_x2, 0x426);
 LAYOUT_ASSERT(cur_player, 0x428);
 LAYOUT_ASSERT(free_obj, 0x42a);
 LAYOUT_ASSERT(crush_timer, 0x42e);
-LAYOUT_ASSERT(hide_phase, 0x430);
-LAYOUT_ASSERT(hide_step, 0x432);
-LAYOUT_ASSERT(hide_timer, 0x434);
+LAYOUT_ASSERT(dive_phase, 0x430);
+LAYOUT_ASSERT(dive_step, 0x432);
+LAYOUT_ASSERT(dive_timer, 0x434);
 LAYOUT_ASSERT(background_scroll, 0x436);
 LAYOUT_ASSERT(v_043a, 0x43a);
-LAYOUT_ASSERT(v_043c, 0x43c);
+LAYOUT_ASSERT(pickup_groups, 0x43c);
 LAYOUT_ASSERT(pickup_kind_a, 0x45c);
 LAYOUT_ASSERT(pickup_kind_b, 0x45e);
 LAYOUT_ASSERT(hit_box, 0x460);
-LAYOUT_ASSERT(v_046c, 0x46c);
-LAYOUT_ASSERT(v_047c, 0x47c);
+LAYOUT_ASSERT(player_trail, 0x46c);
+LAYOUT_ASSERT(player_history, 0x47c);
 LAYOUT_ASSERT(v_04e2, 0x4e2);
 LAYOUT_ASSERT(player_x_prev, 0x4e4);
 LAYOUT_ASSERT(player_y_prev, 0x4e6);
@@ -613,22 +613,22 @@ LAYOUT_ASSERT(key_pressed, 0xa01);
 LAYOUT_ASSERT(player_died, 0xa02);
 LAYOUT_ASSERT(player_active, 0xa03);
 LAYOUT_ASSERT(v_0a07, 0xa07);
-LAYOUT_ASSERT(v_0a08, 0xa08);
-LAYOUT_ASSERT(v_0a6a, 0xa6a);
+LAYOUT_ASSERT(other_player_object, 0xa08);
+LAYOUT_ASSERT(fire_press, 0xa6a);
 LAYOUT_ASSERT(energy_dirty, 0xa6b);
 LAYOUT_ASSERT(level_over, 0xa6c);
 LAYOUT_ASSERT(obj_list, 0xa76);
 LAYOUT_ASSERT(autofire_counter, 0xc60);
 LAYOUT_ASSERT(autofire_period, 0xc62);
-LAYOUT_ASSERT(v_0c64, 0xc64);
+LAYOUT_ASSERT(autofire_level, 0xc64);
 LAYOUT_ASSERT(weapon_slots, 0xc66);
-LAYOUT_ASSERT(v_0c90, 0xc90);
+LAYOUT_ASSERT(shades_timer, 0xc90);
 LAYOUT_ASSERT(player_score, 0xc92);
 LAYOUT_ASSERT(score_shown, 0xc96);
 LAYOUT_ASSERT(player_money, 0xc9a);
-LAYOUT_ASSERT(v_0c9e, 0xc9e);
-LAYOUT_ASSERT(hide_charges, 0xca0);
-LAYOUT_ASSERT(extras_timer, 0xca2);
+LAYOUT_ASSERT(speed_level, 0xc9e);
+LAYOUT_ASSERT(dive_charges, 0xca0);
+LAYOUT_ASSERT(nashwan_timer, 0xca2);
 LAYOUT_ASSERT(level_end_items, 0xca4);
 LAYOUT_ASSERT(player_money_saved, 0xca6);
 LAYOUT_ASSERT(slot_snapshot, 0xcaa);
@@ -652,25 +652,25 @@ LAYOUT_ASSERT(scroll_y, 0xce6);
 LAYOUT_ASSERT(scroll_min, 0xce8);
 LAYOUT_ASSERT(scroll_max, 0xcea);
 LAYOUT_ASSERT(pickup_cycle, 0xcec);
-LAYOUT_ASSERT(v_0cee, 0xcee);
+LAYOUT_ASSERT(scroll_margin, 0xcee);
 LAYOUT_ASSERT(continues_left, 0xcf0);
-LAYOUT_ASSERT(v_0cf2, 0xcf2);
-LAYOUT_ASSERT(v_0cf4, 0xcf4);
-LAYOUT_ASSERT(v_0cf8, 0xcf8);
+LAYOUT_ASSERT(advice_hints, 0xcf2);
+LAYOUT_ASSERT(list_a_prev_saved, 0xcf4);
+LAYOUT_ASSERT(list_a_next_saved, 0xcf8);
 LAYOUT_ASSERT(weapon_slots_saved, 0xcfc);
 LAYOUT_ASSERT(level_vars, 0xd26);
 LAYOUT_ASSERT(v_0d5a, 0xd5a);
 LAYOUT_ASSERT(l2_gates_left, 0xd5c);
 LAYOUT_ASSERT(l2_walls_made, 0xd5e);
 LAYOUT_ASSERT(score_digits, 0xd7c);
-LAYOUT_ASSERT(v_0d83, 0xd83);
+LAYOUT_ASSERT(protection, 0xd83);
 LAYOUT_ASSERT(player_dead, 0xd84);
 LAYOUT_ASSERT(v_0d85, 0xd85);
 LAYOUT_ASSERT(unit_live, 0xd86);
 LAYOUT_ASSERT(v_0d8b, 0xd8b);
 LAYOUT_ASSERT(v_0d8c, 0xd8c);
 LAYOUT_ASSERT(l2_left_wall_made, 0xd8d);
-LAYOUT_ASSERT(v_0d8e, 0xd8e);
+LAYOUT_ASSERT(l2_right_wall_made, 0xd8e);
 LAYOUT_ASSERT(l2_debris_waves, 0xd8f);
 LAYOUT_ASSERT(l2_first_fight_won, 0xd90);
 LAYOUT_ASSERT(level_obj, 0xda0);
@@ -732,7 +732,7 @@ LAYOUT_ASSERT(anim_2a02, 0x2a02);
 LAYOUT_ASSERT(anim_2c24, 0x2c24);
 LAYOUT_ASSERT(mask_empty, 0x2de6);
 LAYOUT_ASSERT(mask_full, 0x2ea6);
-LAYOUT_ASSERT(v_30dc, 0x30dc);
+LAYOUT_ASSERT(area_damage_kept, 0x30dc);
 LAYOUT_ASSERT(spawn_def_326c, 0x326c);
 LAYOUT_ASSERT(spawn_kinds, 0x3728);
 LAYOUT_ASSERT(enemy_shot_dx, 0x38d2);
@@ -743,7 +743,7 @@ LAYOUT_ASSERT(weapon2c_patterns, 0x3d66);
 LAYOUT_ASSERT(pickup_circle_steps, 0x476c);
 LAYOUT_ASSERT(v_5dd0, 0x5dd0);
 LAYOUT_ASSERT(player_pictures, 0x60d0);
-LAYOUT_ASSERT(hide_pictures, 0x614a);
+LAYOUT_ASSERT(dive_pictures, 0x614a);
 LAYOUT_ASSERT(gauge_pics, 0x6336);
 LAYOUT_ASSERT(beam_state, 0x6480);
 LAYOUT_ASSERT(beam_heads, 0x6488);
@@ -774,7 +774,7 @@ LAYOUT_ASSERT(title_font_chars, 0x86d2);
 LAYOUT_ASSERT(text_chars, 0x86fc);
 LAYOUT_ASSERT(squeeze_masks, 0x8724);
 LAYOUT_ASSERT(title_lines, 0x8746);
-LAYOUT_ASSERT(v_8836, 0x8836);
+LAYOUT_ASSERT(ready_text, 0x8836);
 LAYOUT_ASSERT(game_over_text, 0x884a);
 LAYOUT_ASSERT(hiscore_values, 0x891e);
 LAYOUT_ASSERT(hiscore_lines, 0x8946);
@@ -861,8 +861,8 @@ LAYOUT_ASSERT(music_vol_env_data, 0x1ba7c);
 LAYOUT_ASSERT(sample_bank, 0x1bb80);
 LAYOUT_ASSERT(hit_mask_ptrs, 0x3ae96);
 LAYOUT_ASSERT(hit_mask_data, 0x3aed6);
-LAYOUT_ASSERT(v_3bcac, 0x3bcac);
-LAYOUT_ASSERT(v_3ecf4, 0x3ecf4);
+LAYOUT_ASSERT(other_player_level, 0x3bcac);
+LAYOUT_ASSERT(other_player_block, 0x3ecf4);
 LAYOUT_ASSERT(player, 0x3f01c);
 LAYOUT_ASSERT(obj_pool, 0x3f07e);
 LAYOUT_ASSERT(shots, 0x42d5c);
@@ -956,17 +956,17 @@ LAYOUT_ASSERT(level_data_dst, 0x7d120);
 #define cur_player (xenon2.cur_player)
 #define free_obj (xenon2.free_obj)
 #define crush_timer (xenon2.crush_timer)
-#define hide_phase (xenon2.hide_phase)
-#define hide_step (xenon2.hide_step)
-#define hide_timer (xenon2.hide_timer)
+#define dive_phase (xenon2.dive_phase)
+#define dive_step (xenon2.dive_step)
+#define dive_timer (xenon2.dive_timer)
 #define background_scroll (xenon2.background_scroll)
 #define v_043a (xenon2.v_043a)
-#define v_043c (xenon2.v_043c)
+#define pickup_groups (xenon2.pickup_groups)
 #define pickup_kind_a (xenon2.pickup_kind_a)
 #define pickup_kind_b (xenon2.pickup_kind_b)
 #define hit_box (xenon2.hit_box)
-#define v_046c (xenon2.v_046c)
-#define v_047c (xenon2.v_047c)
+#define player_trail (xenon2.player_trail)
+#define player_history (xenon2.player_history)
 #define v_04e2 (xenon2.v_04e2)
 #define player_x_prev (xenon2.player_x_prev)
 #define player_y_prev (xenon2.player_y_prev)
@@ -991,22 +991,22 @@ LAYOUT_ASSERT(level_data_dst, 0x7d120);
 #define player_died (xenon2.player_died)
 #define player_active (xenon2.player_active)
 #define v_0a07 (xenon2.v_0a07)
-#define v_0a08 (xenon2.v_0a08)
-#define v_0a6a (xenon2.v_0a6a)
+#define other_player_object (xenon2.other_player_object)
+#define fire_press (xenon2.fire_press)
 #define energy_dirty (xenon2.energy_dirty)
 #define level_over (xenon2.level_over)
 #define obj_list (xenon2.obj_list)
 #define autofire_counter (xenon2.autofire_counter)
 #define autofire_period (xenon2.autofire_period)
-#define v_0c64 (xenon2.v_0c64)
+#define autofire_level (xenon2.autofire_level)
 #define weapon_slots (xenon2.weapon_slots)
-#define v_0c90 (xenon2.v_0c90)
+#define shades_timer (xenon2.shades_timer)
 #define player_score (xenon2.player_score)
 #define score_shown (xenon2.score_shown)
 #define player_money (xenon2.player_money)
-#define v_0c9e (xenon2.v_0c9e)
-#define hide_charges (xenon2.hide_charges)
-#define extras_timer (xenon2.extras_timer)
+#define speed_level (xenon2.speed_level)
+#define dive_charges (xenon2.dive_charges)
+#define nashwan_timer (xenon2.nashwan_timer)
 #define level_end_items (xenon2.level_end_items)
 #define player_money_saved (xenon2.player_money_saved)
 #define slot_snapshot (xenon2.slot_snapshot)
@@ -1030,25 +1030,25 @@ LAYOUT_ASSERT(level_data_dst, 0x7d120);
 #define scroll_min (xenon2.scroll_min)
 #define scroll_max (xenon2.scroll_max)
 #define pickup_cycle (xenon2.pickup_cycle)
-#define v_0cee (xenon2.v_0cee)
+#define scroll_margin (xenon2.scroll_margin)
 #define continues_left (xenon2.continues_left)
-#define v_0cf2 (xenon2.v_0cf2)
-#define v_0cf4 (xenon2.v_0cf4)
-#define v_0cf8 (xenon2.v_0cf8)
+#define advice_hints (xenon2.advice_hints)
+#define list_a_prev_saved (xenon2.list_a_prev_saved)
+#define list_a_next_saved (xenon2.list_a_next_saved)
 #define weapon_slots_saved (xenon2.weapon_slots_saved)
 #define level_vars (xenon2.level_vars)
 #define v_0d5a (xenon2.v_0d5a)
 #define l2_gates_left (xenon2.l2_gates_left)
 #define l2_walls_made (xenon2.l2_walls_made)
 #define score_digits (xenon2.score_digits)
-#define v_0d83 (xenon2.v_0d83)
+#define protection (xenon2.protection)
 #define player_dead (xenon2.player_dead)
 #define v_0d85 (xenon2.v_0d85)
 #define unit_live (xenon2.unit_live)
 #define v_0d8b (xenon2.v_0d8b)
 #define v_0d8c (xenon2.v_0d8c)
 #define l2_left_wall_made (xenon2.l2_left_wall_made)
-#define v_0d8e (xenon2.v_0d8e)
+#define l2_right_wall_made (xenon2.l2_right_wall_made)
 #define l2_debris_waves (xenon2.l2_debris_waves)
 #define l2_first_fight_won (xenon2.l2_first_fight_won)
 #define level_obj (xenon2.level_obj)
@@ -1110,7 +1110,7 @@ LAYOUT_ASSERT(level_data_dst, 0x7d120);
 #define anim_2c24 (xenon2.anim_2c24)
 #define mask_empty (xenon2.mask_empty)
 #define mask_full (xenon2.mask_full)
-#define v_30dc (xenon2.v_30dc)
+#define area_damage_kept (xenon2.area_damage_kept)
 #define spawn_def_326c (xenon2.spawn_def_326c)
 #define spawn_kinds (xenon2.spawn_kinds)
 #define enemy_shot_dx (xenon2.enemy_shot_dx)
@@ -1121,7 +1121,7 @@ LAYOUT_ASSERT(level_data_dst, 0x7d120);
 #define pickup_circle_steps (xenon2.pickup_circle_steps)
 #define v_5dd0 (xenon2.v_5dd0)
 #define player_pictures (xenon2.player_pictures)
-#define hide_pictures (xenon2.hide_pictures)
+#define dive_pictures (xenon2.dive_pictures)
 #define gauge_pics (xenon2.gauge_pics)
 #define beam_state (xenon2.beam_state)
 #define beam_heads (xenon2.beam_heads)
@@ -1152,7 +1152,7 @@ LAYOUT_ASSERT(level_data_dst, 0x7d120);
 #define text_chars (xenon2.text_chars)
 #define squeeze_masks (xenon2.squeeze_masks)
 #define title_lines (xenon2.title_lines)
-#define v_8836 (xenon2.v_8836)
+#define ready_text (xenon2.ready_text)
 #define game_over_text (xenon2.game_over_text)
 #define hiscore_values (xenon2.hiscore_values)
 #define hiscore_lines (xenon2.hiscore_lines)
@@ -1239,8 +1239,8 @@ LAYOUT_ASSERT(level_data_dst, 0x7d120);
 #define sample_bank (xenon2.sample_bank)
 #define hit_mask_ptrs (xenon2.hit_mask_ptrs)
 #define hit_mask_data (xenon2.hit_mask_data)
-#define v_3bcac (xenon2.v_3bcac)
-#define v_3ecf4 (xenon2.v_3ecf4)
+#define other_player_level (xenon2.other_player_level)
+#define other_player_block (xenon2.other_player_block)
 #define player (xenon2.player)
 #define obj_pool (xenon2.obj_pool)
 #define shots (xenon2.shots)

@@ -375,7 +375,7 @@ void l4_shot_a(Object *a0)
     a1->flag35 = 0;
     a1->kind = (int16_t)pickup_cycle;
     pickup_cycle++;
-    e = v_043c;
+    e = pickup_groups;
     for (i = 0; i < 8; i++, e += 2)
         if (e[0] == 0) {
             e[0] = (uint16_t)a1->kind;

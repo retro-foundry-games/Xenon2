@@ -222,7 +222,7 @@ void guest_set_stick(uint8_t value)
 static int a6a_set;
 static uint8_t a6a_value;
 
-/* The lockstep gives the byte the original's update_all copied into v_0a6a: the press its interrupt saw lands in a different place of the frame than the port's. */
+/* The lockstep gives the byte the original's update_all copied into fire_press: the press its interrupt saw lands in a different place of the frame than the port's. */
 void guest_set_a6a(uint8_t value)
 {
     a6a_set = 1;

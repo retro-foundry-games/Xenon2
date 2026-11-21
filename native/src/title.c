@@ -553,7 +553,7 @@ l82ae:
     title_phase = 0;
     title_index = 0;
     title_text += 0x28;
-    if (title_text != v_8836)
+    if (title_text != ready_text)
         goto l82ae;
     title_fade_out();
     if (key_pressed)
