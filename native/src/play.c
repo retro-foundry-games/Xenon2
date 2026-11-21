@@ -3,6 +3,8 @@
 #include "amiga/hw.h"
 
 #define OPTION_INDEX(o) ((o)->v30)
+#define SHOT_DX(o) ((o)->v2a)
+#define SHOT_DY(o) ((o)->v2e)
 
 /* inlined at its callers: the pair of list links of an append at the end of a list (before the head) */
 static void list_append(Object *head, Object *o)
@@ -319,8 +321,8 @@ void spawn_shot_object(Object *a0, uint16_t d0, uint16_t d1, uint16_t d2, uint16
     }
     a1 = obj_free_pop();
     list_append(&obj_list[3], a1);
-    a1->v2a = d0;
-    a1->v2e = d1;
+    SHOT_DX(a1) = d0;
+    SHOT_DY(a1) = d1;
     a1->x = (uint16_t)(d2 + player.x);
     a1->y = (uint16_t)(d3 + player.y);
     a1->type = 0x10;
