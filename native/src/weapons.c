@@ -21,6 +21,7 @@
 
 /* the scratch fields of Object, by the kind that uses them */
 #define DRILL_STATE(o) ((o)->v28)
+#define SHOT_PHASE(o) ((o)->v28)
 #define PICKUP_MODE(o) ((o)->v28)
 #define SHOT_DX(o) ((o)->v2a)
 #define SHOT_DY(o) ((o)->v2e)
@@ -413,7 +414,7 @@ static Object *weapon_slot5(Object *a0, uint16_t type, obj_fn update, const uint
     set_anim(n, anim);
     n->x = PLAYER->x;
     n->y = PLAYER->y + dy;
-    n->v28 = 0;
+    SHOT_PHASE(n) = 0;
     n->score = score;
     n->energy = energy;
     n->kind = kind;
@@ -502,7 +503,7 @@ static Object *weapon_side(Object *a0, uint16_t type, obj_fn update, const uint8
     n->x = PLAYER->x + WEAPON_DX(n);
     n->y = PLAYER->y + WEAPON_DY(n);
     if (clear28)
-        n->v28 = 0;
+        SHOT_PHASE(n) = 0;
     n->score = 0;
     n->energy = energy;
     n->kind = kind;
@@ -668,7 +669,7 @@ void weaponA0_update(Object *a0)
         DRILL_DIR(cur) = cnt;
         cur->v30 = 0;
         cur->energy = 0;
-        cur->v28 = 0xd;
+        DRILL_STATE(cur) = 0xd;
     }
 }
 
