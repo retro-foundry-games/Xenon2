@@ -96,4 +96,6 @@ void l3_diver_update(Object *a0); void l3_diver_shot(Object *a0);
 Object *level_collision(int16_t x0, int16_t y0, int16_t x1, int16_t y1, Object *miss);
 void level_event(uint16_t d0, const uint8_t *a1); void level_hook(uint16_t d0, const uint8_t *a1, uint16_t d2);
 void level_scroll(void); void level_swap_hook(void); void level_init(void);
+void l4_event(uint16_t d0, const uint8_t *a1); void l4_hook(uint16_t d0, const uint8_t *a1, uint16_t d2);
+void l4_scroll(void); void l4_init(void); void l4_spawn_tower(const uint8_t *a1);
 #endif
