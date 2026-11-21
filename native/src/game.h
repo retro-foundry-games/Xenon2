@@ -52,7 +52,7 @@ struct Xenon2 {
     int16_t sfx_cmd2;  /* $000418 var */
     int16_t v_041a;  /* $00041A var */
     volatile uint16_t vbl_count;  /* $00041C var */
-    uint16_t v_041e;  /* $00041E var */
+    uint16_t crush_reload;  /* $00041E var */
     uint16_t clip_bottom;  /* $000420 var */
     uint16_t players;  /* $000422 var */
     uint16_t difficulty_x1;  /* $000424 var */
@@ -95,7 +95,7 @@ struct Xenon2 {
     uint8_t key_pressed;  /* $000A01 var */
     uint8_t player_died;  /* $000A02 var */
     uint8_t player_active[4];  /* $000A03 arr */
-    uint8_t v_0a07;  /* $000A07 var */
+    uint8_t boss_dead;  /* $000A07 var */
     uint8_t other_player_object[98];  /* $000A08 arr */
     uint8_t fire_press;  /* $000A6A var */
     uint8_t energy_dirty;  /* $000A6B var */
@@ -570,7 +570,7 @@ LAYOUT_ASSERT(v_0416, 0x416);
 LAYOUT_ASSERT(sfx_cmd2, 0x418);
 LAYOUT_ASSERT(v_041a, 0x41a);
 LAYOUT_ASSERT(vbl_count, 0x41c);
-LAYOUT_ASSERT(v_041e, 0x41e);
+LAYOUT_ASSERT(crush_reload, 0x41e);
 LAYOUT_ASSERT(clip_bottom, 0x420);
 LAYOUT_ASSERT(players, 0x422);
 LAYOUT_ASSERT(difficulty_x1, 0x424);
@@ -612,7 +612,7 @@ LAYOUT_ASSERT(joy_stick, 0xa00);
 LAYOUT_ASSERT(key_pressed, 0xa01);
 LAYOUT_ASSERT(player_died, 0xa02);
 LAYOUT_ASSERT(player_active, 0xa03);
-LAYOUT_ASSERT(v_0a07, 0xa07);
+LAYOUT_ASSERT(boss_dead, 0xa07);
 LAYOUT_ASSERT(other_player_object, 0xa08);
 LAYOUT_ASSERT(fire_press, 0xa6a);
 LAYOUT_ASSERT(energy_dirty, 0xa6b);
@@ -948,7 +948,7 @@ LAYOUT_ASSERT(level_data_dst, 0x7d120);
 #define sfx_cmd2 (xenon2.sfx_cmd2)
 #define v_041a (xenon2.v_041a)
 #define vbl_count (xenon2.vbl_count)
-#define v_041e (xenon2.v_041e)
+#define crush_reload (xenon2.crush_reload)
 #define clip_bottom (xenon2.clip_bottom)
 #define players (xenon2.players)
 #define difficulty_x1 (xenon2.difficulty_x1)
@@ -990,7 +990,7 @@ LAYOUT_ASSERT(level_data_dst, 0x7d120);
 #define key_pressed (xenon2.key_pressed)
 #define player_died (xenon2.player_died)
 #define player_active (xenon2.player_active)
-#define v_0a07 (xenon2.v_0a07)
+#define boss_dead (xenon2.boss_dead)
 #define other_player_object (xenon2.other_player_object)
 #define fire_press (xenon2.fire_press)
 #define energy_dirty (xenon2.energy_dirty)

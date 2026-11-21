@@ -8,7 +8,7 @@ var v_0416 0x416 int16_t
 var sfx_cmd2 0x418 int16_t                           ; pending sound command (-1 none), second slot
 var v_041a 0x41a int16_t
 var vbl_count 0x41c volatile uint16_t              ; counts the vertical blank interrupt (twice each)
-var v_041e 0x41e uint16_t
+var crush_reload 0x41e uint16_t
 var pickup_kind_a 0x45c uint16_t
 var pickup_kind_b 0x45e uint16_t
 var v_09fa 0x9fa uint16_t

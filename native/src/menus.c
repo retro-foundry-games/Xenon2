@@ -461,7 +461,7 @@ void shop_run(void)
     clear_palette();
     shop_main();
     guest_blob_raw(level_number > 1 ? 2 : 0);
-    if (v_0a07 != 0) {
+    if (boss_dead != 0) {
         uint16_t other = cur_player ^ 1;
 
         if (player_active[other] == 0)
@@ -499,7 +499,7 @@ void shop_run(void)
     loading_text[1] = 0x20;
     loading_text[2] = 0x20;
     clear_palette();
-    if (v_0a07 != 0)
+    if (boss_dead != 0)
         return;
     for (i = 0; i < 8; i++) {
         uint32_t v = rd32(&level_palette[i]);

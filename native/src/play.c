@@ -172,7 +172,7 @@ void init_level_state(void)
         a0 += 120;
         a1 += 120;
     }
-    v_0a07 = 0;
+    boss_dead = 0;
     o = obj_pool;
     free_obj = o;
     for (i = 0; i < 158; i++) {
@@ -672,7 +672,7 @@ void switch_player_after_clear(void)
         swap_player_state();
         d0 = cur_player;
         if (player_active[2 + d0]) {
-            v_0a07 = 0xff;
+            boss_dead = 0xff;
             if (level_number == 5)
                 level_over = 0xff;
         }

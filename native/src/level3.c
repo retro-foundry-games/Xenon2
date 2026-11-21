@@ -139,9 +139,9 @@ void l3_scroll(void)
             l3_worm_spawn(0);
         sh_w8(0xd94, 0);
         sh_w8(0xd95, 0);
-        if (B(0xd92) != 0 && B(0xd93) != 0 && v_0a07 == 0) {
+        if (B(0xd92) != 0 && B(0xd93) != 0 && boss_dead == 0) {
             spawn_bonuses(9);
-            v_0a07 = 0xff;
+            boss_dead = 0xff;
         }
     } else if ((int16_t)scroll_max < 0xa30) {
         scroll_max = 0xa30;
