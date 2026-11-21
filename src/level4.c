@@ -1087,7 +1087,7 @@ void l4_bar_update(Object *a0)
     }
     BAR_PHASE(a0) = (int16_t)(BAR_PHASE(a0) + BAR_STEP(a0));
     if (BAR_PHASE(a0) == 6)
-        BAR_STEP(a0) = (int16_t)-a0->v2a;
+        BAR_STEP(a0) = (int16_t)-BAR_STEP(a0);
 box:
     if (a0->type == 0x10c) {
         d0 = a0->x;

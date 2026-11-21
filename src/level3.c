@@ -780,7 +780,7 @@ void l3_part_arm(Object *a0)
     if (ARM_SWING(a0) != 0) {
         ARM_SWING(a0) = (int16_t)(ARM_SWING(a0) + ARM_SWING_STEP(a0));
         if (ARM_SWING(a0) == 0xe)
-            ARM_SWING_STEP(a0) = (int16_t)-a0->v2e;
+            ARM_SWING_STEP(a0) = (int16_t)-ARM_SWING_STEP(a0);
         a1->steps = ARM_SWING(a0);
         bbox_from_frame(a0);
         return;
