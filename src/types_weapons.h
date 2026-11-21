@@ -33,10 +33,10 @@ struct Object {
     int16_t v40;
     int16_t score;               /* 42: score the object gives; for a weapon its power */
     int16_t kind;               /* 44: the item or weapon kind (weapons, pickups, the shop's slots), 0 for most enemies */
-    uint8_t *v46;
+    uint8_t *script;
     const uint8_t *cursor;      /* 4a: the next command of a path script (ObjMove cursor) */
     uint16_t turn[3];           /* 4e: the angle change per step as two words (high, low), then the step (52): ObjMove turn_hi, turn_lo, turn_step */
-    int16_t v54;
+    int16_t steps;
     Object *target;             /* 56 */
     Object *chain;              /* 5a */
     uint8_t v5e_b[2];           /* 5e: a word (high byte first), and two bytes in ObjMove (shot_count, shot_rate): kept as bytes, V5E/SET_V5E for the word */

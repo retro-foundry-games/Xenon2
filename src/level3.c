@@ -260,13 +260,13 @@ void l3_worm_spawn(uint16_t d6)
         a0->big = 0;
         a0->is_part = 0;
         a0->anim_delay = 0;
-        a0->v46 = (uint8_t *)GPTR(path);
+        a0->script = (uint8_t *)GPTR(path);
         a0->cursor = (const uint8_t *)GPTR(path);
         a0->v2c = 0xc0;
         a0->x = x;
         a0->y = y;
         a0->kind = 0;
-        a0->v54 = (int16_t)W(0x54e42);
+        a0->steps = (int16_t)W(0x54e42);
         a0->v30 = (int16_t)d6;
         bbox_from_frame(a0);
         a0->target = head;
@@ -539,7 +539,7 @@ void l3_diver_update(Object *a0)
             s->x = sx;
             s->y = sy;
             s->v28 = 0;
-            s->v54 = (int16_t)W(0x54e54);
+            s->steps = (int16_t)W(0x54e54);
             s->v2a = 3;
             if (a0->x >= 0xa0)
                 s->v2a = 5;
@@ -618,7 +618,7 @@ void l3_spawn_parts(void)
         SET_V5E(a0, 0);
         a0->score = 0x3e8;
         a0->big = -1;
-        a0->v46 = (uint8_t *)GPTR(0x570c2);
+        a0->script = (uint8_t *)GPTR(0x570c2);
         a0->x = (int16_t)(W(0x570c4) - 0x20);
         a0->y = (int16_t)(W(0x570c6) - 0x28);
         a0->x_frac = 0;
@@ -628,7 +628,7 @@ void l3_spawn_parts(void)
         a0->v2c = 0;
         a0->turn[2] = 0;
         a0->kind = 0;
-        a0->v54 = (int16_t)W(0x54e46);
+        a0->steps = (int16_t)W(0x54e46);
         bbox_from_frame(a0);
         a0->target = first;
         a0->chain = 0;
@@ -742,12 +742,12 @@ void l3_part_arm(Object *a0)
         a0->v3e = (int16_t)(a0->v3e + a0->v2e);
         if (a0->v3e == 0xe)
             a0->v2e = (int16_t)-a0->v2e;
-        a1->v54 = a0->v3e;
+        a1->steps = a0->v3e;
         bbox_from_frame(a0);
         return;
     }
     if ((random_next() & 0xff) >= 3) {
-        a1->v54 = 0;
+        a1->steps = 0;
         a1->v2c = 0x40;
         bbox_from_frame(a0);
         return;
@@ -766,7 +766,7 @@ void l3_part_arm(Object *a0)
         a1->turn[0] = (uint16_t)(r >> 16);
         a1->turn[1] = (uint16_t)r;
         a1->turn[2] = 0;
-        a1->v54 = 1;
+        a1->steps = 1;
         if (a0->v30 == 0x60) {
             a1->v2c = (int16_t)((a1->v2c & 0xff00) | (uint8_t)(a1->v2c + 0x40));
             r = -r;
@@ -808,7 +808,7 @@ void l3_part_arm_piece(Object *a0)
     a1->turn[0] = a0->turn[0];
     a1->turn[1] = a0->turn[1];
     a1->turn[2] = a0->turn[2];
-    a1->v54 = a0->v54;
+    a1->steps = a0->steps;
     a0->turn[2] = (uint16_t)s52;
     a0->turn[1] = (uint16_t)s4e1;
     a0->turn[0] = (uint16_t)s4e0;
@@ -824,7 +824,7 @@ void l3_part_arm_tip(Object *a0)
     l3_arm_follow(a0);
     obj_script_run(a0);
     d0 = (uint16_t)(((uint16_t)a0->v2c >> 2) & 0x38);
-    if (a0->v54 == 0xe)
+    if (a0->steps == 0xe)
         sfx_cmd = 0xc;
     d1 = (uint16_t)(frame_tick & 4);
     a0->gfx = GPTR(sh_r32(0x55dac + (uint16_t)(d0 + d1)));
@@ -896,7 +896,7 @@ void l3_gun_update(Object *a0)
         return;
     }
     a2 = a0->type == 0xf0 ? 0x56eda : 0x56ee8;
-    copy2(a0->v46, (const uint8_t *)GPTR(a2 + (uint16_t)(a0->v28 & ~1)));
+    copy2(a0->script, (const uint8_t *)GPTR(a2 + (uint16_t)(a0->v28 & ~1)));
     a0->v28++;
     if (a0->v28 == 8) {
         int16_t x = (int16_t)(a0->x + 8), y = (int16_t)(a0->y - scroll_pos), angle = 0;
@@ -925,7 +925,7 @@ void l3_spawn_gun(const uint8_t *a1)
     a0->hit[2] = 0x3e8;
     a0->gfx = GPTR(a2);
     a0->anim = (const uint8_t *)GPTR(flag ? 0x56ef8 : 0x56ef6);
-    copy2(a0->v46, (const uint8_t *)GPTR(a2));
+    copy2(a0->script, (const uint8_t *)GPTR(a2));
     a0->score = 0x64;
     a0->v3e = 0;
     a0->v40 = 0;
@@ -935,7 +935,7 @@ void l3_spawn_gun(const uint8_t *a1)
 void l3_spawn_boss(const uint8_t *a1)
 {
     Object *a0 = spawn_marker_enemy(0xf8, a1, (void (*)(void))l3_boss_update);
-    uint8_t *m = a0->v46;
+    uint8_t *m = a0->script;
     int i;
 
     a0->fn_draw = (obj_fn)obj_nop_thunk;
@@ -970,7 +970,7 @@ void l3_boss_update(Object *a0)
         if ((uint8_t)random_next() >= B(0x54e57))
             return;
     }
-    m = a0->v46;
+    m = a0->script;
     copy4(m + 0xa2, (const uint8_t *)GPTR(0x569a2 + 4 * (d0 & ~1u)));
     copy4(m + 0xca, (const uint8_t *)GPTR(0x569a2 + 4 * (d0 & ~1u) + 4));
     a0->v28++;
@@ -1020,7 +1020,7 @@ void l3_boss_hit(Object *a0, Object *a1, uint16_t d0)
         return;
     }
     spawn_effect((int16_t)(a1->x + 0x20), (int16_t)(a1->y - scroll_pos + 0x40), big_explosion_anim, draw_bob_masked);
-    m = a1->v46;
+    m = a1->script;
     wr32(m + 0x50, 0);
     wr32(m + 0x54, 0);
     wr32(m + 0x78, 0);
@@ -1073,7 +1073,7 @@ void l3_boss2_update(Object *a0)
             return;
         a0->v5e_b[0] = (uint8_t)(random_next() & 0x3f);
     }
-    m = a0->v46;
+    m = a0->script;
     copy4(m + 2, (const uint8_t *)GPTR(0x56d2c + 4 * (d0 & ~1u)));
     copy4(m + 0x2a, (const uint8_t *)GPTR(0x56d2c + 4 * (d0 & ~1u) + 4));
     a0->v28++;
@@ -1106,7 +1106,7 @@ void l3_boss2_hit(Object *a0, Object *a1, uint16_t d0)
         return;
     }
     spawn_effect((int16_t)(a1->x + 0x20), (int16_t)(a1->y - scroll_pos + 0x10), big_explosion_anim, draw_bob_masked);
-    m = a1->v46;
+    m = a1->script;
     wr32(m, 0);
     wr32(m + 4, 0);
     wr32(m + 0x28, 0);
