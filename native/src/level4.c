@@ -271,7 +271,7 @@ void l4_scroll(void)
         a0->energy = (int16_t)W(0x54e42);
         a0->flag35 = 0xff;
         a0->kind = 0;
-        a0->v42 = 0x12c;
+        a0->score = 0x12c;
         bbox_from_frame(a0);
     }
 }
@@ -370,7 +370,7 @@ void l4_shot_a(Object *a0)
     a1->x = (int16_t)(a0->x + d1);
     a1->y = a0->y;
     a1->v28 = 0;
-    a1->v42 = 0x64;
+    a1->score = 0x64;
     a1->energy = (int16_t)W(0x54e48);
     a1->flag35 = 0;
     a1->kind = (int16_t)pickup_cycle;
@@ -1002,7 +1002,7 @@ void l4_b2_ring_hit(Object *a0, Object *a1, uint16_t d0)
     for (n = 0; n < 10; n++) {
         Object *next = a1->next;
 
-        a1->v42 = 0x64;
+        a1->score = 0x64;
         enemy_killed(a0, a1);
         a1 = next;
     }
@@ -1024,7 +1024,7 @@ void l4_b2_eye_hit(Object *a0, Object *a1, uint16_t d0)
     if (old > d0)
         return;
     sh_w16(0xd6c, (uint16_t)(W(0xd6c) - 1));
-    a1->v42 = 0x12c;
+    a1->score = 0x12c;
     enemy_killed(a0, a1);
 }
 
@@ -1120,7 +1120,7 @@ void l4_spawn_walker(const uint8_t *a1)
     a0->flag35 = -1;
     a0->hit[0] = 0x3e8;
     a0->hit[2] = 0x3e8;
-    a0->v42 = 0xc8;
+    a0->score = 0xc8;
     a0->v30 = (int16_t)rd16(a1 + 6);
     set_anim(a0, a0->type == 0xe0 ? 0x56cf8 : 0x56cd4);
     a0->kind = 0;
@@ -1201,7 +1201,7 @@ void l4_walker_hit(Object *a0, Object *a1, uint16_t d0)
     y = (int16_t)(((int16_t)(a1->y - (int16_t)rd16(a5 + 2)) * 2 + (int16_t)rd16(a5 + 6)) >> 1);
     y = (int16_t)(y - scroll_pos);
     spawn_effect(x, y, big_explosion_anim, draw_bob_masked);
-    player_score += (uint16_t)a1->v42;
+    player_score += (uint16_t)a1->score;
     p = alloc_in(LIST_B);
     p->type = 0x18;
     p->v28 = 7;

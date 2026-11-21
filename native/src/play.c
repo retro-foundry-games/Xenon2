@@ -310,8 +310,8 @@ void spawn_shot_object(Object *a0, uint16_t d0, uint16_t d1, uint16_t d2, uint16
 
     if (sfx_cmd < 0)
         sfx_cmd = 0x89;
-    if (a0->v42 != 0) {
-        if (a0->v42 != 1)
+    if (a0->score != 0) {
+        if (a0->score != 1)
             a2++;
         a2++;
     }
@@ -327,7 +327,7 @@ void spawn_shot_object(Object *a0, uint16_t d0, uint16_t d1, uint16_t d2, uint16
     a1->gfx = *a2;
     a1->anim_delay = 0;
     a1->v28 = 0;
-    a1->v42 = a0->v42;
+    a1->score = a0->score;
 }
 
 /* orig $00644e: empties list 1 of its objects and restores its ends and the block at $C66 from their saved copies */
@@ -533,7 +533,7 @@ void create_queued_objects(void)
         if (d1 != 0) {
             Object *a1 = weapon_select(d1, 0, 0);
 
-            a1->v42 = d2;
+            a1->score = d2;
         }
     }
 }

@@ -218,7 +218,7 @@ void l5_spawn_gunners(const uint8_t *a1)
         d6 = (int16_t)(d6 - (int16_t)W(0x54e44));
         a0->hit[0] = 0x3e8;
         a0->hit[2] = 0x3e8;
-        a0->v42 = 0xc8;
+        a0->score = 0xc8;
         a0->kind = 0;
         a0->v54 = (int16_t)W(0x54e46);
         a0->v5e_b[0] = (uint8_t)(d7 * 0x19);
@@ -267,7 +267,7 @@ void l5_spawn_cannon(const uint8_t *a1)
     a0->flag35 = 0xff;
     a0->hit[0] = 0x3e8;
     a0->hit[2] = 0x3e8;
-    a0->v42 = 0xfa;
+    a0->score = 0xfa;
     if (a0->type != 0x100) {
         a0->x = (int16_t)(a0->x + 0x10);
         a2 = 0x5553a;
@@ -292,7 +292,7 @@ static void spawn_pellet(int16_t d0, int16_t d1, uint16_t d2)
     set_anim(a1, sh_r32(0x557de + 4 * (uint32_t)d2));
     a1->energy = (int16_t)W(0x54e4c);
     a1->flag35 = 0;
-    a1->v42 = 0x64;
+    a1->score = 0x64;
     a1->v28 = (int16_t)(random_next() & 0x1f);
     a1->kind = 0;
     a1->hit[0] = 0x3e8;
@@ -545,7 +545,7 @@ fire:
         set_anim(a1, 0x55f7e);
         a1->energy = (int16_t)W(0x54e52);
         a1->flag35 = 0;
-        a1->v42 = 0x96;
+        a1->score = 0x96;
         a1->v28 = 1;
         a1->kind = 0;
         a1->hit[0] = 0x3e8;
@@ -1333,7 +1333,7 @@ void l5_spawn_gun(const uint8_t *a1)
     a0->gfx = GPTR(a2);
     a0->anim = (const uint8_t *)GPTR(a4);
     wr16(a0->v46, W(a2));
-    a0->v42 = 0x64;
+    a0->score = 0x64;
     a0->v3e = 0;
     a0->v40 = 0;
 }

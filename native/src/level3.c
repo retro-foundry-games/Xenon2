@@ -255,7 +255,7 @@ void l3_worm_spawn(uint16_t d6)
         a0->fn_update = (obj_fn)GFN(sh_r32(t + 2));
         a0->fn_draw = draw_bob_masked;
         a0->gfx = GPTR(sh_r32(t + 6));
-        a0->v42 = 0x7d0;
+        a0->score = 0x7d0;
         SET_V5E(a0, 0);
         a0->flag35 = 0;
         a0->flag34 = 0;
@@ -416,7 +416,7 @@ void l3_spawn_snake(const uint8_t *a1)
         a0->flag34 = 1;
         a0->energy = (int16_t)W(0x54e48);
         a0->flag35 = 0;
-        a0->v42 = 0x190;
+        a0->score = 0x190;
         a0->v28 = 0;
         a0->kind = 0;
         a0->v2a = 0;
@@ -574,7 +574,7 @@ void l3_spawn_diver(const uint8_t *a1)
     a0->fn_hit = (void *)hit_enemy;
     a0->energy = (int16_t)W(0x54e4a);
     a0->flag35 = -1;
-    a0->v42 = 0x12c;
+    a0->score = 0x12c;
     a0->v28 = 0;
     a0->kind = 0;
     bbox_from_frame(a0);
@@ -616,7 +616,7 @@ void l3_spawn_parts(void)
         a0->turn[0] = W(t + 12);
         a0->turn[1] = W(t + 14);
         SET_V5E(a0, 0);
-        a0->v42 = 0x3e8;
+        a0->score = 0x3e8;
         a0->flag35 = -1;
         a0->v46 = (uint8_t *)GPTR(0x570c2);
         a0->x = (int16_t)(W(0x570c4) - 0x20);
@@ -926,7 +926,7 @@ void l3_spawn_gun(const uint8_t *a1)
     a0->gfx = GPTR(a2);
     a0->anim = (const uint8_t *)GPTR(flag ? 0x56ef8 : 0x56ef6);
     copy2(a0->v46, (const uint8_t *)GPTR(a2));
-    a0->v42 = 0x64;
+    a0->score = 0x64;
     a0->v3e = 0;
     a0->v40 = 0;
 }
@@ -1139,7 +1139,7 @@ void l3_spawn_walker(const uint8_t *a1)
     a0->fn_hit = (void *)hit_enemy;
     a0->energy = (int16_t)W(0x54e44);
     a0->flag35 = 0;
-    a0->v42 = 0x64;
+    a0->score = 0x64;
     a0->v28 = 0;
     a0->kind = 0;
     bbox_from_frame(a0);
