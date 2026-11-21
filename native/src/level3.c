@@ -261,11 +261,11 @@ void l3_worm_spawn(uint16_t d6)
         a0->flag34 = 0;
         a0->anim_delay = 0;
         a0->v46 = (uint8_t *)GPTR(path);
-        a0->ptr4a = (const uint8_t *)GPTR(path);
+        a0->cursor = (const uint8_t *)GPTR(path);
         a0->v2c = 0xc0;
         a0->x = x;
         a0->y = y;
-        a0->v44 = 0;
+        a0->kind = 0;
         a0->v54 = (int16_t)W(0x54e42);
         a0->v30 = (int16_t)d6;
         bbox_from_frame(a0);
@@ -418,7 +418,7 @@ void l3_spawn_snake(const uint8_t *a1)
         a0->flag35 = 0;
         a0->v42 = 0x190;
         a0->v28 = 0;
-        a0->v44 = 0;
+        a0->kind = 0;
         a0->v2a = 0;
         d6 = (int16_t)(7 - d7);
         if (flag)
@@ -576,7 +576,7 @@ void l3_spawn_diver(const uint8_t *a1)
     a0->flag35 = -1;
     a0->v42 = 0x12c;
     a0->v28 = 0;
-    a0->v44 = 0;
+    a0->kind = 0;
     bbox_from_frame(a0);
 }
 
@@ -613,8 +613,8 @@ void l3_spawn_parts(void)
         a0->fn_hit = GFN(sh_r32(t + 4));
         a0->v28 = 0;
         set_anim(a0, sh_r32(t + 8));
-        a0->pad4e[0] = W(t + 12);
-        a0->pad4e[1] = W(t + 14);
+        a0->turn[0] = W(t + 12);
+        a0->turn[1] = W(t + 14);
         SET_V5E(a0, 0);
         a0->v42 = 0x3e8;
         a0->flag35 = -1;
@@ -623,11 +623,11 @@ void l3_spawn_parts(void)
         a0->y = (int16_t)(W(0x570c6) - 0x28);
         a0->x_frac = 0;
         a0->y_frac = 0;
-        a0->ptr4a = (const uint8_t *)GPTR(0x570c8);
+        a0->cursor = (const uint8_t *)GPTR(0x570c8);
         a0->v2a = 0;
         a0->v2c = 0;
-        a0->pad4e[2] = 0;
-        a0->v44 = 0;
+        a0->turn[2] = 0;
+        a0->kind = 0;
         a0->v54 = (int16_t)W(0x54e46);
         bbox_from_frame(a0);
         a0->target = first;
@@ -668,8 +668,8 @@ void l3_part_follow(Object *a0)
 
     anim_step(a0);
     a1 = a0->target;
-    a0->x = (int16_t)(a1->x + (int16_t)a0->pad4e[0]);
-    a0->y = (int16_t)(a1->y + (int16_t)a0->pad4e[1]);
+    a0->x = (int16_t)(a1->x + (int16_t)a0->turn[0]);
+    a0->y = (int16_t)(a1->y + (int16_t)a0->turn[1]);
     bbox_from_frame(a0);
 }
 
@@ -763,15 +763,15 @@ void l3_part_arm(Object *a0)
         a1->v2a = 0;
         a1->v2c = (int16_t)d0;
         r = (((random_next() & 0x1f) + 0x20) << 8) << 2;
-        a1->pad4e[0] = (uint16_t)(r >> 16);
-        a1->pad4e[1] = (uint16_t)r;
-        a1->pad4e[2] = 0;
+        a1->turn[0] = (uint16_t)(r >> 16);
+        a1->turn[1] = (uint16_t)r;
+        a1->turn[2] = 0;
         a1->v54 = 1;
         if (a0->v30 == 0x60) {
             a1->v2c = (int16_t)((a1->v2c & 0xff00) | (uint8_t)(a1->v2c + 0x40));
             r = -r;
-            a1->pad4e[0] = (uint16_t)(r >> 16);
-            a1->pad4e[1] = (uint16_t)r;
+            a1->turn[0] = (uint16_t)(r >> 16);
+            a1->turn[1] = (uint16_t)r;
         }
     }
     bbox_from_frame(a0);
@@ -798,20 +798,20 @@ void l3_part_arm_piece(Object *a0)
     l3_arm_follow(a0);
     s2a = a0->v2a;
     s2c = a0->v2c;
-    s4e0 = (int16_t)a0->pad4e[0];
-    s4e1 = (int16_t)a0->pad4e[1];
-    s52 = (int16_t)a0->pad4e[2];
+    s4e0 = (int16_t)a0->turn[0];
+    s4e1 = (int16_t)a0->turn[1];
+    s52 = (int16_t)a0->turn[2];
     obj_script_run(a0);
     a1 = a0->prev;
     a1->v2a = a0->v2a;
     a1->v2c = a0->v2c;
-    a1->pad4e[0] = a0->pad4e[0];
-    a1->pad4e[1] = a0->pad4e[1];
-    a1->pad4e[2] = a0->pad4e[2];
+    a1->turn[0] = a0->turn[0];
+    a1->turn[1] = a0->turn[1];
+    a1->turn[2] = a0->turn[2];
     a1->v54 = a0->v54;
-    a0->pad4e[2] = (uint16_t)s52;
-    a0->pad4e[1] = (uint16_t)s4e1;
-    a0->pad4e[0] = (uint16_t)s4e0;
+    a0->turn[2] = (uint16_t)s52;
+    a0->turn[1] = (uint16_t)s4e1;
+    a0->turn[0] = (uint16_t)s4e0;
     a0->v2c = s2c;
     a0->v2a = s2a;
 }
@@ -1141,7 +1141,7 @@ void l3_spawn_walker(const uint8_t *a1)
     a0->flag35 = 0;
     a0->v42 = 0x64;
     a0->v28 = 0;
-    a0->v44 = 0;
+    a0->kind = 0;
     bbox_from_frame(a0);
 }
 

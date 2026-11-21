@@ -173,7 +173,7 @@ void l2_hook(uint16_t d0, const uint8_t *a1, uint16_t d2)
         a0->v28 = -1;
         a0->v2a = (int16_t)(rd16(a1 + 4) << 4);
         a0->v30 = a0->v2a;
-        a0->v44 = 0;
+        a0->kind = 0;
         bbox_from_frame(a0);
         return;
     case 4:
@@ -253,7 +253,7 @@ void l2_init(void)
     a0->v2e = 0;
     a0->v3e = 0;
     a0->v30 = 0;
-    a0->v44 = 0;
+    a0->kind = 0;
     for (d7 = 2; d7 >= 0; d7--) {
         uint16_t x = gate_at[2 - d7][0], y = gate_at[2 - d7][1];
 
@@ -459,7 +459,7 @@ void l2_marker_f8_update(Object *a0)
         s->flag35 = (int8_t)0xff;
         s->v42 = 0x12c;
         s->v28 = 0;
-        s->v44 = 0;
+        s->kind = 0;
         bbox_from_frame(s);
     }
 }
@@ -513,7 +513,7 @@ void l2_marker_fc_update(Object *a0)
         s->flag35 = 0;
         s->v42 = 0x96;
         s->v28 = 0;
-        s->v44 = 0;
+        s->kind = 0;
         bbox_from_frame(s);
     }
 }
@@ -674,7 +674,7 @@ void l2_roamer_update(Object *a0)
         s->flag35 = 0;
         SET_V5E(s, 0);
         s->v42 = 0x1e;
-        s->v44 = 0;
+        s->kind = 0;
         set_anim(s, sh_r32(0x563c0 + ((uint16_t)a0->v2a << 2)));
         s->x = a0->x;
         s->y = a0->y;
@@ -723,7 +723,7 @@ void l2_front_update(Object *a0)
         s->flag35 = 0;
         s->v42 = 0x14;
         s->v28 = (int16_t)(random_next() & 0x1f);
-        s->v44 = 0;
+        s->kind = 0;
         bbox_from_frame(s);
     }
     kill_thunk(a0);
@@ -904,10 +904,10 @@ static void l2_debris_wall(uint16_t d6)
         a0->flag35 = 0;
         a0->anim_delay = 0;
         a0->v46 = (uint8_t *)a1;
-        a0->ptr4a = a1;
+        a0->cursor = a1;
         a0->x = (int16_t)d0;
         a0->y = (int16_t)d1;
-        a0->v44 = 0;
+        a0->kind = 0;
         a0->v28 = (int16_t)d2;
         a0->v54 = (int16_t)W(0x54e54);
         a0->v30 = (int16_t)d6;
@@ -972,10 +972,10 @@ void l2_piece_update(Object *a0)
         if (a0->v28 >= 0)
             a0->fn_draw = draw_bob_behind_map;
     } else if (a0->fn_draw == draw_bob_behind_map) {
-        a1 = a0->ptr4a;
+        a1 = a0->cursor;
         if (rd16(a1) != 0 && a1 - 10 != a0->v46)
             a0->fn_draw = draw_bob_masked;
-    } else if (rd16(a0->ptr4a) == 0) {
+    } else if (rd16(a0->cursor) == 0) {
         a0->fn_draw = draw_bob_behind_map;
     }
     d2 = (uint16_t)(((uint16_t)(a0->v2c + 0x10) >> 3) & 0x1c);

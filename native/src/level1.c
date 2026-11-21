@@ -286,7 +286,7 @@ void level1_hook(uint16_t d0, const uint8_t *a1, uint16_t d2)
         a0->v28 = -1;
         a0->v2a = (int16_t)(rd16(a1 + 6) << 4);
         a0->v30 = a0->v2a;
-        a0->v44 = 0;
+        a0->kind = 0;
         bbox_from_frame(a0);
         return;
     }
@@ -375,9 +375,9 @@ void level1_boss_update(Object *a0)
         }
         a0->v2a = 0;
         a0->v2c = 0;
-        a0->pad4e[0] = 0;
-        a0->pad4e[1] = 0;
-        a0->pad4e[2] = 0;
+        a0->turn[0] = 0;
+        a0->turn[1] = 0;
+        a0->turn[2] = 0;
     }
     if ((int16_t)v_0cea <= 0x1c0)
         v_0cea = 0x1c0;
@@ -415,13 +415,13 @@ void level1_boss_update(Object *a0)
     if (d0 & 0x80)
         d0 = (~d0) & 0xff;
     l = (int32_t)(int16_t)(d0 - 0x40) << 10;
-    a0->pad4e[0] = (uint16_t)(l >> 16);
-    a0->pad4e[1] = (uint16_t)l;
+    a0->turn[0] = (uint16_t)(l >> 16);
+    a0->turn[1] = (uint16_t)l;
     d0 = (int16_t)((v_0cdc + 0xa0) & 0x1ff);
     if (d0 & 0x100)
         d0 ^= 0x1ff;
     d0 -= 0x80;
-    a0->pad4e[2] = (uint16_t)(d0 << 5);
+    a0->turn[2] = (uint16_t)(d0 << 5);
     d0 = (int16_t)(a0->v2e + a0->y);
     if (d0 < 0x10) {
         d0 = 0x10;
@@ -594,7 +594,7 @@ void level1_spawn_unit(uint16_t d6)
         ((ObjMove *)a0)->cursor = s->path;
         a0->x = x;
         a0->y = y;
-        a0->v44 = 0;
+        a0->kind = 0;
         a0->v28 = d2;
         a0->v54 = 4;
         a0->v30 = (int16_t)d6;
@@ -779,9 +779,9 @@ void level1_boss_part_update(Object *a0)
     a0->y_frac = a1->y_frac;
     a0->v2a = a1->v2a;
     a0->v2c = a1->v2c;
-    a0->pad4e[0] = a1->pad4e[0];
-    a0->pad4e[1] = a1->pad4e[1];
-    a0->pad4e[2] = a1->pad4e[2];
+    a0->turn[0] = a1->turn[0];
+    a0->turn[1] = a1->turn[1];
+    a0->turn[2] = a1->turn[2];
     a0->v54 = a1->v54;
     if (a1->type == 0x50) {
         a0->x = 0xa0;

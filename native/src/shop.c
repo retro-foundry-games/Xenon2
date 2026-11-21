@@ -718,7 +718,7 @@ int32_t shop_can_buy(void)
     flags = sh_r8(SH_TAB_FLAGS + (uint16_t)(kind - 1));
     if (flags & 1) {
         a1 = v_0c66[0].obj;
-        if (kind != (uint16_t)a1->v44) {
+        if (kind != (uint16_t)a1->kind) {
             if (v_0c66[0].type == 0 || v_0c66[0].type == 0x94)
                 return -1;
             return 0;
@@ -732,7 +732,7 @@ int32_t shop_can_buy(void)
         if (v_0c66[5].type == 0)
             return -1;
         a1 = v_0c66[5].obj;
-        if (kind != (uint16_t)a1->v44)
+        if (kind != (uint16_t)a1->kind)
             return 0;
     } else if (flags & 0x10) {
         if (v_0c66[6].type == 0 || v_0c66[5].type == 0)
@@ -742,7 +742,7 @@ int32_t shop_can_buy(void)
         if (v_0c66[6].type == 0)
             return -1;
         a1 = v_0c66[6].obj;
-        if (kind != (uint16_t)a1->v44)
+        if (kind != (uint16_t)a1->kind)
             return 0;
     } else {
         return -1;
@@ -953,7 +953,7 @@ void shop_sell_list(void)
 
     while (a1->type != 0) {
         if (a1->type != 0x94) {
-            uint16_t d0 = (uint16_t)a1->v44;
+            uint16_t d0 = (uint16_t)a1->kind;
 
             sh_w16(a0 + 6, d0);
             sh_w32(a0 + 0xc, GADDR(a1));

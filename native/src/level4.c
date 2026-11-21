@@ -56,13 +56,13 @@ static int add_carry(uint8_t *b, uint8_t add)
 
 static uint32_t get4e(const Object *o)
 {
-    return ((uint32_t)o->pad4e[0] << 16) | o->pad4e[1];
+    return ((uint32_t)o->turn[0] << 16) | o->turn[1];
 }
 
 static void put4e(Object *o, uint32_t v)
 {
-    o->pad4e[0] = (uint16_t)(v >> 16);
-    o->pad4e[1] = (uint16_t)v;
+    o->turn[0] = (uint16_t)(v >> 16);
+    o->turn[1] = (uint16_t)v;
 }
 
 /* the player's direction from the object (the eight of direction8), the offsets are the original's */
@@ -270,7 +270,7 @@ void l4_scroll(void)
         a0->v28 = 0;
         a0->energy = (int16_t)W(0x54e42);
         a0->flag35 = 0xff;
-        a0->v44 = 0;
+        a0->kind = 0;
         a0->v42 = 0x12c;
         bbox_from_frame(a0);
     }
@@ -366,19 +366,19 @@ void l4_shot_a(Object *a0)
     a1->fn_hit = (void *)hit_enemy;
     a1->v2a = 0;
     a1->v2c = d0;
-    a1->pad4e[0] = a1->pad4e[1] = a1->pad4e[2] = 0;
+    a1->turn[0] = a1->turn[1] = a1->turn[2] = 0;
     a1->x = (int16_t)(a0->x + d1);
     a1->y = a0->y;
     a1->v28 = 0;
     a1->v42 = 0x64;
     a1->energy = (int16_t)W(0x54e48);
     a1->flag35 = 0;
-    a1->v44 = (int16_t)v_0cec;
+    a1->kind = (int16_t)v_0cec;
     v_0cec++;
     e = v_043c;
     for (i = 0; i < 8; i++, e += 2)
         if (e[0] == 0) {
-            e[0] = (uint16_t)a1->v44;
+            e[0] = (uint16_t)a1->kind;
             e[1] = 1;
             break;
         }
@@ -388,7 +388,7 @@ void l4_shot_a(Object *a0)
     anim = sh_r32(0x55574 + kind);
     set_anim(a1, anim);
     a1->v46 = (uint8_t *)GPTR(cells);
-    a1->ptr4a = (const uint8_t *)GPTR(cells);
+    a1->cursor = (const uint8_t *)GPTR(cells);
     a1->v54 = (int16_t)W(0x54e4a);
     SET_V5E(a1, 0);
 }
@@ -411,7 +411,7 @@ void l4_enemy_f8(Object *a0)
             d0 = (uint16_t)(d0 + 4);
         table = sh_r32(0x55714 + d0);
         a0->v46 = (uint8_t *)GPTR(table);
-        a0->ptr4a = (const uint8_t *)GPTR(table);
+        a0->cursor = (const uint8_t *)GPTR(table);
         a0->v28 = 0;
     }
     d0 = (uint16_t)((((uint16_t)a0->v2c + 0x10) >> 3) & 0x1c);
@@ -474,7 +474,7 @@ void l4_spawn_boss1(void)
         a0->v28 = 0;
         a0->v2a = 0;
         a0->v2c = 0;
-        a0->pad4e[0] = a0->pad4e[1] = a0->pad4e[2] = 0;
+        a0->turn[0] = a0->turn[1] = a0->turn[2] = 0;
         a0->v54 = 3;
         a0->energy = (int16_t)W(a1 + 16);
         a0->flag35 = -1;
@@ -672,7 +672,7 @@ static void l4_pose(Object *a0)
     d0 = (uint16_t)((v_0cdc + 0xa0) & 0x1ff);
     if (d0 & 0x100)
         d0 ^= 0x1ff;
-    a0->pad4e[2] = (uint16_t)((d0 - 0x80) << 2);
+    a0->turn[2] = (uint16_t)((d0 - 0x80) << 2);
     bbox_from_frame(a0);
 }
 
@@ -755,7 +755,7 @@ void l4_spawn_boss2(const uint8_t *a1_record, uint16_t d2)
         a0->v28 = 0;
         a0->v2a = 0;
         a0->v2c = (int16_t)W(a1 + 16);
-        a0->pad4e[0] = a0->pad4e[1] = a0->pad4e[2] = 0;
+        a0->turn[0] = a0->turn[1] = a0->turn[2] = 0;
         a0->v54 = 3;
         a0->energy = B(a1 + 18);
         a0->flag35 = (int8_t)B(a1 + 19);
@@ -777,9 +777,9 @@ static void follow_chain(Object *a0)
     a0->y_frac = a1->y_frac;
     a0->v2a = a1->v2a;
     a0->v2c = a1->v2c;
-    a0->pad4e[0] = a1->pad4e[0];
-    a0->pad4e[1] = a1->pad4e[1];
-    a0->pad4e[2] = a1->pad4e[2];
+    a0->turn[0] = a1->turn[0];
+    a0->turn[1] = a1->turn[1];
+    a0->turn[2] = a1->turn[2];
     a0->v54 = a1->v54;
     a0->v28 = 0x64;
     obj_script_run(a0);
@@ -808,7 +808,7 @@ void l4_b2_head(Object *a0)
         d0 = (uint16_t)((d0 & 0xff00) | ((d0 - 0x40) & 0xff));
         a0->v2a = 0;
         a0->v2c = (int16_t)d0;
-        a0->pad4e[0] = a0->pad4e[1] = a0->pad4e[2] = 0;
+        a0->turn[0] = a0->turn[1] = a0->turn[2] = 0;
         if ((uint8_t)random_next() >= B(0x54e59)) {
             head_picture(a0);
             return;
@@ -827,7 +827,7 @@ void l4_b2_head(Object *a0)
             uint32_t r = ((random_next() & 0x1f) + 0x20) << 10;
 
             put4e(a0, r);
-            a0->pad4e[2] = 0;
+            a0->turn[2] = 0;
         }
         if (a0->v2c < 0x20 || !(a0->v2c < 0xa0)) {
             a0->v2c = (int16_t)((a0->v2c & 0xff00) | ((a0->v2c + 0x40) & 0xff));
@@ -1123,7 +1123,7 @@ void l4_spawn_walker(const uint8_t *a1)
     a0->v42 = 0xc8;
     a0->v30 = (int16_t)rd16(a1 + 6);
     set_anim(a0, a0->type == 0xe0 ? 0x56cf8 : 0x56cd4);
-    a0->v44 = 0;
+    a0->kind = 0;
     SET_V5E(a0, W(0x54e7c));
     a0->v3e = a0->x;
     a0->v40 = a0->y;

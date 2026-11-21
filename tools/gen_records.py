@@ -193,4 +193,5 @@ def main():
     if os.path.exists(old): os.remove(old)
     print(len(names), 'record types,', len(funcs), 'functions in the code table')
 
-main()
+if __name__ == '__main__':
+    main()
