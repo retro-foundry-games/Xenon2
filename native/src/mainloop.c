@@ -320,7 +320,7 @@ static void music_restart_if_enabled(void)
 {
     if (music_switch) {
         music_start(0);
-        music_flag_1a584 = 0x30;
+        music_volume_hi = 0x30;
     }
 }
 

@@ -397,7 +397,7 @@ struct Xenon2 {
     uint8_t music_base[4];  /* $019F9E arr */
     PAD(1504)
     uint16_t music_tempo_mul;  /* $01A582 var */
-    uint8_t music_flag_1a584;  /* $01A584 var */
+    uint8_t music_volume_hi;  /* $01A584 var */
     uint8_t music_volume_lo;  /* $01A585 var */
     uint8_t music_rate;  /* $01A586 var */
     uint8_t music_rate_copy;  /* $01A587 var */
@@ -471,8 +471,8 @@ struct Xenon2 {
     uint16_t shop_money_early;  /* $054E3C var */
     uint16_t shop_money_late;  /* $054E3E var */
     const uint8_t l1_shot_params[24];  /* $054E40 tab */
-    const uint16_t level_54e58[2];  /* $054E58 tab */
-    const uint16_t level_54e5c[3];  /* $054E5C tab */
+    const uint16_t l1_boss_energy[2];  /* $054E58 tab */
+    const uint16_t l1_turret_energy[3];  /* $054E5C tab */
     const uint16_t l1_boss_steps[1];  /* $054E62 tab */
     PAD(2)
     const uint8_t l1_formation_1[2];  /* $054E66 tab */
@@ -523,26 +523,26 @@ struct Xenon2 {
     const uint8_t l1_turret_b_anim_e8[8];  /* $0556CC tab */
     const uint8_t l1_turret_b_anim_ec[8];  /* $0556D4 tab */
     PAD(454)
-    const uint16_t level_558a2[80];  /* $0558A2 tab */
+    const uint16_t l1_level_patches[80];  /* $0558A2 tab */
     PAD(402)
     const uint8_t l1_turret_c_cells_dc[8];  /* $055AD4 tab */
     const uint8_t l1_turret_c_cells_d8[8];  /* $055ADC tab */
     PAD(514)
-    const uint16_t level_55ce6[1];  /* $055CE6 tab */
+    const uint16_t l1_unit_pieces_less_one[1];  /* $055CE6 tab */
     struct LevelSeg level_segs[11];  /* $055CE8 arr */
     struct LevelSpawn level_spawns[16];  /* $055D6C arr */
     PAD(840)
-    uint8_t * level_56174[16];  /* $056174 arr */
+    uint8_t * l1_piece_pictures[16];  /* $056174 arr */
     PAD(470)
     uint8_t * l1_boss_part_pictures[8];  /* $05638A arr */
     PAD(1042)
     const uint8_t l1_boss_grid[2];  /* $0567BC tab */
     PAD(60)
-    uint8_t level_567fa[20];  /* $0567FA arr */
+    uint8_t l1_boss_draw_table[20];  /* $0567FA arr */
     PAD(2)
-    const uint8_t level_56810[48];  /* $056810 tab */
+    const uint8_t l1_boss_draw_sources[48];  /* $056810 tab */
     PAD(13800)
-    const uint8_t level_59e28[2];  /* $059E28 tab */
+    const uint8_t l1_boss_part_picture[2];  /* $059E28 tab */
     PAD(8890)
     const uint8_t l1_eyes_a[2];  /* $05C0E4 tab */
     PAD(174)
@@ -826,7 +826,7 @@ LAYOUT_ASSERT(digit_gfx, 0x1981e);
 LAYOUT_ASSERT(panel_words, 0x19a9e);
 LAYOUT_ASSERT(music_base, 0x19f9e);
 LAYOUT_ASSERT(music_tempo_mul, 0x1a582);
-LAYOUT_ASSERT(music_flag_1a584, 0x1a584);
+LAYOUT_ASSERT(music_volume_hi, 0x1a584);
 LAYOUT_ASSERT(music_volume_lo, 0x1a585);
 LAYOUT_ASSERT(music_rate, 0x1a586);
 LAYOUT_ASSERT(music_rate_copy, 0x1a587);
@@ -885,8 +885,8 @@ LAYOUT_ASSERT(level_events_a, 0x54e38);
 LAYOUT_ASSERT(shop_money_early, 0x54e3c);
 LAYOUT_ASSERT(shop_money_late, 0x54e3e);
 LAYOUT_ASSERT(l1_shot_params, 0x54e40);
-LAYOUT_ASSERT(level_54e58, 0x54e58);
-LAYOUT_ASSERT(level_54e5c, 0x54e5c);
+LAYOUT_ASSERT(l1_boss_energy, 0x54e58);
+LAYOUT_ASSERT(l1_turret_energy, 0x54e5c);
 LAYOUT_ASSERT(l1_boss_steps, 0x54e62);
 LAYOUT_ASSERT(l1_formation_1, 0x54e66);
 LAYOUT_ASSERT(l1_formation_2, 0x54e80);
@@ -916,18 +916,18 @@ LAYOUT_ASSERT(l1_turret_b_cells_ec, 0x5568c);
 LAYOUT_ASSERT(l1_turret_b_cells_e8, 0x556ac);
 LAYOUT_ASSERT(l1_turret_b_anim_e8, 0x556cc);
 LAYOUT_ASSERT(l1_turret_b_anim_ec, 0x556d4);
-LAYOUT_ASSERT(level_558a2, 0x558a2);
+LAYOUT_ASSERT(l1_level_patches, 0x558a2);
 LAYOUT_ASSERT(l1_turret_c_cells_dc, 0x55ad4);
 LAYOUT_ASSERT(l1_turret_c_cells_d8, 0x55adc);
-LAYOUT_ASSERT(level_55ce6, 0x55ce6);
+LAYOUT_ASSERT(l1_unit_pieces_less_one, 0x55ce6);
 LAYOUT_ASSERT(level_segs, 0x55ce8);
 LAYOUT_ASSERT(level_spawns, 0x55d6c);
-LAYOUT_ASSERT(level_56174, 0x56174);
+LAYOUT_ASSERT(l1_piece_pictures, 0x56174);
 LAYOUT_ASSERT(l1_boss_part_pictures, 0x5638a);
 LAYOUT_ASSERT(l1_boss_grid, 0x567bc);
-LAYOUT_ASSERT(level_567fa, 0x567fa);
-LAYOUT_ASSERT(level_56810, 0x56810);
-LAYOUT_ASSERT(level_59e28, 0x59e28);
+LAYOUT_ASSERT(l1_boss_draw_table, 0x567fa);
+LAYOUT_ASSERT(l1_boss_draw_sources, 0x56810);
+LAYOUT_ASSERT(l1_boss_part_picture, 0x59e28);
 LAYOUT_ASSERT(l1_eyes_a, 0x5c0e4);
 LAYOUT_ASSERT(l1_eyes_b, 0x5c194);
 LAYOUT_ASSERT(l1_eyes_c, 0x5c244);
@@ -1204,7 +1204,7 @@ LAYOUT_ASSERT(level_data_dst, 0x7d120);
 #define panel_words (xenon2.panel_words)
 #define music_base (xenon2.music_base)
 #define music_tempo_mul (xenon2.music_tempo_mul)
-#define music_flag_1a584 (xenon2.music_flag_1a584)
+#define music_volume_hi (xenon2.music_volume_hi)
 #define music_volume_lo (xenon2.music_volume_lo)
 #define music_rate (xenon2.music_rate)
 #define music_rate_copy (xenon2.music_rate_copy)
@@ -1263,8 +1263,8 @@ LAYOUT_ASSERT(level_data_dst, 0x7d120);
 #define shop_money_early (xenon2.shop_money_early)
 #define shop_money_late (xenon2.shop_money_late)
 #define l1_shot_params (xenon2.l1_shot_params)
-#define level_54e58 (xenon2.level_54e58)
-#define level_54e5c (xenon2.level_54e5c)
+#define l1_boss_energy (xenon2.l1_boss_energy)
+#define l1_turret_energy (xenon2.l1_turret_energy)
 #define l1_boss_steps (xenon2.l1_boss_steps)
 #define l1_formation_1 (xenon2.l1_formation_1)
 #define l1_formation_2 (xenon2.l1_formation_2)
@@ -1294,18 +1294,18 @@ LAYOUT_ASSERT(level_data_dst, 0x7d120);
 #define l1_turret_b_cells_e8 (xenon2.l1_turret_b_cells_e8)
 #define l1_turret_b_anim_e8 (xenon2.l1_turret_b_anim_e8)
 #define l1_turret_b_anim_ec (xenon2.l1_turret_b_anim_ec)
-#define level_558a2 (xenon2.level_558a2)
+#define l1_level_patches (xenon2.l1_level_patches)
 #define l1_turret_c_cells_dc (xenon2.l1_turret_c_cells_dc)
 #define l1_turret_c_cells_d8 (xenon2.l1_turret_c_cells_d8)
-#define level_55ce6 (xenon2.level_55ce6)
+#define l1_unit_pieces_less_one (xenon2.l1_unit_pieces_less_one)
 #define level_segs (xenon2.level_segs)
 #define level_spawns (xenon2.level_spawns)
-#define level_56174 (xenon2.level_56174)
+#define l1_piece_pictures (xenon2.l1_piece_pictures)
 #define l1_boss_part_pictures (xenon2.l1_boss_part_pictures)
 #define l1_boss_grid (xenon2.l1_boss_grid)
-#define level_567fa (xenon2.level_567fa)
-#define level_56810 (xenon2.level_56810)
-#define level_59e28 (xenon2.level_59e28)
+#define l1_boss_draw_table (xenon2.l1_boss_draw_table)
+#define l1_boss_draw_sources (xenon2.l1_boss_draw_sources)
+#define l1_boss_part_picture (xenon2.l1_boss_part_picture)
 #define l1_eyes_a (xenon2.l1_eyes_a)
 #define l1_eyes_b (xenon2.l1_eyes_b)
 #define l1_eyes_c (xenon2.l1_eyes_c)
