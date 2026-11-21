@@ -5,6 +5,9 @@
 #include "weapons.h"
 #include "shop.h"
 #include "game_all.h"
+#define LAUNCHER_STEP(o)  ((o)->v28)
+#define LAUNCHER_POS(o)   ((o)->v30)
+#define LAUNCHER_RANGE(o) ((o)->v2a)
 #define L2_BOSS_STEP(o)   ((o)->v2a)
 #define L2_BOSS_FRAMES(o) ((o)->v2e)
 
@@ -179,9 +182,9 @@ void l2_hook(uint16_t d0, const uint8_t *a1, uint16_t d2)
         a0->score = 0xc8;
         a0->x = (int16_t)(rd16(a1 + 8) - 8);
         a0->y = (int16_t)(rd16(a1 + 10) - 8 - scroll_pos);
-        a0->v28 = -1;
-        a0->v2a = (int16_t)(rd16(a1 + 4) << 4);
-        a0->v30 = a0->v2a;
+        LAUNCHER_STEP(a0) = -1;
+        LAUNCHER_RANGE(a0) = (int16_t)(rd16(a1 + 4) << 4);
+        LAUNCHER_POS(a0) = a0->v2a;
         a0->kind = 0;
         bbox_from_frame(a0);
         return;
@@ -258,9 +261,9 @@ void l2_init(void)
     a0->screen_fixed = -1;
     a0->y = 0x60;
     a0->energy = (int16_t)W(0x54e5e);
-    a0->v28 = -1;
-    a0->v2e = 0;
-    a0->v3e = 0;
+    L2_BOSS_WAIT(a0) = -1;
+    L2_BOSS_FRAMES(a0) = 0;
+    L2_BOSS_FLASH(a0) = 0;
     a0->v30 = 0;
     a0->kind = 0;
     for (d7 = 2; d7 >= 0; d7--) {
@@ -992,7 +995,7 @@ void l2_piece_update(Object *a0)
         return;
     }
     a0->y = (int16_t)(a0->y + scroll_speed);
-    (&l2_left_wall_made)[(uint16_t)a0->v30] = 0xff;
+    (&l2_left_wall_made)[(uint16_t)GATE_NUMBER(a0)] = 0xff;
     enemy_update_no_anim(a0);
     if (a0->type == 4) {
         uint16_t *c = &level_vars[(uint16_t)a0->v2e - 1];

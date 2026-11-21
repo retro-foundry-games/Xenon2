@@ -3,6 +3,7 @@
 #include "shop.h"
 #include "game_all.h"
 #include <string.h>
+#define BAR_STEP(o) ((o)->v2a)
 
 /* the scratch fields of Object, by the kind that uses them */
 #define L4_ANGLE_HI(o) ((o)->v2a)
@@ -1079,14 +1080,14 @@ void l4_bar_update(Object *a0)
     }
     anim_step(a0);
     if (BAR_PHASE(a0) == 0) {
-        a0->v2a = 1;
+        BAR_STEP(a0) = 1;
         if (!add_carry(&a0->v5e_b[0], B(0x54e5f)))
             goto box;
         a0->v5e_b[0] = (uint8_t)(random_next() & 0x3f);
     }
-    BAR_PHASE(a0) = (int16_t)(BAR_PHASE(a0) + a0->v2a);
+    BAR_PHASE(a0) = (int16_t)(BAR_PHASE(a0) + BAR_STEP(a0));
     if (BAR_PHASE(a0) == 6)
-        a0->v2a = (int16_t)-a0->v2a;
+        BAR_STEP(a0) = (int16_t)-a0->v2a;
 box:
     if (a0->type == 0x10c) {
         d0 = a0->x;
