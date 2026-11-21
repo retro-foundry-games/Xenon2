@@ -176,34 +176,6 @@ void host_game_start(void)
         fprintf(stderr, "xenon2-sdl: the game's entry (game_entry) is not there\n");
 }
 
-/* a few variables of the game, for the headless tests (--status): the frame count, the level's scroll, the score digits, the list head of the objects */
-void host_game_status(void)
-{
-    printf("game: vbl %u scroll %04x cur_player %u v_0430 %04x v_0d84 %02x v_0a02 %02x v_0e04 %u objects at %08x score digits", (unsigned)xenon.vbl_count, (unsigned)xenon.v_0cd0, (unsigned)xenon.cur_player, (unsigned)xenon.v_0430, (unsigned)xenon.v_0d84, (unsigned)xenon.v_0a02, (unsigned)xenon.v_0e04,
-           (unsigned)(uintptr_t)xenon.obj_list[0].next);
-    for (int i = 0; i < 7; i++)
-        printf(" %u", (unsigned)xenon.v_0d7c[i]);
-    printf("  lists:");
-    for (int l = 0; l < 5; l++) {
-        int n = 0;
-        Object *o = xenon.obj_list[l].next;
-
-        while (o && o != &xenon.obj_list[l] && n < 500) {
-            n++;
-            o = o->next;
-        }
-        printf(" %d", n);
-    }
-    printf("  enemies (x,y,type):");
-    {
-        Object *o = xenon.obj_list[2].next;
-
-        for (int n = 0; o && o != &xenon.obj_list[2] && n < 4; n++, o = o->next)
-            printf(" (%d,%d,%x)", (int)(int16_t)o->x, (int)(int16_t)o->y, (unsigned)o->type);
-    }
-    printf("\n");
-}
-
 /* ---- the memory as the original had it, for comparing the port with the original (tools/compare_state.py) ------------------------------------------------------------
  * The whole block (raw buffers keep their bytes) with every named member converted back to the original's byte order and addresses. */
 extern void guest_unswap_record(const char *type, void *record);
@@ -323,25 +295,6 @@ void host_export_ram_buf(uint8_t *ram)   /* ram: 0x80000 bytes */
             }
         }
     }
-}
-
-int host_export_ram(const char *path)
-{
-    uint8_t *ram = malloc(sizeof xenon);
-    FILE *f;
-
-    if (!ram)
-        return -1;
-    host_export_ram_buf(ram);
-    f = fopen(path, "wb");
-    if (!f) {
-        free(ram);
-        return -1;
-    }
-    fwrite(ram, 1, 0x80000, f);   /* the 512 KB the original had */
-    fclose(f);
-    free(ram);
-    return 0;
 }
 
 /* the memory as the original had it (big endian, 0x80000 bytes) into the block: the raw bytes, then the named members converted (the dev build starts the port from the

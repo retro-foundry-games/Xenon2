@@ -5,7 +5,7 @@
  * keys are read, the clock is waited for, and the vertical blank interrupt is raised: if the game enabled it, its handler (the C function in the
  * vector table) is called right here.
  *
- *   xenon2-sdl [--disks FOLDER] [--scale N] [--headless --frames N [--hash] [--dump-every N --dump FOLDER]]
+ *   xenon2-sdl [--disks FOLDER] [--scale N] [--renderer NAME]
  */
 #include <SDL3/SDL.h>
 #include <stdio.h>
@@ -20,17 +20,13 @@ static SDL_Window *window;
 static SDL_Renderer *renderer;
 static SDL_Texture *texture;
 static SDL_AudioStream *audio;
-static int probe_render_at = -1;
 static const char *renderer_name;   /* --renderer NAME: software, opengl, vulkan, ... (default: SDL chooses) */
-static int headless, max_frames = -1, scale = 3, want_hash, dump_every, status_at = -1, status_every;
-static const char *dump_folder, *export_path;
-static unsigned export_vbl;
+static int headless, scale = 3;
 static long frames;
 static uint32_t picture[DISPLAY_W * DISPLAY_H];
 static int quitting;
 static uint16_t dmacon_state, intena_state, intreq_state;
 static int joy_up, joy_down, joy_left, joy_right, joy_fire;
-static const char *joy_script;   /* --joy F:dirs,F:dirs (dirs joined by +, or none): the stick at frame F (tests) */
 
 /* ---- the registers with set/clear semantics (hw.h SETCLR_WRITE) ----------------------------------------------------------------------------------------------- */
 static uint16_t apply(uint16_t state, uint16_t value)
@@ -202,33 +198,6 @@ static void poll_events(void)
 }
 
 /* ---- the frame ------------------------------------------------------------------------------------------------------------------------------------------------------ */
-static uint32_t hash_of(const uint32_t *p, int n)
-{
-    uint32_t h = 2166136261u;
-
-    for (int i = 0; i < n; i++)
-        h = (h ^ p[i]) * 16777619u;
-    return h;
-}
-
-static void dump_picture(long n)
-{
-    char path[1024];
-    FILE *f;
-
-    snprintf(path, sizeof path, "%s/xenon2-%06ld.ppm", dump_folder, n);
-    f = fopen(path, "wb");
-    if (!f)
-        return;
-    fprintf(f, "P6\n%d %d\n255\n", DISPLAY_W, DISPLAY_H);
-    for (int i = 0; i < DISPLAY_W * DISPLAY_H; i++) {
-        uint8_t px[3] = { (uint8_t)(picture[i] >> 16), (uint8_t)(picture[i] >> 8), (uint8_t)picture[i] };
-
-        fwrite(px, 1, 3, f);
-    }
-    fclose(f);
-}
-
 /* the end of a video frame of emulated time: the picture, the sound, the keys, the clock (the dev build calls this and host_vblank itself) */
 void host_frame_end(void)
 {
@@ -239,44 +208,11 @@ void host_frame_end(void)
     for (int i = 0; i < DISPLAY_W * DISPLAY_H; i++)
         picture[i] |= 0xff000000u;   /* opaque */
     sound_mix(samples, 882);
-    if (export_path && host_vbl_count() >= export_vbl) {
-        host_export_ram(export_path);
-        fprintf(stderr, "xenon2-sdl: memory exported at the game's frame count %u\n", host_vbl_count());
-        export_path = 0;
-        quitting = 1;
-    }
-    if (status_every && frames % status_every == 0)
-        host_game_status();
-    if (frames == status_at) {
-        display_status();
-        host_game_status();
-    }
-    if (want_hash && frames % 50 == 0)
-        printf("frame %ld picture %08x\n", frames, hash_of(picture, DISPLAY_W * DISPLAY_H));
-    if (dump_every && dump_folder && frames % dump_every == 0)
-        dump_picture(frames);
     if (!headless) {
         poll_events();
         SDL_UpdateTexture(texture, 0, picture, DISPLAY_W * 4);
         SDL_RenderClear(renderer);
         SDL_RenderTexture(renderer, texture, 0, 0);
-        if (frames == probe_render_at) {   /* --probe-render F: how many pixels of what the renderer drew are not black */
-            SDL_Surface *shot = SDL_RenderReadPixels(renderer, 0);
-
-            if (shot) {
-                SDL_Surface *conv = SDL_ConvertSurface(shot, SDL_PIXELFORMAT_ARGB8888);
-                long lit = 0, total = 0;
-
-                for (int y = 0; conv && y < conv->h; y++)
-                    for (int x = 0; x < conv->w; x++, total++)
-                        lit += (((uint32_t *)((uint8_t *)conv->pixels + y * conv->pitch))[x] & 0xffffff) != 0;
-                printf("render probe at frame %ld: %ldx%d, %ld of %ld pixels not black (renderer %s)\n", frames, (long)shot->w, shot->h, lit, total, SDL_GetRendererName(renderer));
-                SDL_DestroySurface(conv);
-                SDL_DestroySurface(shot);
-            } else {
-                printf("render probe: cannot read the renderer: %s\n", SDL_GetError());
-            }
-        }
         SDL_RenderPresent(renderer);
         if (audio)
             SDL_PutAudioStreamData(audio, samples, sizeof samples);
@@ -290,30 +226,9 @@ void host_frame_end(void)
         else if (now - next > 200000000)
             next = now;
     }
-    if (joy_script) {
-        const char *p = joy_script;
-
-        while (*p) {
-            long f = strtol(p, (char **)&p, 10);
-            char dirs[64] = "";
-            int n = 0;
-
-            if (*p == ':')
-                p++;
-            while (*p && *p != ',' && n < 63)
-                dirs[n++] = *p++;
-            dirs[n] = 0;
-            if (*p == ',')
-                p++;
-            if (f == frames)
-                host_input(strstr(dirs, "fire") != 0, strstr(dirs, "up") != 0, strstr(dirs, "down") != 0, strstr(dirs, "left") != 0, strstr(dirs, "right") != 0);
-        }
-    }
     joystick_registers();
     deliver_keys();
     frames++;
-    if (max_frames >= 0 && frames >= max_frames)
-        quitting = 1;
     if (quitting) {
         if (!headless) {
             SDL_Quit();
@@ -357,6 +272,9 @@ void host_key_event(int raw, int down)
 }
 
 /* ---- start ------------------------------------------------------------------------------------------------------------------------------------------------------------ */
+/* no window, no sound, no clock: for a host that drives the machine itself (the dev build); before host_init */
+void host_set_headless(int on) { headless = on; }
+
 /* the options, the machine and the window; 0 when the game can start, else the exit code */
 int host_init(int argc, char **argv)
 {
@@ -365,19 +283,9 @@ int host_init(int argc, char **argv)
     for (int i = 1; i < argc; i++) {
         if (!strcmp(argv[i], "--disks") && i + 1 < argc) disks = argv[++i];
         else if (!strcmp(argv[i], "--scale") && i + 1 < argc) scale = atoi(argv[++i]);
-        else if (!strcmp(argv[i], "--headless")) headless = 1;
-        else if (!strcmp(argv[i], "--frames") && i + 1 < argc) max_frames = atoi(argv[++i]);
-        else if (!strcmp(argv[i], "--hash")) want_hash = 1;
         else if (!strcmp(argv[i], "--renderer") && i + 1 < argc) renderer_name = argv[++i];
-        else if (!strcmp(argv[i], "--probe-render") && i + 1 < argc) probe_render_at = atoi(argv[++i]);
-        else if (!strcmp(argv[i], "--status-every") && i + 1 < argc) status_every = atoi(argv[++i]);
-        else if (!strcmp(argv[i], "--export-ram") && i + 1 < argc) { export_path = argv[++i]; export_vbl = (unsigned)strtoul(strchr(export_path, ':') ? strchr(export_path, ':') + 1 : "0", 0, 0); if (strchr(export_path, ':')) *strchr(export_path, ':') = 0; }
-        else if (!strcmp(argv[i], "--joy") && i + 1 < argc) joy_script = argv[++i];
-        else if (!strcmp(argv[i], "--status") && i + 1 < argc) status_at = atoi(argv[++i]);
-        else if (!strcmp(argv[i], "--dump-every") && i + 1 < argc) dump_every = atoi(argv[++i]);
-        else if (!strcmp(argv[i], "--dump") && i + 1 < argc) dump_folder = argv[++i];
         else {
-            fprintf(stderr, "usage: xenon2-sdl [--disks FOLDER] [--scale N] [--headless --frames N [--hash] [--status F] [--joy F:dirs,...] [--dump-every N --dump FOLDER]]\n");
+            fprintf(stderr, "usage: xenon2-sdl [--disks FOLDER] [--scale N] [--renderer NAME]\n");
             return 2;
         }
     }
