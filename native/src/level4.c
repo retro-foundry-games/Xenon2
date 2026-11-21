@@ -3,6 +3,7 @@
 #include "shop.h"
 #include "game_all.h"
 #include <string.h>
+#define PATH_WAIT(o) ((o)->v28)
 
 /* the scratch fields of Object, by the kind that uses them */
 #define L4_SIZE(o) ((o)->v28)
@@ -398,7 +399,7 @@ void l4_shot_a(Object *a0)
     a1->turn[0] = a1->turn[1] = a1->turn[2] = 0;
     a1->x = (int16_t)(a0->x + d1);
     a1->y = a0->y;
-    a1->v28 = 0;
+    PATH_WAIT(a1) = 0;
     a1->score = 0x64;
     a1->energy = (int16_t)W(0x54e48);
     a1->big = 0;
@@ -441,7 +442,7 @@ void l4_enemy_f8(Object *a0)
         table = sh_r32(0x55714 + d0);
         a0->script = (uint8_t *)GPTR(table);
         a0->cursor = (const uint8_t *)GPTR(table);
-        a0->v28 = 0;
+        PATH_WAIT(a0) = 0;
     }
     d0 = (uint16_t)((((uint16_t)L4_ANGLE_LO(a0) + 0x10) >> 3) & 0x1c);
     d1 = (uint16_t)(((old + 0x10) >> 3) & 0x1c);
@@ -500,7 +501,7 @@ void l4_spawn_boss1(void)
         a0->x = (int16_t)W(a1 + 12);
         a0->persists = -1;
         a0->y = (int16_t)(W(a1 + 14) - scroll_pos);
-        a0->v28 = 0;
+        L4_SIZE(a0) = 0;
         L4_ANGLE_HI(a0) = 0;
         L4_ANGLE_LO(a0) = 0;
         a0->turn[0] = a0->turn[1] = a0->turn[2] = 0;
@@ -781,7 +782,7 @@ void l4_spawn_boss2(const uint8_t *a1_record, uint16_t d2)
         a0->persists = -1;
         a0->x = (int16_t)W(a1 + 12);
         a0->y = (int16_t)(W(a1 + 14) - scroll_pos);
-        a0->v28 = 0;
+        L4_SIZE(a0) = 0;
         L4_ANGLE_HI(a0) = 0;
         L4_ANGLE_LO(a0) = (int16_t)W(a1 + 16);
         a0->turn[0] = a0->turn[1] = a0->turn[2] = 0;
