@@ -5,7 +5,7 @@ var player_x_prev 0x4e4 uint16_t                         ; the player's x, one f
 var player_y_prev 0x4e6 uint16_t
 var trail_x 0x4e8 int16_t
 var fire_press 0xa6a uint8_t
-var v_0d5a 0xd5a uint16_t
+var l1_eyes_phase 0xd5a uint16_t
 arr level_vars 0xd26 uint16_t 26                      ; level 1 boss state, cleared by the level's init
 arr unit_live 0xd86 uint8_t 5
 var l1_boss_spawned 0xd8b uint8_t
@@ -44,7 +44,7 @@ tab anim_29e4 0x29e4 uint8_t 6
 tab anim_2a02 0x2a02 uint8_t 6
 tab anim_2c24 0x2c24 uint8_t 6
 tab level_54e58 0x54e58 uint16_t 2                ; level 1: energy of the boss ($54E58) and of a second object ($54E5A)
-var v_5dd0 0x5dd0 int16_t                         ; a copy of player_vx the code area holds
+var player_vx_prev 0x5dd0 int16_t                         ; a copy of player_vx the code area holds
 tab level_558a2 0x558a2 uint16_t 80               ; level 1: sixteen records (offset, four words) the scroll patches the level data with
 tab level_567bc 0x567bc uint8_t 2                ; level 1: table the boss is drawn from
 tab level_5c0e4 0x5c0e4 uint8_t 2                ; level 1: pictures of the boss's eye
@@ -52,7 +52,7 @@ tab level_5c194 0x5c194 uint8_t 2
 tab level_5c244 0x5c244 uint8_t 2
 tab level_56810 0x56810 uint8_t 48               ; level 1: three sources (four longs each) of the boss draw table
 arr level_567fa 0x567fa uint8_t 20                ; level 1: the boss draw table
-tab v_192ba 0x192ba uint8_t 2                    ; a picture
+tab weaponc0_picture 0x192ba uint8_t 2                    ; a picture
 tab level_59e28 0x59e28 uint8_t 2                ; level 1: picture of the boss's parts
 arr level_data_src 0x6e80a uint8_t 12000         ; level 1: data copied once to level_data_dst
 arr level_data_dst 0x7d120 uint8_t 12000

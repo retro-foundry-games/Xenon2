@@ -14,7 +14,7 @@ var trail_count 0x43a uint16_t
 arr pickup_groups 0x43c uint16_t 16
 arr player_trail 0x46c uint16_t 8
 arr player_history 0x47c uint16_t 51
-var v_04e2 0x4e2 uint16_t
+var target_count 0x4e2 uint16_t
 var joy_stick 0xa00 uint8_t
 var key_pressed 0xa01 uint8_t
 var player_died 0xa02 uint8_t
@@ -66,12 +66,12 @@ arr weapon_slots_saved 0xcfc Slot 7
 arr score_digits 0xd7c uint8_t 7                        ; score digits
 var protection 0xd83 uint8_t
 var player_dead 0xd84 uint8_t
-var v_0d85 0xd85 uint8_t
+var skip_map_draw 0xd85 uint8_t
 var difficulty 0xe02 uint16_t
 var level_number 0xe04 uint16_t
 var respawn_shield 0xe06 uint16_t
 tab digit_gfx 0x1981e uint8_t 640
-tab v_19a9e 0x19a9e uint16_t 640
+tab panel_words 0x19a9e uint16_t 640
 arr other_player_level 0x3bcac uint8_t 12000
 arr other_player_block 0x3ecf4 uint32_t 202
 var player 0x3f01c Object
@@ -87,7 +87,7 @@ var level_palette 0x54e1c uint32_t *
 tab option_anims 0x6cc2 uint8_t 96                 ; the four options' animation headers (24 bytes each: picture, delay, script)
 tab option_offsets 0x6894 int16_t 14                       ; offsets of the options from the player
 arr palette_shadow 0x7012 uint16_t 16
-tab v_796e 0x796e uint16_t 1
+tab unused_796e 0x796e uint16_t 1             ; not used by the port
 var text_wait_key 0x8428 uint8_t
 arr ready_text 0x8836 uint8_t 19
 var player_gfx 0xebe2 uint8_t

@@ -584,8 +584,8 @@ static void main_loop(void)
         if ((int16_t)level_number >= 6) {
             level_number = 1;
             difficulty++;
-            v_8f94 = 1;
-            v_8f96 = 0;
+            cycle_flag_a = 1;
+            cycle_flag_b = 0;
         }
         loading_level_digit = (uint8_t)(level_number + 0x30);
         level_load();
@@ -610,15 +610,15 @@ static void game_session_start(void)
     joy_stick = 0;
     key_pressed = 0;
     sfx_cmd = -1;
-    v_0416 = -1;
+    sfx_cmd_aux = -1;
     sfx_cmd2 = -1;
-    v_041a = -1;
+    sfx_cmd2_aux = -1;
     last_flip_vbl = vbl_count;
     title_credits();
     menu();
     clear_palette();
-    v_8f94 = 1;
-    v_8f96 = 0;
+    cycle_flag_a = 1;
+    cycle_flag_b = 0;
     level_number = 1;
     loading_level_digit = 0x31;
     level_load();
@@ -704,9 +704,9 @@ void game_entry(void)
     draw_screen = screen_b;
     show_screen = screen_a;
     sfx_cmd = -1;
-    v_0416 = -1;
+    sfx_cmd_aux = -1;
     sfx_cmd2 = -1;
-    v_041a = -1;
+    sfx_cmd2_aux = -1;
     min_vbl_per_frame = 4;
     music_paused = 0xff;
     if (!(CIAA_CRA & 0x80)) {
@@ -717,8 +717,8 @@ void game_entry(void)
     /* SR = $2000: interrupts on */
     music_switch = 0xff;
     crush_reload = 1;
-    v_09fd = 0;
-    v_09fe = 0;
+    music_aux_a = 0;
+    music_aux_b = 0;
     clip_bottom = 0xbf;
     off = 0;
     for (int i = 0; i < 200; i++) {

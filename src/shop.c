@@ -1454,7 +1454,7 @@ void shop_main(void)
     shop_door_left = 0x30;
     shop_door_right = 0x44;
     shop_keeper_talking = 0;
-    v_04f1 = 0;
+    shop_keeper_aux = 0;
     shop_cursor_col = 1;
     shop_cursor_row = 4;
     shop_cursor_erase();
