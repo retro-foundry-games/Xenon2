@@ -309,9 +309,9 @@ void level1_hook(uint16_t d0, const uint8_t *a1, uint16_t d2)
         SET_V5E(a0, 0);
         a0->x = (int16_t)(rd16(a1 + 8) - 8 + (flag ? 0x10 : 0));
         a0->y = (int16_t)(rd16(a1 + 10) - 8 - scroll_pos);
-        a0->v28 = -1;
-        a0->v2a = (int16_t)(rd16(a1 + 6) << 4);
-        a0->v30 = a0->v2a;
+        LAUNCHER_STEP(a0) = -1;
+        LAUNCHER_RANGE(a0) = (int16_t)(rd16(a1 + 6) << 4);
+        LAUNCHER_POS(a0) = a0->v2a;
         a0->kind = 0;
         bbox_from_frame(a0);
         return;
