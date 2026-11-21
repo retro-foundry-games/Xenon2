@@ -3,6 +3,10 @@
 #include "weapons.h"
 #include "shop.h"
 #include "game_all.h"
+
+/* the path script view of an object (ObjMove) */
+#define PATH_ANGLE_HI(o) ((o)->v2a)
+#define PATH_ANGLE_LO(o) ((o)->v2c)
 #define SNAKE_X(o) ((o)->v2e)
 #define ARM_SWING_STEP(o) ((o)->v2e)
 
@@ -651,8 +655,8 @@ void l3_spawn_parts(void)
         a0->x_frac = 0;
         a0->y_frac = 0;
         a0->cursor = (const uint8_t *)GPTR(0x570c8);
-        a0->v2a = 0;
-        a0->v2c = 0;
+        PATH_ANGLE_HI(a0) = 0;
+        PATH_ANGLE_LO(a0) = 0;
         a0->turn[2] = 0;
         a0->kind = 0;
         a0->steps = (int16_t)W(0x54e46);
