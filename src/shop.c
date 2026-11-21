@@ -707,7 +707,7 @@ int32_t shop_can_buy(void)
     case 6: return nashwan_timer != 0 ? 0 : -1;
     case 0xc:
         for (i = 0; i < 7; i++)
-            if (weapon_slots[i].type != 0 && weapon_slots[i].obj->v42 != weapon_slots[i].obj->energy)
+            if (weapon_slots[i].type != 0 && weapon_slots[i].obj->score != weapon_slots[i].obj->energy)
                 return -1;
         return 0;
     case 0x10: return dive_charges != 0 ? 0 : -1;
@@ -747,7 +747,7 @@ int32_t shop_can_buy(void)
     } else {
         return -1;
     }
-    return (uint16_t)a1->v42 != (uint16_t)a1->energy ? -1 : 0;
+    return (uint16_t)a1->score != (uint16_t)a1->energy ? -1 : 0;
 }
 
 /* shop $558E4, $558EC, $55930, $55938: the items that are not a weapon */
@@ -1015,7 +1015,7 @@ void shop_sell_show(uint8_t *rec)
     rec = (uint8_t *)GPTR(sh_r32(SH_REC));
     d0 = sh_r16(SH_TAB_PRICE - 2 + (uint16_t)(rd16(rec + 6) * 2));
     a1 = (const Object *)GPTR(rd32(rec + 0xc));
-    d1 = (uint16_t)(a1->v42 * 0x7d0);
+    d1 = (uint16_t)(a1->score * 0x7d0);
     d0 = (uint16_t)(d0 + d1);
     d0 >>= 1;
     sh_w16(SH_PRICE, d0);
@@ -1048,7 +1048,7 @@ void shop_sell(void)
             sh_w16(SH_LAST_X, shop_cursor_col);
             sh_w16(SH_LAST_Y, shop_cursor_row);
             sh_w8(SH_BLINK_B, 0xff);
-            shop_item_name(kind, (uint16_t)((const Object *)GPTR(rd32(rec + 0xc)))->v42);
+            shop_item_name(kind, (uint16_t)((const Object *)GPTR(rd32(rec + 0xc)))->score);
             shop_sell_show(rec);
             sh_w8(SH_BLINK_B, 0);
             continue;
@@ -1348,7 +1348,7 @@ static void latch_slots_all(uint16_t d2)
     for (i = 0; i < 7; i++) {
         *out++ = weapon_slots[i].type;
         if (weapon_slots[i].type != 0)
-            d2 = (uint16_t)weapon_slots[i].obj->v42;
+            d2 = (uint16_t)weapon_slots[i].obj->score;
         *out++ = d2;
     }
 }

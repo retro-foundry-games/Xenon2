@@ -31,7 +31,7 @@ struct Object {
     int16_t hit[4];             /* 36: the box x0 y0 x1 y1 */
     int16_t v3e;
     int16_t v40;
-    int16_t v42;                /* 42: score of the object */
+    int16_t score;               /* 42: score the object gives; for a weapon its power */
     int16_t kind;               /* 44: the item or weapon kind (weapons, pickups, the shop's slots), 0 for most enemies */
     uint8_t *v46;
     const uint8_t *cursor;      /* 4a: the next command of a path script (ObjMove cursor) */

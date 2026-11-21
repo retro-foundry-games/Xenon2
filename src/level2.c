@@ -148,7 +148,7 @@ void l2_hook(uint16_t d0, const uint8_t *a1, uint16_t d2)
         a0->gfx = GPTR(flag ? 0x559c8 : 0x559e6);
         a0->anim = (const uint8_t *)GPTR(flag ? 0x559c4 : 0x559c6);
         copy2(a0->v46, (const uint8_t *)a0->gfx);
-        a0->v42 = 0x64;
+        a0->score = 0x64;
         a0->v3e = 0;
         a0->v40 = 0;
         return;
@@ -167,7 +167,7 @@ void l2_hook(uint16_t d0, const uint8_t *a1, uint16_t d2)
         a0->fn_hit = (void *)hit_enemy;
         a0->energy = (int16_t)W(0x54e50);
         a0->flag35 = 0;
-        a0->v42 = 0xc8;
+        a0->score = 0xc8;
         a0->x = (int16_t)(rd16(a1 + 8) - 8);
         a0->y = (int16_t)(rd16(a1 + 10) - 8 - scroll_pos);
         a0->v28 = -1;
@@ -457,7 +457,7 @@ void l2_marker_f8_update(Object *a0)
         s->y = (int16_t)(a0->y - scroll_pos + 0x10);
         s->energy = (int16_t)W(0x54e42);
         s->flag35 = (int8_t)0xff;
-        s->v42 = 0x12c;
+        s->score = 0x12c;
         s->v28 = 0;
         s->kind = 0;
         bbox_from_frame(s);
@@ -511,7 +511,7 @@ void l2_marker_fc_update(Object *a0)
         s->y = (int16_t)(a0->y - scroll_pos);
         s->energy = (int16_t)W(0x54e44);
         s->flag35 = 0;
-        s->v42 = 0x96;
+        s->score = 0x96;
         s->v28 = 0;
         s->kind = 0;
         bbox_from_frame(s);
@@ -673,7 +673,7 @@ void l2_roamer_update(Object *a0)
         s->energy = (int16_t)W(0x54e56);
         s->flag35 = 0;
         SET_V5E(s, 0);
-        s->v42 = 0x1e;
+        s->score = 0x1e;
         s->kind = 0;
         set_anim(s, sh_r32(0x563c0 + ((uint16_t)a0->v2a << 2)));
         s->x = a0->x;
@@ -721,7 +721,7 @@ void l2_front_update(Object *a0)
         s->v2a = (int16_t)i;
         s->energy = 1;
         s->flag35 = 0;
-        s->v42 = 0x14;
+        s->score = 0x14;
         s->v28 = (int16_t)(random_next() & 0x1f);
         s->kind = 0;
         bbox_from_frame(s);
@@ -897,7 +897,7 @@ static void l2_debris_wall(uint16_t d6)
         a0->fn_draw = (obj_fn)obj_nop_thunk;
         a0->fn_hit = GFN(rd32(a2 + 2));
         a0->gfx = GPTR(rd32(a2 + 6));
-        a0->v42 = (int16_t)rd16(a2 + 10);
+        a0->score = (int16_t)rd16(a2 + 10);
         a0->v2e = (int16_t)d3;
         a0->energy = (int16_t)W(0x54e52);
         SET_V5E(a0, 0);

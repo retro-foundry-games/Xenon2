@@ -439,7 +439,7 @@ Object *spawn_formation(Object *a0, const uint8_t *rec_raw, const uint8_t *a2)
             a0->y_frac = 0;
             a0->v2a = 0;
             a0->v2c = 0;
-            a0->v42 = (int16_t)a4->w2;
+            a0->score = (int16_t)a4->w2;
             a0->v28 = 0;
             if ((int16_t)a1->x < 100) {
                 d6 = (uint16_t)(0 - d6);
@@ -620,7 +620,7 @@ void latch_slots(uint16_t d2)
     for (i = 0; i < 7; i++, s++) {
         *out++ = s->type;
         if (s->type != 0)
-            d2 = (uint16_t)s->obj->v42;
+            d2 = (uint16_t)s->obj->score;
         *out++ = d2;
     }
 }

@@ -236,7 +236,7 @@ static void level1_turret_cells(Object *a0, const uint8_t *a2, const uint8_t *a4
     a0->anim = a4;
     copy4(a3, a2);
     copy4(a3 + 0x28, a2 + 4);
-    a0->v42 = 0x64;
+    a0->score = 0x64;
     a0->v3e = 1;
     a0->v40 = 1;
 }
@@ -279,7 +279,7 @@ void level1_hook(uint16_t d0, const uint8_t *a1, uint16_t d2)
         a0->fn_hit = (void *)hit_enemy;
         a0->energy = (int16_t)level_54e5c[2];
         a0->flag35 = -1;
-        a0->v42 = 0xfa;
+        a0->score = 0xfa;
         SET_V5E(a0, 0);
         a0->x = (int16_t)(rd16(a1 + 8) - 8 + (flag ? 0x10 : 0));
         a0->y = (int16_t)(rd16(a1 + 10) - 8 - scroll_pos);
@@ -574,7 +574,7 @@ void level1_spawn_unit(uint16_t d6)
     a0->v30 = (int16_t)d6;
     a0->hit[0] = 0x3e8;
     a0->hit[2] = 0x3e8;
-    a0->v42 = 0;
+    a0->score = 0;
     for (i = 0; i <= n; i++) {
         const struct LevelSeg *seg = &level_segs[i];
 
@@ -584,7 +584,7 @@ void level1_spawn_unit(uint16_t d6)
         a0->fn_draw = obj_nop_thunk;
         a0->fn_hit = (void *)seg->hit;
         a0->gfx = seg->gfx;
-        a0->v42 = (int16_t)seg->score;
+        a0->score = (int16_t)seg->score;
         a0->v2e = d3;
         a0->energy = 1;
         a0->flag35 = 0;
@@ -677,7 +677,7 @@ static void level1_piece_burst(Object *a1, const uint8_t *a2)
     set_anim(n, a2);
     n->v2a = 0;
     n->v2c = (int16_t)(random_next() & 0xff);
-    player_score += (uint16_t)a1->v42;
+    player_score += (uint16_t)a1->score;
     kill_object_thunk(a1);
 }
 

@@ -172,8 +172,8 @@ static Object *grow_weapon(Slot *s)
 {
     Object *a1 = s->obj;
 
-    if (a1->energy > a1->v42)
-        a1->v42++;
+    if (a1->energy > a1->score)
+        a1->score++;
     return a1;
 }
 
@@ -221,7 +221,7 @@ Object *weapon_94(Object *a0, Object *a1)
     n->fn_update = FN(weapon94_update);
     n->fn_hit = s;
     n->fn_draw = obj_nop;
-    n->v42 = 0;
+    n->score = 0;
     n->energy = 2;
     n->kind = 1;
     SET_V5E(n, -1);
@@ -250,7 +250,7 @@ Object *weapon_c0(Object *a0, Object *a1)
     n->anim_delay = 0;
     n->x = PLAYER->x;
     n->y = PLAYER->y;
-    n->v42 = 0;
+    n->score = 0;
     n->energy = 2;
     n->kind = 0xe;
     SET_V5E(n, -1);
@@ -279,7 +279,7 @@ Object *weapon_98(Object *a0, Object *a1)
     n->fn_update = FN(weapon98_update);
     n->fn_draw = obj_nop;
     n->fn_hit = s6;
-    n->v42 = 0;
+    n->score = 0;
     n->energy = 2;
     n->kind = 0xa;
     SET_V5E(n, -1);
@@ -304,7 +304,7 @@ Object *weapon_28(Object *a0, Object *a1)
     n->fn_update = FN(weapon9c_update);
     n->fn_draw = obj_nop;
     n->fn_hit = s6;
-    n->v42 = 0;
+    n->score = 0;
     n->energy = 0;
     n->kind = 0x15;
     SET_V5E(n, -1);
@@ -335,7 +335,7 @@ Object *weapon_48(Object *a0, Object *a1)
     n->fn_update = FN(weaponA0_update);
     n->fn_draw = obj_nop;
     n->fn_hit = a2;
-    n->v42 = 0;
+    n->score = 0;
     n->energy = 0;
     n->kind = 0x17;
     SET_V5E(n, -1);
@@ -363,7 +363,7 @@ Object *weapon_b0(Object *a0, Object *a1)
     set_anim(n, anim_2540);
     n->x = PLAYER->x;
     n->y = PLAYER->y;
-    n->v42 = 0;
+    n->score = 0;
     n->energy = 2;
     n->kind = 0x14;
     SET_V5E(n, -1);
@@ -372,7 +372,7 @@ Object *weapon_b0(Object *a0, Object *a1)
 }
 
 /* the weapons of slot 5 share their set-up: type, routine, animation, energy, kind, y offset 0x19 (or none) */
-static Object *weapon_slot5(Object *a0, uint16_t type, obj_fn update, const uint8_t *anim, int16_t energy, int16_t v42, int16_t kind, int dy)
+static Object *weapon_slot5(Object *a0, uint16_t type, obj_fn update, const uint8_t *anim, int16_t energy, int16_t score, int16_t kind, int dy)
 {
     Slot *s5 = SLOT(5);
     Object *n;
@@ -388,7 +388,7 @@ static Object *weapon_slot5(Object *a0, uint16_t type, obj_fn update, const uint
     n->x = PLAYER->x;
     n->y = PLAYER->y + dy;
     n->v28 = 0;
-    n->v42 = v42;
+    n->score = score;
     n->energy = energy;
     n->kind = kind;
     SET_V5E(n, -1);
@@ -477,7 +477,7 @@ static Object *weapon_side(Object *a0, uint16_t type, obj_fn update, const uint8
     n->y = PLAYER->y + n->v40;
     if (clear28)
         n->v28 = 0;
-    n->v42 = 0;
+    n->score = 0;
     n->energy = energy;
     n->kind = kind;
     SET_V5E(n, -1);
@@ -686,7 +686,7 @@ void shot_fixed_update(Object *a0)
     a1 = collide_enemies(a0);
     if (a1 == 0)
         return;
-    d = (uint16_t)(a0->v42 + kill_scores[1]);
+    d = (uint16_t)(a0->score + kill_scores[1]);
     shot_gone(a0);
     apply_damage(a0, a1, d);
 }
@@ -715,7 +715,7 @@ void shot_update(Object *a0)
     a1 = point_in_enemy(a0->x, a0->y);
     if (a1 == 0)
         return;
-    d = (uint16_t)(a0->v42 + kill_scores[0]);
+    d = (uint16_t)(a0->score + kill_scores[0]);
     shot_gone(a0);
     apply_damage(a0, a1, d);
 }
@@ -838,7 +838,7 @@ void enemy_killed(Object *a0, Object *a1)
             n->v2a = (int16_t)random_next();
         }
     }
-    player_score += (uint16_t)a1->v42;
+    player_score += (uint16_t)a1->score;
     kill_object(a1);
 }
 
@@ -869,7 +869,7 @@ void hit_tile(Object *a0, Object *a1, uint16_t d0)
     a1->energy = (int16_t)(old - d0);
     if (old > d0)
         return;
-    player_score += (uint16_t)a1->v42;
+    player_score += (uint16_t)a1->score;
     x = (int16_t)(((a1->v3e + 1) << 3) + a1->x);
     y = (int16_t)(((a1->v40 + 1) << 3) + a1->y - scroll_pos);
     spawn_effect(x, y, anim_273a, draw_bob_masked);
@@ -913,7 +913,7 @@ void pickup_grow_weakest(Object *a0)
         Slot *s = SLOT(i);
 
         if (s->type != 0) {
-            int16_t d2 = s->obj->v42;
+            int16_t d2 = s->obj->score;
 
             if (d2 != s->obj->energy && d2 < d0) {
                 d0 = d2;
@@ -923,7 +923,7 @@ void pickup_grow_weakest(Object *a0)
     }
     if (d0 != 0x7f) {
         a1 = a2->obj;
-        a1->v42++;
+        a1->score++;
     }
 }
 
@@ -1062,15 +1062,15 @@ void init_weapons(Object *a0)
     a1 = weapon_34(a0, a1);
     a1 = weapon_34(a0, a1);
     a1 = weapon_20(a0, a1);
-    a1->v42 = 2;
+    a1->score = 2;
     a1 = weapon_20(a0, a1);
-    a1->v42 = 2;
+    a1->score = 2;
     a1 = weapon_2c(a0, a1);
-    a1->v42 = 2;
+    a1->score = 2;
     a1 = weapon_98(a0, a1);
-    a1->v42 = 2;
+    a1->score = 2;
     a1 = weapon_c0(a0, a1);
-    a1->v42 = 2;
+    a1->score = 2;
 }
 
 /* the pickup routines, by $30(object): the table at $47D6 (the first byte of an entry says the sound: 4, else $81) */
@@ -1186,7 +1186,7 @@ void player_dies(Object *a0)
     a1 = LIST_A->prev;
     if (a1->type == 0)
         return;
-    if (a1->type == 0x94 && a1->v42 == 0) {
+    if (a1->type == 0x94 && a1->score == 0) {
         a1 = a1->prev;
         if (a1->type == 0)
             return;
@@ -1696,7 +1696,7 @@ void weaponb0_update(Object *a0)
             d0 = (int16_t)(d0 - 6);
         a1->y = d0;
         set_anim(a1, anim_2796);
-        a1->v42 = a0->v42;
+        a1->score = a0->score;
         a1->v30 = d7;
         a1->v2a = (int8_t)random_next();
     }
@@ -1744,7 +1744,7 @@ void weapon2c_update(Object *a0)
     if (!(joy_stick & 0x80) || a0->v28 != 0)
         return;
     a0->v28 = 6;
-    a1 = pat[(uint16_t)a0->v42];
+    a1 = pat[(uint16_t)a0->score];
     d7 = *a1++;
     a2 = shots;
     for (d6 = 0x4f; d6 >= 0; d6--, a2++) {
@@ -1844,7 +1844,7 @@ void weapon20_update(Object *a0)
         a1->fn_update = FN(beam_update);
         a1->v28 = -0x20;
         a1->target = a0;
-        a1->v42 = a0->v42;
+        a1->score = a0->score;
         SET_V5E(a0, 6);
     }
 }
@@ -1877,7 +1877,7 @@ void beam_update(Object *a0)
 hurt:
     d0 = a0->x;
     d1 = (int16_t)(a0->y - a0->v28);
-    d2 = a0->v42;
+    d2 = a0->score;
     d0 = (int16_t)(d0 + 4);
     d2 = (int16_t)(d2 + d2);
     d0 = (int16_t)(d0 - d2);
@@ -1889,7 +1889,7 @@ hurt:
         return;
     if (d1 < 0)
         d1 = 0;
-    d7 = (uint16_t)((uint16_t)(a0->v42 + 1) * blast_damage[0]);
+    d7 = (uint16_t)((uint16_t)(a0->score + 1) * blast_damage[0]);
     area_damage(a0, d0, d1, d2, d3, d7);
 }
 
@@ -1973,7 +1973,7 @@ void weapon90_update(Object *a0)
             a1->fn_update = FN(shot_update);
             a1->fn_draw = draw_bob_masked;
             set_anim(a1, anim_2918);
-            a1->v42 = a0->v42;
+            a1->score = a0->score;
             d6 = 5;
         }
         return;
@@ -2035,21 +2035,21 @@ void weapon38_update(Object *a0)
         d2 = (int16_t)(a0->y - 8);
         w = h = 0x10;
         a2 = anim_270e;
-        if (a0->v42 != 0) {
+        if (a0->score != 0) {
             d1 = (int16_t)(d1 - 0xa);
             d2 = (int16_t)(d2 - 0xa);
             w = h = 0x14;
             a2 = anim_273a;
         }
         debris_burst(a0, 2, (uint16_t)d1, (uint16_t)d2, w, h, a2);
-        if (a0->v42 == 0) {
+        if (a0->score == 0) {
             d1 = (int16_t)(a0->x - 0x10);
             d2 = (int16_t)(a0->y - 0x10);
             area_damage(a0, d1, d2, (int16_t)(d1 + 0x20), (int16_t)(d2 + 0x20), (uint16_t)(blast_damage[2]));
         } else {
             d1 = (int16_t)(a0->x - 0x18);
             d2 = (int16_t)(a0->y - 0x18);
-            area_damage(a0, d1, d2, (int16_t)(d1 + 0x2f), (int16_t)(d2 + 0x2f), (uint16_t)(a0->v42 * 2 + blast_damage[2]));
+            area_damage(a0, d1, d2, (int16_t)(d1 + 0x2f), (int16_t)(d2 + 0x2f), (uint16_t)(a0->score * 2 + blast_damage[2]));
         }
         kill_object(a0);
         return;
@@ -2129,7 +2129,7 @@ void weapon38_update(Object *a0)
             set_anim(a1, a0->anim - 6);
             a1->x = a0->x;
             a1->y = a0->y;
-            a1->v42 = a0->v42;
+            a1->score = a0->score;
             v_043a++;
             a1->v28 = (int16_t)(-(int16_t)(v_043a * 4));
         }
@@ -2156,7 +2156,7 @@ void weapon38_update(Object *a0)
  * left and right edges are clipped to one word */
 void beam_draw(Object *a0)
 {
-    uint16_t level = (uint16_t)a0->v42;
+    uint16_t level = (uint16_t)a0->score;
     int16_t d0 = (int16_t)(a0->x + 4 - level - level);
     int16_t d1 = a0->y;
     uint32_t r[5];
