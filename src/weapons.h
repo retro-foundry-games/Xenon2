@@ -22,7 +22,7 @@ void enemy_killed(Object *a0, Object *a1);
 #define LIST_C ((Object *)&obj_list[2])
 #define LIST_B ((Object *)&obj_list[3])
 #define PLAYER ((Object *)&player)
-#define SLOT(i) (&v_0c66[i])
+#define SLOT(i) (&weapon_slots[i])
 
 Object *weapon_select(uint16_t d1, Object *a0, Object *a1);               /* orig $004822 */
 Object *refill_slot0(Object *a0, Object *a1);                                /* orig $005540 */
@@ -60,7 +60,7 @@ void tile_draw(Object *a0);
 void kill_with_slot(Object *a1); void free_with_slot(Object *a1); void free_chain(Object *a1, int16_t d7);
 void player_dies(Object *a0); void player_damage(Object *a0, uint16_t d0); void player_move(Object *a0); void player_update(Object *a0);
 
-/* level 2's blob (level2.c) and the entries that choose by the level in v_0e04 */
+/* level 2's blob (level2.c) and the entries that choose by the level in level_number */
 Object *l2_collision_hook(int16_t d0, int16_t d1, int16_t d2, int16_t d3);
 void l2_block_hit(Object *a0, Object *a1, uint16_t d0);
 void l2_event(uint16_t d0, const uint8_t *a1); void l2_hook(uint16_t d0, const uint8_t *a1, uint16_t d2);

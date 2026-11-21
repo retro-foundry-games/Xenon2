@@ -74,8 +74,8 @@ Object *l2_collision_hook(int16_t d0, int16_t d1, int16_t d2, int16_t d3)
     uint16_t n;
     uint32_t d4 = 0;
 
-    d1 = (int16_t)(d1 + v_0cd0);
-    d3 = (int16_t)(d3 + v_0cd0);
+    d1 = (int16_t)(d1 + scroll_pos);
+    d3 = (int16_t)(d3 + scroll_pos);
     if (d1 >= 0x1b0)
         return 0;
     if (d1 <= 0x80)
@@ -112,7 +112,7 @@ void l2_block_hit(Object *a0, Object *a1, uint16_t d0)
     wr16(e, 0);
     cell = (uint16_t)((uint16_t)(y >> 3) * 0x14 + (x >> 3));
     wr16(level_init_src + cell, 0);
-    spawn_effect((int16_t)(x + 8), (int16_t)(y - v_0cd0 + 8), anim_270e, draw_bob_masked);
+    spawn_effect((int16_t)(x + 8), (int16_t)(y - scroll_pos + 8), anim_270e, draw_bob_masked);
 }
 
 /* level2 $054E10, $055D8A: level events by d0 (a1 = the record that fired): d0 0 is the wave of $326C, 1 to 6 formations */
@@ -169,7 +169,7 @@ void l2_hook(uint16_t d0, const uint8_t *a1, uint16_t d2)
         a0->flag35 = 0;
         a0->v42 = 0xc8;
         a0->x = (int16_t)(rd16(a1 + 8) - 8);
-        a0->y = (int16_t)(rd16(a1 + 10) - 8 - v_0cd0);
+        a0->y = (int16_t)(rd16(a1 + 10) - 8 - scroll_pos);
         a0->v28 = -1;
         a0->v2a = (int16_t)(rd16(a1 + 4) << 4);
         a0->v30 = a0->v2a;
@@ -191,16 +191,16 @@ void l2_hook(uint16_t d0, const uint8_t *a1, uint16_t d2)
 /* level2 $054E24, $055B1E: the level's scroll events: the walls of debris while the first fight is not won, the stop of the scroll while it is */
 void l2_scroll(void)
 {
-    if (v_0d90 == 0) {
-        if ((int16_t)v_0cd0 >= 0x9d0 && (int16_t)v_0cd0 <= 0xb50)
+    if (l2_first_fight_won == 0) {
+        if ((int16_t)scroll_pos >= 0x9d0 && (int16_t)scroll_pos <= 0xb50)
             l2_debris_walls();
-    } else if ((int16_t)v_0cd0 > 0x9f0) {
-        v_0cd0 = 0x9f0;
+    } else if ((int16_t)scroll_pos > 0x9f0) {
+        scroll_pos = 0x9f0;
         v_0cea = 0x9f0;
-        v_0cce = 0x18d8;
-        v_0cd6 = 0;
+        map_row_offset = 0x18d8;
+        scroll_fine = 0;
     }
-    v_0d8d = 0;
+    l2_left_wall_made = 0;
     v_0d8e = 0;
 }
 
@@ -238,7 +238,7 @@ void l2_init(void)
     }
     v_0ce8 = 0x9e0;
     v_0cea = 0x11ff;
-    v_0d90 = 0;
+    l2_first_fight_won = 0;
     a0 = alloc_in(LIST_C);
     a0->type = 0x50;
     a0->fn_update = FN(l2_boss_update);
@@ -272,14 +272,14 @@ void l2_init(void)
         a0->v28 = 0;
         a0->v30 = (int16_t)d7;
     }
-    v_0d5c = 3;
-    v_0d5e = 0;
+    l2_gates_left = 3;
+    l2_walls_made = 0;
     sh_w8(0xd5f, 0);
-    v_0d8d = 0;
+    l2_left_wall_made = 0;
     v_0d8e = 0;
-    v_0d8f = 2;
+    l2_debris_waves = 2;
     for (i = 0; i < 8; i++)
-        v_0d26[i] = 0;
+        level_vars[i] = 0;
     for (i = 0; i < 4; i++) {
         uint8_t *g = level_buf + groups[i];
         uint16_t n = rd16(g);
@@ -293,10 +293,10 @@ void l2_init(void)
     level_obj.fn_update = (obj_fn)obj_nop_thunk;
     level_obj.fn_draw = (obj_fn)obj_nop_thunk;
     level_obj.fn_hit = (void *)l2_block_hit;
-    v_0d26[16] = 0x45d2;
-    v_0d26[17] = 0x72ba;
-    v_0d26[18] = 0xaa6a;
-    v_0d26[19] = 0x4a56;
+    level_vars[16] = 0x45d2;
+    level_vars[17] = 0x72ba;
+    level_vars[18] = 0xaa6a;
+    level_vars[19] = 0x4a56;
     v_0424 = (uint16_t)(v_0e02 * 1);
     v_0426 = (uint16_t)(v_0e02 * 2);
     for (i = 0; i < 0xb4; i++) {
@@ -335,7 +335,7 @@ void l2_front_piece_update(Object *a0)
             return;
         }
         a0->x = x;
-        y = (int16_t)(dy[a0->v2a] + a0->y + v_0cd8);
+        y = (int16_t)(dy[a0->v2a] + a0->y + scroll_speed);
         if ((uint16_t)y >= 0xc0) {
             kill_thunk(a0);
             return;
@@ -415,7 +415,7 @@ void l2_marker_f8_update(Object *a0)
         kill_thunk(a0);
         return;
     }
-    d0 = (int16_t)(a0->y - v_0cd0);
+    d0 = (int16_t)(a0->y - scroll_pos);
     if (d0 >= 0xb4)
         return;
     if (a0->v28 >= 5) {
@@ -454,7 +454,7 @@ void l2_marker_f8_update(Object *a0)
         set_anim(s, 0x5501a);
         SET_V5E(s, 0);
         s->x = (int16_t)(a0->x + 0x10);
-        s->y = (int16_t)(a0->y - v_0cd0 + 0x10);
+        s->y = (int16_t)(a0->y - scroll_pos + 0x10);
         s->energy = (int16_t)W(0x54e42);
         s->flag35 = (int8_t)0xff;
         s->v42 = 0x12c;
@@ -474,7 +474,7 @@ void l2_marker_fc_update(Object *a0)
         kill_thunk(a0);
         return;
     }
-    d0 = (int16_t)(a0->y - v_0cd0);
+    d0 = (int16_t)(a0->y - scroll_pos);
     if (d0 >= 0xb4)
         return;
     if (a0->v28 >= 5) {
@@ -508,7 +508,7 @@ void l2_marker_fc_update(Object *a0)
         set_anim(s, 0x5504a);
         SET_V5E(s, 0);
         s->x = a0->x;
-        s->y = (int16_t)(a0->y - v_0cd0);
+        s->y = (int16_t)(a0->y - scroll_pos);
         s->energy = (int16_t)W(0x54e44);
         s->flag35 = 0;
         s->v42 = 0x96;
@@ -522,7 +522,7 @@ void l2_marker_fc_update(Object *a0)
  * written again */
 static void l2_restore_blocks(Object *a0)
 {
-    int16_t d0 = a0->hit[0], d1 = (int16_t)(a0->hit[1] + v_0cd0), d2 = a0->hit[2], d3 = (int16_t)(a0->hit[3] + v_0cd0);
+    int16_t d0 = a0->hit[0], d1 = (int16_t)(a0->hit[1] + scroll_pos), d2 = a0->hit[2], d3 = (int16_t)(a0->hit[3] + scroll_pos);
     uint32_t d4 = 0;
     const uint8_t *a1;
     uint16_t n;
@@ -562,7 +562,7 @@ void l2_roamer_shot_update(Object *a0)
     int n;
 
     anim_step(a0);
-    a0->y = (int16_t)(a0->y + v_0cd8);
+    a0->y = (int16_t)(a0->y + scroll_speed);
     if (a0->v28 >= 0) {
         if (!(v_0cdc & 1)) {
             bbox_from_frame(a0);
@@ -599,7 +599,7 @@ void l2_roamer_shot_update(Object *a0)
     y = (int16_t)(a0->y + dy[a0->v2a]);
     a0->x = x;
     a0->y = y;
-    y = (int16_t)(y + v_0cd0);
+    y = (int16_t)(y + scroll_pos);
     for (n = 0; n < 8; n++) {
         uint32_t entry = 0x56526 + (uint32_t)n * 10;
 
@@ -626,7 +626,7 @@ void l2_roamer_update(Object *a0)
     static const int16_t dy[8] = { -4, -3, 0, 3, 4, 3, 0, -3 };
 
     anim_step(a0);
-    a0->y = (int16_t)(a0->y + v_0cd8);
+    a0->y = (int16_t)(a0->y + scroll_speed);
     if (a0->v28 == 0) {
         int16_t x = (int16_t)(a0->x + dx[a0->v2a]);
         int16_t y = (int16_t)(a0->y + dy[a0->v2a]);
@@ -641,7 +641,7 @@ void l2_roamer_update(Object *a0)
             a0->v28 = 1;
             a0->v2a = 0;
         }
-        y = (int16_t)(y + v_0cd0);
+        y = (int16_t)(y + scroll_pos);
         if (y <= 0x6c) {
             y = 0x6c;
             a0->v28 = 1;
@@ -653,7 +653,7 @@ void l2_roamer_update(Object *a0)
             a0->v2a = 2;
         }
         a0->x = x;
-        a0->y = (int16_t)(y - v_0cd0);
+        a0->y = (int16_t)(y - scroll_pos);
         return;
     }
     if (a0->v28 == 1) {
@@ -692,7 +692,7 @@ void l2_front_update(Object *a0)
     int i;
 
     if (a0->v28 == 0) {
-        if ((int16_t)(a0->y - v_0cd0) >= (int16_t)W(0x54e62))
+        if ((int16_t)(a0->y - scroll_pos) >= (int16_t)W(0x54e62))
             a0->v28 = 1;
         return;
     }
@@ -717,7 +717,7 @@ void l2_front_update(Object *a0)
         set_anim(s, sh_r32(entry));
         SET_V5E(s, 0);
         s->x = (int16_t)(a0->x + 0x10 + (int16_t)W(entry + 4));
-        s->y = (int16_t)(a0->y - v_0cd0 + 0x10 + (int16_t)W(entry + 6));
+        s->y = (int16_t)(a0->y - scroll_pos + 0x10 + (int16_t)W(entry + 6));
         s->v2a = (int16_t)i;
         s->energy = 1;
         s->flag35 = 0;
@@ -743,7 +743,7 @@ void l2_turret_update(Object *a0)
     d0 = (int16_t)(a0->x - 8);
     a0->hit[0] = d0;
     a0->hit[2] = (int16_t)(d0 + 0x14);
-    d0 = (int16_t)(a0->y - v_0cd0 + 4);
+    d0 = (int16_t)(a0->y - scroll_pos + 4);
     a0->hit[1] = d0;
     a0->hit[3] = (int16_t)(d0 + 8);
     if (a0->v28 == 0) {
@@ -759,7 +759,7 @@ void l2_turret_update(Object *a0)
         return;
     }
     d0 = (int16_t)(a0->x + 8);
-    d1 = (int16_t)(a0->y - v_0cd0 + 8);
+    d1 = (int16_t)(a0->y - scroll_pos + 8);
     pic = sh_r32(sh_r32(0x6c89c + 4 * (uint32_t)W(0x54e48)));
     d2 = a0->type == 0xec ? 2 : 6;
     spawn_enemy_shot((uint16_t)d0, (uint16_t)d1, (uint16_t)d2, W(0x54e4a), GPTR(pic));
@@ -771,12 +771,12 @@ void l2_launcher_update(Object *a0)
 {
     int16_t d0, d1, d2;
 
-    if ((int16_t)(v_0cea + 0xd0 - v_0cd0) < a0->y) {
+    if ((int16_t)(v_0cea + 0xd0 - scroll_pos) < a0->y) {
         kill_thunk(a0);
         return;
     }
     anim_step(a0);
-    a0->y = (int16_t)(a0->y + v_0cd8);
+    a0->y = (int16_t)(a0->y + scroll_speed);
     if (a0->v28 == 0)
         return;
     d0 = (int16_t)(a0->y - PLAYER_Y);
@@ -835,7 +835,7 @@ void l2_hit_a(Object *a0, Object *a1, uint16_t d0)
         hit_enemy(a0, a1, d0);
         return;
     }
-    v_0d5e &= (uint8_t)~(1 << (a1->v30 & 7));
+    l2_walls_made &= (uint8_t)~(1 << (a1->v30 & 7));
     l2_wreck(a1, 0x55062);
 }
 
@@ -872,20 +872,20 @@ static void l2_debris_wall(uint16_t d6)
     const uint8_t *a1, *a2;
     Object *a0;
 
-    if (v_0d5c == 1) {
-        r = ror5(&v_0d26[d6 ? 18 : 16]) & 6;
-    } else if (v_0d8f != 0) {
-        v_0d8f--;
-        r = ror5(&v_0d26[d6 ? 18 : 16]) & 6;
+    if (l2_gates_left == 1) {
+        r = ror5(&level_vars[d6 ? 18 : 16]) & 6;
+    } else if (l2_debris_waves != 0) {
+        l2_debris_waves--;
+        r = ror5(&level_vars[d6 ? 18 : 16]) & 6;
     } else {
-        r = (ror5(&v_0d26[d6 ? 18 : 16]) & 6) + 8;
+        r = (ror5(&level_vars[d6 ? 18 : 16]) & 6) + 8;
     }
     a1 = (const uint8_t *)GPTR(0x55f56 + (uint16_t)(((uint16_t)r + d6) * 12));
     d0 = rd16(a1);
-    d1 = (uint16_t)(rd16(a1 + 2) - v_0cda - v_0cd0);
+    d1 = (uint16_t)(rd16(a1 + 2) - v_0cda - scroll_pos);
     d2 = rd16(a1 + 4);
-    if (v_0d26[d2 - 1] == 0)
-        v_0d26[d2 - 1] = 0x18;
+    if (level_vars[d2 - 1] == 0)
+        level_vars[d2 - 1] = 0x18;
     d3 = rd16(a1 + 6);
     a1 = (const uint8_t *)GPTR(rd32(a1 + 8));
     d2 = 0;
@@ -915,17 +915,17 @@ static void l2_debris_wall(uint16_t d6)
         bbox_from_frame(a0);
         a2 += 12;
     }
-    v_0d5e |= (uint8_t)(1 << (d6 & 7));
+    l2_walls_made |= (uint8_t)(1 << (d6 & 7));
 }
 
-/* level2 $056016: the walls of debris that are not in the field (v_0d8d, v_0d8e say a piece of each moved this frame) are made */
+/* level2 $056016: the walls of debris that are not in the field (l2_left_wall_made, v_0d8e say a piece of each moved this frame) are made */
 void l2_debris_walls(void)
 {
-    if (v_0d90 != 0)
+    if (l2_first_fight_won != 0)
         return;
-    if (v_0d8d == 0) {
+    if (l2_left_wall_made == 0) {
         l2_debris_wall(0);
-        v_0d8d = 0xff;
+        l2_left_wall_made = 0xff;
     }
     if (v_0d8e == 0) {
         l2_debris_wall(1);
@@ -945,8 +945,8 @@ void l2_piece_update(Object *a0)
 
         anim_step(a0);
         d2 = (uint16_t)a0->v2c;
-        d1 = (int16_t)(v_0f60[d2] >> 2);
-        d0 = (int16_t)(v_0f60[(uint16_t)(d2 + 0x40)] >> 2);
+        d1 = (int16_t)(piece_directions[d2] >> 2);
+        d0 = (int16_t)(piece_directions[(uint16_t)(d2 + 0x40)] >> 2);
         d0 = (int16_t)(d0 + a0->x);
         d1 = (int16_t)(d1 + a0->y);
         if ((uint16_t)d0 >= 0x140 || (uint16_t)d1 >= 0xc0) {
@@ -958,11 +958,11 @@ void l2_piece_update(Object *a0)
         a0->fn_draw = draw_bob_masked;
         return;
     }
-    a0->y = (int16_t)(a0->y + v_0cd8);
-    (&v_0d8d)[(uint16_t)a0->v30] = 0xff;
+    a0->y = (int16_t)(a0->y + scroll_speed);
+    (&l2_left_wall_made)[(uint16_t)a0->v30] = 0xff;
     enemy_update_no_anim(a0);
     if (a0->type == 4) {
-        uint16_t *c = &v_0d26[(uint16_t)a0->v2e - 1];
+        uint16_t *c = &level_vars[(uint16_t)a0->v2e - 1];
 
         if (*c == 0)
             *c = 0x18;
@@ -986,7 +986,7 @@ void l2_piece_update(Object *a0)
 /* ---- the first fight: three gates and the boss ---- */
 
 /* level2 $056A4A: update of a gate ($54, v30 its number): its box once the player can reach it, its cells open and close (v28 is the step);
- * the gate 2 also patches the map by the counters in v_0d26 (eight records at $56B58) */
+ * the gate 2 also patches the map by the counters in level_vars (eight records at $56B58) */
 void l2_gate_update(Object *a0)
 {
     int hide, step;
@@ -995,11 +995,11 @@ void l2_gate_update(Object *a0)
     if ((int16_t)v_0ccc < 0 && (int16_t)v_0cea <= 0xb40)
         v_0cea = 0xb40;
     if (a0->v30 == 2)
-        hide = v_0d5c != 1;
+        hide = l2_gates_left != 1;
     else if (a0->v30 == 1)
-        hide = px >= 0xa0 || v_0d5e == 3;
+        hide = px >= 0xa0 || l2_walls_made == 3;
     else
-        hide = px < 0xa0 || v_0d5e == 3;
+        hide = px < 0xa0 || l2_walls_made == 3;
     if (hide) {
         a0->hit[0] = 0x3e8;
         a0->hit[2] = 0x3e8;
@@ -1008,10 +1008,10 @@ void l2_gate_update(Object *a0)
         d0 = (int16_t)(a0->x << 4);
         a0->hit[0] = d0;
         a0->hit[2] = (int16_t)(d0 + 0xf);
-        d0 = (int16_t)((a0->y << 4) - v_0cd0);
+        d0 = (int16_t)((a0->y << 4) - scroll_pos);
         a0->hit[1] = d0;
         a0->hit[3] = (int16_t)(d0 + 0xf);
-        step = a0->v28 != 4 || v_0d5e == 3;
+        step = a0->v28 != 4 || l2_walls_made == 3;
     }
     if (step && !(v_0cdc & 1))
         a0->v28 = (int16_t)((a0->v28 + 1) & 7);
@@ -1021,7 +1021,7 @@ void l2_gate_update(Object *a0)
     copy2((uint8_t *)a0->gfx, (const uint8_t *)GPTR(0x56b4e + 2 * d0));
     if (a0->v30 == 2) {
         const uint8_t *a1 = (const uint8_t *)GPTR(0x56b58);
-        uint16_t *a4 = v_0d26;
+        uint16_t *a4 = level_vars;
         int i;
 
         for (i = 7; i >= 0; i--, a4++, a1 += 0x12) {
@@ -1044,7 +1044,7 @@ void l2_gate_flash(Object *a0)
 {
     const uint8_t *cells = (const uint8_t *)GPTR(0x56926);
     uint16_t rows = 1;
-    int16_t d2 = (int16_t)((a0->y << 4) - v_0cd0 - 0x10);
+    int16_t d2 = (int16_t)((a0->y << 4) - scroll_pos - 0x10);
     uint16_t d3 = (uint16_t)((a0->x << 3) - 0x10);
 
     a0->fn_draw = (obj_fn)obj_nop_thunk;
@@ -1069,26 +1069,26 @@ void l2_gate_hit(Object *a0, Object *a1, uint16_t d0)
     Object *e;
     int i;
 
-    if (v_0d5e == 3)
+    if (l2_walls_made == 3)
         return;
     a1->fn_draw = FN(l2_gate_flash);
     old = (uint16_t)a1->energy;
     a1->energy = (int16_t)(old - d0);
     if (old > d0)
         return;
-    v_0d5e = 3;
+    l2_walls_made = 3;
     wr16((uint8_t *)a1->gfx, 0x8e45);
     spawn_effect((int16_t)(a1->hit[0] + 8), (int16_t)(a1->hit[1] + 8), anim_270e, draw_bob_masked);
     kill_thunk(a1);
-    v_0d5c--;
-    if (v_0d5c == 1) {
+    l2_gates_left--;
+    if (l2_gates_left == 1) {
         v_0ccc = 0xffff;
-        v_0d26[16] = 0xd251;
-        v_0d26[17] = 0x35d3;
-        v_0d26[18] = 0x894d;
-        v_0d26[19] = 0x5d53;
+        level_vars[16] = 0xd251;
+        level_vars[17] = 0x35d3;
+        level_vars[18] = 0x894d;
+        level_vars[19] = 0x5d53;
     }
-    if (v_0d5c != 0)
+    if (l2_gates_left != 0)
         return;
     v_0ccc = 1;
     for (i = 0; i < 0x1cc * 2; i++)
@@ -1100,14 +1100,14 @@ void l2_gate_hit(Object *a0, Object *a1, uint16_t d0)
             apply_damage_max(a0, e);
         e = next;
     }
-    v_0d8d = 0;
+    l2_left_wall_made = 0;
     v_0d8e = 0;
     for (i = 0; i < 16; i++)
         v_043c[i] = 0;
-    debris_burst(a0, 0x27, 0, 0, 0x140, 0xc0, v_0f64);
+    debris_burst(a0, 0x27, 0, 0, 0x140, 0xc0, big_explosion_anim);
     spawn_bonuses(4);
     v_0ce8 = 0;
-    v_0d90 = 0xff;
+    l2_first_fight_won = 0xff;
 }
 
 /* level2 $05685A: hit routine of the boss: it flashes; when its energy is gone it bursts and the level is won */
@@ -1122,7 +1122,7 @@ void l2_boss_hit(Object *a0, Object *a1, uint16_t d0)
         return;
     kill_thunk(a1);
     spawn_bonuses(9);
-    debris_burst(a0, 0x1d, 0x50, (uint16_t)(a1->y - v_0cd0), 0xa0, 0x70, v_0f64);
+    debris_burst(a0, 0x1d, 0x50, (uint16_t)(a1->y - scroll_pos), 0xa0, 0x70, big_explosion_anim);
     free_object_chain(LIST_HEAD(LIST_ENEMY));
     v_0a07 = 0xff;
 }
@@ -1130,18 +1130,18 @@ void l2_boss_hit(Object *a0, Object *a1, uint16_t d0)
 /* level2 $056ED0: the draw of the boss: its picture of cells while the scroll is near the end */
 void l2_boss_draw(Object *a0)
 {
-    if ((int16_t)v_0cd0 >= 0x160)
+    if ((int16_t)scroll_pos >= 0x160)
         return;
-    draw_tile_grid((const uint8_t *)GPTR(0x5725e), 5, 8, (int16_t)(a0->y - v_0cd0), 0x38);
+    draw_tile_grid((const uint8_t *)GPTR(0x5725e), 5, 8, (int16_t)(a0->y - scroll_pos), 0x38);
 }
 
 /* level2 $056EF6: the draw of the boss for the frame after a hit */
 void l2_boss_flash(Object *a0)
 {
     a0->fn_draw = FN(l2_boss_draw);
-    if ((int16_t)v_0cd0 >= 0x160)
+    if ((int16_t)scroll_pos >= 0x160)
         return;
-    draw_tile_grid_flash((const uint8_t *)GPTR(0x5725e), 5, 8, (int16_t)(a0->y - v_0cd0), 0x38);
+    draw_tile_grid_flash((const uint8_t *)GPTR(0x5725e), 5, 8, (int16_t)(a0->y - scroll_pos), 0x38);
 }
 
 uint32_t l2_stale_d0;
@@ -1161,7 +1161,7 @@ void l2_boss_rest(Object *a0)
             return;
         }
     } else {
-        r = l2_stale_d0_set ? l2_stale_d0 : ((uint32_t)v_0cd0 << 3) ^ v_0cdc;
+        r = l2_stale_d0_set ? l2_stale_d0 : ((uint32_t)scroll_pos << 3) ^ v_0cdc;
         l2_stale_d0_set = 0;
     }
     d1 = (r & 0x4000) ? -3 : 3;
@@ -1179,7 +1179,7 @@ static void l2_boss_move(Object *a0)
         return;
     }
     if (B(0x19f9e + 0x1794) == 0)
-        v_0414 = 3;
+        sfx_cmd = 3;
     a0->v2e--;
     d0 = (int16_t)(a0->v2a + a0->y);
     if (d0 < 0x60) {
@@ -1213,7 +1213,7 @@ void l2_boss_update(Object *a0)
         if (a0->v28 < 0) {
             a0->hit[0] = 0x3e8;
             a0->hit[2] = 0x3e8;
-            d0 = (int16_t)(PLAYER_Y + v_0cd0);
+            d0 = (int16_t)(PLAYER_Y + scroll_pos);
             if (d0 > 0xb0)
                 return;
             d0 = PLAYER_X;
@@ -1234,7 +1234,7 @@ void l2_boss_update(Object *a0)
     sum = (uint16_t)(a0->v5e_b[0] + B(0x54e65));
     a0->v5e_b[0] = (uint8_t)sum;
     if (sum > 0xff) {
-        int16_t y = (int16_t)(a0->y - v_0cd0 + 0x70);
+        int16_t y = (int16_t)(a0->y - scroll_pos + 0x70);
 
         a0->v5e_b[0] = (uint8_t)(random_next() & 0x3f);
         if ((random_next() & 3) != 0) {
@@ -1249,12 +1249,12 @@ void l2_boss_update(Object *a0)
             }
         }
     }
-    d5 = (int16_t)(a0->y - v_0cd0 + 0x70);
+    d5 = (int16_t)(a0->y - scroll_pos + 0x70);
     a0->hit[0] = 0x98;
     a0->hit[1] = d5;
     a0->hit[2] = 0xa7;
     a0->hit[3] = (int16_t)(d5 + 0xa);
-    if ((int16_t)v_0cd0 >= 0x160)
+    if ((int16_t)scroll_pos >= 0x160)
         return;
     if (a0->v3e != 0) {
         const uint8_t *a2;
@@ -1274,7 +1274,7 @@ void l2_boss_update(Object *a0)
         s->hit[0] = 0x3e8;
         s->hit[2] = 0x3e8;
         s->x = 0xa0;
-        s->y = (int16_t)(a0->y - v_0cd0 + 0x80);
+        s->y = (int16_t)(a0->y - scroll_pos + 0x80);
         set_anim(s, 0x55116);
         s->v28 = 0;
         s->v2a = (int16_t)(random_next() & 7);

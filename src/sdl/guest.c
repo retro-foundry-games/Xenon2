@@ -62,7 +62,7 @@ static int blob_skips(uint32_t m)
     return (blob_raw == 1 && m >= BLOB_LO && m < BLOB_HI) || (blob_raw == 2 && m >= BLOB_LEVEL_LO && m < BLOB_HI);
 }
 
-int guest_level_table(void) { return blob_raw == 2 ? xenon2.v_0e04 : 0; }
+int guest_level_table(void) { return blob_raw == 2 ? xenon2.level_number : 0; }
 extern void *guest_code(uint32_t address);
 
 static void missing_code(void) {}
@@ -213,9 +213,9 @@ void guest_edge_apply(uint8_t value);
 void guest_set_stick(uint8_t value)
 {
     if (!stick_poked)
-        stick_saved = xenon2.v_0a00;
+        stick_saved = xenon2.joy_stick;
     stick_poked = 1;
-    xenon2.v_0a00 = value;
+    xenon2.joy_stick = value;
     guest_edge_apply(value);
 }
 
@@ -245,7 +245,7 @@ void guest_set_shield(uint16_t frames)
 void guest_stick_restore(void)
 {
     if (stick_poked)
-        xenon2.v_0a00 = stick_saved;
+        xenon2.joy_stick = stick_saved;
     stick_poked = 0;
 }
 
@@ -298,6 +298,6 @@ void host_export_ram_buf(uint8_t *ram)   /* ram: 0x80000 bytes */
 void host_import_ram_buf(const uint8_t *ram)
 {
     memcpy(&xenon2, ram, sizeof xenon2);
-    blob_raw = be16(ram + 0xe04) > 1 ? 2 : 0;   /* (v_0e04: the level) */
+    blob_raw = be16(ram + 0xe04) > 1 ? 2 : 0;   /* (level_number: the level) */
     guest_load_range(0, ram, 0x80000);
 }

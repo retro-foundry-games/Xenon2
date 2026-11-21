@@ -401,7 +401,7 @@ void redraw_energy_bar(void)
 /* orig $176E: copy 8 lines of 4 plane bytes of the digit glyph cca (0-9, 32 bytes each) into both screens */
 void draw_status_digit(void)
 {
-    int16_t d0 = (int16_t)v_0cca;
+    int16_t d0 = (int16_t)player_lives;
     const uint8_t *a0;
     uint8_t *a1 = &screen_b[0x78b1], *a2 = &screen_a[0x78b1];
 
@@ -469,7 +469,7 @@ static void put_tile(const uint8_t *tiles, uint16_t cell, uint8_t *dest, uint16_
 /* orig $17D6: draw the background: the picture scrolled by the strip at $436, then the map's tiles over it; HLE: blitter */
 HLE_WEAK void draw_background(void)
 {
-    uint16_t scroll = (uint16_t)(v_0436 >> 16);
+    uint16_t scroll = (uint16_t)(background_scroll >> 16);
     uint16_t d1 = (uint16_t)(0xc0 - scroll);
     uint8_t *a0 = map_image + (int16_t)(uint16_t)(scroll * 0x50u);
     uint8_t *a1 = draw_screen;
@@ -499,7 +499,7 @@ HLE_WEAK void draw_background(void)
     if (v_0d85)
         return;
 
-    draw_tile_grid(level_init_src + (int16_t)v_0cce, 0x13, 0xc, (int16_t)-(int16_t)v_0cd6, 0);
+    draw_tile_grid(level_init_src + (int16_t)map_row_offset, 0x13, 0xc, (int16_t)-(int16_t)scroll_fine, 0);
 }
 
 /* one tile as $1BD0 puts it: a plain cell is the fixed block at $1EA2, a cell with bit 15 is OR-ed into planes 0 to 2 by its mask and
@@ -515,7 +515,7 @@ static void put_tile_flash(const uint8_t *tiles, uint16_t cell, uint8_t *dest, u
         custom->bltdmod = 0x26;
         custom->bltafwm = 0xffff;
         custom->bltalwm = 0xffff;
-        custom->bltapt = ADDR(v_1ea2);
+        custom->bltapt = ADDR(tile_mask_block);
         custom->bltdpt = ADDR(dest);
         BLTSIZE_WRITE(partial ? (uint16_t)((uint16_t)(rows_size << 2) - 3) : 0x1001);
         BLIT_WAIT();
