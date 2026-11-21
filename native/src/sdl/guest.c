@@ -269,6 +269,11 @@ uint8_t guest_a6a(uint8_t a01)
     return a6a_value;
 }
 
+void guest_set_shield(uint16_t frames)
+{
+    xenon.v_0cc8 = frames;
+}
+
 void guest_stick_restore(void)
 {
     if (stick_poked)

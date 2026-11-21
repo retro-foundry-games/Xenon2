@@ -17,6 +17,7 @@
 --     startfn=HEX   (with state=) the original's state is inside a function that has no sync point for a long time (the shop: state=shop-before-512k startfn=8ff2): the port is given the memory at once and runs that function
 --     resync=N      after more than N frames between two sync points (a disk load) the port takes the original's memory and the baseline starts again (with startfn=: 120)
 --     gate=0        (default on) a disk load of the port waits for the original's: the port takes the original's memory at the instant its load returns and goes on from there, the comparison starts again
+--     shield=SECONDS (with state=) both sides are invulnerable for that many seconds (50 sync points each)
 --     health=full   (with state=) the player's energy is set to full in the state before the run
 --     syncs=N       how many synchronisation points to compare (default 300)
 --     tolerant=1    also leave out what depends on how many interrupts the original took while its (slow) code ran: the music player, the sound requests and the joystick bytes (the interrupt fills them), the hardware mirror, the random generator
@@ -55,6 +56,7 @@ local STRICT = args:match("strict=1") ~= nil
 local REPORT = args:match("report=(%S+)")
 local PLAY = args:match("play=1") ~= nil   -- you play: arrows = stick, Ctrl / Space / Return = fire, in the emulator's window (without --headless); implies hold=1, no sync limit
 local AUTO = args:match("auto=1") ~= nil   -- the autoplayer (host/autoplay.lua) plays: the stick from the original's memory at each sync point; the input is written to captures/input/play-latest.txt as when played
+local SHIELD_FRAMES = tonumber(args:match("shield=(%d+)") or "0") * 50   -- shield=SECONDS: the original and the port are invulnerable (v_0cc8 counts down by the sync points)
 local LIVE = (PLAY or AUTO or args:match("live=1") ~= nil) and args:match("live=0") == nil   -- the port is stepped a frame at a time beside the emulator, its panel shows it live (it waits at each sync point for the original); off for headless regression runs
 local HOLD = PLAY or args:match("hold=1") ~= nil   -- (a replay=FILE of a run is shown in the window with the three views too)   -- at the first difference stay paused (with --control PATH: LS.port_call(LUA) runs Lua in the port, LS.snap is the original's memory and frame at the point)
 local CALLS = args:match("calls=1") ~= nil   -- also compare how often each function of the game was called between two sync points (the code table of the port)
@@ -108,6 +110,7 @@ if STATE then
     ami.wait(1)
     assert(ami.snapshot_load(STATE .. ".state"), "cannot load " .. STATE)
     if args:match("health=full") then ami.poke16(0xcc6, 0x27); ami.poke8(0xa6b, 0xff); ami.log(string.format("health=full: energy now $%x", ami.peek16(0xcc6))) end   -- the player's energy ($CC6, 39 bar cells) and the flag that redraws the bar; the port takes the original's memory at the first sync point
+    if SHIELD_FRAMES > 0 then ami.poke16(0xcc8, SHIELD_FRAMES) end
     started = true
 end
 local peer = ami.peer("port")
@@ -263,6 +266,7 @@ local function sync_point()
             for k, v in pairs(stick) do applied_stick[k] = v end
         end
     end
+    if SHIELD_FRAMES > 0 and n <= SHIELD_FRAMES then ami.poke16(0xcc8, SHIELD_FRAMES - n) end
     pending[#pending].shop = shop_loaded   -- the shop's overlay (sector 1476) is the last thing loaded at $54E00 (the level's code lives there too)
     do
         local list = PLAY and key_queue or replay_keys[n] or {}
@@ -594,7 +598,7 @@ for _, a in ipairs(STICK_READERS) do
         r[#r + 1] = ("{0x%x,%d}"):format(a, value)
     end)
 end
-port_call("rseq, ridx = nil, 1; function rhook(a) local i = ridx; while rseq and rseq[i] and rseq[i][1] ~= a do i = i + 1 end; local e = rseq and rseq[i]; if e then if a == 0x56e56 then port.poke_stale(e[2]) else port.poke_stick(e[2]) end; ridx = i + 1 end end")
+port_call("rseq, ridx, rlog = nil, 1, {}; function rhook(a) local i = ridx; while rseq and rseq[i] and rseq[i][1] ~= a do i = i + 1 end; local e = rseq and rseq[i]; rlog[#rlog + 1] = string.format(\"%x:%s\", a, e and e[2] or \"-\"); if e then if a == 0x56e56 then port.poke_stale(e[2]) else port.poke_stick(e[2]) end; ridx = i + 1 end end")
 for _, a in ipairs(STICK_READERS) do port_call(("port.hook(0x%x, rhook)"):format(a)) end
 local function stick_bits(st) return (st.up == 1 and 1 or 0) | (st.down == 1 and 2 or 0) | (st.left == 1 and 4 or 0) | (st.right == 1 and 8 or 0) | (st.fire == 1 and 0x80 or 0) end
 local function send_high()   -- the original's memory above 512 KB, which the port does not have (the map masks of bobs above the screen read it)
@@ -610,7 +614,7 @@ local function apply_joy0(snap)
     reads[snap.n - 1] = nil
     trail[#trail + 1] = ("sync %d: stick %s, original's c60=%d a00=%02x, reads {%s}"):format(snap.n, desired_joy and stick_bits(desired_joy) or "-", ami.peek16(0xc60), ami.peek8(0xa00), r and table.concat(r, ",") or "")
     if #trail > 8 then table.remove(trail, 1) end
-    port_call(("rseq, ridx = {%s}, 1"):format(r and table.concat(r, ",") or ""))
+    port_call(("rseq, ridx, rlog = {%s}, 1, {}"):format(r and table.concat(r, ",") or ""))
     local d = desired_joy
     if not d then return end
     if not r and port_joy and INLAG ~= "0" and (INLAG == "1" or snap.shop) and held_joy ~= d then   -- no steering call: the shop's stick check runs late
@@ -629,6 +633,7 @@ local function apply_joy(snap)
     local r = reads[snap.n - 1]
     local first = r and r.first
     apply_joy0(snap)
+    if SHIELD_FRAMES > 0 and snap.ram and snap.n <= SHIELD_FRAMES + 1 then port_call(("port.set_shield(%d)"):format(snap.ram:byte(0xcc9) * 256 + snap.ram:byte(0xcca))) end
     if snap.ram then port_call(("port.set_a6a(%d)"):format(snap.ram:byte(0xa6b))) end   -- the press the original's interrupt saw is in v_0a6a where it copied it
     -- the interrupt that brings a fire press came after the routine that read the old stick: the press is in v_0a01 from there on
     port_call(("port.edge_defer(%d)"):format(first and port_joy and first & 0x80 == 0 and stick_bits(port_joy) & 0x80 ~= 0 and 1 or 0))

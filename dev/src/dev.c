@@ -486,6 +486,15 @@ static int peek(lua_State *s, int size)
 void guest_edge_defer(int on);
 void guest_set_a6a(uint8_t value);
 
+void guest_set_shield(uint16_t frames);
+
+static int l_set_shield(lua_State *s)
+{
+    guest_set_shield((uint16_t)luaL_checkinteger(s, 1));
+    cache_valid = 0;
+    return 0;
+}
+
 static int l_set_a6a(lua_State *s)
 {
     guest_set_a6a((uint8_t)luaL_checkinteger(s, 1));
@@ -773,7 +782,7 @@ static int l_close(lua_State *s)
 
 static const luaL_Reg port_functions[] = {
     { "step", l_step }, { "run", l_run }, { "run_until", l_run_until }, { "hook", l_hook }, { "unhook", l_unhook }, { "stop_on", l_stop_on },
-    { "frame", l_frame }, { "trace", l_trace }, { "joy", l_joy }, { "key", l_key }, { "ram", l_ram }, { "poke_stick", l_poke_stick }, { "poke_stale", l_poke_stale }, { "edge_defer", l_edge_defer }, { "set_a6a", l_set_a6a }, { "peek8", l_peek8 }, { "peek16", l_peek16 }, { "peek32", l_peek32 },
+    { "frame", l_frame }, { "trace", l_trace }, { "joy", l_joy }, { "key", l_key }, { "ram", l_ram }, { "poke_stick", l_poke_stick }, { "poke_stale", l_poke_stale }, { "edge_defer", l_edge_defer }, { "set_a6a", l_set_a6a }, { "set_shield", l_set_shield }, { "peek8", l_peek8 }, { "peek16", l_peek16 }, { "peek32", l_peek32 },
     { "load_ram", l_load_ram }, { "load_high", l_load_high }, { "picture", l_picture }, { "picture_hash", l_picture_hash }, { "disk", l_disk }, { "disk_gate", l_disk_gate }, { "disk_waiting", l_disk_waiting }, { "disk_release", l_disk_release }, { "run_function", l_run_function }, { "save_state", l_save_state }, { "load_state", l_load_state }, { "quit", l_quit }, { "listen", l_listen }, { "accept", l_accept }, { "readline", l_readline }, { "read", l_read }, { "write", l_write }, { "close", l_close }, { 0, 0 }
 };
 
