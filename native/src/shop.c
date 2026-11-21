@@ -1473,14 +1473,14 @@ void shop_main(void)
     shop_delay();
     sfx_cmd = 0x16;
     shop_slide_in();
-    if (v_8fec)
+    if (shop_closing)
         shop_stock_sold_out();
     else
         shop_sell_list();
     shop_open();
     shop_keeper_in();
     shop_text_home();
-    if (v_8fec) {
+    if (shop_closing) {
         shop_end_of_broadcast();
     } else {
         const uint8_t *text = (const uint8_t *)GPTR(SH_TXT_SELL);

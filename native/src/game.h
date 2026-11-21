@@ -349,7 +349,7 @@ struct Xenon2 {
     uint16_t loaded_level;  /* $008F98 var */
     PAD(80)
     uint8_t progress_text[2];  /* $008FEA arr */
-    uint8_t v_8fec;  /* $008FEC var */
+    uint8_t shop_closing;  /* $008FEC var */
     PAD(1)
     uint8_t * saved_level_init;  /* $008FEE var */
     PAD(364)
@@ -793,7 +793,7 @@ LAYOUT_ASSERT(v_8f94, 0x8f94);
 LAYOUT_ASSERT(v_8f96, 0x8f96);
 LAYOUT_ASSERT(loaded_level, 0x8f98);
 LAYOUT_ASSERT(progress_text, 0x8fea);
-LAYOUT_ASSERT(v_8fec, 0x8fec);
+LAYOUT_ASSERT(shop_closing, 0x8fec);
 LAYOUT_ASSERT(saved_level_init, 0x8fee);
 LAYOUT_ASSERT(level_palette_copy, 0x915e);
 LAYOUT_ASSERT(level_sectors, 0x91ea);
@@ -1171,7 +1171,7 @@ LAYOUT_ASSERT(level_data_dst, 0x7d120);
 #define v_8f96 (xenon2.v_8f96)
 #define loaded_level (xenon2.loaded_level)
 #define progress_text (xenon2.progress_text)
-#define v_8fec (xenon2.v_8fec)
+#define shop_closing (xenon2.shop_closing)
 #define saved_level_init (xenon2.saved_level_init)
 #define level_palette_copy (xenon2.level_palette_copy)
 #define level_sectors (xenon2.level_sectors)
