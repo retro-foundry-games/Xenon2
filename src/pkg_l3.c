@@ -50,6 +50,7 @@ static void set_anim(Object *o, uint32_t address)
 void l3_spawn_snake(const uint8_t *a1);
 void l3_spawn_diver(const uint8_t *a1);
 void l3_worm_spawn(uint16_t d6);
+void l3_worm_hit(Object *a0, Object *a1, uint16_t d0);
 void l3_end_draw(Object *a0);
 void l3_spawn_gun(const uint8_t *a1);
 void l3_spawn_boss(const uint8_t *a1);
@@ -210,10 +211,69 @@ void l3_end_draw(Object *a0)
     }
 }
 
-/* level3 $055310: the spawner of the end's worm (not written) */
+/* level3 $055310: the worm of the end: eleven objects of the table at $55270 (update, picture, the delay v28 of each behind the one before) along a path from
+ * the table at $6EF36: the first path is the first, then they come by the seed of d6 (1 to 6); d6 is the side (v30) */
 void l3_worm_spawn(uint16_t d6)
 {
-    (void)d6;
+    uint16_t d0;
+    uint32_t t = 0x55270, path;
+    int16_t d2 = 0, x, y;
+    int n, count;
+    Object *head = 0, *prev = 0;
+
+    if (W(0xd64) != 1) {
+        d0 = W(0xd64);
+        sh_w16(0xd64, (uint16_t)(d0 + 1));
+    } else {
+        uint16_t *seed = d6 == 0 ? &v_0d26[16] : &v_0d26[18];
+
+        do {
+            uint32_t r = ((uint32_t)seed[0] << 16) | seed[1];
+
+            r = (r >> 5) | (r << 27);
+            seed[0] = (uint16_t)(r >> 16);
+            seed[1] = (uint16_t)r;
+            d0 = (uint16_t)(r & 7);
+        } while (d0 < 1 || d0 == 7);
+    }
+    path = sh_r32(0x6ef36 + 4 * (uint32_t)d0);
+    x = (int16_t)W(path + 2);
+    y = (int16_t)(W(path + 4) - v_0cd0 - v_0cda);
+    count = W(t) + 1;
+    t += 2;
+    for (n = 0; n < count; n++) {
+        Object *a0 = alloc_in(LIST_C);
+
+        if (prev)
+            prev->chain = a0;
+        else
+            head = a0;
+        a0->fn_hit = prev ? GFN(0xf2c) : (void *)l3_worm_hit;
+        a0->type = 0x50;
+        a0->v28 = d2;
+        d2 = (int16_t)(d2 - (int16_t)W(t));
+        a0->fn_update = (obj_fn)GFN(sh_r32(t + 2));
+        a0->fn_draw = draw_bob_masked;
+        a0->gfx = GPTR(sh_r32(t + 6));
+        a0->v42 = 0x7d0;
+        SET_V5E(a0, 0);
+        a0->flag35 = 0;
+        a0->flag34 = 0;
+        a0->anim_delay = 0;
+        a0->v46 = (uint8_t *)GPTR(path);
+        a0->ptr4a = (const uint8_t *)GPTR(path);
+        a0->v2c = 0xc0;
+        a0->x = x;
+        a0->y = y;
+        a0->v44 = 0;
+        a0->v54 = (int16_t)W(0x54e42);
+        a0->v30 = (int16_t)d6;
+        bbox_from_frame(a0);
+        a0->target = head;
+        a0->chain = 0;
+        t += 10;
+        prev = a0;
+    }
 }
 
 static void l3_enemy(Object *a0, uint32_t table)
@@ -1152,4 +1212,84 @@ void l3_walker_update(Object *a0)
         }
     }
     bbox_from_frame(a0);
+}
+
+/* the picture of a worm's piece follows its phase v2c by a table of eight */
+static void l3_worm_follow(Object *a0, uint32_t table)
+{
+    a0->y = (int16_t)(a0->y + v_0cd8);
+    if (table == 0x55622)
+        sh_w8(0xd94 + (uint16_t)a0->v30, 0xff);
+    enemy_update_no_anim(a0);
+    a0->gfx = GPTR(sh_r32(table + ((((uint16_t)a0->v2c + 0x10) >> 3) & 0x1c)));
+    bbox_from_frame(a0);
+}
+
+/* level3 $055420: the worm's head: its picture follows its phase and now and then it fires eight shots round it */
+void l3_worm_head(Object *a0)
+{
+    uint16_t old = (uint16_t)a0->v2c;
+    uint16_t d0, d1, sum;
+
+    a0->y = (int16_t)(a0->y + v_0cd8);
+    enemy_update(a0);
+    d0 = (uint16_t)((((uint16_t)a0->v2c + 0x10) >> 3) & 0x1c);
+    d1 = (uint16_t)(((old + 0x10) >> 3) & 0x1c);
+    if (d1 != d0)
+        set_anim(a0, sh_r32(0x55400 + d0));
+    sum = (uint16_t)(a0->v5e_b[0] + B(0x54e6f));
+    a0->v5e_b[0] = (uint8_t)sum;
+    if (sum > 0xff) {
+        int d2;
+
+        for (d2 = 7; d2 >= 0; d2--) {
+            Object *s = spawn_enemy_shot((uint16_t)a0->x, (uint16_t)a0->y, (uint16_t)d2, W(0x54e70), 0);
+
+            set_anim(s, 0x5549e);
+        }
+    }
+    bbox_from_frame(a0);
+}
+
+/* level3 $05556A */
+void l3_worm_a(Object *a0)
+{
+    l3_worm_follow(a0, 0x5558e);
+}
+
+/* level3 $0555AE */
+void l3_worm_b(Object *a0)
+{
+    l3_worm_follow(a0, 0x555d2);
+}
+
+/* level3 $0555F2: the last piece: it shows the end's flag of its side (d94 / d95) */
+void l3_worm_c(Object *a0)
+{
+    l3_worm_follow(a0, 0x55622);
+}
+
+/* level3 $055642: the hit of the worm's first piece: the energy of its side (d66 / d68) runs out and the whole worm bursts and the side's flag d92 / d93 is set */
+void l3_worm_hit(Object *a0, Object *a1, uint16_t d0)
+{
+    Object *o;
+    uint32_t w = 0xd66 + 2 * (uint32_t)(uint16_t)a1->v30;
+    uint16_t old = W(w);
+
+    for (o = a1; o; o = o->chain)
+        o->fn_draw = draw_bob_or_first;
+    sh_w16(w, (uint16_t)(old - d0));
+    if (old > d0)
+        return;
+    sh_w8(0xd92 + (uint16_t)a1->v30, 0xff);
+    sh_w8(0xd94 + (uint16_t)a1->v30, 0);
+    for (o = a1->chain; o;) {
+        Object *next = o->chain;
+
+        kill_thunk(o);
+        o = next;
+    }
+    kill_thunk(a1);
+    debris_burst(a0, 0x13, 0, 0, 0x140, 0xc0, v_0f64);
+    free_object_chain(LIST_C->prev);
 }
