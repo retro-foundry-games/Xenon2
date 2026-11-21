@@ -452,7 +452,7 @@ Object *spawn_formation(Object *a0, const uint8_t *rec_raw, const uint8_t *a2)
             e = (const uint8_t *)GPTR(rd32(level_formations + (int16_t)(uint16_t)((a1->index - 1) * 4)));
             if ((const void *)e < (const void *)level_data_start || (const void *)e >= (const void *)level_events_a)
                 return a0;
-            a0->v46 = (uint8_t *)e;
+            a0->script = (uint8_t *)e;
             if (rd16(e) == 0xa) {
                 a0->x = (int16_t)rd16(e + 2);
                 a0->y = (int16_t)rd16(e + 4);
@@ -461,7 +461,7 @@ Object *spawn_formation(Object *a0, const uint8_t *rec_raw, const uint8_t *a2)
                 e += 6;
             }
             set_cursor(a0, e);
-            a0->v54 = (int16_t)a1->w0c;
+            a0->steps = (int16_t)a1->w0c;
             SET_V5E(a0, (int16_t)a1->y);
             d0 = (uint16_t)random_next();
             SET_V5E(a0, (int16_t)((V5E(a0) & 0x00ff) | ((d0 & 0xff) << 8)));
@@ -753,8 +753,8 @@ void spawn_debris(Object *a0_unused, Object *a1, uint16_t d0_unused)
 Object *spawn_wave_326c(Object *a0, const uint8_t *a1)
 {
     a0 = spawn_formation(a0, a1, spawn_def_326c);
-    a0->v30 = a0->v54;
-    a0->v54 = 3;
+    a0->v30 = a0->steps;
+    a0->steps = 3;
     a0->kind = 0;
     return a0;
 }
@@ -772,7 +772,7 @@ static Object *marker_tail(Object *a0, uint16_t d0, const uint8_t *a1, void (*a2
     a0->x = (int16_t)x;
     y = (uint16_t)(rd16(a1 + 10) - 8);
     a0->y = (int16_t)y;
-    a0->v46 = level_init_src + (uint16_t)((x >> 3) & 0xfe) + (int16_t)(uint16_t)((uint32_t)(y >> 4) * 0x28);
+    a0->script = level_init_src + (uint16_t)((x >> 3) & 0xfe) + (int16_t)(uint16_t)((uint32_t)(y >> 4) * 0x28);
     a0->v28 = 0;
     a0->v30 = 0;
     return a0;
@@ -790,7 +790,7 @@ Object *spawn_marker_front(uint16_t d0, const uint8_t *a1, void (*a2)(void))
     return marker_tail(list_insert(LIST_FRONT), d0, a1, a2);
 }
 
-/* orig $EFC, $003912: update of a shot of an enemy: animation, moves by steps (v54) along one of 8 directions (v2a), gone when it leaves the
+/* orig $EFC, $003912: update of a shot of an enemy: animation, moves by steps (steps) along one of 8 directions (v2a), gone when it leaves the
  * screen; when it meets the player the player is hit (unless shield_timer) and the shot goes */
 void enemy_shot_update(Object *a0)
 {
@@ -802,9 +802,9 @@ void enemy_shot_update(Object *a0)
     d2 = (uint16_t)a0->v2a;
     d0 = ((uint32_t)(uint16_t)a0->x << 16) | a0->x_frac;
     d1 = ((uint32_t)(uint16_t)a0->y << 16) | a0->y_frac;
-    m = (int32_t)enemy_shot_dx[d2] * (int16_t)a0->v54;
+    m = (int32_t)enemy_shot_dx[d2] * (int16_t)a0->steps;
     d0 += (uint32_t)m << 2;
-    m = (int32_t)enemy_shot_dy[d2] * (int16_t)a0->v54;
+    m = (int32_t)enemy_shot_dy[d2] * (int16_t)a0->steps;
     d1 += (uint32_t)m << 2;
     a0->x = (int16_t)(d0 >> 16);
     a0->x_frac = (uint16_t)d0;
@@ -837,7 +837,7 @@ Object *spawn_enemy_shot(uint16_t x, uint16_t y, uint16_t angle, uint16_t steps,
     a0->x = (int16_t)x;
     a0->y = (int16_t)y;
     a0->v2a = (int16_t)angle;
-    a0->v54 = (int16_t)steps;
+    a0->steps = (int16_t)steps;
     a0->hit[0] = 0x3e8;
     a0->hit[2] = 0x3e8;
     return a0;

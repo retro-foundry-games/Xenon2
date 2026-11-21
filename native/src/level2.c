@@ -147,15 +147,15 @@ void l2_hook(uint16_t d0, const uint8_t *a1, uint16_t d2)
         a0->hit[2] = 0x3e8;
         a0->gfx = GPTR(flag ? 0x559c8 : 0x559e6);
         a0->anim = (const uint8_t *)GPTR(flag ? 0x559c4 : 0x559c6);
-        copy2(a0->v46, (const uint8_t *)a0->gfx);
+        copy2(a0->script, (const uint8_t *)a0->gfx);
         a0->score = 0x64;
         a0->v3e = 0;
         a0->v40 = 0;
         return;
     case 2:
         a0 = spawn_marker_front(flag ? 0xf0 : 0xf4, a1, (void (*)(void))l2_front_update);
-        copy4(a0->v46, (const uint8_t *)GPTR(flag ? 0x55890 : 0x558b8));
-        copy4(a0->v46 + 0x28, (const uint8_t *)GPTR(flag ? 0x55894 : 0x558bc));
+        copy4(a0->script, (const uint8_t *)GPTR(flag ? 0x55890 : 0x558b8));
+        copy4(a0->script + 0x28, (const uint8_t *)GPTR(flag ? 0x55894 : 0x558bc));
         return;
     case 3:
         a0 = alloc_in(LIST_C);
@@ -179,7 +179,7 @@ void l2_hook(uint16_t d0, const uint8_t *a1, uint16_t d2)
     case 4:
         a0 = spawn_marker_front(0xfc, a1, (void (*)(void))l2_marker_fc_update);
         a0->v30 = 1;
-        copy2(a0->v46, (const uint8_t *)GPTR(0x5567a));
+        copy2(a0->script, (const uint8_t *)GPTR(0x5567a));
         return;
     case 5:
         a0 = spawn_marker_front(0xf8, a1, (void (*)(void))l2_marker_f8_update);
@@ -435,8 +435,8 @@ void l2_marker_f8_update(Object *a0)
             a0->v28 ^= 1;
     }
     a2 = (const uint8_t *)GPTR(0x554c6 + ((uint16_t)a0->v28 << 3));
-    copy4(a0->v46, a2);
-    copy4(a0->v46 + 0x28, a2 + 4);
+    copy4(a0->script, a2);
+    copy4(a0->script + 0x28, a2 + 4);
     if ((uint16_t)a0->v28 < 2)
         return;
     if (frame_tick & 3)
@@ -492,7 +492,7 @@ void l2_marker_fc_update(Object *a0)
             return;
         a0->v28 = 2;
     }
-    copy2(a0->v46, (const uint8_t *)GPTR(0x5567a + ((uint16_t)a0->v28 << 1)));
+    copy2(a0->script, (const uint8_t *)GPTR(0x5567a + ((uint16_t)a0->v28 << 1)));
     if (frame_tick & 3)
         return;
     a0->v28++;
@@ -700,8 +700,8 @@ void l2_front_update(Object *a0)
         uint32_t table = a0->type == 0xf0 ? 0x557e8 : 0x5583c;
         const uint8_t *a2 = (const uint8_t *)GPTR(sh_r32(table + ((uint16_t)a0->v28 << 2)));
 
-        copy4(a0->v46, a2);
-        copy4(a0->v46 + 0x28, a2 + 4);
+        copy4(a0->script, a2);
+        copy4(a0->script + 0x28, a2 + 4);
     }
     a0->v28++;
     if (a0->v28 < 0x15)
@@ -751,7 +751,7 @@ void l2_turret_update(Object *a0)
             a0->v28 = 1;
         return;
     }
-    copy2(a0->v46, (const uint8_t *)GPTR((a0->type == 0xe8 ? 0x559c8 : 0x559e6) + 2 * (uint16_t)a0->v28));
+    copy2(a0->script, (const uint8_t *)GPTR((a0->type == 0xe8 ? 0x559c8 : 0x559e6) + 2 * (uint16_t)a0->v28));
     a0->v28++;
     if (a0->v28 != 7) {
         if (a0->v28 == 0xf)
@@ -903,13 +903,13 @@ static void l2_debris_wall(uint16_t d6)
         SET_V5E(a0, 0);
         a0->big = 0;
         a0->anim_delay = 0;
-        a0->v46 = (uint8_t *)a1;
+        a0->script = (uint8_t *)a1;
         a0->cursor = a1;
         a0->x = (int16_t)d0;
         a0->y = (int16_t)d1;
         a0->kind = 0;
         a0->v28 = (int16_t)d2;
-        a0->v54 = (int16_t)W(0x54e54);
+        a0->steps = (int16_t)W(0x54e54);
         a0->v30 = (int16_t)d6;
         d2 = (uint16_t)(d2 - 0xa);
         bbox_from_frame(a0);
@@ -973,7 +973,7 @@ void l2_piece_update(Object *a0)
             a0->fn_draw = draw_bob_behind_map;
     } else if (a0->fn_draw == draw_bob_behind_map) {
         a1 = a0->cursor;
-        if (rd16(a1) != 0 && a1 - 10 != a0->v46)
+        if (rd16(a1) != 0 && a1 - 10 != a0->script)
             a0->fn_draw = draw_bob_masked;
     } else if (rd16(a0->cursor) == 0) {
         a0->fn_draw = draw_bob_behind_map;

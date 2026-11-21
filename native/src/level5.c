@@ -212,7 +212,7 @@ void l5_spawn_gunners(const uint8_t *a1)
         a0->turn[0] = 0;
         a0->turn[1] = 0;
         a0->turn[2] = 0;
-        a0->v46 = (uint8_t *)GPTR(a2);
+        a0->script = (uint8_t *)GPTR(a2);
         a0->cursor = (const uint8_t *)GPTR(a2 + 6);
         a0->v28 = d6;
         d6 = (int16_t)(d6 - (int16_t)W(0x54e44));
@@ -220,7 +220,7 @@ void l5_spawn_gunners(const uint8_t *a1)
         a0->hit[2] = 0x3e8;
         a0->score = 0xc8;
         a0->kind = 0;
-        a0->v54 = (int16_t)W(0x54e46);
+        a0->steps = (int16_t)W(0x54e46);
         a0->v5e_b[0] = (uint8_t)(d7 * 0x19);
     }
 }
@@ -1008,7 +1008,7 @@ void l5_spawn_gates(const uint8_t *a1)
         a0->energy = (int16_t)W(0x54e5e);
         a0->hit[0] = 0x3e8;
         a0->hit[2] = 0x3e8;
-        a0->v46 = a2;
+        a0->script = a2;
         d2 = W(rec + 10);
         a2 += (int16_t)d2;
         d0 = (int16_t)(d0 + (int16_t)(d2 << 3));
@@ -1023,7 +1023,7 @@ void l5_gate_update(Object *a0)
     if (d0 >= 0x10)
         d0 = 0;
     a0->v28 = d0;
-    copy4(a0->v46, (const uint8_t *)GPTR(0x56c30 + (uint32_t)d0));
+    copy4(a0->script, (const uint8_t *)GPTR(0x56c30 + (uint32_t)d0));
     a0->hit[0] = a0->x;
     a0->hit[2] = (int16_t)(a0->x + 0x20);
     a0->hit[1] = (int16_t)(a0->y - scroll_pos + 2);
@@ -1036,7 +1036,7 @@ void l5_wall_update(Object *a0)
     uint32_t a2 = a0->type == 0x128 ? 0x56c94 : 0x56c9c;
 
     a0->v28 = (int16_t)((a0->v28 + 1) & 3);
-    wr16(a0->v46, W(a2 + 2 * (uint32_t)a0->v28));
+    wr16(a0->script, W(a2 + 2 * (uint32_t)a0->v28));
     a0->hit[0] = (int16_t)(a0->x + 3);
     a0->hit[2] = (int16_t)(a0->hit[0] + 0xa);
     a0->hit[1] = (int16_t)(a0->y - scroll_pos + 3);
@@ -1054,7 +1054,7 @@ void l5_wall_hit_a(Object *a0, Object *a1, uint16_t d0)
     if (!dies(a1, d0))
         return;
     spawn_effect((int16_t)(a1->x + 8), (int16_t)(a1->y - scroll_pos + 8), anim_270e, draw_bob_masked);
-    c = a1->v46;
+    c = a1->script;
     wr16(c, 0x87b5);
     wr32(c + 2, 0);
     wr16(c + 6, 0x87ab);
@@ -1077,7 +1077,7 @@ void l5_wall_hit_b(Object *a0, Object *a1, uint16_t d0)
     if (!dies(a1, d0))
         return;
     spawn_effect((int16_t)(a1->x + 8), (int16_t)(a1->y - scroll_pos + 8), anim_270e, draw_bob_masked);
-    c = a1->v46;
+    c = a1->script;
     wr16(c, 0x87ab);
     wr32(c - 4, 0);
     wr16(c - 6, 0x87b5);
@@ -1115,7 +1115,7 @@ void l5_spawn_bridge(const uint8_t *a1)
     a0->energy = (int16_t)W(0x54e60);
     a0->hit[0] = 0x3e8;
     a0->hit[2] = 0x3e8;
-    c = a0->v46;
+    c = a0->script;
     if (rd16(c - 2) == 0x8669) {
         wr16(c - 2, 0xc7);
         wr16(c + 0x26, 0x177);
@@ -1153,7 +1153,7 @@ void l5_bridge_update(Object *a0)
             set_anim(a1, 0x56fb8);
         }
     }
-    c = a0->v46;
+    c = a0->script;
     d0 = (uint32_t)((uint16_t)a0->v28 & 0xe) * 4;
     copy4(c, (const uint8_t *)GPTR(0x56ea2 + d0));
     copy4(c + 0x28, (const uint8_t *)GPTR(0x56ea6 + d0));
@@ -1169,7 +1169,7 @@ void l5_bridge_hit(Object *a0, Object *a1, uint16_t d0)
     if (!dies(a1, d0))
         return;
     spawn_effect((int16_t)(a1->x + 0x10), (int16_t)(a1->y - scroll_pos + 0x10), big_explosion_anim, draw_bob_masked);
-    c = a1->v46;
+    c = a1->script;
     if (rd16(c - 2) == 0xc7) {
         wr16(c - 2, 0x8669);
         wr16(c + 0x26, 0x8707);
@@ -1214,7 +1214,7 @@ Object *l5_spawn_unit(const uint8_t *a1)
     a0->energy = (int16_t)W(0x54e62);
     a0->hit[0] = 0x3e8;
     a0->hit[2] = 0x3e8;
-    c = a0->v46;
+    c = a0->script;
     d0 = (uint32_t)(uint16_t)a0->v2a << 3;
     a0->v30 = -1;
     if (rd16(c - 2) == 0x867d) {
@@ -1277,7 +1277,7 @@ void l5_unit_update(Object *a0)
         spawn_enemy_shot((uint16_t)x, (uint16_t)y, (uint16_t)a0->v2a, W(0x54e66), GPTR(sh_r32(0x572ca + d3)));
     }
 cells:
-    c = a0->v46;
+    c = a0->script;
     d0 = (uint32_t)(uint16_t)a0->v2a << 3;
     copy4(c, (const uint8_t *)GPTR(0x5711e + d0));
     copy4(c + 0x28, (const uint8_t *)GPTR(0x57122 + d0));
@@ -1295,7 +1295,7 @@ void l5_unit_hit(Object *a0, Object *a1, uint16_t d0)
     if (a1->v30 >= 0)
         sh_w8(0xd9b + (uint32_t)(uint16_t)a1->v30, 0xff);
     spawn_effect((int16_t)(a1->x + 0x10), (int16_t)(a1->y - scroll_pos + 0x10), big_explosion_anim, draw_bob_masked);
-    c = a1->v46;
+    c = a1->script;
     if (rd16(c - 2) == 0x80d7) {
         wr16(c - 2, 0x867d);
         wr16(c + 0x26, 0x871b);
@@ -1332,7 +1332,7 @@ void l5_spawn_gun(const uint8_t *a1)
     a0->hit[2] = 0x3e8;
     a0->gfx = GPTR(a2);
     a0->anim = (const uint8_t *)GPTR(a4);
-    wr16(a0->v46, W(a2));
+    wr16(a0->script, W(a2));
     a0->score = 0x64;
     a0->v3e = 0;
     a0->v40 = 0;
@@ -1358,7 +1358,7 @@ void l5_gun_update(Object *a0)
     }
     a0->v28 = (int16_t)(a0->v28 + 1);
     a2 = a0->type == 0x108 ? 0x57524 : 0x57514;
-    wr16(a0->v46, W(a2 + 2 * (uint32_t)(uint16_t)a0->v28));
+    wr16(a0->script, W(a2 + 2 * (uint32_t)(uint16_t)a0->v28));
     if (a0->v28 == 3) {
         int16_t d0 = (int16_t)(a0->x + 0x18), d1 = (int16_t)(a0->y - scroll_pos + 8);
         uint16_t d2 = 2;

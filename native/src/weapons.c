@@ -873,7 +873,7 @@ void hit_tile(Object *a0, Object *a1, uint16_t d0)
     x = (int16_t)(((a1->v3e + 1) << 3) + a1->x);
     y = (int16_t)(((a1->v40 + 1) << 3) + a1->y - scroll_pos);
     spawn_effect(x, y, anim_273a, draw_bob_masked);
-    dst = a1->v46;
+    dst = a1->script;
     src = a1->anim;
     for (rows = a1->v40; rows >= 0; rows--) {
         uint8_t *row = dst;

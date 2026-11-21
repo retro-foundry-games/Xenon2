@@ -73,7 +73,7 @@ void level1_turret_a_update(Object *a0)
     a0->hit[3] = (int16_t)(y + 0x18);
     d0 = (uint16_t)(a0->v28 << 3);
     a2 = a0->type == 0xe0 ? level_553b2 : level_553d2;
-    a1 = a0->v46;
+    a1 = a0->script;
     copy4(a1, a2 + d0);
     copy4(a1 + 0x28, a2 + d0 + 4);
     a0->v28 = (int16_t)((a0->v28 + 1) & 3);
@@ -109,7 +109,7 @@ void level1_turret_b_update(Object *a0)
     a0->hit[3] = (int16_t)(y + 0x18);
     d0 = (uint16_t)(((uint16_t)a0->v28 & 0xfffc) << 1);
     a2 = a0->type == 0xe8 ? level_556ac : level_5568c;
-    a1 = a0->v46;
+    a1 = a0->script;
     copy4(a1, a2 + d0);
     copy4(a1 + 0x28, a2 + d0 + 4);
     a0->v28 = (int16_t)((a0->v28 + 1) & 0xf);
@@ -144,7 +144,7 @@ void level1_turret_c_update(Object *a0)
     a0->hit[3] = (int16_t)(y + 0x10);
     d0 = (uint16_t)(((uint16_t)a0->v28 & 0xfffe) << 1);
     a2 = a0->type == 0xd8 ? level_5554a : level_554fa;
-    copy4(a0->v46, a2 + d0);
+    copy4(a0->script, a2 + d0);
     if (a0->v28 == 0) {
         sum = (uint16_t)(((ObjMove *)a0)->shot_count + level_54e40[9]);
         ((ObjMove *)a0)->shot_count = (uint8_t)sum;
@@ -230,7 +230,7 @@ static Object *level1_turret(uint16_t type, const uint8_t *a1, void (*update)(vo
 /* the end of the turrets' set-up: the first cells are written into the map ($46), the object hides them again when it is shot */
 static void level1_turret_cells(Object *a0, const uint8_t *a2, const uint8_t *a4)
 {
-    uint8_t *a3 = a0->v46;
+    uint8_t *a3 = a0->script;
 
     a0->gfx = a2;
     a0->anim = a4;
@@ -259,10 +259,10 @@ void level1_hook(uint16_t d0, const uint8_t *a1, uint16_t d2)
     case 2:
         a0 = level1_turret(flag ? 0xe0 : 0xe4, a1, (void (*)(void))level1_turret_a_update, level_54e58[1]);
         if (flag) {
-            a0->v46 += 2;
+            a0->script += 2;
             a0->x = (int16_t)(a0->x + 0x10);
         }
-        a0->v46 -= 2;
+        a0->script -= 2;
         a0->x = (int16_t)(a0->x - 0x10);
         level1_turret_cells(a0, flag ? level_553b2 : level_553d2, flag ? level_553f2 : level_553fa);
         return;
@@ -394,12 +394,12 @@ void level1_boss_update(Object *a0)
         a0->v30 = 0xaa;
     }
     if (a0->v28 < 0) {
-        if (a0->v54 != 0)
-            a0->v54--;
-    } else if (a0->v54 < 0xb) {
-        if (a0->v54 == 0)
+        if (a0->steps != 0)
+            a0->steps--;
+    } else if (a0->steps < 0xb) {
+        if (a0->steps == 0)
             sfx_cmd2 = 0xf;
-        a0->v54++;
+        a0->steps++;
     }
     a0->v28++;
     if (a0->v28 == 0)
@@ -505,7 +505,7 @@ void level1_init(void)
     a0->y = 0x10;
     a0->energy = level_54e58[0];
     a0->v28 = 0;
-    a0->v54 = 0;
+    a0->steps = 0;
     l1_boss_spawned = 0;
     for (i = 0; i < 5; i++)
         unit_live[i] = 0;
@@ -565,12 +565,12 @@ void level1_spawn_unit(uint16_t d6)
     a0->fn_hit = (void *)level1_hit_free;
     a0->v2e = d3;
     SET_V5E(a0, 0);
-    a0->v46 = s->path;
+    a0->script = s->path;
     ((ObjMove *)a0)->cursor = s->path;
     a0->x = x;
     a0->y = y;
     a0->v28 = d2;
-    a0->v54 = (int16_t)level_54e62[0];
+    a0->steps = (int16_t)level_54e62[0];
     a0->v30 = (int16_t)d6;
     a0->hit[0] = 0x3e8;
     a0->hit[2] = 0x3e8;
@@ -590,13 +590,13 @@ void level1_spawn_unit(uint16_t d6)
         a0->big = 0;
         SET_V5E(a0, 0);
         a0->anim_delay = 0;
-        a0->v46 = s->path;
+        a0->script = s->path;
         ((ObjMove *)a0)->cursor = s->path;
         a0->x = x;
         a0->y = y;
         a0->kind = 0;
         a0->v28 = d2;
-        a0->v54 = 4;
+        a0->steps = 4;
         a0->v30 = (int16_t)d6;
         d2 = (int16_t)(d2 - 7);
         bbox_from_frame(a0);
@@ -782,7 +782,7 @@ void level1_boss_part_update(Object *a0)
     a0->turn[0] = a1->turn[0];
     a0->turn[1] = a1->turn[1];
     a0->turn[2] = a1->turn[2];
-    a0->v54 = a1->v54;
+    a0->steps = a1->steps;
     if (a1->type == 0x50) {
         a0->x = 0xa0;
         a0->x_frac = 0;
@@ -792,7 +792,7 @@ void level1_boss_part_update(Object *a0)
     }
     a0->v28 = 0x64;
     enemy_update_no_anim(a0);
-    if (a0->v54 == 0) {
+    if (a0->steps == 0) {
         a0->hit[0] = 0x3e8;
         a0->hit[2] = 0x3e8;
         return;
@@ -802,7 +802,7 @@ void level1_boss_part_update(Object *a0)
 
         a0->v2a = (int16_t)dir;
         a0->gfx = level_5638a[dir];
-        if (a0->v54 >= 0xb) {
+        if (a0->steps >= 0xb) {
             uint16_t sum = (uint16_t)(m->shot_count + 0xf);
 
             m->shot_count = (uint8_t)sum;

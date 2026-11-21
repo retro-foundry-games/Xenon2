@@ -189,7 +189,7 @@ void l4_tower_update(Object *a0)
         return;
     }
     cells = (a0->type == 0xd0 ? 0x57160 : 0x57190) + ((uint16_t)a0->v28 << 3);
-    put_cells(a0->v46, cells);
+    put_cells(a0->script, cells);
     a0->v28++;
     if (a0->v28 == 4) {
         int16_t x = (int16_t)(a0->x + 0x12), y = (int16_t)(a0->y - scroll_pos + 0xe);
@@ -218,7 +218,7 @@ void l4_tower_hit(Object *a0, Object *a1, uint16_t d0)
         return;
     }
     spawn_effect((int16_t)(a1->x + 0x10), (int16_t)(a1->y - scroll_pos + 0x10), big_explosion_anim, draw_bob_masked);
-    put_cells(a1->v46, a1->type == 0xd0 ? 0x57236 : 0x5723e);
+    put_cells(a1->script, a1->type == 0xd0 ? 0x57236 : 0x5723e);
     player_score += 0x190;
     kill_thunk(a1);
 }
@@ -241,7 +241,7 @@ void l4_spawn_tower(const uint8_t *a1)
     a0->energy = (int16_t)W(0x54e66);
     a0->hit[0] = 0x3e8;
     a0->hit[2] = 0x3e8;
-    put_cells(a0->v46, flag ? 0x57160 : 0x57190);
+    put_cells(a0->script, flag ? 0x57160 : 0x57190);
 }
 
 /* level4 $055090: the scroll: the floor of the scroll ends at $DF0 and between $AE0 and $E50 an enemy comes every 16 pixels */
@@ -387,9 +387,9 @@ void l4_shot_a(Object *a0)
     kind = (uint16_t)((uint16_t)d0 >> 3);
     anim = sh_r32(0x55574 + kind);
     set_anim(a1, anim);
-    a1->v46 = (uint8_t *)GPTR(cells);
+    a1->script = (uint8_t *)GPTR(cells);
     a1->cursor = (const uint8_t *)GPTR(cells);
-    a1->v54 = (int16_t)W(0x54e4a);
+    a1->steps = (int16_t)W(0x54e4a);
     SET_V5E(a1, 0);
 }
 
@@ -410,7 +410,7 @@ void l4_enemy_f8(Object *a0)
         if (a0->x >= 0xa0)
             d0 = (uint16_t)(d0 + 4);
         table = sh_r32(0x55714 + d0);
-        a0->v46 = (uint8_t *)GPTR(table);
+        a0->script = (uint8_t *)GPTR(table);
         a0->cursor = (const uint8_t *)GPTR(table);
         a0->v28 = 0;
     }
@@ -475,7 +475,7 @@ void l4_spawn_boss1(void)
         a0->v2a = 0;
         a0->v2c = 0;
         a0->turn[0] = a0->turn[1] = a0->turn[2] = 0;
-        a0->v54 = 3;
+        a0->steps = 3;
         a0->energy = (int16_t)W(a1 + 16);
         a0->big = -1;
         a0->v2e = 0;
@@ -651,7 +651,7 @@ void l4_b1_core_flash(Object *a0)
 /* level4 $055C34: the picture of a piece of the chain while it has its size */
 void l4_b1_piece_draw(Object *a0)
 {
-    if (a0->v54 != 0)
+    if (a0->steps != 0)
         draw_bob_masked(a0);
 }
 
@@ -692,7 +692,7 @@ void l4_b1_head(Object *a0)
         if (d0 > 8)
             d0 = 8;
     }
-    a0->v54 = d0;
+    a0->steps = d0;
     if (d0 == 0) {
         a0->hit[0] = 0x3e8;
         a0->hit[2] = 0x3e8;
@@ -707,7 +707,7 @@ static void l4_b1_piece(Object *a0, uint32_t gfx)
     a0->anim_delay = 0;
     a0->y = (int16_t)(a0->y + W(0xd70));
     follow_chain(a0);
-    if (a0->v54 == 0) {
+    if (a0->steps == 0) {
         a0->hit[0] = 0x3e8;
         a0->hit[2] = 0x3e8;
     }
@@ -756,7 +756,7 @@ void l4_spawn_boss2(const uint8_t *a1_record, uint16_t d2)
         a0->v2a = 0;
         a0->v2c = (int16_t)W(a1 + 16);
         a0->turn[0] = a0->turn[1] = a0->turn[2] = 0;
-        a0->v54 = 3;
+        a0->steps = 3;
         a0->energy = B(a1 + 18);
         a0->big = (int8_t)B(a1 + 19);
         a0->v2e = 0;
@@ -780,7 +780,7 @@ static void follow_chain(Object *a0)
     a0->turn[0] = a1->turn[0];
     a0->turn[1] = a1->turn[1];
     a0->turn[2] = a1->turn[2];
-    a0->v54 = a1->v54;
+    a0->steps = a1->steps;
     a0->v28 = 0x64;
     obj_script_run(a0);
 }
@@ -837,7 +837,7 @@ void l4_b2_head(Object *a0)
     a0->v28 = (int16_t)(a0->v28 + a0->v2e);
     if (a0->v28 >= 0x18)
         a0->v2e = (int16_t)-a0->v2e;
-    a0->v54 = (int16_t)(a0->v28 + 4);
+    a0->steps = (int16_t)(a0->v28 + 4);
     head_picture(a0);
 }
 
@@ -897,7 +897,7 @@ void l4_b2_barrel(Object *a0)
 void l4_b2_wave(Object *a0)
 {
     a0->y = (int16_t)(a0->y + scroll_speed);
-    a0->v54 = 0xc;
+    a0->steps = 0xc;
     l4_pose(a0);
 }
 
