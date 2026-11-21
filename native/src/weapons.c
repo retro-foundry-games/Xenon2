@@ -5,6 +5,18 @@
 #include "weapon_util.h"
 #include "amiga/hw.h"
 
+/* the scratch fields of Object, by the kind that uses them */
+#define DRILL_STATE(o) ((o)->v28)
+#define PICKUP_MODE(o) ((o)->v28)
+#define SHOT_DX(o) ((o)->v2a)
+#define SHOT_DY(o) ((o)->v2e)
+#define SHOT_SPEED_HI(o) ((o)->v2a)
+#define SHOT_SPEED_LO(o) ((o)->v2c)
+#define W20_TICK(o) ((o)->v28)
+#define W2C_TICK(o) ((o)->v28)
+#define WB0_TICK(o) ((o)->v28)
+
+
 #define FN(f) ((obj_fn)(f))
 
 /* the pattern `move.w #4,(a); move.l #$fee,2(a); move.l #$3130,6(a); move.l #$3130,$a(a); sf.b $34(a); sf.b $60(a)` */
@@ -667,7 +679,7 @@ void shot_fixed_update(Object *a0)
     anim_step(a0);
     if (a0->type == 4)
         return;
-    d0 = (int32_t)(((uint32_t)(uint16_t)a0->v2a << 16) | (uint16_t)a0->v2c) >> 6;
+    d0 = (int32_t)(((uint32_t)(uint16_t)SHOT_SPEED_HI(a0) << 16) | (uint16_t)SHOT_SPEED_LO(a0)) >> 6;
     pos = ((uint32_t)(uint16_t)a0->x << 16) | a0->x_frac;
     pos += (uint32_t)d0;
     a0->x = (int16_t)(pos >> 16);
@@ -702,12 +714,12 @@ void shot_update(Object *a0)
         return;
     }
     anim_step(a0);
-    a0->x += a0->v2a;
+    a0->x += SHOT_DX(a0);
     if ((uint16_t)a0->x >= 0x138) {
         shot_gone(a0);
         return;
     }
-    a0->y += a0->v2e;
+    a0->y += SHOT_DY(a0);
     if ((uint16_t)a0->y >= 0xc0) {
         shot_gone(a0);
         return;
@@ -1110,7 +1122,7 @@ void pickup_update(Object *a0)
     int idx;
 
     anim_step(a0);
-    if (a0->v28 == 0) {
+    if (PICKUP_MODE(a0) == 0) {
         a0->y += 8;
         if (a0->y >= 0xc8) {
             if (level_end_items != 0) {
@@ -1122,18 +1134,18 @@ void pickup_update(Object *a0)
             return;
         }
     } else {
-        if (a0->v28 > 0) {
-            a0->v28 &= 7;
-            if (a0->v28 == 0)
+        if (PICKUP_MODE(a0) > 0) {
+            PICKUP_MODE(a0) &= 7;
+            if (PICKUP_MODE(a0) == 0)
                 a0->v2a = (int16_t)direction8((int16_t)(0xa0 - a0->x), (int16_t)(0x64 - a0->y));
-            a0->v28++;
+            PICKUP_MODE(a0)++;
             d0 = (int16_t)(0xa0 - a0->x);
             d1 = (int16_t)(0x64 - a0->y);
             if ((int32_t)d0 * d0 + (int32_t)d1 * d1 < 0x190)
-                a0->v28 = -34;
+                PICKUP_MODE(a0) = -34;
         } else {
-            a0->v28++;
-            if ((a0->v28 & 3) == 0) {
+            PICKUP_MODE(a0)++;
+            if ((PICKUP_MODE(a0) & 3) == 0) {
                 a0->v2a++;
                 a0->v2a &= 7;
             }
@@ -1535,7 +1547,7 @@ void spawn_bonuses(int16_t d7)
         set_anim(n, anim_26ae);
         n->x = (int16_t)(random_below(0x12c) + 0xa);
         n->y = (int16_t)(random_below(0xb4) + 6);
-        n->v28 = 7;
+        PICKUP_MODE(n) = 7;
         level_end_items++;
         n = alloc_b_front(0);
         n->type = 0x18;
@@ -1544,7 +1556,7 @@ void spawn_bonuses(int16_t d7)
         set_anim(n, anim_264e);
         n->x = (int16_t)(random_below(0x12c) + 0xa);
         n->y = (int16_t)(random_below(0xb4) + 6);
-        n->v28 = 7;
+        PICKUP_MODE(n) = 7;
         level_end_items++;
     } while (--d7 != -1);
 }
@@ -1581,9 +1593,9 @@ void drill_update(Object *a0)
         return;
     }
     anim_step(a0);
-    if (a0->v28 > 0) {
-        a0->v28--;
-        if (a0->v28 >= 8)
+    if (DRILL_STATE(a0) > 0) {
+        DRILL_STATE(a0)--;
+        if (DRILL_STATE(a0) >= 8)
             goto fly;
         d0 = a0->x;
         d1 = a0->y;
@@ -1604,9 +1616,9 @@ find:
     }
     set_ptr_30(a0, a1);
 have:
-    if (a0->v28 != 0) {
-        a0->v28++;
-        if (a0->v28 != 0)
+    if (DRILL_STATE(a0) != 0) {
+        DRILL_STATE(a0)++;
+        if (DRILL_STATE(a0) != 0)
             goto fly;
     }
     d0 = (int16_t)(a1->hit[0] + 2 - a0->x);
@@ -1620,7 +1632,7 @@ have:
         else
             DRILL_DIR(a0)--;
         DRILL_DIR(a0) &= 7;
-        a0->v28 = -3;
+        DRILL_STATE(a0) = -3;
         set_anim(a0, heads[DRILL_DIR(a0)]);
     }
 fly:
@@ -1674,15 +1686,15 @@ void weaponb0_update(Object *a0)
     }
     a0->fn_draw = draw_bob_masked;
     if (!(joy_stick & 0x80)) {
-        if (a0->v28 != 0) {
+        if (WB0_TICK(a0) != 0) {
             sfx_stop_all();
-            a0->v28 = 0;
+            WB0_TICK(a0) = 0;
         }
         return;
     }
-    if (a0->v28 == 0 || sfx_channels[2].active == 0) {
+    if (WB0_TICK(a0) == 0 || sfx_channels[2].active == 0) {
         sfx_cmd = 1;
-        a0->v28 = 1;
+        WB0_TICK(a0) = 1;
     }
     for (d7 = 1; d7 >= 0; d7--) {
         Object *a1 = alloc_b(a0);
@@ -1741,11 +1753,11 @@ void weapon2c_update(Object *a0)
         return;
     }
     a0->fn_draw = draw_bob_masked;
-    if (a0->v28)
-        a0->v28--;
-    if (!(joy_stick & 0x80) || a0->v28 != 0)
+    if (W2C_TICK(a0))
+        W2C_TICK(a0)--;
+    if (!(joy_stick & 0x80) || W2C_TICK(a0) != 0)
         return;
-    a0->v28 = 6;
+    W2C_TICK(a0) = 6;
     a1 = pat[(uint16_t)a0->score];
     d7 = *a1++;
     a2 = shots;
@@ -1847,7 +1859,7 @@ void weapon20_update(Object *a0)
         a1->type = 0x24;
         a1->fn_draw = FN(beam_draw);
         a1->fn_update = FN(beam_update);
-        a1->v28 = -0x20;
+        W20_TICK(a1) = -0x20;
         a1->target = a0;
         a1->score = a0->score;
         SET_V5E(a0, 6);
