@@ -1147,12 +1147,12 @@ void l4_spawn_walker(const uint8_t *a1)
     a0->hit[0] = 0x3e8;
     a0->hit[2] = 0x3e8;
     a0->score = 0xc8;
-    a0->v30 = (int16_t)rd16(a1 + 6);
+    WALKER_SIDE(a0) = (int16_t)rd16(a1 + 6);
     set_anim(a0, a0->type == 0xe0 ? 0x56cf8 : 0x56cd4);
     a0->kind = 0;
     SET_V5E(a0, W(0x54e7c));
-    a0->v3e = a0->x;
-    a0->v40 = a0->y;
+    WALKER_HOME_X(a0) = a0->x;
+    WALKER_HOME_Y(a0) = a0->y;
 }
 
 /* the walker goes back to where it came from */
