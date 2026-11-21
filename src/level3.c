@@ -3,6 +3,7 @@
 #include "weapons.h"
 #include "shop.h"
 #include "game_all.h"
+#define WORM_DELAY(o) ((o)->v28)
 #define WALKER_DIR(o) ((o)->v2a)
 
 /* the scratch fields of Object, by the kind that uses them */
@@ -280,7 +281,7 @@ void l3_worm_spawn(uint16_t d6)
             head = a0;
         a0->fn_hit = prev ? GFN(0xf2c) : (void *)l3_worm_hit;
         a0->type = 0x50;
-        a0->v28 = d2;
+        WORM_DELAY(a0) = d2;
         d2 = (int16_t)(d2 - (int16_t)W(t));
         a0->fn_update = (obj_fn)GFN(sh_r32(t + 2));
         a0->fn_draw = draw_bob_masked;
@@ -292,12 +293,12 @@ void l3_worm_spawn(uint16_t d6)
         a0->anim_delay = 0;
         a0->script = (uint8_t *)GPTR(path);
         a0->cursor = (const uint8_t *)GPTR(path);
-        a0->v2c = 0xc0;
+        WORM_PHASE(a0) = 0xc0;
         a0->x = x;
         a0->y = y;
         a0->kind = 0;
         a0->steps = (int16_t)W(0x54e42);
-        a0->v30 = (int16_t)d6;
+        WORM_SIDE(a0) = (int16_t)d6;
         bbox_from_frame(a0);
         a0->target = head;
         a0->chain = 0;

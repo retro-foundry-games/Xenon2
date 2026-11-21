@@ -853,13 +853,13 @@ void enemy_killed(Object *a0, Object *a1)
                 a2 = anim_264e;
                 n->type = 0x18;
             }
-            n->v28 = 7;
+            PICKUP_MODE(n) = 7;
             n->fn_update = FN(pickup_update);
             n->fn_draw = draw_bob_masked;
             set_anim(n, a2);
             n->x = a1->x;
             n->y = a1->y;
-            n->v2a = (int16_t)random_next();
+            PICKUP_DIR(n) = (int16_t)random_next();
         }
     }
     player_score += (uint16_t)a1->score;
