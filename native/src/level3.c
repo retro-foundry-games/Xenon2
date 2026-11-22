@@ -5,87 +5,7 @@
 #include "game_all.h"
 #include "blobs.h"
 
-/* level 3: its data tables in the level blob, by the routine that reads them */
-#define L3_ENEMY_A_DATA BLOB_ADDR(Level3Blob, enemy_a_data)
-#define L3_ENEMY_B_DATA BLOB_ADDR(Level3Blob, enemy_b_data)
-#define L3_ENEMY_C_DATA BLOB_ADDR(Level3Blob, enemy_c_data)
-#define L3_ENEMY_ENTER_ANIMS BLOB_ADDR(Level3Blob, enemy_enter_anims)
-#define L3_WORM_SPAWN_DATA BLOB_ADDR(Level3Blob, worm_spawn_data)
-#define L3_WORM_HEAD_ANIMS BLOB_ADDR(Level3Blob, worm_head_anims)
-#define L3_WORM_HEAD_DATA BLOB_ADDR(Level3Blob, worm_head_data)
-#define L3_WORM_A_DATA BLOB_ADDR(Level3Blob, worm_a_data)
-#define L3_WORM_B_DATA BLOB_ADDR(Level3Blob, worm_b_data)
-#define L3_WORM_FOLLOW_DATA BLOB_ADDR(Level3Blob, worm_follow_data)
-#define L3_WALKER_SPAWN_DX BLOB_ADDR(Level3Blob, walker_spawn_dx)
-#define L3_WALKER_SPAWN_DY BLOB_ADDR(Level3Blob, walker_spawn_dy)
-#define L3_WALKER_SPAWN_ANIMS BLOB_ADDR(Level3Blob, walker_spawn_anims)
-#define L3_SPAWN_PARTS_DATA BLOB_ADDR(Level3Blob, spawn_parts_data)
-#define L3_PART_GUN_DATA_3 BLOB_ADDR(Level3Blob, part_gun_data_3)
-#define L3_PART_CORE_DATA BLOB_ADDR(Level3Blob, part_core_data)
-#define L3_ARM_TIP_PICTURES BLOB_ADDR(Level3Blob, arm_tip_pictures)
-#define L3_SNAKE_ANIM_B BLOB_ADDR(Level3Blob, snake_anim_b)
-#define L3_SNAKE_ANIM_A BLOB_ADDR(Level3Blob, snake_anim_a)
-#define L3_SPAWN_BOSS_DATA BLOB_ADDR(Level3Blob, spawn_boss_data)
-#define L3_WALKER_UPDATE_WORDS BLOB_ADDR(Level3Blob, walker_update_words)
-#define L3_WALKER_UPDATE_WORDS_2 BLOB_ADDR(Level3Blob, walker_update_words_2)
-#define L3_WALKER_UPDATE_WORDS_3 BLOB_ADDR(Level3Blob, walker_update_words_3)
-#define L3_WALKER_UPDATE_WORDS_4 BLOB_ADDR(Level3Blob, walker_update_words_4)
-#define L3_WALKER_UPDATE_WORDS_5 BLOB_ADDR(Level3Blob, walker_update_words_5)
-#define L3_WALKER_UPDATE_WORDS_6 BLOB_ADDR(Level3Blob, walker_update_words_6)
-#define L3_DIVER_UPDATE_DATA BLOB_ADDR(Level3Blob, diver_update_data)
-#define L3_DIVER_UPDATE_DATA_3 BLOB_ADDR(Level3Blob, diver_update_data_3)
-#define L3_DIVER_UPDATE_DATA_2 BLOB_ADDR(Level3Blob, diver_update_data_2)
-#define L3_DIVER_UPDATE_DATA_4 BLOB_ADDR(Level3Blob, diver_update_data_4)
-#define L3_BOSS_UPDATE_DATA BLOB_ADDR(Level3Blob, boss_update_data)
-#define L3_BOSS_FLASH_GRID BLOB_ADDR(Level3Blob, boss_flash_grid)
-#define L3_BOSS2_SHOT_ANIMS BLOB_ADDR(Level3Blob, boss2_shot_anims)
-#define L3_BOSS2_UPDATE_DATA BLOB_ADDR(Level3Blob, boss2_update_data)
-#define L3_GUN_CELLS_F0 BLOB_ADDR(Level3Blob, gun_cells_f0)
-#define L3_GUN_CELLS_OTHER BLOB_ADDR(Level3Blob, gun_cells_other)
-#define L3_GUN_ANIM_B BLOB_ADDR(Level3Blob, gun_anim_b)
-#define L3_GUN_ANIM_A BLOB_ADDR(Level3Blob, gun_anim_a)
-#define L3_END_DRAW_DATA BLOB_ADDR(Level3Blob, end_draw_data)
-#define L3_SPAWN_PARTS_DATA_2 BLOB_ADDR(Level3Blob, spawn_parts_data_2)
-#define L3_SPAWN_PARTS_WORDS BLOB_ADDR(Level3Blob, spawn_parts_words)
-#define L3_SPAWN_PARTS_WORDS_2 BLOB_ADDR(Level3Blob, spawn_parts_words_2)
-#define L3_SPAWN_PARTS_DATA_3 BLOB_ADDR(Level3Blob, spawn_parts_data_3)
-#define L3_SNAKE_PICTURE_A BLOB_ADDR(Level3Blob, snake_picture_a)
-#define L3_SNAKE_PICTURE_B BLOB_ADDR(Level3Blob, snake_picture_b)
-#define L3_DIVER_SHOT_PICTURE_A BLOB_ADDR(Level3Blob, diver_shot_picture_a)
-#define L3_DIVER_SHOT_PICTURE_B BLOB_ADDR(Level3Blob, diver_shot_picture_b)
-#define L3_GUN_SHOT_PICTURE BLOB_ADDR(Level3Blob, gun_shot_picture)
-#define L3_PART_GUN_PICTURE_SIDE_40 BLOB_ADDR(Level3Blob, part_gun_picture_side_40)
-#define L3_PART_GUN_PICTURE_OTHER BLOB_ADDR(Level3Blob, part_gun_picture_other)
 
-/* level 3: its parameter block at E42 (energies, fire rates, shot steps), by the object that reads them */
-#define L3_WORM_SPAWN_STEPS BLOB_ADDR(Level3Blob, worm_spawn_steps)
-#define L3_WALKER_ENERGY BLOB_ADDR(Level3Blob, walker_energy)
-#define L3_PARTS_STEPS BLOB_ADDR(Level3Blob, parts_steps)
-#define L3_SNAKE_ENERGY BLOB_ADDR(Level3Blob, snake_energy)
-#define L3_DIVER_ENERGY BLOB_ADDR(Level3Blob, diver_energy)
-#define L3_BOSS_ENERGY BLOB_ADDR(Level3Blob, boss_energy)
-#define L3_WALKER_FIRE_RATE BLOB_ADDR(Level3Blob, walker_fire_rate)
-#define L3_WALKER_PARAM BLOB_ADDR(Level3Blob, walker_param)
-#define L3_WALKER_SHOT_STEPS BLOB_ADDR(Level3Blob, walker_shot_steps)
-#define L3_DIVER_STEPS BLOB_ADDR(Level3Blob, diver_steps)
-#define L3_BOSS_CHANCE BLOB_ADDR(Level3Blob, boss_chance)
-#define L3_BOSS_CHANCE_2 BLOB_ADDR(Level3Blob, boss_chance_2)
-#define L3_BOSS_FIRE_RATE BLOB_ADDR(Level3Blob, boss_fire_rate)
-#define L3_BOSS_PARAM BLOB_ADDR(Level3Blob, boss_param)
-#define L3_GUN_ENERGY BLOB_ADDR(Level3Blob, gun_energy)
-#define L3_BOSS_ENERGY_2 BLOB_ADDR(Level3Blob, boss_energy_2)
-#define L3_BOSS2_FIRE_RATE BLOB_ADDR(Level3Blob, boss2_fire_rate)
-#define L3_BOSS2_SHOT_STEPS BLOB_ADDR(Level3Blob, boss2_shot_steps)
-#define L3_GUN_FIRE_RATE BLOB_ADDR(Level3Blob, gun_fire_rate)
-#define L3_GUN_SHOT_STEPS BLOB_ADDR(Level3Blob, gun_shot_steps)
-#define L3_INIT_PATCH BLOB_ADDR(Level3Blob, init_patch)
-#define L3_INIT_PATCH_2 BLOB_ADDR(Level3Blob, init_patch_2)
-#define L3_WORM_HEAD_FIRE_RATE BLOB_ADDR(Level3Blob, worm_head_fire_rate)
-#define L3_WORM_HEAD_SHOT_STEPS BLOB_ADDR(Level3Blob, worm_head_shot_steps)
-#define L3_PART_CORE_FIRE_RATE BLOB_ADDR(Level3Blob, part_core_fire_rate)
-#define L3_PART_CORE_SHOT_STEPS BLOB_ADDR(Level3Blob, part_core_shot_steps)
-#define L3_PART_GUN_FIRE_RATE BLOB_ADDR(Level3Blob, part_gun_fire_rate)
-#define L3_EVENT_PARAM BLOB_ADDR(Level3Blob, event_param)
 #define PART_SLOT(o) ((o)->v30)
 #define TILE_COLS(o) ((o)->v3e)
 #define TILE_ROWS(o) ((o)->v40)
@@ -161,9 +81,9 @@ static void kill_thunk(Object *o)
     o->persists = 0;
 }
 
-static void set_anim(Object *o, uint32_t address)
+static void set_anim(Object *o, const uint8_t *anim)
 {
-    anim_header_set(o, (const uint8_t *)GPTR(address));
+    anim_header_set(o, anim);
 }
 
 void l3_spawn_snake(const uint8_t *a1);
@@ -188,22 +108,22 @@ void l3_event(uint16_t d0, const uint8_t *a1)
         spawn_wave_326c(0, a1);   /* $E5A */
         break;
     case 1:
-        spawn_formation(0, a1, (const uint8_t *)GPTR(0x54e7e));
+        spawn_formation(0, a1, level3_blob.formation_1);
         break;
     case 2:
-        spawn_formation(0, a1, (const uint8_t *)GPTR(0x54e98));
+        spawn_formation(0, a1, level3_blob.formation_2);
         break;
     case 3:
         saved = difficulty_x2;
-        difficulty_x2 = W(L3_EVENT_PARAM);
-        spawn_formation(0, a1, (const uint8_t *)GPTR(0x54eb2));
+        difficulty_x2 = level3_blob.event_param;
+        spawn_formation(0, a1, level3_blob.formation_3);
         difficulty_x2 = saved;
         break;
     case 4:
-        spawn_formation(0, a1, (const uint8_t *)GPTR(0x54f5c));
+        spawn_formation(0, a1, level3_blob.formation_4);
         break;
     case 5:
-        spawn_formation(0, a1, (const uint8_t *)GPTR(0x54f76));
+        spawn_formation(0, a1, level3_blob.formation_5);
         break;
     }
 }
@@ -301,12 +221,12 @@ void l3_init(void)
     sh_w8(0xd94, 0);
     sh_w8(0xd95, 0);
     sh_w16(0xd64, 0);
-    sh_w16(0xd66, W(L3_INIT_PATCH));
-    sh_w16(0xd68, W(L3_INIT_PATCH));
+    sh_w16(0xd66, level3_blob.init_patch);
+    sh_w16(0xd68, level3_blob.init_patch);
     sh_w8(0xd96, 0);
     sh_w16(0xd6a, 2);
-    sh_w16(0xd60, W(L3_INIT_PATCH_2));
-    sh_w16(0xd62, W(L3_INIT_PATCH_2));
+    sh_w16(0xd60, level3_blob.init_patch_2);
+    sh_w16(0xd62, level3_blob.init_patch_2);
     difficulty_x1 = (uint16_t)(difficulty * 2);
     difficulty_x2 = (uint16_t)(difficulty * 3);
 }
@@ -316,17 +236,17 @@ void l3_init(void)
 /* level3 $056F60: draws the tile grids of the table at $56F9A (the pieces of the end) that are on the screen */
 void l3_end_draw(Object *a0)
 {
-    uint32_t t = L3_END_DRAW_DATA;
+    const struct Level3EndPiece *t = level3_blob.end_pieces;
 
     (void)a0;
     if (B(0xd94) == 0 && B(0xd95) == 0)
         return;
-    for (; sh_r32(t) != 0; t += 12) {
-        int16_t d2 = (int16_t)(W(t + 8) - scroll_pos);
+    for (; t->cells != 0; t++) {
+        int16_t d2 = (int16_t)(t->y - scroll_pos);
 
         if (d2 >= 0xc0 || d2 <= -0x30)
             continue;
-        draw_tile_grid((const uint8_t *)GPTR(sh_r32(t)), W(t + 4), W(t + 6), d2, W(t + 10));
+        draw_tile_grid(t->cells, t->w, t->h, d2, t->x);
     }
 }
 
@@ -335,7 +255,8 @@ void l3_end_draw(Object *a0)
 void l3_worm_spawn(uint16_t d6)
 {
     uint16_t d0;
-    uint32_t t = L3_WORM_SPAWN_DATA, path;
+    const struct Level3WormPiece *t = level3_blob.worm_spawn.pieces;
+    uint32_t path;
     int16_t d2 = 0, x, y;
     int n, count;
     Object *head = 0, *prev = 0;
@@ -358,8 +279,7 @@ void l3_worm_spawn(uint16_t d6)
     path = sh_r32(0x6ef36 + 4 * (uint32_t)d0);
     x = (int16_t)W(path + 2);
     y = (int16_t)(W(path + 4) - scroll_pos - scroll_step);
-    count = W(t) + 1;
-    t += 2;
+    count = level3_blob.worm_spawn.last + 1;
     for (n = 0; n < count; n++) {
         Object *a0 = alloc_in(LIST_C);
 
@@ -370,10 +290,10 @@ void l3_worm_spawn(uint16_t d6)
         a0->fn_hit = prev ? GFN(0xf2c) : (void *)l3_worm_hit;
         a0->type = 0x50;
         WORM_DELAY(a0) = d2;
-        d2 = (int16_t)(d2 - (int16_t)W(t));
-        a0->fn_update = (obj_fn)GFN(sh_r32(t + 2));
+        d2 = (int16_t)(d2 - (int16_t)t->delay);
+        a0->fn_update = (obj_fn)t->update;
         a0->fn_draw = draw_bob_masked;
-        a0->gfx = GPTR(sh_r32(t + 6));
+        a0->gfx = (void *)t->gfx;
         a0->score = 0x7d0;
         SET_V5E(a0, 0);
         a0->big = 0;
@@ -385,39 +305,39 @@ void l3_worm_spawn(uint16_t d6)
         a0->x = x;
         a0->y = y;
         a0->kind = 0;
-        a0->steps = (int16_t)W(L3_WORM_SPAWN_STEPS);
+        a0->steps = (int16_t)level3_blob.worm_spawn_steps;
         WORM_SIDE(a0) = (int16_t)d6;
         bbox_from_frame(a0);
         a0->target = head;
         a0->chain = 0;
-        t += 10;
+        t++;
         prev = a0;
     }
 }
 
-static void l3_enemy(Object *a0, uint32_t table)
+static void l3_enemy(Object *a0, const uint8_t *const *table)
 {
     enemy_update_no_anim(a0);
-    a0->gfx = GPTR(sh_r32(table + ((((uint16_t)L3_PICTURE_PHASE(a0) + 0x10) >> 3) & 0x1c)));
+    a0->gfx = (void *)table[(((uint16_t)L3_PICTURE_PHASE(a0) + 0x10) >> 5) & 7];
     bbox_from_frame(a0);
 }
 
 /* level3 $055044: an enemy whose picture follows its phase v2c (eight pictures of a table; $05504E and $055058 are the same with another table) */
 void l3_enemy_a(Object *a0)
 {
-    l3_enemy(a0, L3_ENEMY_A_DATA);
+    l3_enemy(a0, level3_blob.enemy_a_pictures);
 }
 
 /* level3 $05504E */
 void l3_enemy_b(Object *a0)
 {
-    l3_enemy(a0, L3_ENEMY_B_DATA);
+    l3_enemy(a0, level3_blob.enemy_b_pictures);
 }
 
 /* level3 $055058 */
 void l3_enemy_c(Object *a0)
 {
-    l3_enemy(a0, L3_ENEMY_C_DATA);
+    l3_enemy(a0, level3_blob.enemy_c_pictures);
 }
 
 /* a snake's piece leaves the field at y $E8 */
@@ -520,11 +440,11 @@ void l3_spawn_snake(const uint8_t *a1)
         int16_t d6;
 
         a0->type = flag ? 0xcc : 0xc8;
-        a0->gfx = GPTR(flag ? L3_SNAKE_PICTURE_A : L3_SNAKE_PICTURE_B);
+        a0->gfx = (void *)(flag ? level3_blob.snake_picture_a : level3_blob.snake_picture_b);
         a0->anim_delay = 0;
         SET_V5E(a0, 0);
         if (d7 == 0)
-            set_anim(a0, flag ? L3_SNAKE_ANIM_A : L3_SNAKE_ANIM_B);
+            set_anim(a0, flag ? level3_blob.snake_anim_a : level3_blob.snake_anim_b);
         a0->fn_update = FN(l3_snake_body);
         if (d7 == 0)
             a0->fn_update = FN(l3_snake_tail);
@@ -536,7 +456,7 @@ void l3_spawn_snake(const uint8_t *a1)
         a0->y = d1;
         a0->fn_hit = (void *)hit_part;
         a0->is_part = 1;
-        a0->energy = (int16_t)W(L3_SNAKE_ENERGY);
+        a0->energy = (int16_t)level3_blob.snake_energy;
         a0->big = 0;
         a0->score = 0x190;
         SNAKE_SWING(a0) = 0;
@@ -585,11 +505,11 @@ void l3_diver_shot(Object *a0)
         return;
     if (a0->x < 0x80) {
         DIVER_SIDE(a0) = 3;
-        a0->gfx = GPTR(L3_DIVER_SHOT_PICTURE_A);
+        a0->gfx = (void *)level3_blob.diver_shot_picture_a;
     }
     if (a0->x >= 0xc0) {
         DIVER_SIDE(a0) = 5;
-        a0->gfx = GPTR(L3_DIVER_SHOT_PICTURE_B);
+        a0->gfx = (void *)level3_blob.diver_shot_picture_b;
     }
 }
 
@@ -600,7 +520,7 @@ void l3_diver_shot(Object *a0)
 void l3_diver_update(Object *a0)
 {
     int16_t d0;
-    uint32_t a2;
+    const uint8_t *a2;
     int flip;
 
     a0->y = (int16_t)(a0->y + scroll_speed);
@@ -615,19 +535,19 @@ void l3_diver_update(Object *a0)
         a0->x = d0;
         if (d0 <= -0x20) {
             a0->x = 0;
-            a2 = L3_DIVER_UPDATE_DATA;
+            a2 = level3_blob.diver_update_data;
             flip = 1;
         } else if (d0 >= 0x160) {
             a0->x = 0x140;
-            a2 = L3_DIVER_UPDATE_DATA_2;
+            a2 = level3_blob.diver_update_data_2;
             flip = 1;
         } else if (d0 == 0x88) {
             DIVER_STATE(a0) = 1;
-            a2 = L3_DIVER_UPDATE_DATA_3;
+            a2 = level3_blob.diver_update_data_3;
             flip = 0;
         } else if (d0 == 0xb8) {
             DIVER_STATE(a0) = 1;
-            a2 = L3_DIVER_UPDATE_DATA_4;
+            a2 = level3_blob.diver_update_data_4;
             flip = 0;
         } else {
             bbox_from_frame(a0);
@@ -637,33 +557,33 @@ void l3_diver_update(Object *a0)
         DIVER_STATE(a0) = 0;
         if (a0->x > 0xa0) {
             a0->x = 0xd8;
-            a2 = L3_DIVER_UPDATE_DATA;
+            a2 = level3_blob.diver_update_data;
         } else {
             a0->x = 0x68;
-            a2 = L3_DIVER_UPDATE_DATA_2;
+            a2 = level3_blob.diver_update_data_2;
         }
         flip = 1;
     } else {
         DIVER_STATE(a0)++;
         if (DIVER_STATE(a0) == 0xb) {
             int16_t sx = (int16_t)(a0->x - 5), sy = (int16_t)(a0->y + 4);
-            uint32_t gfx = L3_DIVER_SHOT_PICTURE_A;
+            const uint8_t *gfx = level3_blob.diver_shot_picture_a;
             Object *s;
 
             if (sx > 0xa0) {
                 sx = (int16_t)(sx + 0xa);
-                gfx = L3_DIVER_SHOT_PICTURE_B;
+                gfx = level3_blob.diver_shot_picture_b;
             }
             s = alloc_in(LIST_B);
             s->type = 0x14;
             s->fn_update = FN(l3_diver_shot);
             s->fn_draw = draw_bob_masked;
-            s->gfx = GPTR(gfx);
+            s->gfx = (void *)gfx;
             s->anim_delay = 0;
             s->x = sx;
             s->y = sy;
             DIVER_STATE(s) = 0;
-            s->steps = (int16_t)W(L3_DIVER_STEPS);
+            s->steps = (int16_t)level3_blob.diver_steps;
             DIVER_SIDE(s) = 3;
             if (a0->x >= 0xa0)
                 DIVER_SIDE(s) = 5;
@@ -681,7 +601,7 @@ void l3_diver_update(Object *a0)
 void l3_spawn_diver(const uint8_t *a1)
 {
     Object *a0 = alloc_in(LIST_C);
-    uint32_t a2 = L3_DIVER_UPDATE_DATA;
+    const uint8_t *a2 = level3_blob.diver_update_data;
 
     a0->type = 0xd0;
     a0->fn_update = FN(l3_diver_update);
@@ -691,12 +611,12 @@ void l3_spawn_diver(const uint8_t *a1)
     a0->y = (int16_t)(rd16(a1 + 0xa) + 8 - scroll_pos);
     DIVER_SIDE(a0) = 2;
     if (a0->x > 0xa0) {
-        a2 = L3_DIVER_UPDATE_DATA_2;
+        a2 = level3_blob.diver_update_data_2;
         DIVER_SIDE(a0) = -2;
     }
     set_anim(a0, a2);
     a0->fn_hit = (void *)hit_enemy;
-    a0->energy = (int16_t)W(L3_DIVER_ENERGY);
+    a0->energy = (int16_t)level3_blob.diver_energy;
     a0->big = -1;
     a0->score = 0x12c;
     DIVER_STATE(a0) = 0;
@@ -721,7 +641,7 @@ static void l3_centre(const Object *o, int16_t *x, int16_t *y)
  * of them is the head of the chain; v30 is the place after the part's entry in the table */
 void l3_spawn_parts(void)
 {
-    uint32_t t = L3_SPAWN_PARTS_DATA;
+    const struct Level3Part *t = level3_blob.parts;
     Object *first = 0, *prev = 0;
 
     do {
@@ -732,35 +652,35 @@ void l3_spawn_parts(void)
         else
             first = a0;
         a0->type = 0x54;
-        a0->fn_update = (obj_fn)GFN(sh_r32(t));
+        a0->fn_update = (obj_fn)t->update;
         a0->fn_draw = draw_bob_masked;
-        a0->fn_hit = GFN(sh_r32(t + 4));
+        a0->fn_hit = (void *)t->hit;
         PATH_WAIT(a0) = 0;
-        set_anim(a0, sh_r32(t + 8));
-        a0->turn[0] = W(t + 12);
-        a0->turn[1] = W(t + 14);
+        set_anim(a0, t->anim);
+        a0->turn[0] = t->x;
+        a0->turn[1] = t->y;
         SET_V5E(a0, 0);
         a0->score = 0x3e8;
         a0->big = -1;
-        a0->script = (uint8_t *)GPTR(L3_SPAWN_PARTS_DATA_2);
-        a0->x = (int16_t)(W(L3_SPAWN_PARTS_WORDS) - 0x20);
-        a0->y = (int16_t)(W(L3_SPAWN_PARTS_WORDS_2) - 0x28);
+        a0->script = level3_blob.spawn_parts_data_2;
+        a0->x = (int16_t)(level3_blob.spawn_parts_words - 0x20);
+        a0->y = (int16_t)(level3_blob.spawn_parts_words_2 - 0x28);
         a0->x_frac = 0;
         a0->y_frac = 0;
-        a0->cursor = (const uint8_t *)GPTR(L3_SPAWN_PARTS_DATA_3);
+        a0->cursor = level3_blob.spawn_parts_data_3;
         PATH_ANGLE_HI(a0) = 0;
         PATH_ANGLE_LO(a0) = 0;
         a0->turn[2] = 0;
         a0->kind = 0;
-        a0->steps = (int16_t)W(L3_PARTS_STEPS);
+        a0->steps = (int16_t)level3_blob.parts_steps;
         bbox_from_frame(a0);
         a0->target = first;
         a0->chain = 0;
-        t += 16;
-        PART_SLOT(a0) = (int16_t)(t - L3_SPAWN_PARTS_DATA);
+        t++;
+        PART_SLOT(a0) = (int16_t)((t - level3_blob.parts) * 16);
         ARM_SWING(a0) = 0;
         prev = a0;
-    } while (sh_r32(t) != 0);
+    } while (t->update != 0);
     sh_w8(0xd96, 0xff);
     sh_w8(0xd85, 0xff);
 }
@@ -772,7 +692,7 @@ void l3_part_core(Object *a0)
 
     sh_w8(0xd96, 0xff);
     enemy_update(a0);
-    sum = (uint16_t)(a0->v5e_b[0] + B(L3_PART_CORE_FIRE_RATE));
+    sum = (uint16_t)(a0->v5e_b[0] + level3_blob.part_core_fire_rate);
     a0->v5e_b[0] = (uint8_t)sum;
     if (sum > 0xff) {
         Object *s;
@@ -780,8 +700,8 @@ void l3_part_core(Object *a0)
 
         a0->v5e_b[0] = (uint8_t)(random_next() & 0x3f);
         angle = direction8((int16_t)(PLAYER_X - a0->x), (int16_t)(PLAYER_Y - a0->y));
-        s = spawn_enemy_shot((uint16_t)(a0->x + 0x10), (uint16_t)(a0->y + 0x3c), angle, W(L3_PART_CORE_SHOT_STEPS), 0);
-        set_anim(s, L3_PART_CORE_DATA);
+        s = spawn_enemy_shot((uint16_t)(a0->x + 0x10), (uint16_t)(a0->y + 0x3c), angle, level3_blob.part_core_shot_steps, 0);
+        set_anim(s, level3_blob.part_core_data);
     }
 }
 
@@ -808,7 +728,7 @@ void l3_part_gun(Object *a0)
     l3_part_follow(a0);
     side = (int16_t)W(GUN_SIDE(a0) == 0x40 ? 0xd60 : 0xd62);
     if (side <= 0) {
-        a0->gfx = GPTR(GUN_SIDE(a0) == 0x40 ? L3_PART_GUN_PICTURE_SIDE_40 : L3_PART_GUN_PICTURE_OTHER);
+        a0->gfx = (void *)(GUN_SIDE(a0) == 0x40 ? level3_blob.part_gun_picture_side_40 : level3_blob.part_gun_picture_other);
         a0->anim_delay = 0;
         a0->hit[0] = 0x3e8;
         a0->fn_hit = (void *)obj_nop_thunk;
@@ -819,12 +739,12 @@ void l3_part_gun(Object *a0)
         return;
     }
     {
-        uint16_t sum = (uint16_t)(a0->v5e_b[0] + B(L3_PART_GUN_FIRE_RATE));
+        uint16_t sum = (uint16_t)(a0->v5e_b[0] + level3_blob.part_gun_fire_rate);
 
         a0->v5e_b[0] = (uint8_t)sum;
         if (sum > 0xff) {
             a0->v5e_b[0] = (uint8_t)(random_next() & 0x3f);
-            set_anim(a0, L3_PART_GUN_DATA_3);
+            set_anim(a0, level3_blob.part_gun_data_3);
         }
     }
     a0->hit[0] = 0x3e8;
@@ -958,7 +878,7 @@ void l3_part_arm_tip(Object *a0)
     if (a0->steps == 0xe)
         sfx_cmd = 0xc;
     d1 = (uint16_t)(frame_tick & 4);
-    a0->gfx = GPTR(sh_r32(L3_ARM_TIP_PICTURES + (uint16_t)(d0 + d1)));
+    a0->gfx = (void *)level3_blob.arm_tip_pictures[(uint16_t)(d0 + d1) / 4];
     a0->anim_delay = 0;
     bbox_from_frame(a0);
 }
@@ -982,7 +902,7 @@ void l3_enemy_enter(Object *a0)
     } else {
         d0 = (int16_t)(y - 0xc0) < (int16_t)(x - 0x140) ? 8 : 0xc;
     }
-    set_anim(a0, sh_r32(L3_ENEMY_ENTER_ANIMS + d0));
+    set_anim(a0, level3_blob.enemy_enter_anims[d0 / 4]);
     a0->fn_update = FN(enemy_update);
     bbox_from_frame(a0);
 }
@@ -1007,7 +927,7 @@ static void copy4(uint8_t *dst, const uint8_t *src)
 void l3_gun_update(Object *a0)
 {
     int16_t d0;
-    uint32_t a2;
+    const uint8_t *a2;
 
     if ((int16_t)(scroll_max + 0xd0) < a0->y) {
         kill_thunk(a0);
@@ -1019,7 +939,7 @@ void l3_gun_update(Object *a0)
     a0->hit[1] = d0;
     a0->hit[3] = (int16_t)(d0 + 0xc);
     if (L3_GUN_OPEN(a0) == 0) {
-        uint16_t sum = (uint16_t)(a0->v5e_b[0] + B(L3_GUN_FIRE_RATE));
+        uint16_t sum = (uint16_t)(a0->v5e_b[0] + level3_blob.gun_fire_rate);
 
         a0->v5e_b[0] = (uint8_t)sum;
         if (sum > 0xff) {
@@ -1028,8 +948,8 @@ void l3_gun_update(Object *a0)
         }
         return;
     }
-    a2 = a0->type == 0xf0 ? L3_GUN_CELLS_F0 : L3_GUN_CELLS_OTHER;
-    copy2(a0->script, (const uint8_t *)GPTR(a2 + (uint16_t)(L3_GUN_OPEN(a0) & ~1)));
+    a2 = a0->type == 0xf0 ? level3_blob.gun_cells_f0 : level3_blob.gun_cells_other;
+    copy2(a0->script, a2 + (uint16_t)(L3_GUN_OPEN(a0) & ~1));
     L3_GUN_OPEN(a0)++;
     if (L3_GUN_OPEN(a0) == 8) {
         int16_t x = (int16_t)(a0->x + 8), y = (int16_t)(a0->y - scroll_pos), angle = 0;
@@ -1038,7 +958,7 @@ void l3_gun_update(Object *a0)
             angle = 4;
             y = (int16_t)(y + 0xa);
         }
-        spawn_enemy_shot((uint16_t)x, (uint16_t)y, (uint16_t)angle, W(L3_GUN_SHOT_STEPS), GPTR(L3_GUN_SHOT_PICTURE));
+        spawn_enemy_shot((uint16_t)x, (uint16_t)y, (uint16_t)angle, level3_blob.gun_shot_steps, (void *)level3_blob.gun_shot_picture);
         return;
     }
     if (L3_GUN_OPEN(a0) == 0xe)
@@ -1050,15 +970,15 @@ void l3_spawn_gun(const uint8_t *a1)
 {
     int flag = rd16(a1 + 0xc) != 0;
     Object *a0 = spawn_marker_enemy(flag ? 0xf4 : 0xf0, a1, (void (*)(void))l3_gun_update);
-    uint32_t a2 = flag ? L3_GUN_CELLS_OTHER : L3_GUN_CELLS_F0;
+    const uint8_t *a2 = flag ? level3_blob.gun_cells_other : level3_blob.gun_cells_f0;
 
     a0->fn_hit = (void *)hit_tile;
-    a0->energy = (int16_t)W(L3_GUN_ENERGY);
+    a0->energy = (int16_t)level3_blob.gun_energy;
     a0->hit[0] = 0x3e8;
     a0->hit[2] = 0x3e8;
-    a0->gfx = GPTR(a2);
-    a0->anim = (const uint8_t *)GPTR(flag ? L3_GUN_ANIM_A : L3_GUN_ANIM_B);
-    copy2(a0->script, (const uint8_t *)GPTR(a2));
+    a0->gfx = (void *)a2;
+    a0->anim = flag ? level3_blob.gun_anim_a : level3_blob.gun_anim_b;
+    copy2(a0->script, a2);
     a0->score = 0x64;
     TILE_COLS(a0) = 0;
     TILE_ROWS(a0) = 0;
@@ -1073,12 +993,12 @@ void l3_spawn_boss(const uint8_t *a1)
 
     a0->fn_draw = (obj_fn)obj_nop_thunk;
     a0->fn_hit = (void *)l3_boss_hit;
-    a0->energy = (int16_t)W(L3_BOSS_ENERGY);
+    a0->energy = (int16_t)level3_blob.boss_energy;
     a0->hit[0] = 0x3e8;
     a0->hit[2] = 0x3e8;
     for (i = 0; i < 6; i++) {
-        copy4(m, (const uint8_t *)GPTR(L3_SPAWN_BOSS_DATA + 8 * i));
-        copy4(m + 4, (const uint8_t *)GPTR(L3_SPAWN_BOSS_DATA + 8 * i + 4));
+        copy4(m, level3_blob.spawn_boss_data + 8 * i);
+        copy4(m + 4, level3_blob.spawn_boss_data + 8 * i + 4);
         m += 0x28;
     }
 }
@@ -1102,12 +1022,12 @@ void l3_boss_update(Object *a0)
     a0->hit[3] = (int16_t)(d0 + 0x1a);
     d0 = (uint16_t)L3_BOSS_CELL(a0);
     if (d0 == 0) {
-        if ((uint8_t)random_next() >= B(L3_BOSS_CHANCE))
+        if ((uint8_t)random_next() >= level3_blob.boss_chance)
             return;
     }
     m = a0->script;
-    copy4(m + 0xa2, (const uint8_t *)GPTR(L3_BOSS_UPDATE_DATA + 4 * (d0 & ~1u)));
-    copy4(m + 0xca, (const uint8_t *)GPTR(L3_BOSS_UPDATE_DATA + 4 * (d0 & ~1u) + 4));
+    copy4(m + 0xa2, level3_blob.boss_update_data + 4 * (d0 & ~1u));
+    copy4(m + 0xca, level3_blob.boss_update_data + 4 * (d0 & ~1u) + 4);
     L3_BOSS_CELL(a0)++;
     if (L3_BOSS_CELL(a0) == 0x12) {
         L3_BOSS_CELL(a0) = 0;
@@ -1116,12 +1036,12 @@ void l3_boss_update(Object *a0)
     if (L3_BOSS_CELL(a0) < 4)
         return;
     if (L3_BOSS_CELL(a0) > 0xb) {
-        if (L3_BOSS_CELL(a0) == 0xc && (uint8_t)random_next() < B(L3_BOSS_CHANCE_2))
+        if (L3_BOSS_CELL(a0) == 0xc && (uint8_t)random_next() < level3_blob.boss_chance_2)
             L3_BOSS_CELL(a0) = 4;
         return;
     }
     {
-        uint16_t sum = (uint16_t)(a0->v5e_b[0] + B(L3_BOSS_FIRE_RATE));
+        uint16_t sum = (uint16_t)(a0->v5e_b[0] + level3_blob.boss_fire_rate);
         int16_t x, y;
         uint16_t angle = 4, step;
         uint32_t gfx;
@@ -1132,13 +1052,13 @@ void l3_boss_update(Object *a0)
         a0->v5e_b[0] = (uint8_t)(random_next() & 0x3f);
         x = (int16_t)(a0->x + 0x20);
         y = (int16_t)(a0->y - scroll_pos + 0x58);
-        gfx = sh_r32(sh_r32(0x6ee26 + 4 * (uint32_t)W(L3_BOSS_PARAM)));
+        gfx = sh_r32(sh_r32(0x6ee26 + 4 * (uint32_t)level3_blob.boss_param));
         step = (uint16_t)(L3_BOSS_CELL(a0) & ~1);
         if (step == 6)
             angle = 3;
         if (step == 8)
             angle = 5;
-        spawn_enemy_shot((uint16_t)x, (uint16_t)y, angle, W(L3_GUN_ENERGY), GPTR(gfx));
+        spawn_enemy_shot((uint16_t)x, (uint16_t)y, angle, level3_blob.gun_energy, GPTR(gfx));
     }
 }
 
@@ -1166,7 +1086,7 @@ void l3_boss_hit(Object *a0, Object *a1, uint16_t d0)
     a1->fn_update = FN(l3_boss2_update);
     a1->fn_draw = (obj_fn)obj_nop_thunk;
     a1->fn_hit = (void *)l3_boss2_hit;
-    a1->energy = (int16_t)W(L3_BOSS_ENERGY_2);
+    a1->energy = (int16_t)level3_blob.boss_energy_2;
     a1->hit[0] = 0x3e8;
     a1->hit[2] = 0x3e8;
     L3_BOSS_CELL(a1) = 0;
@@ -1177,11 +1097,11 @@ void l3_boss_hit(Object *a0, Object *a1, uint16_t d0)
 void l3_boss_flash(Object *a0)
 {
     int16_t y = (int16_t)(a0->y - scroll_pos);
-    uint32_t cells = L3_BOSS_UPDATE_DATA + 4 * (uint32_t)(L3_BOSS_CELL(a0) & ~1);
+    const uint8_t *cells = level3_blob.boss_update_data + 4 * (uint32_t)(L3_BOSS_CELL(a0) & ~1);
 
     a0->fn_draw = (obj_fn)obj_nop_thunk;
-    draw_tile_grid_flash((const uint8_t *)GPTR(L3_BOSS_FLASH_GRID), 3, 2, (int16_t)(y + 0x20), (uint16_t)(((uint16_t)a0->x >> 1) & 0xfffc));
-    draw_tile_grid_flash((const uint8_t *)GPTR(cells), 1, 1, (int16_t)(y + 0x40), (uint16_t)(((uint16_t)(a0->x + 0x10) >> 1) & 0xfffc));
+    draw_tile_grid_flash(level3_blob.boss_flash_grid, 3, 2, (int16_t)(y + 0x20), (uint16_t)(((uint16_t)a0->x >> 1) & 0xfffc));
+    draw_tile_grid_flash(cells, 1, 1, (int16_t)(y + 0x40), (uint16_t)(((uint16_t)(a0->x + 0x10) >> 1) & 0xfffc));
 }
 
 #define L3_BOSS2_CELL(o) ((o)->v28)
@@ -1203,7 +1123,7 @@ void l3_boss2_update(Object *a0)
     a0->hit[3] = (int16_t)(d0 + 0x17);
     d0 = (uint16_t)L3_BOSS2_CELL(a0);
     if (d0 == 0) {
-        uint16_t sum = (uint16_t)(a0->v5e_b[0] + B(L3_BOSS2_FIRE_RATE));
+        uint16_t sum = (uint16_t)(a0->v5e_b[0] + level3_blob.boss2_fire_rate);
 
         a0->v5e_b[0] = (uint8_t)sum;
         if (sum <= 0xff)
@@ -1211,8 +1131,8 @@ void l3_boss2_update(Object *a0)
         a0->v5e_b[0] = (uint8_t)(random_next() & 0x3f);
     }
     m = a0->script;
-    copy4(m + 2, (const uint8_t *)GPTR(L3_BOSS2_UPDATE_DATA + 4 * (d0 & ~1u)));
-    copy4(m + 0x2a, (const uint8_t *)GPTR(L3_BOSS2_UPDATE_DATA + 4 * (d0 & ~1u) + 4));
+    copy4(m + 2, level3_blob.boss2_update_data + 4 * (d0 & ~1u));
+    copy4(m + 0x2a, level3_blob.boss2_update_data + 4 * (d0 & ~1u) + 4);
     L3_BOSS2_CELL(a0)++;
     if (L3_BOSS2_CELL(a0) == 0xa) {
         L3_BOSS2_CELL(a0) = 0;
@@ -1223,9 +1143,9 @@ void l3_boss2_update(Object *a0)
         int d7;
 
         for (d7 = 7; d7 >= 0; d7--) {
-            Object *s = spawn_enemy_shot((uint16_t)x, (uint16_t)y, (uint16_t)d7, W(L3_BOSS2_SHOT_STEPS), 0);
+            Object *s = spawn_enemy_shot((uint16_t)x, (uint16_t)y, (uint16_t)d7, level3_blob.boss2_shot_steps, 0);
 
-            set_anim(s, sh_r32(L3_BOSS2_SHOT_ANIMS + 4 * (uint32_t)(7 - d7)));
+            set_anim(s, level3_blob.boss2_shot_anims[7 - d7]);
         }
     }
 }
@@ -1256,7 +1176,7 @@ void l3_boss2_hit(Object *a0, Object *a1, uint16_t d0)
 void l3_boss2_flash(Object *a0)
 {
     a0->fn_draw = (obj_fn)obj_nop_thunk;
-    draw_tile_grid_flash((const uint8_t *)GPTR(L3_BOSS2_UPDATE_DATA), 1, 1, (int16_t)(a0->y - scroll_pos), (uint16_t)(((uint16_t)(a0->x + 0x10) >> 1) & 0xfffc));
+    draw_tile_grid_flash(level3_blob.boss2_update_data, 1, 1, (int16_t)(a0->y - scroll_pos), (uint16_t)(((uint16_t)(a0->x + 0x10) >> 1) & 0xfffc));
 }
 
 /* level3 $0556F6: a walker ($DC) from a record: the direction w6 of the record gives its first place and picture */
@@ -1270,11 +1190,11 @@ void l3_spawn_walker(const uint8_t *a1)
     a0->fn_draw = draw_bob_masked;
     WALKER_DIR(a0) = (int16_t)i;
     SET_V5E(a0, 0);
-    a0->x = (int16_t)(rd16(a1 + 8) - 8 + (int16_t)W(L3_WALKER_SPAWN_DX + 2 * i));
-    a0->y = (int16_t)(rd16(a1 + 10) - 8 - scroll_pos + (int16_t)W(L3_WALKER_SPAWN_DY + 2 * i));
-    set_anim(a0, sh_r32(L3_WALKER_SPAWN_ANIMS + 4 * (uint32_t)i));
+    a0->x = (int16_t)(rd16(a1 + 8) - 8 + level3_blob.walker_spawn_dx[i]);
+    a0->y = (int16_t)(rd16(a1 + 10) - 8 - scroll_pos + level3_blob.walker_spawn_dy[i]);
+    set_anim(a0, level3_blob.walker_spawn_anims[i]);
     a0->fn_hit = (void *)hit_enemy;
-    a0->energy = (int16_t)W(L3_WALKER_ENERGY);
+    a0->energy = (int16_t)level3_blob.walker_energy;
     a0->big = 0;
     a0->score = 0x64;
     WALKER_STATE(a0) = 0;
@@ -1298,12 +1218,12 @@ void l3_walker_update(Object *a0)
         kill_thunk(a0);
         return;
     }
-    d0 = (int16_t)W(L3_WALKER_UPDATE_WORDS + d2);
+    d0 = level3_blob.walker_update_words[d2 / 2];
     if (d0 != 0) {
         a0->x = (int16_t)(a0->x + d0);
         at_tile = d0 < 0 ? (a0->x & 0xf) == 0xf : (a0->x & 0xf) == 0;
     } else {
-        int16_t step = (int16_t)W(L3_WALKER_UPDATE_WORDS_2 + d2);
+        int16_t step = level3_blob.walker_update_words_2[d2 / 2];
 
         a0->y = (int16_t)(a0->y + step);
         d1 = (int16_t)(a0->y + scroll_pos);
@@ -1318,11 +1238,11 @@ void l3_walker_update(Object *a0)
             const uint8_t *a1 = level_init_src + (int16_t)(uint16_t)(row * 0x28) + (((uint16_t)d0 >> 3) & 0xfe);
 
             if (rd16(a1) != 0) {
-                a0->x = (int16_t)(a0->x - (int16_t)W(L3_WALKER_UPDATE_WORDS + d2));
-                a0->y = (int16_t)(a0->y - (int16_t)W(L3_WALKER_UPDATE_WORDS_2 + d2));
+                a0->x = (int16_t)(a0->x - level3_blob.walker_update_words[d2 / 2]);
+                a0->y = (int16_t)(a0->y - level3_blob.walker_update_words_2[d2 / 2]);
                 turn = 1;
             } else {
-                int16_t d3 = (int16_t)W(L3_WALKER_UPDATE_WORDS_3 + d2);
+                int16_t d3 = level3_blob.walker_update_words_3[d2 / 2];
 
                 turn = rd16(a1 + d3) == 0;
             }
@@ -1330,37 +1250,37 @@ void l3_walker_update(Object *a0)
         if (turn) {
             uint16_t ni;
 
-            a0->x = (int16_t)(a0->x + (int16_t)W(L3_WALKER_UPDATE_WORDS_4 + d2));
-            a0->y = (int16_t)(a0->y + (int16_t)W(L3_WALKER_UPDATE_WORDS_5 + d2));
-            ni = W(L3_WALKER_UPDATE_WORDS_6 + d2);
+            a0->x = (int16_t)(a0->x + level3_blob.walker_update_words_4[d2 / 2]);
+            a0->y = (int16_t)(a0->y + level3_blob.walker_update_words_5[d2 / 2]);
+            ni = level3_blob.walker_update_words_6[d2 / 2];
             WALKER_DIR(a0) = (int16_t)ni;
-            set_anim(a0, sh_r32(L3_WALKER_SPAWN_ANIMS + 4 * (uint32_t)ni));
+            set_anim(a0, level3_blob.walker_spawn_anims[ni]);
         }
     }
     {
-        uint16_t sum = (uint16_t)(a0->v5e_b[0] + B(L3_WALKER_FIRE_RATE));
+        uint16_t sum = (uint16_t)(a0->v5e_b[0] + level3_blob.walker_fire_rate);
 
         a0->v5e_b[0] = (uint8_t)sum;
         if (sum > 0xff) {
-            uint32_t gfx = sh_r32(sh_r32(0x6ee26 + 4 * (uint32_t)W(L3_WALKER_PARAM)));
+            uint32_t gfx = sh_r32(sh_r32(0x6ee26 + 4 * (uint32_t)level3_blob.walker_param));
             uint16_t angle;
 
             a0->v5e_b[0] = (uint8_t)(random_next() & 0x3f);
             angle = direction8((int16_t)(PLAYER_X - a0->x), (int16_t)(PLAYER_Y - a0->y));
-            spawn_enemy_shot((uint16_t)a0->x, (uint16_t)a0->y, angle, W(L3_WALKER_SHOT_STEPS), GPTR(gfx));
+            spawn_enemy_shot((uint16_t)a0->x, (uint16_t)a0->y, angle, level3_blob.walker_shot_steps, GPTR(gfx));
         }
     }
     bbox_from_frame(a0);
 }
 
 /* the picture of a worm's piece follows its phase v2c by a table of eight */
-static void l3_worm_follow(Object *a0, uint32_t table)
+static void l3_worm_follow(Object *a0, const uint8_t *const *table)
 {
     a0->y = (int16_t)(a0->y + scroll_speed);
-    if (table == L3_WORM_FOLLOW_DATA)
+    if (table == level3_blob.worm_follow_pictures)
         sh_w8(0xd94 + (uint16_t)WORM_SIDE(a0), 0xff);
     enemy_update_no_anim(a0);
-    a0->gfx = GPTR(sh_r32(table + ((((uint16_t)WORM_PHASE(a0) + 0x10) >> 3) & 0x1c)));
+    a0->gfx = (void *)table[(((uint16_t)WORM_PHASE(a0) + 0x10) >> 5) & 7];
     bbox_from_frame(a0);
 }
 
@@ -1375,16 +1295,16 @@ void l3_worm_head(Object *a0)
     d0 = (uint16_t)((((uint16_t)WORM_PHASE(a0) + 0x10) >> 3) & 0x1c);
     d1 = (uint16_t)(((old + 0x10) >> 3) & 0x1c);
     if (d1 != d0)
-        set_anim(a0, sh_r32(L3_WORM_HEAD_ANIMS + d0));
-    sum = (uint16_t)(a0->v5e_b[0] + B(L3_WORM_HEAD_FIRE_RATE));
+        set_anim(a0, level3_blob.worm_head_anims[d0 / 4]);
+    sum = (uint16_t)(a0->v5e_b[0] + level3_blob.worm_head_fire_rate);
     a0->v5e_b[0] = (uint8_t)sum;
     if (sum > 0xff) {
         int d2;
 
         for (d2 = 7; d2 >= 0; d2--) {
-            Object *s = spawn_enemy_shot((uint16_t)a0->x, (uint16_t)a0->y, (uint16_t)d2, W(L3_WORM_HEAD_SHOT_STEPS), 0);
+            Object *s = spawn_enemy_shot((uint16_t)a0->x, (uint16_t)a0->y, (uint16_t)d2, level3_blob.worm_head_shot_steps, 0);
 
-            set_anim(s, L3_WORM_HEAD_DATA);
+            set_anim(s, level3_blob.worm_head_data);
         }
     }
     bbox_from_frame(a0);
@@ -1393,19 +1313,19 @@ void l3_worm_head(Object *a0)
 /* level3 $05556A */
 void l3_worm_a(Object *a0)
 {
-    l3_worm_follow(a0, L3_WORM_A_DATA);
+    l3_worm_follow(a0, level3_blob.worm_a_pictures);
 }
 
 /* level3 $0555AE */
 void l3_worm_b(Object *a0)
 {
-    l3_worm_follow(a0, L3_WORM_B_DATA);
+    l3_worm_follow(a0, level3_blob.worm_b_pictures);
 }
 
 /* level3 $0555F2: the last piece: it shows the end's flag of its side (d94 / d95) */
 void l3_worm_c(Object *a0)
 {
-    l3_worm_follow(a0, L3_WORM_FOLLOW_DATA);
+    l3_worm_follow(a0, level3_blob.worm_follow_pictures);
 }
 
 /* level3 $055642: the hit of the worm's first piece: the energy of its side (d66 / d68) runs out and the whole worm bursts and the side's flag d92 / d93 is set */
