@@ -249,12 +249,12 @@ void l4_scroll(void)
         return;
     {
         Object *obj = alloc_in(LIST_C);
-        uint16_t offset = (random_next() & 1) ? 0xc : 0;
+        uint16_t index = (random_next() & 1) ? 1 : 0;
         const struct Level4ScrollEnemy *entry;
 
         if (xenon2.frame_tick & 0x20)
-            offset += 0x18;
-        entry = &xenon2.level4_data.scroll_enemies[offset / 12];
+            index += 2;
+        entry = &xenon2.level4_data.scroll_enemies[index];
         obj->type = (int16_t)entry->type;
         obj->x = (int16_t)entry->x;
         obj->fn_update = (obj_fn)entry->update;

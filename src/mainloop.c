@@ -27,9 +27,9 @@ void scroll_pos_update(uint16_t speed)
 
         pos = (uint16_t)(xenon2.background_scroll >> 16) - step;
         if ((int16_t)pos < 0)
-            pos += 0xc0;
-        if ((int16_t)pos >= 0xc0)
-            pos -= 0xc0;
+            pos += SCREEN_ROWS;
+        if ((int16_t)pos >= SCREEN_ROWS)
+            pos -= SCREEN_ROWS;
         xenon2.background_scroll = (xenon2.background_scroll & 0xffffu) | ((uint32_t)pos << 16);
     }
 }
@@ -94,15 +94,15 @@ void stars_scroll(uint16_t speed)
         uint16_t frac = STAR_POS(s) + vel;
 
         while ((int16_t)frac < 0) {
-            STAR_OFF(s) -= 0xa0;
+            STAR_OFF(s) -= SCREEN_ROW_BYTES;
             if ((int16_t)STAR_OFF(s) < 0)
                 STAR_OFF(s) += SCREEN_ROWS * SCREEN_ROW_BYTES;
             frac += 0x180;
         }
         while ((int16_t)frac >= 0x180) {
-            STAR_OFF(s) += 0xa0;
-            if ((int16_t)STAR_OFF(s) >= 0x7800)
-                STAR_OFF(s) -= 0x7800;
+            STAR_OFF(s) += SCREEN_ROW_BYTES;
+            if ((int16_t)STAR_OFF(s) >= SCREEN_ROWS * SCREEN_ROW_BYTES)
+                STAR_OFF(s) -= SCREEN_ROWS * SCREEN_ROW_BYTES;
             frac -= 0x180;
         }
         STAR_POS(s) = frac;
@@ -364,10 +364,10 @@ static void camera_step(void)
     fine -= step;
     if ((int16_t)fine < 0) {
         fine += 0x10;
-        row_off -= 0x28;
+        row_off -= MAP_ROW_BYTES;
     } else if ((int16_t)fine >= 0x10) {
         fine -= 0x10;
-        row_off += 0x28;
+        row_off += MAP_ROW_BYTES;
     }
     xenon2.scroll_speed = step;
     xenon2.scroll_fine = fine;
@@ -715,11 +715,11 @@ void game_entry(void)
     xenon2.crush_reload = 1;
     xenon2.music_aux_a = 0;
     xenon2.music_aux_b = 0;
-    xenon2.clip_bottom = 0xbf;
+    xenon2.clip_bottom = SCREEN_ROWS - 1;
     off = 0;
-    for (int i = 0; i < 200; i++) {
+    for (int i = 0; i < SCREEN_ROWS + PANEL_ROWS; i++) {
         rows[i] = off;
-        off += 0xa0;
+        off += SCREEN_ROW_BYTES;
     }
     stars_init_dots();
     xenon2.players = 1;

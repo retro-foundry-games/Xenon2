@@ -128,8 +128,8 @@ static void blit_edges(Clip *c)
     custom->bltafwm = 0xffff;
     custom->bltamod = 8;
     custom->bltbmod = 8;
-    custom->bltcmod = 0x9e;
-    custom->bltdmod = 0x9e;
+    custom->bltcmod = SCREEN_ROW_BYTES - 2;
+    custom->bltdmod = SCREEN_ROW_BYTES - 2;
     c->size += 1;
     return;
 
@@ -142,8 +142,8 @@ wide:
             custom->bltafwm = 0xffff;
             custom->bltamod = 0x12;
             custom->bltbmod = 0x12;
-            custom->bltcmod = 0x9e;
-            custom->bltdmod = 0x9e;
+            custom->bltcmod = SCREEN_ROW_BYTES - 2;
+            custom->bltdmod = SCREEN_ROW_BYTES - 2;
             c->size += 1;
             return;
         }
@@ -307,7 +307,7 @@ HLE_WEAK void draw_text(const uint8_t *text, uint8_t *dest)
  * unexecuted part is read from the listing */
 void draw_number(uint32_t value, uint8_t *dest)
 {
-    uint8_t *other = dest - 0x8700;
+    uint8_t *other = dest - ((uint8_t *)xenon2.screen_b - (uint8_t *)xenon2.screen_a);
     const uint32_t *p = xenon2.pow10;
 
     for (; *p != 0; p++) {
@@ -321,7 +321,7 @@ void draw_number(uint32_t value, uint8_t *dest)
             digit++;
         }
         value += *p;
-        g = &xenon2.digit_gfx[(uint16_t)(digit << 5)];
+        g = &xenon2.digit_gfx[(uint16_t)digit * DIGIT_GLYPH_BYTES];
         for (int row = 0; row < 8; row++) {
             for (int plane = 0; plane < 4; plane++) {
                 uint8_t b = *g++;
@@ -407,7 +407,7 @@ void draw_status_digit(void)
 
     if (lives > 9)
         lives = 9;
-    glyph = &xenon2.digit_gfx[0x140] + (int16_t)(uint16_t)(lives << 5);
+    glyph = &xenon2.digit_gfx[10 * DIGIT_GLYPH_BYTES] + (int16_t)(uint16_t)lives * DIGIT_GLYPH_BYTES;
     if (xenon2.cur_player) {
         dst_b = SCREEN_POS(xenon2.screen_b, 193, 22);
         dst_a = SCREEN_POS(xenon2.screen_a, 193, 22);
@@ -451,8 +451,8 @@ static void put_tile(const uint8_t *tiles, uint16_t cell, uint8_t *dest, uint16_
         custom->bltcon1 = 0;
         custom->bltamod = 8;
         custom->bltbmod = 8;
-        custom->bltcmod = 0x9e;
-        custom->bltdmod = 0x9e;
+        custom->bltcmod = SCREEN_ROW_BYTES - 2;
+        custom->bltdmod = SCREEN_ROW_BYTES - 2;
         for (int plane = 0; plane < 4; plane++) {
             custom->bltapt = ADDR(tile);
             custom->bltbpt = ADDR(tile_b);
@@ -471,26 +471,26 @@ HLE_WEAK void draw_background(void)
 {
     uint16_t scroll = (uint16_t)(xenon2.background_scroll >> 16);
     uint16_t lines = (uint16_t)(0xc0 - scroll);
-    uint8_t *src = xenon2.map_image + (int16_t)(uint16_t)(scroll * 0x50u);
+    uint8_t *src = xenon2.map_image + (int16_t)(uint16_t)(scroll * MAP_BLIT_BYTES);
     uint8_t *dst = xenon2.draw_screen;
 
     custom->bltapt = ADDR(src);
     custom->bltdpt = ADDR(dst);
     custom->bltamod = 0;
-    custom->bltdmod = 0x50;
+    custom->bltdmod = MAP_BLIT_BYTES;
     custom->bltafwm = 0xffff;
     custom->bltalwm = 0xffff;
     custom->bltcon0 = 0x09f0;
     custom->bltcon1 = 0;
-    BLTSIZE_WRITE((uint16_t)((uint16_t)(lines << 6) + 0x28));
+    BLTSIZE_WRITE((uint16_t)((uint16_t)(lines << 6) + MAP_BLIT_WORDS));
     BLIT_WAIT();
     lines = scroll;
     if (lines) {
         custom->bltapt = ADDR(xenon2.map_image);
-        BLTSIZE_WRITE((uint16_t)((uint16_t)(lines << 6) + 0x28));
+        BLTSIZE_WRITE((uint16_t)((uint16_t)(lines << 6) + MAP_BLIT_WORDS));
         BLIT_WAIT();
     }
-    dst += 0x50;
+    dst += MAP_BLIT_BYTES;
     custom->bltdpt = ADDR(dst);
     custom->bltcon0 = 0x01f0;
     custom->bltadat = 0;
@@ -525,8 +525,8 @@ static void put_tile_flash(const uint8_t *tiles, uint16_t cell, uint8_t *dest, u
     custom->bltcon0 = 0x0bfa;
     custom->bltcon1 = 0;
     custom->bltamod = 8;
-    custom->bltcmod = 0x9e;
-    custom->bltdmod = 0x9e;
+    custom->bltcmod = SCREEN_ROW_BYTES - 2;
+    custom->bltdmod = SCREEN_ROW_BYTES - 2;
     for (int plane = 0; plane < 4; plane++) {
         if (plane == 3)
             custom->bltcon0 = 0x0b0a;
