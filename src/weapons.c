@@ -43,13 +43,13 @@ static void set_ptr_2a(Object *o, Object *p)
 {
     uint32_t v = p ? GADDR(p) : 0;   /* (the original's address: the two words are compared and exported as they are) */
 
-    o->v2a = (int16_t)(v >> 16);
-    o->v2c = (int16_t)v;
+    o->link.ptr_hi = (int16_t)(v >> 16);
+    o->link.ptr_lo = (int16_t)v;
 }
 
 static Object *get_ptr_2a(const Object *o)
 {
-    uint32_t v = ((uint32_t)(uint16_t)o->v2a << 16) | (uint16_t)o->v2c;
+    uint32_t v = ((uint32_t)(uint16_t)o->link.ptr_hi << 16) | (uint16_t)o->link.ptr_lo;
 
     return v ? (Object *)GPTR(v) : 0;
 }
@@ -649,7 +649,7 @@ void weaponA0_update(Object *a0)
         cur->x = PLAYER->x;
         cur->y = PLAYER->y;
         cur->drill.dir = cnt;
-        cur->v30 = 0;
+        cur->drill.target_hi = 0;
         cur->energy = 0;
         cur->drill.state = 0xd;
     }
@@ -1410,7 +1410,7 @@ move:
 /* the pointer in the words $30 and $32 (the drill's target) */
 static Object *get_ptr_30(const Object *o)
 {
-    uint32_t v = ((uint32_t)(uint16_t)o->v30 << 16) | (uint16_t)o->energy;
+    uint32_t v = ((uint32_t)(uint16_t)o->drill.target_hi << 16) | (uint16_t)o->energy;
 
     return v ? (Object *)GPTR(v) : 0;
 }
@@ -1419,7 +1419,7 @@ static void set_ptr_30(Object *o, Object *p)
 {
     uint32_t v = p ? GADDR(p) : 0;
 
-    o->v30 = (int16_t)(v >> 16);
+    o->drill.target_hi = (int16_t)(v >> 16);
     o->energy = (int16_t)v;
 }
 

@@ -57,6 +57,7 @@ struct Object {
         struct KindA_l5_arm l5_arm;
         struct KindA_l5_turret l5_turret;
         struct KindA_launcher launcher;
+        struct KindA_link link;
         struct KindA_marker marker;
         struct KindA_marker_f8 marker_f8;
         struct KindA_marker_fc marker_fc;

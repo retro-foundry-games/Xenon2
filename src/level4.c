@@ -284,7 +284,7 @@ void l4_scroll(void)
         anim_header_set(a0, a2->anim);
         a0->v5e_b[0] = (uint8_t)random_next();
         a0->y = -0x20;
-        a0->v28 = 0;
+        a0->l4.size = 0;
         a0->energy = (int16_t)level4_blob.scroll_energy;
         a0->big = 0xff;
         a0->kind = 0;

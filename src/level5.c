@@ -472,7 +472,7 @@ void l5_spawn_boss1(uint16_t d2)
         a0->part_b.dy = rec->dy;
         a0->boss.phase = 0;
         a0->persists = 0xff;
-        a0->v2a = 4;
+        a0->boss.step = 4;
         a0->energy = rec->energy;
         a0->big = rec->big;
         a0->hit[0] = 0x3e8;
@@ -747,8 +747,8 @@ void l5_spawn_boss2(const uint8_t *a1)
         a0->y = d1;
         a0->part_b.dx = rec->dx;
         a0->part_b.dy = rec->dy;
-        a0->v28 = 0;
-        a0->v2a = 4;
+        a0->mover.tick = 0;
+        a0->mover.step = 4;
         a0->energy = (int16_t)rec->energy;
         a0->hit[0] = 0x3e8;
         a0->hit[2] = 0x3e8;

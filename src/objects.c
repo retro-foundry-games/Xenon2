@@ -758,7 +758,7 @@ void spawn_debris(Object *a0_unused, Object *a1, uint16_t d0_unused)
 Object *spawn_wave_326c(Object *a0, const uint8_t *a1)
 {
     a0 = spawn_formation(a0, a1, spawn_def_326c);
-    a0->v30 = a0->steps;
+    a0->marker.launches = a0->steps;
     a0->steps = 3;
     a0->kind = 0;
     return a0;
@@ -778,8 +778,8 @@ static Object *marker_tail(Object *a0, uint16_t d0, const uint8_t *a1, void (*a2
     y = (uint16_t)(rd16(a1 + 10) - 8);
     a0->y = (int16_t)y;
     a0->script = level_init_src + (uint16_t)((x >> 3) & 0xfe) + (int16_t)(uint16_t)((uint32_t)(y >> 4) * 0x28);
-    a0->v28 = 0;
-    a0->v30 = 0;
+    a0->marker.step = 0;
+    a0->marker.launches = 0;
     return a0;
 }
 
