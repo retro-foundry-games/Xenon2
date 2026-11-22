@@ -8,33 +8,12 @@
 #include "blobs.h"
 
 
-#define PIECE_DIR_HI(o) ((o)->v2a)
-#define PIECE_VAR(o)  ((o)->v2e)
-#define GATE_STEP(o) ((o)->v28)
-#define PIECE_WALL(o) ((o)->v30)
-#define L2_BOSS_CELL(o) ((o)->v30)
-#define MARKER_LAUNCHES(o) ((o)->v30)
-#define TILE_COLS(o) ((o)->v3e)
-#define TILE_ROWS(o) ((o)->v40)
 
 /* the scratch fields of Object, by the kind that uses them */
-#define FRONT_DIR(o) ((o)->v2a)
-#define FRONT_TICK(o) ((o)->v28)
 
-#define L2_BOSS_WAIT(o)  ((o)->v28)
-#define L2_BOSS_FLASH(o) ((o)->v3e)
-#define GATE_NUMBER(o)   ((o)->v30)
-#define LAUNCHER_STEP(o)  ((o)->v28)
-#define LAUNCHER_POS(o)   ((o)->v30)
-#define LAUNCHER_RANGE(o) ((o)->v2a)
-#define L2_BOSS_STEP(o)   ((o)->v2a)
-#define L2_BOSS_FRAMES(o) ((o)->v2e)
 
-#define PIECE_WAIT(o) ((o)->v28)
-#define PIECE_DIR(o)  ((o)->v2c)
 
 /* the scratch fields of Object, by the kind that uses them */
-#define FLYER_DIVE(o) ((o)->v28)
 
 
 #define FN(f) ((obj_fn)(f))
@@ -181,8 +160,8 @@ void l2_hook(uint16_t d0, const uint8_t *a1, uint16_t d2)
         a0->anim = flag ? level2_blob.hook_anim_a : level2_blob.hook_anim_b;
         copy2(a0->script, (const uint8_t *)a0->gfx);
         a0->score = 0x64;
-        TILE_COLS(a0) = 0;
-        TILE_ROWS(a0) = 0;
+        a0->tile.cols = 0;
+        a0->tile.rows = 0;
         return;
     case 2:
         a0 = spawn_marker_front(flag ? 0xf0 : 0xf4, a1, (void (*)(void))l2_front_update);
@@ -202,20 +181,20 @@ void l2_hook(uint16_t d0, const uint8_t *a1, uint16_t d2)
         a0->score = 0xc8;
         a0->x = (int16_t)(rd16(a1 + 8) - 8);
         a0->y = (int16_t)(rd16(a1 + 10) - 8 - scroll_pos);
-        LAUNCHER_STEP(a0) = -1;
-        LAUNCHER_RANGE(a0) = (int16_t)(rd16(a1 + 4) << 4);
-        LAUNCHER_POS(a0) = LAUNCHER_RANGE(a0);
+        a0->launcher.step = -1;
+        a0->launcher.range = (int16_t)(rd16(a1 + 4) << 4);
+        a0->launcher.pos = a0->launcher.range;
         a0->kind = 0;
         bbox_from_frame(a0);
         return;
     case 4:
         a0 = spawn_marker_front(0xfc, a1, (void (*)(void))l2_marker_fc_update);
-        MARKER_LAUNCHES(a0) = 1;
+        a0->marker.launches = 1;
         copy2(a0->script, level2_blob.hook_words);
         return;
     case 5:
         a0 = spawn_marker_front(0xf8, a1, (void (*)(void))l2_marker_f8_update);
-        MARKER_LAUNCHES(a0) = 1;
+        a0->marker.launches = 1;
         return;
     }
 }
@@ -281,10 +260,10 @@ void l2_init(void)
     a0->screen_fixed = -1;
     a0->y = 0x60;
     a0->energy = (int16_t)level2_blob.init_energy;
-    L2_BOSS_WAIT(a0) = -1;
-    L2_BOSS_FRAMES(a0) = 0;
-    L2_BOSS_FLASH(a0) = 0;
-    L2_BOSS_CELL(a0) = 0;
+    a0->l2_boss.wait = -1;
+    a0->l2_boss.frames = 0;
+    a0->l2_boss_b.flash = 0;
+    a0->l2_boss.cell = 0;
     a0->kind = 0;
     for (d7 = 2; d7 >= 0; d7--) {
         uint16_t x = gate_at[2 - d7][0], y = gate_at[2 - d7][1];
@@ -301,8 +280,8 @@ void l2_init(void)
         a0->x = (int16_t)x;
         a0->y = (int16_t)y;
         a0->gfx = level_init_src + (uint16_t)(((uint16_t)(y * 0x14) + x) * 2);
-        GATE_STEP(a0) = 0;
-        GATE_NUMBER(a0) = (int16_t)d7;
+        a0->gate.step = 0;
+        a0->gate.number = (int16_t)d7;
     }
     l2_gates_left = 3;
     l2_walls_made = 0;
@@ -349,25 +328,25 @@ void l2_front_piece_update(Object *a0)
     int burst = 0;
 
     anim_step(a0);
-    FRONT_TICK(a0)++;
-    if (FRONT_TICK(a0) >= 0x50) {
+    a0->front.tick++;
+    if (a0->front.tick >= 0x50) {
         burst = 1;
     } else {
         int16_t x, y;
 
-        if ((FRONT_TICK(a0) & 0xf) == 0) {
+        if ((a0->front.tick & 0xf) == 0) {
             uint16_t d = direction8((int16_t)(PLAYER_X - a0->x), (int16_t)(PLAYER_Y - a0->y));
 
-            FRONT_DIR(a0) = (int16_t)(~d & 7);
-            set_anim(a0, level2_blob.front_anims_by_dir[(uint16_t)FRONT_DIR(a0)]);
+            a0->front.dir = (int16_t)(~d & 7);
+            set_anim(a0, level2_blob.front_anims_by_dir[(uint16_t)a0->front.dir]);
         }
-        x = (int16_t)(dx[FRONT_DIR(a0)] + a0->x);
+        x = (int16_t)(dx[a0->front.dir] + a0->x);
         if ((uint16_t)x >= 0x140) {
             kill_thunk(a0);
             return;
         }
         a0->x = x;
-        y = (int16_t)(dy[FRONT_DIR(a0)] + a0->y + scroll_speed);
+        y = (int16_t)(dy[a0->front.dir] + a0->y + scroll_speed);
         if ((uint16_t)y >= 0xc0) {
             kill_thunk(a0);
             return;
@@ -404,7 +383,7 @@ void l2_flyer_update(Object *a0)
     int16_t d0;
 
     anim_step(a0);
-    if (FLYER_DIVE(a0) == 0) {
+    if (a0->flyer.dive == 0) {
         if (a0->y > 0x32) {
             a0->y -= 5;
             a0->x = (int16_t)(a0->x + wobble[(phase >> 2) & 7]);
@@ -415,7 +394,7 @@ void l2_flyer_update(Object *a0)
         if (d0 < 0)
             d0 = (int16_t)-d0;
         if (d0 < 10) {
-            FLYER_DIVE(a0) = 1;
+            a0->flyer.dive = 1;
             set_anim(a0, a0->type == 0xe0 ? level2_blob.flyer_anim_e0 : level2_blob.flyer_anim_other);
             bbox_from_frame(a0);
             return;
@@ -430,13 +409,12 @@ void l2_flyer_update(Object *a0)
     }
     a0->y += 0xc;
     if (a0->y >= 0xa0) {
-        FLYER_DIVE(a0) = 0;
+        a0->flyer.dive = 0;
         set_anim(a0, a0->type == 0xe0 ? level2_blob.flyer_anim2_e0 : level2_blob.flyer_anim2_other);
     }
     bbox_from_frame(a0);
 }
 
-#define MARKER_F8_BLINK(o) ((o)->v28)
 
 /* level2 $05533E: the marker $F8: as $05550E, but its picture blinks (v28 0 / 1) until the scroll is near, its steps use a table of
  * two longs, and at step 4 it launches the flyer $E0 */
@@ -452,31 +430,31 @@ void l2_marker_f8_update(Object *a0)
     d0 = (int16_t)(a0->y - scroll_pos);
     if (d0 >= 0xb4)
         return;
-    if (MARKER_F8_BLINK(a0) >= 5) {
-        if (MARKER_LAUNCHES(a0) == 0) {
+    if (a0->marker_f8.blink >= 5) {
+        if (a0->marker.launches == 0) {
             kill_thunk(a0);
             return;
         }
-        if (MARKER_F8_BLINK(a0) >= 9) {
-            MARKER_F8_BLINK(a0) = 0;
-            MARKER_LAUNCHES(a0)--;
+        if (a0->marker_f8.blink >= 9) {
+            a0->marker_f8.blink = 0;
+            a0->marker.launches--;
         }
     }
-    if ((uint16_t)MARKER_F8_BLINK(a0) <= 1) {
+    if ((uint16_t)a0->marker_f8.blink <= 1) {
         if (d0 >= 0x64)
-            MARKER_F8_BLINK(a0) = 2;
+            a0->marker_f8.blink = 2;
         else if ((frame_tick & 3) == 0)
-            MARKER_F8_BLINK(a0) ^= 1;
+            a0->marker_f8.blink ^= 1;
     }
-    a2 = level2_blob.marker_f8_cells + ((uint16_t)MARKER_F8_BLINK(a0) << 3);
+    a2 = level2_blob.marker_f8_cells + ((uint16_t)a0->marker_f8.blink << 3);
     copy4(a0->script, a2);
     copy4(a0->script + 0x28, a2 + 4);
-    if ((uint16_t)MARKER_F8_BLINK(a0) < 2)
+    if ((uint16_t)a0->marker_f8.blink < 2)
         return;
     if (frame_tick & 3)
         return;
-    MARKER_F8_BLINK(a0)++;
-    if (MARKER_F8_BLINK(a0) != 4)
+    a0->marker_f8.blink++;
+    if (a0->marker_f8.blink != 4)
         return;
     {
         Object *s = alloc_in(LIST_C);
@@ -492,14 +470,12 @@ void l2_marker_f8_update(Object *a0)
         s->energy = (int16_t)level2_blob.marker_f8_energy;
         s->big = (int8_t)0xff;
         s->score = 0x12c;
-        MARKER_F8_BLINK(s) = 0;
+        s->marker_f8.blink = 0;
         s->kind = 0;
         bbox_from_frame(s);
     }
 }
 
-#define MARKER_FC_STEP(o) ((o)->v28)
-#define MARKER_FC_LAUNCHES(o) ((o)->v30)
 
 /* level2 $05550E: the marker $FC: gone when the scroll has passed it; its picture steps (v28) and at step 4 it launches the flyer $E4;
  * v30 counts the launches left */
@@ -514,26 +490,26 @@ void l2_marker_fc_update(Object *a0)
     d0 = (int16_t)(a0->y - scroll_pos);
     if (d0 >= 0xb4)
         return;
-    if (MARKER_FC_STEP(a0) >= 5) {
-        if (MARKER_FC_LAUNCHES(a0) == 0) {
+    if (a0->marker_fc.step >= 5) {
+        if (a0->marker_fc.launches == 0) {
             kill_thunk(a0);
             return;
         }
-        if (MARKER_FC_STEP(a0) >= 9) {
-            MARKER_FC_STEP(a0) = 0;
-            MARKER_FC_LAUNCHES(a0)--;
+        if (a0->marker_fc.step >= 9) {
+            a0->marker_fc.step = 0;
+            a0->marker_fc.launches--;
         }
     }
-    if ((uint16_t)MARKER_FC_STEP(a0) <= 1) {
+    if ((uint16_t)a0->marker_fc.step <= 1) {
         if (d0 < 0x64)
             return;
-        MARKER_FC_STEP(a0) = 2;
+        a0->marker_fc.step = 2;
     }
-    copy2(a0->script, level2_blob.hook_words + ((uint16_t)MARKER_FC_STEP(a0) << 1));
+    copy2(a0->script, level2_blob.hook_words + ((uint16_t)a0->marker_fc.step << 1));
     if (frame_tick & 3)
         return;
-    MARKER_FC_STEP(a0)++;
-    if (MARKER_FC_STEP(a0) != 4)
+    a0->marker_fc.step++;
+    if (a0->marker_fc.step != 4)
         return;
     {
         Object *s = alloc_in(LIST_C);
@@ -549,7 +525,7 @@ void l2_marker_fc_update(Object *a0)
         s->energy = (int16_t)level2_blob.marker_fc_energy;
         s->big = 0;
         s->score = 0x96;
-        MARKER_FC_STEP(s) = 0;
+        s->marker_fc.step = 0;
         s->kind = 0;
         bbox_from_frame(s);
     }
@@ -587,8 +563,6 @@ static void l2_restore_blocks(Object *a0)
     }
 }
 
-#define BOLT_DIR(o) ((o)->v2a)
-#define BOLT_TARGET(o) ((o)->v28)
 
 /* level2 $0563E0: the creature's bolt ($110): it turns (v2a, eight directions) towards v28, which is -1 when it flies on; it shoots
  * every so often, moves one step by the table, and at the corners of the table of $056524 takes a new direction; it breaks blocks back
@@ -603,21 +577,21 @@ void l2_roamer_shot_update(Object *a0)
 
     anim_step(a0);
     a0->y = (int16_t)(a0->y + scroll_speed);
-    if (BOLT_TARGET(a0) >= 0) {
+    if (a0->bolt.target >= 0) {
         if (!(frame_tick & 1)) {
             bbox_from_frame(a0);
             return;
         }
-        d0 = (int16_t)(BOLT_TARGET(a0) - BOLT_DIR(a0));
+        d0 = (int16_t)(a0->bolt.target - a0->bolt.dir);
         if (d0 != 0) {
             if (d0 < 0)
                 d0 += 8;
-            BOLT_DIR(a0) = (int16_t)((BOLT_DIR(a0) + (d0 > 4 ? -1 : 1)) & 7);
-            set_anim(a0, level2_blob.bolt_anims_by_dir[(uint16_t)BOLT_DIR(a0)]);
+            a0->bolt.dir = (int16_t)((a0->bolt.dir + (d0 > 4 ? -1 : 1)) & 7);
+            set_anim(a0, level2_blob.bolt_anims_by_dir[(uint16_t)a0->bolt.dir]);
             bbox_from_frame(a0);
             return;
         }
-        BOLT_TARGET(a0) = -1;
+        a0->bolt.target = -1;
     }
     if ((uint16_t)a0->y < 0xc0) {
         uint16_t sum = (uint16_t)(a0->v5e_b[0] + level2_blob.roamer_shot_fire_rate);
@@ -635,8 +609,8 @@ void l2_roamer_shot_update(Object *a0)
             spawn_enemy_shot((uint16_t)a0->x, (uint16_t)a0->y, angle, level2_blob.roamer_shot_shot_steps, gfx);
         }
     }
-    x = (int16_t)(a0->x + dx[BOLT_DIR(a0)]);
-    y = (int16_t)(a0->y + dy[BOLT_DIR(a0)]);
+    x = (int16_t)(a0->x + dx[a0->bolt.dir]);
+    y = (int16_t)(a0->y + dy[a0->bolt.dir]);
     a0->x = x;
     a0->y = y;
     y = (int16_t)(y + scroll_pos);
@@ -649,7 +623,7 @@ void l2_roamer_shot_update(Object *a0)
             do
                 r = (uint16_t)(random_next() & 3);
             while (r == 0);
-            BOLT_TARGET(a0) = (int16_t)entry->targets[r - 1];
+            a0->bolt.target = (int16_t)entry->targets[r - 1];
             bbox_from_frame(a0);
             return;
         }
@@ -658,8 +632,6 @@ void l2_roamer_shot_update(Object *a0)
     l2_restore_blocks(a0);
 }
 
-#define ROAMER_DIR(o) ((o)->v2a)
-#define ROAMER_STATE(o) ((o)->v28)
 
 /* level2 $05623E: the creature that crosses the screen between the walls (v2a its direction, v28 0 moving, 1 at a wall, 2 shooting): at the
  * frame $5B5D6 of its animation it launches the bolt $110 in its direction and is gone */
@@ -670,38 +642,38 @@ void l2_roamer_update(Object *a0)
 
     anim_step(a0);
     a0->y = (int16_t)(a0->y + scroll_speed);
-    if (ROAMER_STATE(a0) == 0) {
-        int16_t x = (int16_t)(a0->x + dx[ROAMER_DIR(a0)]);
-        int16_t y = (int16_t)(a0->y + dy[ROAMER_DIR(a0)]);
+    if (a0->roamer.state == 0) {
+        int16_t x = (int16_t)(a0->x + dx[a0->roamer.dir]);
+        int16_t y = (int16_t)(a0->y + dy[a0->roamer.dir]);
 
         if (x <= 0x74) {
             x = 0x74;
-            ROAMER_STATE(a0) = 1;
-            ROAMER_DIR(a0) = 4;
+            a0->roamer.state = 1;
+            a0->roamer.dir = 4;
         }
         if (x >= 0xcc) {
             x = 0xcc;
-            ROAMER_STATE(a0) = 1;
-            ROAMER_DIR(a0) = 0;
+            a0->roamer.state = 1;
+            a0->roamer.dir = 0;
         }
         y = (int16_t)(y + scroll_pos);
         if (y <= 0x6c) {
             y = 0x6c;
-            ROAMER_STATE(a0) = 1;
-            ROAMER_DIR(a0) = 6;
+            a0->roamer.state = 1;
+            a0->roamer.dir = 6;
         }
         if (y >= 0x154) {
             y = 0x154;
-            ROAMER_STATE(a0) = 1;
-            ROAMER_DIR(a0) = 2;
+            a0->roamer.state = 1;
+            a0->roamer.dir = 2;
         }
         a0->x = x;
         a0->y = (int16_t)(y - scroll_pos);
         return;
     }
-    if (ROAMER_STATE(a0) == 1) {
+    if (a0->roamer.state == 1) {
         if ((random_next() & 7) == 0) {
-            ROAMER_STATE(a0) = 2;
+            a0->roamer.state = 2;
             set_anim(a0, level2_blob.roamer_anim);
         }
         return;
@@ -718,17 +690,16 @@ void l2_roamer_update(Object *a0)
         SET_V5E(s, 0);
         s->score = 0x1e;
         s->kind = 0;
-        set_anim(s, level2_blob.bolt_anims_by_dir[(uint16_t)ROAMER_DIR(a0)]);
+        set_anim(s, level2_blob.bolt_anims_by_dir[(uint16_t)a0->roamer.dir]);
         s->x = a0->x;
         s->y = a0->y;
-        ROAMER_DIR(s) = ROAMER_DIR(a0);
-        ROAMER_STATE(s) = -1;
+        s->roamer.dir = a0->roamer.dir;
+        s->roamer.state = -1;
         bbox_from_frame(s);
         kill_thunk(a0);
     }
 }
 
-#define FRONT_STEP(o) ((o)->v28)
 
 /* level2 $05568C: the marker $F0 / $F4: waits for the scroll, then its picture takes 20 steps (v28) from a table, and it bursts into
  * eight pieces ($108, update $056596) */
@@ -736,20 +707,20 @@ void l2_front_update(Object *a0)
 {
     int i;
 
-    if (FRONT_STEP(a0) == 0) {
+    if (a0->front.step == 0) {
         if ((int16_t)(a0->y - scroll_pos) >= (int16_t)level2_blob.front_param)
-            FRONT_STEP(a0) = 1;
+            a0->front.step = 1;
         return;
     }
     {
         const uint8_t *const *table = a0->type == 0xf0 ? level2_blob.front_table_f0 : level2_blob.front_table_other;
-        const uint8_t *a2 = table[(uint16_t)FRONT_STEP(a0)];
+        const uint8_t *a2 = table[(uint16_t)a0->front.step];
 
         copy4(a0->script, a2);
         copy4(a0->script + 0x28, a2 + 4);
     }
-    FRONT_STEP(a0)++;
-    if (FRONT_STEP(a0) < 0x15)
+    a0->front.step++;
+    if (a0->front.step < 0x15)
         return;
     for (i = 7; i >= 0; i--) {
         const struct Level2FrontEntry *entry = &level2_blob.front_entries[7 - i];
@@ -763,11 +734,11 @@ void l2_front_update(Object *a0)
         SET_V5E(s, 0);
         s->x = (int16_t)(a0->x + 0x10 + entry->dx);
         s->y = (int16_t)(a0->y - scroll_pos + 0x10 + entry->dy);
-        FRONT_DIR(s) = (int16_t)i;
+        s->front.dir = (int16_t)i;
         s->energy = 1;
         s->big = 0;
         s->score = 0x14;
-        FRONT_STEP(s) = (int16_t)(random_next() & 0x1f);
+        s->front.step = (int16_t)(random_next() & 0x1f);
         s->kind = 0;
         bbox_from_frame(s);
     }
@@ -776,7 +747,6 @@ void l2_front_update(Object *a0)
 
 
 /* the turret's use of the scratch fields of Object */
-#define TURRET_STEP(o) ((o)->v28)
 
 /* level2 $0558E0: update of the turret $E8 / $EC: its box, the cells it opens and closes (v28 is the step), and at step 7 a shot */
 void l2_turret_update(Object *a0)
@@ -794,16 +764,16 @@ void l2_turret_update(Object *a0)
     d0 = (int16_t)(a0->y - scroll_pos + 4);
     a0->hit[1] = d0;
     a0->hit[3] = (int16_t)(d0 + 8);
-    if (TURRET_STEP(a0) == 0) {
+    if (a0->turret.step == 0) {
         if ((uint8_t)random_next() < level2_blob.turret_chance)
-            TURRET_STEP(a0) = 1;
+            a0->turret.step = 1;
         return;
     }
-    copy2(a0->script, (a0->type == 0xe8 ? level2_blob.hook_picture_a : level2_blob.hook_picture_b) + 2 * (uint16_t)TURRET_STEP(a0));
-    TURRET_STEP(a0)++;
-    if (TURRET_STEP(a0) != 7) {
-        if (TURRET_STEP(a0) == 0xf)
-            TURRET_STEP(a0) = 0;
+    copy2(a0->script, (a0->type == 0xe8 ? level2_blob.hook_picture_a : level2_blob.hook_picture_b) + 2 * (uint16_t)a0->turret.step);
+    a0->turret.step++;
+    if (a0->turret.step != 7) {
+        if (a0->turret.step == 0xf)
+            a0->turret.step = 0;
         return;
     }
     d0 = (int16_t)(a0->x + 8);
@@ -814,9 +784,6 @@ void l2_turret_update(Object *a0)
 }
 
 /* the launcher's use of the scratch fields of Object */
-#define LAUNCHER_STEP(o)  ((o)->v28)
-#define LAUNCHER_POS(o)   ((o)->v30)
-#define LAUNCHER_RANGE(o) ((o)->v2a)
 
 /* level2 $055A04: update of the launcher $100 / $104: it moves up and down (v28 is its step, v30 its place between 0 and v2a); when the
  * player is level with it (now and then) it goes into list B and fires a shot */
@@ -830,13 +797,13 @@ void l2_launcher_update(Object *a0)
     }
     anim_step(a0);
     a0->y = (int16_t)(a0->y + scroll_speed);
-    if (LAUNCHER_STEP(a0) == 0)
+    if (a0->launcher.step == 0)
         return;
     d0 = (int16_t)(a0->y - PLAYER_Y);
     if (d0 <= 0xa && d0 >= -0x1e && (uint8_t)random_next() < 0x1e) {
         Object *tail;
 
-        LAUNCHER_STEP(a0) = 0;
+        a0->launcher.step = 0;
         a0->next->prev = a0->prev;
         a0->prev->next = a0->next;
         tail = LIST_B->prev;
@@ -855,11 +822,11 @@ void l2_launcher_update(Object *a0)
         spawn_enemy_shot((uint16_t)d0, (uint16_t)d1, (uint16_t)d2, level2_blob.launcher_shot_steps, (void *)level2_blob.launcher_shot_picture);
         return;
     }
-    d0 = LAUNCHER_STEP(a0);
+    d0 = a0->launcher.step;
     a0->y = (int16_t)(a0->y + d0);
-    LAUNCHER_POS(a0) = (int16_t)(LAUNCHER_POS(a0) + d0);
-    if (LAUNCHER_POS(a0) == 0 || LAUNCHER_POS(a0) == LAUNCHER_RANGE(a0))
-        LAUNCHER_STEP(a0) = (int16_t)-LAUNCHER_STEP(a0);
+    a0->launcher.pos = (int16_t)(a0->launcher.pos + d0);
+    if (a0->launcher.pos == 0 || a0->launcher.pos == a0->launcher.range)
+        a0->launcher.step = (int16_t)-a0->launcher.step;
     bbox_from_frame(a0);
 }
 
@@ -874,9 +841,9 @@ static void l2_wreck(Object *a1, const uint8_t *a2)
     n->x = a1->x;
     n->y = a1->y;
     set_anim(n, a2);
-    PIECE_WAIT(n) = (int16_t)0x8000;
-    PIECE_DIR_HI(n) = 0;
-    PIECE_DIR(n) = (int16_t)(random_next() & 0xff);
+    n->piece.wait = (int16_t)0x8000;
+    n->piece.dir_hi = 0;
+    n->piece.dir = (int16_t)(random_next() & 0xff);
     kill_thunk(a1);
 }
 
@@ -888,7 +855,7 @@ void l2_hit_a(Object *a0, Object *a1, uint16_t d0)
         hit_enemy(a0, a1, d0);
         return;
     }
-    l2_walls_made &= (uint8_t)~(1 << (PIECE_WALL(a1) & 7));
+    l2_walls_made &= (uint8_t)~(1 << (a1->piece.wall & 7));
     l2_wreck(a1, level2_blob.wreck_a);
 }
 
@@ -953,7 +920,7 @@ static void l2_debris_wall(uint16_t d6)
         a0->fn_hit = (void *)a2->hit;
         a0->gfx = (void *)a2->gfx;
         a0->score = (int16_t)a2->score;
-        PIECE_VAR(a0) = (int16_t)d3;
+        a0->piece.var = (int16_t)d3;
         a0->energy = (int16_t)level2_blob.debris_wall_energy;
         SET_V5E(a0, 0);
         a0->big = 0;
@@ -963,9 +930,9 @@ static void l2_debris_wall(uint16_t d6)
         a0->x = (int16_t)d0;
         a0->y = (int16_t)d1;
         a0->kind = 0;
-        PIECE_WAIT(a0) = (int16_t)d2;
+        a0->piece.wait = (int16_t)d2;
         a0->steps = (int16_t)level2_blob.debris_wall_steps;
-        PIECE_WALL(a0) = (int16_t)d6;
+        a0->piece.wall = (int16_t)d6;
         d2 = (uint16_t)(d2 - 0xa);
         bbox_from_frame(a0);
         a2++;
@@ -988,8 +955,6 @@ void l2_debris_walls(void)
     }
 }
 
-#define PIECE_WAIT(o) ((o)->v28)
-#define PIECE_DIR(o) ((o)->v2c)
 
 /* level2 $0566CE: update of a piece of a wall of debris ($114 to $11C): v28 $8000 is a wreck flying off in the direction of v2c; otherwise
  * it follows its path (a wait while v28 is negative), is drawn behind the map while the path is inside it, and its picture goes by the direction */
@@ -998,11 +963,11 @@ void l2_piece_update(Object *a0)
     const uint8_t *a1;
     uint16_t d2;
 
-    if (PIECE_WAIT(a0) == (int16_t)0x8000) {
+    if (a0->piece.wait == (int16_t)0x8000) {
         int16_t d0, d1;
 
         anim_step(a0);
-        d2 = (uint16_t)PIECE_DIR(a0);
+        d2 = (uint16_t)a0->piece.dir;
         d1 = (int16_t)(piece_directions[d2] >> 2);
         d0 = (int16_t)(piece_directions[(uint16_t)(d2 + 0x40)] >> 2);
         d0 = (int16_t)(d0 + a0->x);
@@ -1017,17 +982,17 @@ void l2_piece_update(Object *a0)
         return;
     }
     a0->y = (int16_t)(a0->y + scroll_speed);
-    (&l2_left_wall_made)[(uint16_t)PIECE_WALL(a0)] = 0xff;
+    (&l2_left_wall_made)[(uint16_t)a0->piece.wall] = 0xff;
     enemy_update_no_anim(a0);
     if (a0->type == 4) {
-        uint16_t *c = &level_vars[(uint16_t)PIECE_VAR(a0) - 1];
+        uint16_t *c = &level_vars[(uint16_t)a0->piece.var - 1];
 
         if (*c == 0)
             *c = 0x18;
         return;
     }
     if (a0->fn_draw == (obj_fn)obj_nop_thunk) {
-        if (PIECE_WAIT(a0) >= 0)
+        if (a0->piece.wait >= 0)
             a0->fn_draw = draw_bob_behind_map;
     } else if (a0->fn_draw == draw_bob_behind_map) {
         a1 = a0->cursor;
@@ -1036,7 +1001,7 @@ void l2_piece_update(Object *a0)
     } else if (rd16(a0->cursor) == 0) {
         a0->fn_draw = draw_bob_behind_map;
     }
-    d2 = (uint16_t)(((uint16_t)(PIECE_DIR(a0) + 0x10) >> 3) & 0x1c);
+    d2 = (uint16_t)(((uint16_t)(a0->piece.dir + 0x10) >> 3) & 0x1c);
     a0->gfx = (void *)(a0->type == 0x118 ? level2_blob.piece_pictures_118 : a0->type == 0x11c ? level2_blob.piece_pictures_11c : level2_blob.piece_pictures_other)[d2 / 4];
     bbox_from_frame(a0);
 }
@@ -1044,8 +1009,6 @@ void l2_piece_update(Object *a0)
 /* ---- the first fight: three gates and the boss ---- */
 
 /* the gate's use of the scratch fields of Object */
-#define GATE_STEP(o)   ((o)->v28)
-#define GATE_NUMBER(o) ((o)->v30)
 
 /* level2 $056A4A: update of a gate ($54, v30 its number): its box once the player can reach it, its cells open and close (v28 is the step);
  * the gate 2 also patches the map by the counters in level_vars (eight records at $56B58) */
@@ -1056,9 +1019,9 @@ void l2_gate_update(Object *a0)
 
     if ((int16_t)scroll_step_target < 0 && (int16_t)scroll_max <= 0xb40)
         scroll_max = 0xb40;
-    if (GATE_NUMBER(a0) == 2)
+    if (a0->gate.number == 2)
         hide = l2_gates_left != 1;
-    else if (GATE_NUMBER(a0) == 1)
+    else if (a0->gate.number == 1)
         hide = px >= 0xa0 || l2_walls_made == 3;
     else
         hide = px < 0xa0 || l2_walls_made == 3;
@@ -1073,15 +1036,15 @@ void l2_gate_update(Object *a0)
         d0 = (int16_t)((a0->y << 4) - scroll_pos);
         a0->hit[1] = d0;
         a0->hit[3] = (int16_t)(d0 + 0xf);
-        step = GATE_STEP(a0) != 4 || l2_walls_made == 3;
+        step = a0->gate.step != 4 || l2_walls_made == 3;
     }
     if (step && !(frame_tick & 1))
-        GATE_STEP(a0) = (int16_t)((GATE_STEP(a0) + 1) & 7);
-    d0 = GATE_STEP(a0);
+        a0->gate.step = (int16_t)((a0->gate.step + 1) & 7);
+    d0 = a0->gate.step;
     if (d0 > 4)
         d0 = (int16_t)(8 - d0);
     copy2((uint8_t *)a0->gfx, level2_blob.gate_number_cells + 2 * d0);
-    if (GATE_NUMBER(a0) == 2) {
+    if (a0->gate.number == 2) {
         const uint8_t *a1 = level2_blob.gate_cells;
         uint16_t *a4 = level_vars;
         int i;
@@ -1110,10 +1073,10 @@ void l2_gate_flash(Object *a0)
     uint16_t d3 = (uint16_t)((a0->x << 3) - 0x10);
 
     a0->fn_draw = (obj_fn)obj_nop_thunk;
-    if (GATE_NUMBER(a0) != 0) {
+    if (a0->gate.number != 0) {
         d3 = (uint16_t)(d3 + 0x10);
         cells = level2_blob.gate_flash_cells_b;
-        if (GATE_NUMBER(a0) != 1) {
+        if (a0->gate.number != 1) {
             cells = level2_blob.gate_flash_cells_c;
             rows = 2;
             d2 = (int16_t)(d2 - 0x10);
@@ -1219,7 +1182,7 @@ void l2_boss_rest(Object *a0)
     if ((int16_t)target_count < 0x10) {
         r = random_next();
         if (!(r & 0x2000)) {
-            L2_BOSS_FLASH(a0) = (int16_t)((r & 7) + 2);
+            a0->l2_boss_b.flash = (int16_t)((r & 7) + 2);
             return;
         }
     } else {
@@ -1227,34 +1190,32 @@ void l2_boss_rest(Object *a0)
         l2_stale_d0_set = 0;
     }
     d1 = (r & 0x4000) ? -3 : 3;
-    L2_BOSS_FRAMES(a0) = (int16_t)((r & 7) + 8);
-    L2_BOSS_STEP(a0) = d1;
+    a0->l2_boss.frames = (int16_t)((r & 7) + 8);
+    a0->l2_boss.step = d1;
 }
 
 /* the boss's use of the scratch fields of Object */
-#define L2_BOSS_STEP(o)   ((o)->v2a)
-#define L2_BOSS_FRAMES(o) ((o)->v2e)
 
 /* level2 $056DD8: the boss moves up or down (v2a a step, v2e the frames left) between y $60 and $C0 */
 static void l2_boss_move(Object *a0)
 {
     int16_t d0;
 
-    if (L2_BOSS_FRAMES(a0) == 0) {
+    if (a0->l2_boss.frames == 0) {
         l2_boss_rest(a0);
         return;
     }
     if (B(0x19f9e + 0x1794) == 0)
         sfx_cmd = 3;
-    L2_BOSS_FRAMES(a0)--;
-    d0 = (int16_t)(L2_BOSS_STEP(a0) + a0->y);
+    a0->l2_boss.frames--;
+    d0 = (int16_t)(a0->l2_boss.step + a0->y);
     if (d0 < 0x60) {
         d0 = 0x60;
-        L2_BOSS_FRAMES(a0) = 0;
+        a0->l2_boss.frames = 0;
     }
     if (d0 > 0xc0) {
         d0 = 0xc0;
-        L2_BOSS_FRAMES(a0) = 0;
+        a0->l2_boss.frames = 0;
     }
     a0->y = d0;
     d0 = (int16_t)((frame_tick & 1) * 4);
@@ -1264,8 +1225,6 @@ static void l2_boss_move(Object *a0)
     copy4(&level2_blob.boss_cells[0x1c], level2_blob.boss_move_paths_b[d0 / 4] + 4);
 }
 
-#define L2_BOSS_WAIT(o) ((o)->v28)
-#define L2_BOSS_FLASH(o) ((o)->v3e)
 
 /* level2 $056BE8: update of the boss ($50): it waits for the player to come into reach (v28 negative), then counts v28 down; it shoots now
  * and then (a ring of sixteen shots one time in four, else one); while its v3e counts down it changes the cells of its picture.  The moves from
@@ -1278,8 +1237,8 @@ void l2_boss_update(Object *a0)
 
     if ((int16_t)scroll_max <= 0x120)
         scroll_max = 0x120;
-    if (L2_BOSS_FRAMES(a0) == 0) {
-        if (L2_BOSS_WAIT(a0) < 0) {
+    if (a0->l2_boss.frames == 0) {
+        if (a0->l2_boss.wait < 0) {
             a0->hit[0] = 0x3e8;
             a0->hit[2] = 0x3e8;
             d0 = (int16_t)(PLAYER_Y + scroll_pos);
@@ -1288,16 +1247,16 @@ void l2_boss_update(Object *a0)
             d0 = PLAYER_X;
             if (d0 < 0 || d0 > 0x13f)
                 return;
-            L2_BOSS_FRAMES(a0) = 0x3e8;
-            L2_BOSS_STEP(a0) = 3;
-            L2_BOSS_WAIT(a0) = 0x154;
+            a0->l2_boss.frames = 0x3e8;
+            a0->l2_boss.step = 3;
+            a0->l2_boss.wait = 0x154;
             return;
         }
-        L2_BOSS_WAIT(a0)--;
-        if (L2_BOSS_WAIT(a0) < 0) {
-            L2_BOSS_FLASH(a0) = 0;
-            L2_BOSS_FRAMES(a0) = 0x3e8;
-            L2_BOSS_STEP(a0) = -3;
+        a0->l2_boss.wait--;
+        if (a0->l2_boss.wait < 0) {
+            a0->l2_boss_b.flash = 0;
+            a0->l2_boss.frames = 0x3e8;
+            a0->l2_boss.step = -3;
         }
     }
     sum = (uint16_t)(a0->v5e_b[0] + level2_blob.boss_fire_rate);
@@ -1325,15 +1284,15 @@ void l2_boss_update(Object *a0)
     a0->hit[3] = (int16_t)(d5 + 0xa);
     if ((int16_t)scroll_pos >= 0x160)
         return;
-    if (L2_BOSS_FLASH(a0) != 0) {
+    if (a0->l2_boss_b.flash != 0) {
         const uint8_t *a2;
 
-        L2_BOSS_CELL(a0) = (int16_t)((L2_BOSS_CELL(a0) + 4) & 0xc);
-        a2 = level2_blob.boss_cells_by_cell[(uint16_t)L2_BOSS_CELL(a0) / 4];
+        a0->l2_boss.cell = (int16_t)((a0->l2_boss.cell + 4) & 0xc);
+        a2 = level2_blob.boss_cells_by_cell[(uint16_t)a0->l2_boss.cell / 4];
         copy4(&level2_blob.boss_cells[0], a2);
         copy4(&level2_blob.boss_cells[0xc], a2 + 4);
-        L2_BOSS_FLASH(a0)--;
-        if (L2_BOSS_FLASH(a0) != 0)
+        a0->l2_boss_b.flash--;
+        if (a0->l2_boss_b.flash != 0)
             return;
         s = alloc_in(LIST_C);
         s->type = 0x10c;
@@ -1345,8 +1304,8 @@ void l2_boss_update(Object *a0)
         s->x = 0xa0;
         s->y = (int16_t)(a0->y - scroll_pos + 0x80);
         set_anim(s, level2_blob.boss_update_data_4);
-        L2_BOSS_WAIT(s) = 0;
-        L2_BOSS_STEP(s) = (int16_t)(random_next() & 7);
+        s->l2_boss.wait = 0;
+        s->l2_boss.step = (int16_t)(random_next() & 7);
         return;
     }
     l2_boss_move(a0);

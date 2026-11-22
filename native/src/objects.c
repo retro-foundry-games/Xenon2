@@ -3,14 +3,8 @@
 #include "game_all.h"
 
 /* the path script view of an object (ObjMove) */
-#define PATH_WAIT(o) ((o)->v28)
-#define PATH_ANGLE_HI(o) ((o)->v2a)
-#define PATH_ANGLE_LO(o) ((o)->v2c)
 
 /* the scratch fields of Object, by the kind that uses them */
-#define DEBRIS_KIND(o) ((o)->v30)
-#define ENEMY_SHOT_DIR(o) ((o)->v2a)
-#define PICKUP_MODE(o) ((o)->v28)
 
 #ifdef GAME_SDL
 uint8_t guest_a6a(uint8_t a01);
@@ -448,18 +442,18 @@ Object *spawn_formation(Object *a0, const uint8_t *rec_raw, const uint8_t *a2)
             a0->x_frac = 0;
             a0->y = 0;
             a0->y_frac = 0;
-            PATH_ANGLE_HI(a0) = 0;
-            PATH_ANGLE_LO(a0) = 0;
+            a0->path.angle_hi = 0;
+            a0->path.angle_lo = 0;
             a0->score = (int16_t)a4->score;
-            PATH_WAIT(a0) = 0;
+            a0->path.wait = 0;
             if ((int16_t)a1->x < 100) {
                 d6 = (uint16_t)(0 - d6);
-                PATH_WAIT(a0) = (int16_t)d6;
+                a0->path.wait = (int16_t)d6;
                 d6 = (uint16_t)(0 - d6);
                 a0->x = 0;
             }
             if (a5 != a0)
-                PATH_WAIT(a0) = (int16_t)(PATH_WAIT(a0) - (int16_t)a4->score);
+                a0->path.wait = (int16_t)(a0->path.wait - (int16_t)a4->score);
             e = (const uint8_t *)GPTR(rd32(level_formations + (int16_t)(uint16_t)((a1->index - 1) * 4)));
             if ((const void *)e < (const void *)level_data_start || (const void *)e >= (const void *)level_events_a)
                 return a0;
@@ -744,9 +738,9 @@ void update_all(void)
 void spawn_debris(Object *a0_unused, Object *a1, uint16_t d0_unused)
 {
     Object *a0 = list_insert(LIST_EFFECT);
-    const struct SpawnKind *k = &spawn_kinds[(uint16_t)DEBRIS_KIND(a1)];
+    const struct SpawnKind *k = &spawn_kinds[(uint16_t)a1->debris.kind];
 
-    DEBRIS_KIND(a0) = DEBRIS_KIND(a1);
+    a0->debris.kind = a1->debris.kind;
     a0->type = k->kind;
     sfx_cmd = 0x11;
     a0->fn_update = (obj_fn)pickup_update;
@@ -754,7 +748,7 @@ void spawn_debris(Object *a0_unused, Object *a1, uint16_t d0_unused)
     a0->x = a1->x;
     a0->y = a1->y;
     anim_header_set(a0, (const uint8_t *)k->anim);
-    PICKUP_MODE(a0) = 7;
+    a0->pickup.mode = 7;
     kill_object(a1);
 }
 
@@ -810,7 +804,7 @@ void enemy_shot_update(Object *a0)
     int32_t m;
 
     anim_step(a0);
-    d2 = (uint16_t)ENEMY_SHOT_DIR(a0);
+    d2 = (uint16_t)a0->enemy_shot.dir;
     d0 = ((uint32_t)(uint16_t)a0->x << 16) | a0->x_frac;
     d1 = ((uint32_t)(uint16_t)a0->y << 16) | a0->y_frac;
     m = (int32_t)enemy_shot_dx[d2] * (int16_t)a0->steps;
@@ -847,7 +841,7 @@ Object *spawn_enemy_shot(uint16_t x, uint16_t y, uint16_t angle, uint16_t steps,
     a0->anim_delay = 0;
     a0->x = (int16_t)x;
     a0->y = (int16_t)y;
-    ENEMY_SHOT_DIR(a0) = (int16_t)angle;
+    a0->enemy_shot.dir = (int16_t)angle;
     a0->steps = (int16_t)steps;
     a0->hit[0] = 0x3e8;
     a0->hit[2] = 0x3e8;

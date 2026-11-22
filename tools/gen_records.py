@@ -32,10 +32,32 @@ def typedef_kinds():
 
 TYPEDEFS = {}
 
+def flatten_unions(t):
+    """an anonymous `union { A; B; ... };` has the layout of its first member (the members are the same size): keep that one"""
+    while True:
+        m = re.search(r'\bunion\s*\{', t)
+        if not m: return t
+        depth, i = 1, m.end()
+        while depth:
+            depth += (t[i] == '{') - (t[i] == '}')
+            i += 1
+        body = t[m.end():i - 1]
+        end = t.index(';', i) + 1
+        first = re.match(r'\s*struct\s*\{', body)
+        if first:
+            d, j = 1, first.end()
+            while d:
+                d += (body[j] == '{') - (body[j] == '}')
+                j += 1
+            keep = body[first.end():j - 1]
+        else:
+            keep = body[:body.index(';') + 1]
+        t = t[:m.start()] + keep + t[end:]
+
 def parse_structs():
     structs = {}
     for f in sorted(glob.glob(os.path.join(SRC, 'types_*.h'))) + [os.path.join(SRC, 'types.h')]:
-        text = strip_comments(open(f).read())
+        text = flatten_unions(strip_comments(open(f).read()))
         for m in re.finditer(r'struct\s+(\w+)\s*\{(.*?)\}\s*;', text, re.S):
             fields = []
             for stmt in m.group(2).split(';'):
