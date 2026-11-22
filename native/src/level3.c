@@ -3,88 +3,89 @@
 #include "weapons.h"
 #include "shop.h"
 #include "game_all.h"
+#include "blobs.h"
 
 /* level 3: its data tables in the level blob, by the routine that reads them */
-#define L3_ENEMY_A_DATA 0x55078
-#define L3_ENEMY_B_DATA 0x55098
-#define L3_ENEMY_C_DATA 0x550b8
-#define L3_ENEMY_ENTER_ANIMS 0x5513e
-#define L3_WORM_SPAWN_DATA 0x55270
-#define L3_WORM_HEAD_ANIMS 0x55400
-#define L3_WORM_HEAD_DATA 0x5549e
-#define L3_WORM_A_DATA 0x5558e
-#define L3_WORM_B_DATA 0x555d2
-#define L3_WORM_FOLLOW_DATA 0x55622
-#define L3_WALKER_SPAWN_DX 0x55790
-#define L3_WALKER_SPAWN_DY 0x557a0
-#define L3_WALKER_SPAWN_ANIMS 0x557b0
-#define L3_SPAWN_PARTS_DATA 0x558f0
-#define L3_PART_GUN_DATA_3 0x55a40
-#define L3_PART_CORE_DATA 0x55b14
-#define L3_ARM_TIP_PICTURES 0x55dac
-#define L3_SNAKE_ANIM_B 0x560b4
-#define L3_SNAKE_ANIM_A 0x560de
-#define L3_SPAWN_BOSS_DATA 0x561f0
-#define L3_WALKER_UPDATE_WORDS 0x56290
-#define L3_WALKER_UPDATE_WORDS_2 0x562a0
-#define L3_WALKER_UPDATE_WORDS_3 0x56450
-#define L3_WALKER_UPDATE_WORDS_4 0x56460
-#define L3_WALKER_UPDATE_WORDS_5 0x56470
-#define L3_WALKER_UPDATE_WORDS_6 0x56480
-#define L3_DIVER_UPDATE_DATA 0x567ce
-#define L3_DIVER_UPDATE_DATA_3 0x567f2
-#define L3_DIVER_UPDATE_DATA_2 0x5681c
-#define L3_DIVER_UPDATE_DATA_4 0x56840
-#define L3_BOSS_UPDATE_DATA 0x569a2
-#define L3_BOSS_FLASH_GRID 0x56a74
-#define L3_BOSS2_SHOT_ANIMS 0x56bec
-#define L3_BOSS2_UPDATE_DATA 0x56d2c
-#define L3_GUN_CELLS_F0 0x56eda
-#define L3_GUN_CELLS_OTHER 0x56ee8
-#define L3_GUN_ANIM_B 0x56ef6
-#define L3_GUN_ANIM_A 0x56ef8
-#define L3_END_DRAW_DATA 0x56f9a
-#define L3_SPAWN_PARTS_DATA_2 0x570c2
-#define L3_SPAWN_PARTS_WORDS 0x570c4
-#define L3_SPAWN_PARTS_WORDS_2 0x570c6
-#define L3_SPAWN_PARTS_DATA_3 0x570c8
-#define L3_SNAKE_PICTURE_A 0x5b1d0
-#define L3_SNAKE_PICTURE_B 0x5b280
-#define L3_DIVER_SHOT_PICTURE_A 0x5b330
-#define L3_DIVER_SHOT_PICTURE_B 0x5b386
-#define L3_GUN_SHOT_PICTURE 0x5e69e
-#define L3_PART_GUN_PICTURE_SIDE_40 0x5f05e
-#define L3_PART_GUN_PICTURE_OTHER 0x5f0f0
+#define L3_ENEMY_A_DATA BLOB_ADDR(Level3Blob, enemy_a_data)
+#define L3_ENEMY_B_DATA BLOB_ADDR(Level3Blob, enemy_b_data)
+#define L3_ENEMY_C_DATA BLOB_ADDR(Level3Blob, enemy_c_data)
+#define L3_ENEMY_ENTER_ANIMS BLOB_ADDR(Level3Blob, enemy_enter_anims)
+#define L3_WORM_SPAWN_DATA BLOB_ADDR(Level3Blob, worm_spawn_data)
+#define L3_WORM_HEAD_ANIMS BLOB_ADDR(Level3Blob, worm_head_anims)
+#define L3_WORM_HEAD_DATA BLOB_ADDR(Level3Blob, worm_head_data)
+#define L3_WORM_A_DATA BLOB_ADDR(Level3Blob, worm_a_data)
+#define L3_WORM_B_DATA BLOB_ADDR(Level3Blob, worm_b_data)
+#define L3_WORM_FOLLOW_DATA BLOB_ADDR(Level3Blob, worm_follow_data)
+#define L3_WALKER_SPAWN_DX BLOB_ADDR(Level3Blob, walker_spawn_dx)
+#define L3_WALKER_SPAWN_DY BLOB_ADDR(Level3Blob, walker_spawn_dy)
+#define L3_WALKER_SPAWN_ANIMS BLOB_ADDR(Level3Blob, walker_spawn_anims)
+#define L3_SPAWN_PARTS_DATA BLOB_ADDR(Level3Blob, spawn_parts_data)
+#define L3_PART_GUN_DATA_3 BLOB_ADDR(Level3Blob, part_gun_data_3)
+#define L3_PART_CORE_DATA BLOB_ADDR(Level3Blob, part_core_data)
+#define L3_ARM_TIP_PICTURES BLOB_ADDR(Level3Blob, arm_tip_pictures)
+#define L3_SNAKE_ANIM_B BLOB_ADDR(Level3Blob, snake_anim_b)
+#define L3_SNAKE_ANIM_A BLOB_ADDR(Level3Blob, snake_anim_a)
+#define L3_SPAWN_BOSS_DATA BLOB_ADDR(Level3Blob, spawn_boss_data)
+#define L3_WALKER_UPDATE_WORDS BLOB_ADDR(Level3Blob, walker_update_words)
+#define L3_WALKER_UPDATE_WORDS_2 BLOB_ADDR(Level3Blob, walker_update_words_2)
+#define L3_WALKER_UPDATE_WORDS_3 BLOB_ADDR(Level3Blob, walker_update_words_3)
+#define L3_WALKER_UPDATE_WORDS_4 BLOB_ADDR(Level3Blob, walker_update_words_4)
+#define L3_WALKER_UPDATE_WORDS_5 BLOB_ADDR(Level3Blob, walker_update_words_5)
+#define L3_WALKER_UPDATE_WORDS_6 BLOB_ADDR(Level3Blob, walker_update_words_6)
+#define L3_DIVER_UPDATE_DATA BLOB_ADDR(Level3Blob, diver_update_data)
+#define L3_DIVER_UPDATE_DATA_3 BLOB_ADDR(Level3Blob, diver_update_data_3)
+#define L3_DIVER_UPDATE_DATA_2 BLOB_ADDR(Level3Blob, diver_update_data_2)
+#define L3_DIVER_UPDATE_DATA_4 BLOB_ADDR(Level3Blob, diver_update_data_4)
+#define L3_BOSS_UPDATE_DATA BLOB_ADDR(Level3Blob, boss_update_data)
+#define L3_BOSS_FLASH_GRID BLOB_ADDR(Level3Blob, boss_flash_grid)
+#define L3_BOSS2_SHOT_ANIMS BLOB_ADDR(Level3Blob, boss2_shot_anims)
+#define L3_BOSS2_UPDATE_DATA BLOB_ADDR(Level3Blob, boss2_update_data)
+#define L3_GUN_CELLS_F0 BLOB_ADDR(Level3Blob, gun_cells_f0)
+#define L3_GUN_CELLS_OTHER BLOB_ADDR(Level3Blob, gun_cells_other)
+#define L3_GUN_ANIM_B BLOB_ADDR(Level3Blob, gun_anim_b)
+#define L3_GUN_ANIM_A BLOB_ADDR(Level3Blob, gun_anim_a)
+#define L3_END_DRAW_DATA BLOB_ADDR(Level3Blob, end_draw_data)
+#define L3_SPAWN_PARTS_DATA_2 BLOB_ADDR(Level3Blob, spawn_parts_data_2)
+#define L3_SPAWN_PARTS_WORDS BLOB_ADDR(Level3Blob, spawn_parts_words)
+#define L3_SPAWN_PARTS_WORDS_2 BLOB_ADDR(Level3Blob, spawn_parts_words_2)
+#define L3_SPAWN_PARTS_DATA_3 BLOB_ADDR(Level3Blob, spawn_parts_data_3)
+#define L3_SNAKE_PICTURE_A BLOB_ADDR(Level3Blob, snake_picture_a)
+#define L3_SNAKE_PICTURE_B BLOB_ADDR(Level3Blob, snake_picture_b)
+#define L3_DIVER_SHOT_PICTURE_A BLOB_ADDR(Level3Blob, diver_shot_picture_a)
+#define L3_DIVER_SHOT_PICTURE_B BLOB_ADDR(Level3Blob, diver_shot_picture_b)
+#define L3_GUN_SHOT_PICTURE BLOB_ADDR(Level3Blob, gun_shot_picture)
+#define L3_PART_GUN_PICTURE_SIDE_40 BLOB_ADDR(Level3Blob, part_gun_picture_side_40)
+#define L3_PART_GUN_PICTURE_OTHER BLOB_ADDR(Level3Blob, part_gun_picture_other)
 
 /* level 3: its parameter block at E42 (energies, fire rates, shot steps), by the object that reads them */
-#define L3_WORM_SPAWN_STEPS 0x54e42
-#define L3_WALKER_ENERGY 0x54e44
-#define L3_PARTS_STEPS 0x54e46
-#define L3_SNAKE_ENERGY 0x54e48
-#define L3_DIVER_ENERGY 0x54e4a
-#define L3_BOSS_ENERGY 0x54e4c
-#define L3_WALKER_FIRE_RATE 0x54e4f
-#define L3_WALKER_PARAM 0x54e50
-#define L3_WALKER_SHOT_STEPS 0x54e52
-#define L3_DIVER_STEPS 0x54e54
-#define L3_BOSS_CHANCE 0x54e57
-#define L3_BOSS_CHANCE_2 0x54e59
-#define L3_BOSS_FIRE_RATE 0x54e5b
-#define L3_BOSS_PARAM 0x54e5c
-#define L3_GUN_ENERGY 0x54e5e
-#define L3_BOSS_ENERGY_2 0x54e60
-#define L3_BOSS2_FIRE_RATE 0x54e63
-#define L3_BOSS2_SHOT_STEPS 0x54e64
-#define L3_GUN_FIRE_RATE 0x54e67
-#define L3_GUN_SHOT_STEPS 0x54e68
-#define L3_INIT_PATCH 0x54e6a
-#define L3_INIT_PATCH_2 0x54e6c
-#define L3_WORM_HEAD_FIRE_RATE 0x54e6f
-#define L3_WORM_HEAD_SHOT_STEPS 0x54e70
-#define L3_PART_CORE_FIRE_RATE 0x54e75
-#define L3_PART_CORE_SHOT_STEPS 0x54e76
-#define L3_PART_GUN_FIRE_RATE 0x54e79
-#define L3_EVENT_PARAM 0x54e7a
+#define L3_WORM_SPAWN_STEPS BLOB_ADDR(Level3Blob, worm_spawn_steps)
+#define L3_WALKER_ENERGY BLOB_ADDR(Level3Blob, walker_energy)
+#define L3_PARTS_STEPS BLOB_ADDR(Level3Blob, parts_steps)
+#define L3_SNAKE_ENERGY BLOB_ADDR(Level3Blob, snake_energy)
+#define L3_DIVER_ENERGY BLOB_ADDR(Level3Blob, diver_energy)
+#define L3_BOSS_ENERGY BLOB_ADDR(Level3Blob, boss_energy)
+#define L3_WALKER_FIRE_RATE BLOB_ADDR(Level3Blob, walker_fire_rate)
+#define L3_WALKER_PARAM BLOB_ADDR(Level3Blob, walker_param)
+#define L3_WALKER_SHOT_STEPS BLOB_ADDR(Level3Blob, walker_shot_steps)
+#define L3_DIVER_STEPS BLOB_ADDR(Level3Blob, diver_steps)
+#define L3_BOSS_CHANCE BLOB_ADDR(Level3Blob, boss_chance)
+#define L3_BOSS_CHANCE_2 BLOB_ADDR(Level3Blob, boss_chance_2)
+#define L3_BOSS_FIRE_RATE BLOB_ADDR(Level3Blob, boss_fire_rate)
+#define L3_BOSS_PARAM BLOB_ADDR(Level3Blob, boss_param)
+#define L3_GUN_ENERGY BLOB_ADDR(Level3Blob, gun_energy)
+#define L3_BOSS_ENERGY_2 BLOB_ADDR(Level3Blob, boss_energy_2)
+#define L3_BOSS2_FIRE_RATE BLOB_ADDR(Level3Blob, boss2_fire_rate)
+#define L3_BOSS2_SHOT_STEPS BLOB_ADDR(Level3Blob, boss2_shot_steps)
+#define L3_GUN_FIRE_RATE BLOB_ADDR(Level3Blob, gun_fire_rate)
+#define L3_GUN_SHOT_STEPS BLOB_ADDR(Level3Blob, gun_shot_steps)
+#define L3_INIT_PATCH BLOB_ADDR(Level3Blob, init_patch)
+#define L3_INIT_PATCH_2 BLOB_ADDR(Level3Blob, init_patch_2)
+#define L3_WORM_HEAD_FIRE_RATE BLOB_ADDR(Level3Blob, worm_head_fire_rate)
+#define L3_WORM_HEAD_SHOT_STEPS BLOB_ADDR(Level3Blob, worm_head_shot_steps)
+#define L3_PART_CORE_FIRE_RATE BLOB_ADDR(Level3Blob, part_core_fire_rate)
+#define L3_PART_CORE_SHOT_STEPS BLOB_ADDR(Level3Blob, part_core_shot_steps)
+#define L3_PART_GUN_FIRE_RATE BLOB_ADDR(Level3Blob, part_gun_fire_rate)
+#define L3_EVENT_PARAM BLOB_ADDR(Level3Blob, event_param)
 #define PART_SLOT(o) ((o)->v30)
 #define TILE_COLS(o) ((o)->v3e)
 #define TILE_ROWS(o) ((o)->v40)

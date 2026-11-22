@@ -36,7 +36,10 @@ XENON_RAM ?= ../captures/trace-10000.bin
 SYMBOL_FILES := $(wildcard $(SRC)/game.symbols $(SRC)/symbols/*.symbols)
 $(SRC)/game.h $(SRC)/game.ld $(SRC)/guest_members.h $(SRC)/data.c: $(SYMBOL_FILES) ../tools/gen_symbols.py
 	$(PYTHON) ../tools/gen_symbols.py --ram $(XENON_RAM)
-generate: $(SRC)/game.h
+generate: $(SRC)/game.h $(SRC)/blobs.h
+# the layout of the level blobs (tools/gen_blobs.py)
+$(SRC)/blobs.h: $(wildcard $(SRC)/blobs/*.blob) ../tools/gen_blobs.py
+	$(PYTHON) ../tools/gen_blobs.py
 
 $(BUILD):
 	mkdir -p $@
