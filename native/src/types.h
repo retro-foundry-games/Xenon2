@@ -45,6 +45,10 @@ struct PicBox { uint16_t dx, dy, w, h; };
 #define SCREEN_ROW_BYTES (2 * SCREEN_ROW_WORDS)
 #define SCREEN_ROWS 192   /* the rows of a screen; the panel (8 rows) follows */
 #define PANEL_ROWS 8
+#define SOUND_SILENCE_BYTES 0x40   /* the bytes of silence after the samples of a bank */
+#define MAP_BLIT_WORDS (2 * SCREEN_PLANE_WORDS)   /* the blitter copies a row of the map image (two planes of a screen row) */
+#define MAP_BLIT_BYTES (2 * MAP_BLIT_WORDS)
+#define DIGIT_GLYPH_BYTES 32   /* 8 rows of 4 planes */
 #define MAP_ROW_BYTES (2 * MAP_COLS)
 #define MAP_ROW(row) ((row) * MAP_ROW_BYTES)   /* the byte offset of a row of the map */
 #define MAP_CELL(row, col) (MAP_ROW(row) + 2 * (col))

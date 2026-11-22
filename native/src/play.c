@@ -606,7 +606,7 @@ void respawn_player(void)
     xenon2.scroll_max = pos;
     pos++;
     xenon2.next_event_a = pos;
-    pos += 0xbf;
+    pos += SCREEN_ROWS - 1;
     xenon2.next_event_b = pos;
     xenon2.scroll_fine = xenon2.scroll_y & 0xf;
     xenon2.map_row_offset = (uint16_t)MAP_ROW(xenon2.scroll_y >> 4);

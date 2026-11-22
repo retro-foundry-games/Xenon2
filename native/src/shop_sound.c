@@ -43,7 +43,7 @@ void shop_sound_tables(void)
     wave->len = (uint16_t)size;
     wave->period = (uint16_t)divu(SND_PERIOD_CLOCK, bank->rate);
     snd->silence = src;
-    src += 0x40;
+    src += SOUND_SILENCE_BYTES;
     snd->waves = src;
     snd->built1 = 0xff;
 }
