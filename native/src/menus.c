@@ -181,96 +181,96 @@ uint8_t hiscore_stick_again(void)
  * stick (up/down), fire takes a letter */
 void hiscore_enter(void)
 {
-    int32_t d0 = (int32_t)player_score;
-    uint32_t *a0;
-    uint8_t *a1, *a2;
-    const uint8_t *a3;
+    int32_t score = (int32_t)player_score;
+    uint32_t *slot;
+    uint8_t *line, *cursor;
+    const uint8_t *chars;
     const uint32_t *p;
     uint16_t idx;
-    uint8_t d1, d2;
-    int16_t d7;
-    int8_t n;
+    uint8_t stick, dir;
+    int16_t repeats;
+    int8_t wait_frames;
 
-    if (d0 <= (int32_t)hiscore_values[9])
+    if (score <= (int32_t)hiscore_values[9])
         return;
     title_in_hiscore();
-    d0 = (int32_t)player_score;
-    a0 = &hiscore_values[9];
-    a1 = &hiscore_lines[9 * 15];
+    score = (int32_t)player_score;
+    slot = &hiscore_values[9];
+    line = &hiscore_lines[9 * 15];
     for (;;) {
         int k;
 
-        if (d0 <= (int32_t)a0[-1])
+        if (score <= (int32_t)slot[-1])
             break;
-        a0[0] = a0[-1];
-        a0--;
+        slot[0] = slot[-1];
+        slot--;
         for (k = 10; k >= 0; k--) {
-            a1--;
-            a1[15] = a1[0];
+            line--;
+            line[15] = line[0];
         }
-        a1 -= 4;
-        if (!(a0 > hiscore_values))
+        line -= 4;
+        if (!(slot > hiscore_values))
             break;
     }
-    *a0 = (uint32_t)d0;
-    a1[12] = 0x3a;
-    a1[13] = 0x3a;
-    a1[14] = 0x3a;
-    a2 = a1 + 4;
+    *slot = (uint32_t)score;
+    line[12] = 0x3a;
+    line[13] = 0x3a;
+    line[14] = 0x3a;
+    cursor = line + 4;
     for (p = decimal_powers; *p != 0; p++) {
         int32_t unit = (int32_t)*p;
 
-        *a2 = 0x30;
+        *cursor = 0x30;
         for (;;) {
-            d0 -= unit;
-            if (d0 < 0)
+            score -= unit;
+            if (score < 0)
                 break;
-            (*a2)++;
+            (*cursor)++;
         }
-        d0 += unit;
-        a2++;
+        score += unit;
+        cursor++;
     }
     key_pressed = 0;
-    a2 = a1 + 12;
-    a3 = text_chars;
+    cursor = line + 12;
+    chars = text_chars;
     idx = 0;
 next_letter:
-    *a2 = a3[(int16_t)idx];
+    *cursor = chars[(int16_t)idx];
 wait_stick:
     hiscore_draw();
     if (key_pressed)
         goto letter_done;
-    d1 = hiscore_stick_first() & 0xc;
-    d2 = 0xff;
-    if (d1 & 4)
+    stick = hiscore_stick_first() & 0xc;
+    dir = 0xff;
+    if (stick & 4)
         goto step;
-    d2 = 1;
-    if (!(d1 & 8))
+    dir = 1;
+    if (!(stick & 8))
         goto wait_stick;
 step:
-    d7 = 3;
+    repeats = 3;
 step_again:
-    idx = (uint16_t)(idx + (int8_t)d2);
+    idx = (uint16_t)(idx + (int8_t)dir);
     if ((int16_t)idx < 0)
         idx = 0x25;
     if ((int16_t)idx >= 0x26)
         idx = 0;
 repeat:
-    *a2 = a3[(int16_t)idx];
+    *cursor = chars[(int16_t)idx];
     hiscore_draw();
     if (key_pressed)
         goto letter_done;
-    if ((uint8_t)(hiscore_stick_again() & 0xc) != d1)
+    if ((uint8_t)(hiscore_stick_again() & 0xc) != stick)
         goto wait_stick;
-    if (d7-- != 0)
+    if (repeats-- != 0)
         goto repeat;
     goto step;
 letter_done:
     key_pressed = 0;
-    a2++;
-    if (*a2 == 0x3a)
+    cursor++;
+    if (*cursor == 0x3a)
         goto next_letter;
-    for (n = 0x11; n != 0; n--)
+    for (wait_frames = 0x11; wait_frames != 0; wait_frames--)
         hiscore_draw();
     title_out_hiscore();
 }
@@ -288,7 +288,7 @@ void credits_draw(void)
 void menu(void)
 {
     int16_t sel = 0;
-    const uint8_t *a1;
+    const uint8_t *row;
 
     continues_left = 3;
     title_stars_start();
@@ -299,22 +299,22 @@ void menu(void)
         title_y = 0xc;
         draw_text_row(menu_text);
         title_y = 0x3c;
-        a1 = &menu_text[20];
+        row = &menu_text[20];
         if (sel == 0)
-            a1 = &menu_text[40];
-        draw_text_row(a1);
+            row = &menu_text[40];
+        draw_text_row(row);
         title_y = 0x54;
-        a1 = &menu_text[60];
+        row = &menu_text[60];
         if (sel == 1)
-            a1 = &menu_text[80];
-        draw_text_row(a1);
+            row = &menu_text[80];
+        draw_text_row(row);
         title_y = 0x6c;
-        a1 = &menu_text[100];
+        row = &menu_text[100];
         if (!music_switch)
-            a1 = &menu_text[140];
+            row = &menu_text[140];
         if (sel == 2)
-            a1 += 0x14;
-        draw_text_row(a1);
+            row += 0x14;
+        draw_text_row(row);
         credits_draw();
         stars_update();
         swap_screens_200();
@@ -597,7 +597,7 @@ HLE_WEAK void disk_recalibrate(void)
  * (HLE: disk) */
 HLE_WEAK void disk_seek(uint16_t track)
 {
-    int16_t d0;
+    int16_t delta;
 
     if (disk_track < 0)
         disk_recalibrate();
@@ -605,8 +605,8 @@ HLE_WEAK void disk_seek(uint16_t track)
     CIAB_PRB &= ~4;
     if (!(track & 1))
         CIAB_PRB |= 4;
-    d0 = (int16_t)((track & ~1) - (uint16_t)disk_track);
-    if (d0 == 0)
+    delta = (int16_t)((track & ~1) - (uint16_t)disk_track);
+    if (delta == 0)
         return;
     {
         uint16_t digit = 0;
@@ -616,12 +616,12 @@ HLE_WEAK void disk_seek(uint16_t track)
         progress_text[0] = (uint8_t)(digit + 0x30);
         draw_text_row_at(show_screen + 0x3854, progress_text, 0);
     }
-    disk_track = (int16_t)(disk_track + d0);
-    d0 >>= 1;
-    if (d0 >= 0)
-        disk_step_in((uint16_t)d0);
+    disk_track = (int16_t)(disk_track + delta);
+    delta >>= 1;
+    if (delta >= 0)
+        disk_step_in((uint16_t)delta);
     else
-        disk_step_out((uint16_t)-d0);
+        disk_step_out((uint16_t)-delta);
 }
 
 /* orig $957E: bytes of MFM data (odd bits first, then the even bits) decoded to dest; returns the end of the source */
@@ -648,63 +648,63 @@ uint8_t *mfm_decode(uint8_t *dest, uint8_t *src, uint16_t bytes)
  * -1 when nothing is found within 0xABC bytes */
 int32_t mfm_align(const uint16_t *src)
 {
-    const uint16_t *a0 = src;
+    const uint16_t *p = src;
     const uint16_t *limit = (const uint16_t *)((const uint8_t *)src + 0xabc);
-    const uint32_t *a2;
-    uint16_t d2;
-    int16_t d0;
-    uint16_t d1;
+    const uint32_t *pats;
+    uint16_t word;
+    int16_t shift_right;
+    uint16_t shift_left;
     uint16_t *out;
     int i;
 
     for (;;) {
         for (;;) {
-            d2 = rd16(a0++);
-            if (d2 == 0x5555) {
-                a2 = mfm_sync_a;
-                d0 = 0xf;
+            word = rd16(p++);
+            if (word == 0x5555) {
+                pats = mfm_sync_a;
+                shift_right = 0xf;
                 break;
             }
-            if (d2 == 0xaaaa) {
-                a2 = mfm_sync_b;
-                d0 = 0xe;
+            if (word == 0xaaaa) {
+                pats = mfm_sync_b;
+                shift_right = 0xe;
                 break;
             }
-            if (!(a0 < limit))
+            if (!(p < limit))
                 return -1;
         }
-        while (d2 == rd16(a0++))
+        while (word == rd16(p++))
             ;
-        a0--;
+        p--;
         {
-            uint32_t pat = ((uint32_t)rd16(&a0[0]) << 16) | rd16(&a0[1]);
+            uint32_t pat = ((uint32_t)rd16(&p[0]) << 16) | rd16(&p[1]);
 
             for (;;) {
-                if (pat == *a2++)
+                if (pat == *pats++)
                     goto found;
-                d0 -= 2;
-                if (d0 < 0)
+                shift_right -= 2;
+                if (shift_right < 0)
                     break;
             }
         }
     }
 found:
     out = SCREEN_A_WORDS(0x1600);
-    d1 = (uint16_t)(0x10 - d0);
+    shift_left = (uint16_t)(0x10 - shift_right);
     for (i = 0; i < 0x2000; i++) {
-        uint16_t hi = (uint16_t)((uint32_t)rd16(&a0[-1]) << d1);
-        uint16_t lo = (uint16_t)(rd16(a0++) >> d0);
+        uint16_t hi = (uint16_t)((uint32_t)rd16(&p[-1]) << shift_left);
+        uint16_t lo = (uint16_t)(rd16(p++) >> shift_right);
 
         wr16(out++, (uint16_t)(lo | hi));
     }
-    return d0;
+    return shift_right;
 }
 
 /* orig $93F8: reads the track the head is on into the track buffer by DMA and decodes its eleven sectors into screen_a (sector n
  * at 512 * n); up to 4 tries, the head recalibrated between them; returns 0, or -1 when it fails (HLE: disk) */
 HLE_WEAK int disk_read_track(void)
 {
-    uint8_t *a1;
+    uint8_t *p;
     int n;
 
     disk_retries = 3;
@@ -726,28 +726,28 @@ retry:
     mfm_align(SCREEN_A_WORDS(0x1604));
     if (disk_error)
         goto fail;
-    a1 = &screen_a[0x1602];
-    while (rd16(a1) == 0x4489)
-        a1 += 2;
+    p = &screen_a[0x1602];
+    while (rd16(p) == 0x4489)
+        p += 2;
     for (n = 10; n >= 0; n--) {
         uint16_t sector;
 
-        a1 = mfm_decode(disk_header, a1, 4);
-        a1 += 0x30;
+        p = mfm_decode(disk_header, p, 4);
+        p += 0x30;
         sector = disk_header[2];
         if (sector > 10)
             goto fail;
         if (disk_seen[sector] & 0x80)
             goto fail;
         disk_seen[sector] |= 0x80;
-        a1 = mfm_decode(&screen_a[(uint16_t)(sector << 9)], a1, 0x200);
+        p = mfm_decode(&screen_a[(uint16_t)(sector << 9)], p, 0x200);
         if (disk_header[3] == 1) {
-            mfm_align((const uint16_t *)a1);
-            a1 = &screen_a[0x1602];
-            while (rd16(a1) == 0x4489)
-                a1 += 2;
+            mfm_align((const uint16_t *)p);
+            p = &screen_a[0x1602];
+            while (rd16(p) == 0x4489)
+                p += 2;
         } else {
-            a1 += 8;
+            p += 8;
         }
         if (disk_error)
             goto fail;
@@ -855,59 +855,59 @@ void obj_script_step(Object *obj)
 {
     ObjMove *o = (ObjMove *)obj;
     const int8_t *sine = sine_table;
-    uint16_t d7;
-    uint32_t d0, d1, d3, d4;
-    int32_t d5;
+    uint16_t steps;
+    uint32_t x_fixed, y_fixed, angle_fixed, turn;
+    int32_t turn_delta;
 
-    d7 = o->steps;
-    if (d7 == 0)
+    steps = o->steps;
+    if (steps == 0)
         return;
     if (o->wait == 0)
         goto next_command;
     if (o->wait < 0) {
-        d7 = (uint16_t)(d7 + o->wait);
-        if ((int16_t)d7 > 0)
+        steps = (uint16_t)(steps + o->wait);
+        if ((int16_t)steps > 0)
             goto next_command;
-        o->wait = (int16_t)d7;
+        o->wait = (int16_t)steps;
         return;
     }
 move:
-    d0 = ((uint32_t)o->x_hi << 16) | o->x_lo;
-    d1 = ((uint32_t)o->y_hi << 16) | o->y_lo;
-    d3 = ((uint32_t)o->angle_hi << 16) | o->angle_lo;
-    d4 = o->turn_fixed;
-    d5 = o->turn_step;
+    x_fixed = ((uint32_t)o->x_hi << 16) | o->x_lo;
+    y_fixed = ((uint32_t)o->y_hi << 16) | o->y_lo;
+    angle_fixed = ((uint32_t)o->angle_hi << 16) | o->angle_lo;
+    turn = o->turn_fixed;
+    turn_delta = o->turn_step;
     for (;;) {
-        d7--;
-        if ((int16_t)d7 < 0) {
-            o->x_hi = (uint16_t)(d0 >> 16);
-            o->x_lo = (uint16_t)d0;
-            o->y_hi = (uint16_t)(d1 >> 16);
-            o->y_lo = (uint16_t)d1;
-            o->angle_hi = (uint16_t)(d3 >> 16);
-            o->angle_lo = (uint16_t)d3;
-            o->turn_fixed = d4;
+        steps--;
+        if ((int16_t)steps < 0) {
+            o->x_hi = (uint16_t)(x_fixed >> 16);
+            o->x_lo = (uint16_t)x_fixed;
+            o->y_hi = (uint16_t)(y_fixed >> 16);
+            o->y_lo = (uint16_t)y_fixed;
+            o->angle_hi = (uint16_t)(angle_fixed >> 16);
+            o->angle_lo = (uint16_t)angle_fixed;
+            o->turn_fixed = turn;
             return;
         }
         o->wait--;
         if (o->wait < 0) {
-            d7++;
-            o->x_hi = (uint16_t)(d0 >> 16);
-            o->x_lo = (uint16_t)d0;
-            o->y_hi = (uint16_t)(d1 >> 16);
-            o->y_lo = (uint16_t)d1;
-            o->angle_hi = (uint16_t)(d3 >> 16);
-            o->angle_lo = (uint16_t)d3;
-            o->turn_fixed = d4;
+            steps++;
+            o->x_hi = (uint16_t)(x_fixed >> 16);
+            o->x_lo = (uint16_t)x_fixed;
+            o->y_hi = (uint16_t)(y_fixed >> 16);
+            o->y_lo = (uint16_t)y_fixed;
+            o->angle_hi = (uint16_t)(angle_fixed >> 16);
+            o->angle_lo = (uint16_t)angle_fixed;
+            o->turn_fixed = turn;
             goto next_command;
         }
-        d1 += (uint32_t)((int32_t)((uint32_t)(int16_t)sine[(int16_t)d3] << 16) >> 6);
-        d0 += (uint32_t)((int32_t)((uint32_t)(int16_t)sine[0x40 + (int16_t)d3] << 16) >> 6);
-        d3 = (d3 << 16) | (d3 >> 16);
-        d3 += d4;
-        d3 = (d3 << 16) | (d3 >> 16);
-        d3 = (d3 & 0xffff0000u) | (d3 & 0xff);
-        d4 += (uint32_t)d5;
+        y_fixed += (uint32_t)((int32_t)((uint32_t)(int16_t)sine[(int16_t)angle_fixed] << 16) >> 6);
+        x_fixed += (uint32_t)((int32_t)((uint32_t)(int16_t)sine[0x40 + (int16_t)angle_fixed] << 16) >> 6);
+        angle_fixed = (angle_fixed << 16) | (angle_fixed >> 16);
+        angle_fixed += turn;
+        angle_fixed = (angle_fixed << 16) | (angle_fixed >> 16);
+        angle_fixed = (angle_fixed & 0xffff0000u) | (angle_fixed & 0xff);
+        turn += (uint32_t)turn_delta;
     }
 next_command:
     for (;;) {
@@ -963,10 +963,10 @@ next_command:
             uint16_t t = rd16(cmd + 2);
 
             o->cursor = cmd + 4;
-            d7 = (uint16_t)(d7 - t);
-            if ((int16_t)d7 > 0)
+            steps = (uint16_t)(steps - t);
+            if ((int16_t)steps > 0)
                 continue;
-            o->wait = (int16_t)d7;
+            o->wait = (int16_t)steps;
             return;
         }
         case 6: {

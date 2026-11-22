@@ -16,30 +16,33 @@ extern void guest_stick_restore(void);   /* sdl/guest.c: undoes what the lockste
 #define STAR_MASK(s) ((s)->y)
 #define STAR_POS(s) ((s)->z)
 
-/* orig $ED8, $001F22: the background's scroll position (background_scroll, high word) moves back by half the scroll speed; d0.w = scroll speed */
-void scroll_pos_update(uint16_t d0)
+/* orig $ED8, $001F22: the background's scroll position (background_scroll, high word) moves back by half the scroll speed; speed = scroll speed */
+void scroll_pos_update(uint16_t speed)
 {
-    uint16_t d2 = d0;
-    uint16_t d1 = frame_tick & 1;
+    uint16_t full_speed = speed;
+    uint16_t odd = frame_tick & 1;
+    uint16_t step;
 
-    d0 = (uint16_t)((int16_t)d0 >> 1);
-    d1 &= d2;
-    d0 += d1;
-    if (d0 != 0) {
-        d0 = (uint16_t)(background_scroll >> 16) - d0;
-        if ((int16_t)d0 < 0)
-            d0 += 0xc0;
-        if ((int16_t)d0 >= 0xc0)
-            d0 -= 0xc0;
-        background_scroll = (background_scroll & 0xffffu) | ((uint32_t)d0 << 16);
+    step = (uint16_t)((int16_t)speed >> 1);
+    odd &= full_speed;
+    step += odd;
+    if (step != 0) {
+        uint16_t pos;
+
+        pos = (uint16_t)(background_scroll >> 16) - step;
+        if ((int16_t)pos < 0)
+            pos += 0xc0;
+        if ((int16_t)pos >= 0xc0)
+            pos -= 0xc0;
+        background_scroll = (background_scroll & 0xffffu) | ((uint32_t)pos << 16);
     }
 }
 
 /* orig $ED2, $00200A: do two boxes overlap?  The original returns it in the Z flag: Z clear = overlap (returned here as 1).
- * d0,d1 = left, top of the first, d2,d3 = right, bottom; d4,d5 = left, top of the second, d6,d7 = right, bottom. */
-uint16_t box_overlap(int16_t d0, int16_t d1, int16_t d2, int16_t d3, int16_t d4, int16_t d5, int16_t d6, int16_t d7)
+ * a_left, a_top, a_right, a_bottom = the first; b_left, b_top, b_right, b_bottom = the second. */
+uint16_t box_overlap(int16_t a_left, int16_t a_top, int16_t a_right, int16_t a_bottom, int16_t b_left, int16_t b_top, int16_t b_right, int16_t b_bottom)
 {
-    if (d6 < d0 || d4 > d2 || d7 < d1 || d5 > d3)
+    if (b_right < a_left || b_left > a_right || b_bottom < a_top || b_top > a_bottom)
         return 0;
     return 1;
 }
@@ -48,7 +51,7 @@ uint16_t box_overlap(int16_t d0, int16_t d1, int16_t d2, int16_t d3, int16_t d4,
  * swap the draw and shown screens and start the copper list of the other one.  Inside $2026 and $202E. */
 void swap_screens(void)
 {
-    uint8_t *t;
+    uint8_t *old_draw;
     uint32_t list;
 
     if ((uint16_t)(vbl_count - last_flip_vbl) >= min_vbl_per_frame)
@@ -60,54 +63,54 @@ void swap_screens(void)
         HOST_IDLE();
     while ((custom->vhposr >> 8) < 2)
         HOST_IDLE();
-    t = draw_screen;
+    old_draw = draw_screen;
     draw_screen = show_screen;
-    show_screen = t;
+    show_screen = old_draw;
     list = ADDR(copper_list_a) + ADDR(copper_list_b) - ADDR(copper_cur);   /* the lists alternate */
     copper_cur = (uint16_t *)list;
     custom->cop1lc = list;
     custom->copjmp1 = (uint16_t)list;   /* HLE: copper */
 }
 
-/* orig $002026: swap_screens for a 200-line screen; returns d7 = size of the screen in bytes per plane group (0x7D00) */
+/* orig $002026: swap_screens for a 200-line screen; returns the size of the screen in bytes per plane group (0x7D00) */
 uint32_t swap_screens_200(void)
 {
     swap_screens();
     return 0x7d00;
 }
 
-/* orig $00202E: swap_screens for a 192-line screen; returns d7 = 0x7800 */
+/* orig $00202E: swap_screens for a 192-line screen; returns 0x7800 */
 uint32_t swap_screens_192(void)
 {
     swap_screens();
     return 0x7800;
 }
 
-/* orig $EDE, $0022DA: scroll the starfield: each of the 48 stars moves by a step that grows with its index (d0.w = scroll speed);
+/* orig $EDE, $0022DA: scroll the starfield: each of the 48 stars moves by a step that grows with its index (speed = scroll speed);
  * the fractional line (z) wraps at 0x180 and moves the offset by one line (0xA0 bytes), the offset wraps at 0x7800. */
-void stars_scroll(uint16_t d0)
+void stars_scroll(uint16_t speed)
 {
-    uint16_t d5 = *(const uint16_t *)((const uint8_t *)(star_speed + 16) + (int16_t)(uint16_t)(d0 * 2));
-    uint16_t step = (uint16_t)(d0 << 3);
+    uint16_t vel = *(const uint16_t *)((const uint8_t *)(star_speed + 16) + (int16_t)(uint16_t)(speed * 2));
+    uint16_t step = (uint16_t)(speed << 3);
 
     for (int i = 0; i < 48; i++) {
         struct Star *s = &stars[i];
-        uint16_t d6 = STAR_POS(s) + d5;
+        uint16_t frac = STAR_POS(s) + vel;
 
-        while ((int16_t)d6 < 0) {
+        while ((int16_t)frac < 0) {
             STAR_OFF(s) -= 0xa0;
             if ((int16_t)STAR_OFF(s) < 0)
                 STAR_OFF(s) += 0x7800;
-            d6 += 0x180;
+            frac += 0x180;
         }
-        while ((int16_t)d6 >= 0x180) {
+        while ((int16_t)frac >= 0x180) {
             STAR_OFF(s) += 0xa0;
             if ((int16_t)STAR_OFF(s) >= 0x7800)
                 STAR_OFF(s) -= 0x7800;
-            d6 -= 0x180;
+            frac -= 0x180;
         }
-        STAR_POS(s) = d6;
-        d5 += step;
+        STAR_POS(s) = frac;
+        vel += step;
     }
 }
 
@@ -121,66 +124,66 @@ void stars_draw(void)
     for (int g = 0; g < 4; g++) {
         for (int i = 0; i < 12; i++) {
             struct Star *s = &stars[g * 12 + i];
-            uint8_t *a2 = screen + (int16_t)STAR_OFF(s);
+            uint8_t *p = screen + (int16_t)STAR_OFF(s);
             uint16_t mask = STAR_MASK(s);
-            uint16_t d4 = rd16(a2) | rd16(a2 + 0x28) | rd16(a2 + 0x50) | rd16(a2 + 0x78);
+            uint16_t planes = rd16(p) | rd16(p + 0x28) | rd16(p + 0x50) | rd16(p + 0x78);
 
-            if (d4 & mask)
+            if (planes & mask)
                 continue;
             if (g == 1 || g == 3)
-                wr16(a2, rd16(a2) | mask);
+                wr16(p, rd16(p) | mask);
             if (g == 2 || g == 3)
-                wr16(a2 + 0x28, rd16(a2 + 0x28) | mask);
-            wr16(a2 + 0x50, rd16(a2 + 0x50) | mask);
+                wr16(p + 0x28, rd16(p + 0x28) | mask);
+            wr16(p + 0x50, rd16(p + 0x50) | mask);
         }
     }
 }
 
-/* orig $E54, $002418: take an object off the free list (free_obj) and clear its flag bytes; the result is in a0 (0 here when the list is
+/* orig $E54, $002418: take an object off the free list (free_obj) and clear its flag bytes; the result is returned (0 here when the list is
  * empty: the original then searches the lists from $2436, goes on at $2436). */
 Object *obj_free_pop(void)
 {
-    Object *a0 = free_obj;
+    Object *obj = free_obj;
     Object *next, *prev;
 
-    if (a0 != 0) {
-        free_obj = a0->next;
+    if (obj != 0) {
+        free_obj = obj->next;
         goto clear;
     }
     /* $2436: the pool is empty: take an object away from the lists, the effects first (obj_list[3], obj_list[4] is the front list, obj_list[2] the enemies) */
-    a0 = &obj_list[3];
+    obj = &obj_list[3];
     for (;;) {
-        a0 = a0->prev;
-        if (a0->type == 4 || a0->type == 0xc || a0->type == 0x10)
+        obj = obj->prev;
+        if (obj->type == 4 || obj->type == 0xc || obj->type == 0x10)
             goto steal;
-        if (a0->type == 0)
+        if (obj->type == 0)
             break;
     }
-    a0 = obj_list[3].prev;
-    if (a0->type != 0)
+    obj = obj_list[3].prev;
+    if (obj->type != 0)
         goto steal;
-    a0 = obj_list[4].prev;
-    if (a0->type != 0)
+    obj = obj_list[4].prev;
+    if (obj->type != 0)
         goto steal;
-    a0 = obj_list[2].prev;   /* $247E: from the enemies' list head on, the first dead one or one far enough down */
+    obj = obj_list[2].prev;   /* $247E: from the enemies' list head on, the first dead one or one far enough down */
     for (;;) {
-        if ((int16_t)a0->type >= 0xc8 || a0->type == 4)
+        if ((int16_t)obj->type >= 0xc8 || obj->type == 4)
             goto steal;
-        a0 = a0->prev;
-        if (a0->type == 0)
+        obj = obj->prev;
+        if (obj->type == 0)
             break;
     }
-    a0 = obj_list[2].prev;
+    obj = obj_list[2].prev;
 steal:
-    next = a0->next;   /* $2464: take it out of its list */
-    prev = a0->prev;
+    next = obj->next;   /* $2464: take it out of its list */
+    prev = obj->prev;
     next->prev = prev;
     prev->next = next;
 clear:
-    a0->is_part = 0;
-    a0->persists = 0;
-    a0->screen_fixed = 0;
-    return a0;
+    obj->is_part = 0;
+    obj->persists = 0;
+    obj->screen_fixed = 0;
+    return obj;
 }
 
 #ifdef GAME_SDL
@@ -214,18 +217,18 @@ void guest_edge_defer(int on)
 void irq_vblank(void)
 {
     if (custom->intreqr & 0x20) {
-        uint16_t d0, d1;
+        uint16_t dat, raw;
         uint8_t joy = 0;
 
         vbl_count++;
         vbl_count++;
-        d0 = custom->joy1dat;
-        d1 = d0;
-        if (d0 & 0x0002) joy |= 0x08;
-        if (d0 & 0x0200) joy |= 0x04;
-        d0 = (uint16_t)(d0 + d0) ^ d1;
-        if (d0 & 0x0002) joy |= 0x02;
-        if (d0 & 0x0200) joy |= 0x01;
+        dat = custom->joy1dat;
+        raw = dat;
+        if (dat & 0x0002) joy |= 0x08;
+        if (dat & 0x0200) joy |= 0x04;
+        dat = (uint16_t)(dat + dat) ^ raw;
+        if (dat & 0x0002) joy |= 0x02;
+        if (dat & 0x0200) joy |= 0x01;
         if (!(CIAA_PRA & 0x80))
             joy |= 0x80;
         irq_joy = joy;
@@ -245,7 +248,7 @@ void irq_vblank(void)
             irq_joy_prev = joy;
         }
         if (sfx_cmd >= 0 || sfx_cmd2 >= 0) {
-            void (*cmd)(uint16_t) = (void (*)(uint16_t))music_cmd_fn;   /* d0.w = command */
+            void (*cmd)(uint16_t) = (void (*)(uint16_t))music_cmd_fn;   /* the command is the argument */
 
             if (sfx_cmd >= 0) {
                 cmd((uint16_t)sfx_cmd | 0x200);
@@ -267,12 +270,12 @@ void irq_vblank(void)
 void irq_keyboard(void)
 {
     if (CIAA_ICR & 0x08) {
-        uint8_t d0 = (uint8_t)~CIAA_SDR;
+        uint8_t key = (uint8_t)~CIAA_SDR;
         volatile uint16_t n = 0x36;
 
-        d0 = (uint8_t)((d0 >> 1) | (d0 << 7));
-        if (!(d0 & 0x80))
-            key_code = d0;
+        key = (uint8_t)((key >> 1) | (key << 7));
+        if (!(key & 0x80))
+            key_code = key;
         CIAA_CRA |= 0x40;
         do {
         } while (n--);
@@ -324,60 +327,60 @@ static void music_restart_if_enabled(void)
     }
 }
 
-void camera_limit(uint16_t d7, uint16_t d3) __attribute__((noinline));
+void camera_limit(uint16_t pos, uint16_t limit) __attribute__((noinline));
 
 /* orig $007A56: the scroll limit follows the camera unless the camera stands at it with the stick down (the lockstep hooks it to give the port the
  * stick byte the original read) */
-void camera_limit(uint16_t d7, uint16_t d3)
+void camera_limit(uint16_t pos, uint16_t limit)
 {
-    if (d7 != scroll_max || (joy_stick & 2) == 0)
-        d3 += scroll_margin;
-    if (!((int16_t)d3 > (int16_t)scroll_max))
-        scroll_max = d3;
+    if (pos != scroll_max || (joy_stick & 2) == 0)
+        limit += scroll_margin;
+    if (!((int16_t)limit > (int16_t)scroll_max))
+        scroll_max = limit;
 }
 
 /* the camera / scroll speed step of the main loop ($79D6-$7A72) */
 static void camera_step(void)
 {
-    uint16_t d7 = scroll_pos;
-    uint16_t d0 = scroll_step;
-    uint16_t d1, d2, d3;
+    uint16_t old_pos = scroll_pos;
+    uint16_t step = scroll_step;
+    uint16_t fine, row_off, new_pos;
 
-    if (d0 != scroll_step_target) {
+    if (step != scroll_step_target) {
         scroll_accel_frames++;
         if ((int16_t)scroll_accel_frames >= 0x23) {
-            d0 += d0;
-            scroll_step = d0;
+            step += step;
+            scroll_step = step;
         }
     } else {
         scroll_accel_frames = 0;
     }
-    d1 = scroll_fine;
-    d2 = map_row_offset;
-    d3 = scroll_pos - d0;
-    if ((int16_t)d3 < (int16_t)scroll_min) {
-        d3 -= scroll_min;
-        d0 += d3;
-        d3 = scroll_min;
+    fine = scroll_fine;
+    row_off = map_row_offset;
+    new_pos = scroll_pos - step;
+    if ((int16_t)new_pos < (int16_t)scroll_min) {
+        new_pos -= scroll_min;
+        step += new_pos;
+        new_pos = scroll_min;
     }
-    if ((int16_t)d3 > (int16_t)scroll_max) {
-        d0 += d3;
-        d0 -= scroll_max;
-        d3 = scroll_max;
+    if ((int16_t)new_pos > (int16_t)scroll_max) {
+        step += new_pos;
+        step -= scroll_max;
+        new_pos = scroll_max;
     }
-    d1 -= d0;
-    if ((int16_t)d1 < 0) {
-        d1 += 0x10;
-        d2 -= 0x28;
-    } else if ((int16_t)d1 >= 0x10) {
-        d1 -= 0x10;
-        d2 += 0x28;
+    fine -= step;
+    if ((int16_t)fine < 0) {
+        fine += 0x10;
+        row_off -= 0x28;
+    } else if ((int16_t)fine >= 0x10) {
+        fine -= 0x10;
+        row_off += 0x28;
     }
-    scroll_speed = d0;
-    scroll_fine = d1;
-    map_row_offset = d2;
-    scroll_pos = d3;
-    camera_limit(d7, d3);
+    scroll_speed = step;
+    scroll_fine = fine;
+    map_row_offset = row_off;
+    scroll_pos = new_pos;
+    camera_limit(old_pos, new_pos);
 }
 
 /* The target of a key in key_table: the addresses inside the original's main loop */
@@ -423,11 +426,11 @@ static int key_command(uint8_t key)
 /* wait for the next vertical blank, flip, draw the starfield, show the level palette ($7D60 and $78A4 do the same) */
 static void wait_vbl_and_show(void)
 {
-    uint16_t t = vbl_count;
+    uint16_t vbl_start = vbl_count;
     uint16_t colors[16];
     int i;
 
-    while (t == vbl_count)
+    while (vbl_start == vbl_count)
         HOST_IDLE();
     draw_background();
     stars_draw();
@@ -507,27 +510,27 @@ static void main_loop(void)
                 continue;
         } else {
             uint16_t other;
-            uint32_t d1 = 0;
+            uint32_t money = 0;
 
             music_silence();
             if ((int16_t)scroll_pos <= 0x1e0) {
-                d1 = shop_money_early;
-                shop_price_cap = (uint16_t)d1;
-                d1 = (uint16_t)(d1 + 0x190);
-                if ((int32_t)d1 > (int32_t)player_money) {
-                    uint16_t r = (uint16_t)((random_next() & 3) * 0x32);
+                money = shop_money_early;
+                shop_price_cap = (uint16_t)money;
+                money = (uint16_t)(money + 0x190);
+                if ((int32_t)money > (int32_t)player_money) {
+                    uint16_t bonus = (uint16_t)((random_next() & 3) * 0x32);
 
-                    d1 = (uint16_t)(d1 + r);
-                    player_money = d1;
+                    money = (uint16_t)(money + bonus);
+                    player_money = money;
                 }
             } else {
-                d1 = shop_money_late;
-                shop_price_cap = (uint16_t)d1;
-                if ((int32_t)d1 > (int32_t)player_money) {
-                    uint16_t r = (uint16_t)((random_next() & 3) * 0x32);
+                money = shop_money_late;
+                shop_price_cap = (uint16_t)money;
+                if ((int32_t)money > (int32_t)player_money) {
+                    uint16_t bonus = (uint16_t)((random_next() & 3) * 0x32);
 
-                    d1 = (uint16_t)(d1 + r);
-                    player_money = d1;
+                    money = (uint16_t)(money + bonus);
+                    player_money = money;
                 }
             }
             protection = 0;
@@ -551,11 +554,11 @@ static void main_loop(void)
         boss_dead = 0;
         if (level_number == 5) {
             for (;;) {
-                Object *a1 = obj_list[1].prev;
+                Object *obj = obj_list[1].prev;
 
-                if (a1->type == 0)
+                if (obj->type == 0)
                     break;
-                free_with_slot(a1);
+                free_with_slot(obj);
             }
             refill_slot0(0, 0);
             latch_slots(0);

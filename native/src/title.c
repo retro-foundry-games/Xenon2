@@ -60,7 +60,7 @@ int32_t find_glyph(uint8_t ch, const uint8_t *list)
  * 22 rows high in 4 planes; characters not in the font leave a gap */
 void draw_text_row_at(uint8_t *dst, const uint8_t *s, uint16_t count)
 {
-    uint8_t *a0 = dst;
+    uint8_t *out = dst;
     uint16_t n = count;
 
     do {
@@ -71,32 +71,32 @@ void draw_text_row_at(uint8_t *dst, const uint8_t *s, uint16_t count)
             int row;
 
             for (row = 0; row < 22; row++) {
-                SETW(a0, 0, *g++);
-                SETW(a0, 0x28, *g++);
-                SETW(a0, 0x50, *g++);
-                SETW(a0, 0x78, *g++);
-                a0 += 0xa0;
+                SETW(out, 0, *g++);
+                SETW(out, 0x28, *g++);
+                SETW(out, 0x50, *g++);
+                SETW(out, 0x78, *g++);
+                out += 0xa0;
             }
-            a0 -= 0xdc0;
+            out -= 0xdc0;
         }
-        a0 += 2;
+        out += 2;
     } while (n-- != 0);
 }
 
 /* orig $007F12: a line of text (20 characters) in the row title_y - 8 */
 void draw_text_row(const uint8_t *s)
 {
-    uint16_t d1 = (uint16_t)(title_y - 8);
+    uint16_t row_y = (uint16_t)(title_y - 8);
 
-    draw_text_row_at(draw_screen + (int16_t)(uint16_t)(d1 * 0xa0u), s, 0x13);
+    draw_text_row_at(draw_screen + (int16_t)(uint16_t)(row_y * 0xa0u), s, 0x13);
 }
 
 /* orig $007F64: a line of text squeezed by the step title_scale: the columns of each character the mask keeps are compacted,
  * the rows the rotating mask drops are left out; from step 16 on the line is drawn plain */
 void draw_text_squeezed(const uint8_t *s)
 {
-    uint8_t *a0, *a6;
-    uint16_t col, t;
+    uint8_t *out, *end;
+    uint16_t col, offset;
     const uint16_t *mask;
     int n;
 
@@ -104,87 +104,87 @@ void draw_text_squeezed(const uint8_t *s)
         draw_text_row(s);
         return;
     }
-    a0 = draw_screen;
-    a6 = a0 + 0x7d00;
+    out = draw_screen;
+    end = out + 0x7d00;
     col = title_scale;
-    t = (uint16_t)(((uint16_t)(title_y + title_y) - col) >> 1);
-    a0 += (int16_t)(uint16_t)(t * 0xa0u);
-    t = (uint16_t)(0xa0 - (uint16_t)((uint32_t)col * 10));
-    col = t & 0xf;
-    t = (uint16_t)((t - col) >> 3);
-    a0 += (int16_t)t;
+    offset = (uint16_t)(((uint16_t)(title_y + title_y) - col) >> 1);
+    out += (int16_t)(uint16_t)(offset * 0xa0u);
+    offset = (uint16_t)(0xa0 - (uint16_t)((uint32_t)col * 10));
+    col = offset & 0xf;
+    offset = (uint16_t)((offset - col) >> 3);
+    out += (int16_t)offset;
     mask = &squeeze_masks[(int16_t)title_scale];
 
     for (n = 0; n < 20; n++) {
         int32_t idx = find_glyph(*s++, title_font_chars);
 
         if (idx >= 0) {
-            uint8_t *keep = a0;
+            uint8_t *keep = out;
             const uint16_t *g = title_font + ((uint16_t)idx * 0xb0u) / 2;
-            uint16_t m = *mask;
+            uint16_t row_mask = *mask;
             uint16_t rows = 0x15;
 
             for (;;) {
-                uint16_t bit = m >> 15;
+                uint16_t bit = row_mask >> 15;
 
-                m = (uint16_t)((m << 1) | bit);
+                row_mask = (uint16_t)((row_mask << 1) | bit);
                 if (bit == 0) {
                     g += 4;
                 } else {
-                    uint32_t p1 = g[0], p2 = g[1], p3 = g[2], p4 = g[3];
-                    uint16_t mm = *mask;
-                    int16_t sh;
+                    uint32_t plane1 = g[0], plane2 = g[1], plane3 = g[2], plane4 = g[3];
+                    uint16_t col_mask = *mask;
+                    int16_t shift;
                     int i;
 
                     g += 4;
                     for (i = 0; i < 16; i++) {
-                        uint16_t carry = mm >> 15;
+                        uint16_t carry = col_mask >> 15;
 
-                        mm = (uint16_t)(mm << 1);
+                        col_mask = (uint16_t)(col_mask << 1);
                         if (carry) {
-                            p1 <<= 1; p2 <<= 1; p3 <<= 1; p4 <<= 1;
+                            plane1 <<= 1; plane2 <<= 1; plane3 <<= 1; plane4 <<= 1;
                         } else {
-                            p1 = (p1 & 0xffff0000u) | (uint16_t)(p1 << 1);
-                            p2 = (p2 & 0xffff0000u) | (uint16_t)(p2 << 1);
-                            p3 = (p3 & 0xffff0000u) | (uint16_t)(p3 << 1);
-                            p4 = (p4 & 0xffff0000u) | (uint16_t)(p4 << 1);
+                            plane1 = (plane1 & 0xffff0000u) | (uint16_t)(plane1 << 1);
+                            plane2 = (plane2 & 0xffff0000u) | (uint16_t)(plane2 << 1);
+                            plane3 = (plane3 & 0xffff0000u) | (uint16_t)(plane3 << 1);
+                            plane4 = (plane4 & 0xffff0000u) | (uint16_t)(plane4 << 1);
                         }
                     }
-                    sh = (int16_t)(0x10 - col - title_scale);
-                    if (sh >= 0) {
-                        SETW(a0, 0x28, WORD(a0, 0x28) | (uint16_t)((p2 >> 16) << sh));
-                        SETW(a0, 0x50, WORD(a0, 0x50) | (uint16_t)((p3 >> 16) << sh));
-                        SETW(a0, 0x78, WORD(a0, 0x78) | (uint16_t)((p4 >> 16) << sh));
-                        SETW(a0, 0, WORD(a0, 0) | (uint16_t)((p1 >> 16) << sh));
-                        a0 += 2;
+                    shift = (int16_t)(0x10 - col - title_scale);
+                    if (shift >= 0) {
+                        SETW(out, 0x28, WORD(out, 0x28) | (uint16_t)((plane2 >> 16) << shift));
+                        SETW(out, 0x50, WORD(out, 0x50) | (uint16_t)((plane3 >> 16) << shift));
+                        SETW(out, 0x78, WORD(out, 0x78) | (uint16_t)((plane4 >> 16) << shift));
+                        SETW(out, 0, WORD(out, 0) | (uint16_t)((plane1 >> 16) << shift));
+                        out += 2;
                     } else {
-                        sh += 0x10;
-                        p1 = (p1 << sh) | (p1 >> (32 - sh));
-                        p2 = (p2 << sh) | (p2 >> (32 - sh));
-                        p3 = (p3 << sh) | (p3 >> (32 - sh));
-                        p4 = (p4 << sh) | (p4 >> (32 - sh));
-                        SETW(a0, 0x28, WORD(a0, 0x28) | (uint16_t)p2);
-                        SETW(a0, 0x50, WORD(a0, 0x50) | (uint16_t)p3);
-                        SETW(a0, 0x78, WORD(a0, 0x78) | (uint16_t)p4);
-                        SETW(a0, 0, WORD(a0, 0) | (uint16_t)p1);
-                        a0 += 2;
-                        SETW(a0, 0, (uint16_t)(p1 >> 16));
-                        SETW(a0, 0x28, (uint16_t)(p2 >> 16));
-                        SETW(a0, 0x50, (uint16_t)(p3 >> 16));
-                        SETW(a0, 0x78, (uint16_t)(p4 >> 16));
+                        shift += 0x10;
+                        plane1 = (plane1 << shift) | (plane1 >> (32 - shift));
+                        plane2 = (plane2 << shift) | (plane2 >> (32 - shift));
+                        plane3 = (plane3 << shift) | (plane3 >> (32 - shift));
+                        plane4 = (plane4 << shift) | (plane4 >> (32 - shift));
+                        SETW(out, 0x28, WORD(out, 0x28) | (uint16_t)plane2);
+                        SETW(out, 0x50, WORD(out, 0x50) | (uint16_t)plane3);
+                        SETW(out, 0x78, WORD(out, 0x78) | (uint16_t)plane4);
+                        SETW(out, 0, WORD(out, 0) | (uint16_t)plane1);
+                        out += 2;
+                        SETW(out, 0, (uint16_t)(plane1 >> 16));
+                        SETW(out, 0x28, (uint16_t)(plane2 >> 16));
+                        SETW(out, 0x50, (uint16_t)(plane3 >> 16));
+                        SETW(out, 0x78, (uint16_t)(plane4 >> 16));
                     }
-                    a0 += 0x9e;
+                    out += 0x9e;
                 }
-                if ((int32_t)(uintptr_t)a0 >= (int32_t)(uintptr_t)a6)
+                if ((int32_t)(uintptr_t)out >= (int32_t)(uintptr_t)end)
                     break;
                 if (rows-- == 0)
                     break;
             }
-            a0 = keep;
+            out = keep;
         }
         col = (uint16_t)(col + title_scale);
         if ((int16_t)col >= 0x10) {
-            a0 += 2;
+            out += 2;
             col = (uint16_t)(col - 0x10);
         }
     }
@@ -200,9 +200,9 @@ void stars_update(void)
         struct Star *s = &stars[i];
         int32_t x = s->x, y = s->y;
         int16_t z = (int16_t)(((uint16_t)s->z & 0x7fff) - 0x200);
-        uint16_t px, py, mask, c;
-        uint8_t *a1;
-        int d;
+        uint16_t px, py, mask, color;
+        uint8_t *dst;
+        int pixel;
 
         if (!(z > 0x200))
             goto regen;
@@ -217,30 +217,30 @@ void stars_update(void)
         goto plot;
     regen:
         {
-            uint32_t r = random_next();
+            uint32_t rnd = random_next();
 
-            y = (int16_t)r;
-            s->y = (int16_t)r;
-            r = random_next();
-            s->x = (int16_t)r;
-            x = (int16_t)r;
+            y = (int16_t)rnd;
+            s->y = (int16_t)rnd;
+            rnd = random_next();
+            s->x = (int16_t)rnd;
+            x = (int16_t)rnd;
             z = 0x1fff;
         }
         goto again;
     plot:
-        a1 = draw_screen + (int16_t)(uint16_t)(py * 0xa0u);
-        d = px & 0xf;
-        a1 += (int16_t)(uint16_t)((px - d) >> 3);
-        mask = (uint16_t)(0x8000 >> d);
-        if ((WORD(a1, 0) | WORD(a1, 0x28) | WORD(a1, 0x50) | WORD(a1, 0x78)) & mask) {
+        dst = draw_screen + (int16_t)(uint16_t)(py * 0xa0u);
+        pixel = px & 0xf;
+        dst += (int16_t)(uint16_t)((px - pixel) >> 3);
+        mask = (uint16_t)(0x8000 >> pixel);
+        if ((WORD(dst, 0) | WORD(dst, 0x28) | WORD(dst, 0x50) | WORD(dst, 0x78)) & mask) {
             s->z |= (int16_t)0x8000;
             continue;
         }
-        c = star_colors[(((uint16_t)z << 6) | ((uint16_t)z >> 10)) & 7];
-        if (c & 1) SETW(a1, 0, WORD(a1, 0) | mask);
-        if (c & 2) SETW(a1, 0x28, WORD(a1, 0x28) | mask);
-        if (c & 4) SETW(a1, 0x50, WORD(a1, 0x50) | mask);
-        if (c & 8) SETW(a1, 0x78, WORD(a1, 0x78) | mask);
+        color = star_colors[(((uint16_t)z << 6) | ((uint16_t)z >> 10)) & 7];
+        if (color & 1) SETW(dst, 0, WORD(dst, 0) | mask);
+        if (color & 2) SETW(dst, 0x28, WORD(dst, 0x28) | mask);
+        if (color & 4) SETW(dst, 0x50, WORD(dst, 0x50) | mask);
+        if (color & 8) SETW(dst, 0x78, WORD(dst, 0x78) | mask);
     }
 }
 
@@ -251,24 +251,24 @@ void stars_erase(void)
 
     for (i = 0; i < 48; i++) {
         struct Star *s = &stars[i];
-        uint16_t px, py, t;
-        uint8_t *a1;
-        int d;
+        uint16_t px, py, byte_off;
+        uint8_t *dst;
+        int pixel;
         uint16_t keep;
 
         if (s->z < 0)
             continue;
         px = (uint16_t)(divs_low((int32_t)((uint32_t)(int32_t)s->x << 4), s->z) + 0xa0);
         py = (uint16_t)(divs_low((int32_t)((uint32_t)(int32_t)s->y << 4), s->z) + 0x64);
-        a1 = draw_screen + (int16_t)(uint16_t)(py * 0xa0u);
-        d = px & 0xf;
-        t = (uint16_t)((px - d) >> 3);
-        a1 += (int16_t)t;
-        keep = (uint16_t)((0x7fff >> d) | (0x7fff << (16 - d)));
-        SETW(a1, 0, WORD(a1, 0) & keep);
-        SETW(a1, 0x28, WORD(a1, 0x28) & keep);
-        SETW(a1, 0x50, WORD(a1, 0x50) & keep);
-        SETW(a1, 0x78, WORD(a1, 0x78) & keep);
+        dst = draw_screen + (int16_t)(uint16_t)(py * 0xa0u);
+        pixel = px & 0xf;
+        byte_off = (uint16_t)((px - pixel) >> 3);
+        dst += (int16_t)byte_off;
+        keep = (uint16_t)((0x7fff >> pixel) | (0x7fff << (16 - pixel)));
+        SETW(dst, 0, WORD(dst, 0) & keep);
+        SETW(dst, 0x28, WORD(dst, 0x28) & keep);
+        SETW(dst, 0x50, WORD(dst, 0x50) & keep);
+        SETW(dst, 0x78, WORD(dst, 0x78) & keep);
     }
 }
 
@@ -278,81 +278,81 @@ void stars_erase(void)
  * add.l when 16 pixels are in; a dropped column shifts only the low half (add.w). */
 void draw_logo_scaled(const uint16_t *gfx, int16_t x, int16_t y, int16_t width, int16_t rows)
 {
-    const uint16_t *a0 = gfx;
-    uint8_t *a1 = draw_screen;
+    const uint16_t *src = gfx;
+    uint8_t *dst = draw_screen;
     uint16_t px = (uint16_t)((int16_t)(uint16_t)(int32_t)((int32_t)x * (int16_t)title_scale) >> 4) + 0xa0;
     uint16_t py = (uint16_t)((int16_t)(uint16_t)(int32_t)((int32_t)y * (int16_t)title_scale) >> 4) + 0x64;
-    uint16_t sh = px & 0xf;
+    uint16_t shift = px & 0xf;
     uint16_t cnt = (uint16_t)rows;
     uint16_t mask = squeeze_masks[(int16_t)title_scale];
     uint16_t rowpat = mask, colpat = mask;
     uint32_t marker;
 
-    a1 += (int16_t)(uint16_t)((int32_t)(int16_t)py * 0xa0);
-    a1 += (int16_t)(uint16_t)((uint16_t)(px - sh) >> 3);
-    marker = 0x10000u << sh;
+    dst += (int16_t)(uint16_t)((int32_t)(int16_t)py * 0xa0);
+    dst += (int16_t)(uint16_t)((uint16_t)(px - shift) >> 3);
+    marker = 0x10000u << shift;
     do {
-        uint32_t r0 = marker, r1 = marker, r2 = marker, r3 = marker;
-        uint16_t d7 = (uint16_t)width;
+        uint32_t w0 = marker, w1 = marker, w2 = marker, w3 = marker;
+        uint16_t cols_left = (uint16_t)width;
         uint16_t bit = rowpat >> 15;
 
         rowpat = (uint16_t)((rowpat << 1) | bit);
         if (bit == 0) {
-            a0 += (8 + ((uint16_t)width & 0xfff0) / 2) / 2;
+            src += (8 + ((uint16_t)width & 0xfff0) / 2) / 2;
         } else {
-            uint8_t *a2 = a1;
-            uint16_t d6 = 0;
+            uint8_t *out = dst;
+            uint16_t bits_left = 0;
             uint8_t carry;
 
             for (;;) {
-                d6--;
-                if (d6 == 0xffff) {
-                    r0 = (r0 & 0xffff0000u) | *a0++;
-                    r1 = (r1 & 0xffff0000u) | *a0++;
-                    r2 = (r2 & 0xffff0000u) | *a0++;
-                    r3 = (r3 & 0xffff0000u) | *a0++;
-                    d6 = 0xf;
+                bits_left--;
+                if (bits_left == 0xffff) {
+                    w0 = (w0 & 0xffff0000u) | *src++;
+                    w1 = (w1 & 0xffff0000u) | *src++;
+                    w2 = (w2 & 0xffff0000u) | *src++;
+                    w3 = (w3 & 0xffff0000u) | *src++;
+                    bits_left = 0xf;
                 }
                 bit = colpat >> 15;
                 colpat = (uint16_t)((colpat << 1) | bit);
                 if (bit == 0) {
-                    r0 = (r0 & 0xffff0000u) | (uint16_t)(r0 << 1);
-                    r1 = (r1 & 0xffff0000u) | (uint16_t)(r1 << 1);
-                    r2 = (r2 & 0xffff0000u) | (uint16_t)(r2 << 1);
-                    r3 = (r3 & 0xffff0000u) | (uint16_t)(r3 << 1);
-                    if (--d7 != 0xffff)
+                    w0 = (w0 & 0xffff0000u) | (uint16_t)(w0 << 1);
+                    w1 = (w1 & 0xffff0000u) | (uint16_t)(w1 << 1);
+                    w2 = (w2 & 0xffff0000u) | (uint16_t)(w2 << 1);
+                    w3 = (w3 & 0xffff0000u) | (uint16_t)(w3 << 1);
+                    if (--cols_left != 0xffff)
                         continue;
                     break;
                 }
-                carry = (uint8_t)(r3 >> 31);
-                r0 <<= 1; r1 <<= 1; r2 <<= 1; r3 <<= 1;
+                carry = (uint8_t)(w3 >> 31);
+                w0 <<= 1; w1 <<= 1; w2 <<= 1; w3 <<= 1;
                 if (!carry) {
-                    if (--d7 != 0xffff)
+                    if (--cols_left != 0xffff)
                         continue;
                     break;
                 }
-                wr16(a2 + 0x28, (uint16_t)(r1 >> 16));
-                wr16(a2 + 0x50, (uint16_t)(r2 >> 16));
-                wr16(a2 + 0x78, (uint16_t)(r3 >> 16));
-                wr16(a2, (uint16_t)(r0 >> 16));
-                a2 += 2;
-                r0 = 0x10000u | (r0 & 0xffff);
-                r1 = 0x10000u | (r1 & 0xffff);
-                r2 = 0x10000u | (r2 & 0xffff);
-                r3 = 0x10000u | (r3 & 0xffff);
-                if (--d7 != 0xffff)
+                wr16(out + 0x28, (uint16_t)(w1 >> 16));
+                wr16(out + 0x50, (uint16_t)(w2 >> 16));
+                wr16(out + 0x78, (uint16_t)(w3 >> 16));
+                wr16(out, (uint16_t)(w0 >> 16));
+                out += 2;
+                w0 = 0x10000u | (w0 & 0xffff);
+                w1 = 0x10000u | (w1 & 0xffff);
+                w2 = 0x10000u | (w2 & 0xffff);
+                w3 = 0x10000u | (w3 & 0xffff);
+                if (--cols_left != 0xffff)
                     continue;
                 break;
             }
             do {
-                carry = (uint8_t)(r3 >> 31);
-                r0 <<= 1; r1 <<= 1; r2 <<= 1; r3 <<= 1;
+                carry = (uint8_t)(w3 >> 31);
+                w0 <<= 1; w1 <<= 1; w2 <<= 1; w3 <<= 1;
             } while (!carry);
-            wr16(a2 + 0x28, (uint16_t)(r1 >> 16));
-            wr16(a2 + 0x50, (uint16_t)(r2 >> 16));
-            wr16(a2 + 0x78, (uint16_t)(r3 >> 16));
-            wr16(a2, (uint16_t)(r0 >> 16));
-            a1 += 0xa0;
+            wr16(out + 0x28, (uint16_t)(w1 >> 16));
+            wr16(out + 0x50, (uint16_t)(w2 >> 16));
+            wr16(out + 0x78, (uint16_t)(w3 >> 16));
+            wr16(out, (uint16_t)(w0 >> 16));
+            dst += 0xa0;
         }
         cnt--;
     } while ((int16_t)cnt >= 0);
@@ -402,24 +402,24 @@ void title_fade_in(void)
 /* orig $007DE2: clears the screen and draws the logo (54 rows of 13 groups) at its place */
 void title_draw_logo(void)
 {
-    uint8_t *a0;
+    uint8_t *dst;
     const uint16_t *g = title_gfx;
     int row, k;
 
     clear_screen();
-    a0 = draw_screen + 0xc86;
+    dst = draw_screen + 0xc86;
     for (row = 0; row < 54; row++) {
         for (k = 0; k < 13; k++) {
-            SETW(a0, 2 * k, *g++);
-            SETW(a0, 2 * k + 0x28, *g++);
-            SETW(a0, 2 * k + 0x50, *g++);
-            SETW(a0, 2 * k + 0x78, *g++);
+            SETW(dst, 2 * k, *g++);
+            SETW(dst, 2 * k + 0x28, *g++);
+            SETW(dst, 2 * k + 0x50, *g++);
+            SETW(dst, 2 * k + 0x78, *g++);
         }
-        a0 += 0xa0;
+        dst += 0xa0;
     }
 }
 
-/* orig $0084AE: plays a table of squeeze steps over the text (a0) with stars and the title palette until a negative step */
+/* orig $0084AE: plays a table of squeeze steps over the text with stars and the title palette until a negative step */
 void show_text_sequence(uint16_t row, const uint8_t *text, const uint16_t *steps)
 {
     title_rows = row;
@@ -507,7 +507,7 @@ void stars_init_dots(void)
 void title_credits(void)
 {
     int i;
-    uint16_t d0;
+    uint16_t step_off;
 
     for (i = 0; i < 16; i++)
         palette_saved[i] = palette_shadow[i];
@@ -534,17 +534,17 @@ l82ae:
         draw_text_row(title_text);
         title_y = 0x96;
     }
-    d0 = title_index;
+    step_off = title_index;
     title_index += 2;
-    title_scale = title_steps[d0 / 2];
+    title_scale = title_steps[step_off / 2];
     if (title_scale == 0)
         goto frame;
     if ((int16_t)title_scale > 0) {
-        const uint8_t *a1 = title_text;
+        const uint8_t *line = title_text;
 
         if (title_phase == 1)
-            a1 += 0x14;
-        draw_text_squeezed(a1);
+            line += 0x14;
+        draw_text_squeezed(line);
         goto frame;
     }
     title_phase++;

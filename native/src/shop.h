@@ -26,9 +26,9 @@ static inline void sh_w32(uint32_t a, uint32_t v) { wr32(GPTR(a), v); }
 
 /* the shop's code (shop.c) and its sound (shop_sound.c): the interrupt calls shop_irq_tick ($2090), shop_sound_cmd is $2094 */
 void shop_draw_both(uint16_t x, uint16_t y, const uint8_t *gfx);   /* shop $553F8 */
-uint8_t *shop_clear_columns(uint8_t *a1, uint16_t d0);             /* shop $5537A */
+uint8_t *shop_clear_columns(uint8_t *dst, uint16_t rows);             /* shop $5537A */
 void shop_copy_block(const uint8_t *src, uint8_t *dst, uint16_t w, uint16_t h); /* shop $55200 */
-void shop_put_rows(const uint8_t *a0, uint8_t *a1, uint16_t d0);   /* shop $56912 */
+void shop_put_rows(const uint8_t *src, uint8_t *dst, uint16_t rows);   /* shop $56912 */
 void shop_lights_draw(void);                                       /* shop $56E8E */
 void shop_text_newline(void);                                      /* shop $56E44 */
 void shop_text_char(uint8_t ch);                                   /* shop $56D8C */
@@ -40,13 +40,13 @@ void shop_door_draw(void);                                         /* shop $568E
 void shop_room_draw(void);                                         /* shop $5662A */
 void shop_room_update(void);                                       /* shop $5661C */
 void shop_keeper_draw(void);                                       /* shop $5648C */
-void shop_hold(uint16_t d0);                                       /* shop $564B2 */
-void shop_wait(uint16_t d0);                                       /* shop $551E6 */
+void shop_hold(uint16_t frames);                                       /* shop $564B2 */
+void shop_wait(uint16_t frames);                                       /* shop $551E6 */
 void shop_board_clear(void);                                       /* shop $55360 */
 void shop_text_home(void);                                         /* shop $56CA0 */
 void shop_cash_draw(void);                                         /* shop $56CB2 */
-void shop_print(const uint8_t *a0);                                /* shop $56CC0 */
-void shop_print_number(uint16_t d0);                               /* shop $56D56 */
+void shop_print(const uint8_t *text);                                /* shop $56CC0 */
+void shop_print_number(uint16_t value);                               /* shop $56D56 */
 void shop_stick(void);                                             /* shop $55F60 */
 int32_t shop_can_buy(void);                                        /* shop $5593E */
 void shop_item_ca2(void);                                          /* shop $558E4 */
@@ -77,7 +77,7 @@ void shop_sound_stop(void);                                        /* shop $647C
 void shop_sound_reset(void);                                       /* shop $64828 */
 void shop_sound_tick(void);                                        /* shop $64BBC */
 void shop_irq_tick(void);                                          /* shop $6477C */
-void shop_sound_cmd(uint16_t d0);                                  /* shop $649C6 */
+void shop_sound_cmd(uint16_t cmd);                                  /* shop $649C6 */
 void shop_cursor_draw(void);                                       /* shop $56040 */
 void shop_cursor_erase(void);                                      /* shop $560A6 */
 void shop_pillars_a(void);                                         /* shop $5530C */
