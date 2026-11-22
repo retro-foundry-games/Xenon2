@@ -872,9 +872,9 @@ void obj_script_step(Object *obj)
         return;
     }
 move:
-    d0 = (((uint32_t)(uint16_t)o->x_hi << 16) | (uint16_t)o->x_lo);
-    d1 = (((uint32_t)(uint16_t)o->y_hi << 16) | (uint16_t)o->y_lo);
-    d3 = (((uint32_t)(uint16_t)o->angle_hi << 16) | (uint16_t)o->angle_lo);
+    d0 = ((uint32_t)o->x_hi << 16) | o->x_lo;
+    d1 = ((uint32_t)o->y_hi << 16) | o->y_lo;
+    d3 = ((uint32_t)o->angle_hi << 16) | o->angle_lo;
     d4 = o->turn_fixed;
     d5 = o->turn_step;
     for (;;) {

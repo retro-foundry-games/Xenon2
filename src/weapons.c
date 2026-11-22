@@ -49,7 +49,7 @@ static void set_ptr_2a(Object *o, Object *p)
 
 static Object *get_ptr_2a(const Object *o)
 {
-    uint32_t v = (((uint32_t)(uint16_t)o->link.ptr_hi << 16) | (uint16_t)o->link.ptr_lo);
+    uint32_t v = ((uint32_t)(uint16_t)o->link.ptr_hi << 16) | (uint16_t)o->link.ptr_lo;
 
     return v ? (Object *)GPTR(v) : 0;
 }
@@ -677,7 +677,7 @@ void shot_fixed_update(Object *a0)
     if (a0->type == 4)
         return;
     d0 = (int32_t)(((uint32_t)(uint16_t)a0->shot.speed_hi << 16) | (uint16_t)a0->shot.speed_lo) >> 6;
-    pos = (((uint32_t)(uint16_t)a0->x << 16) | (uint16_t)a0->x_frac);
+    pos = ((uint32_t)(uint16_t)a0->x << 16) | a0->x_frac;
     pos += (uint32_t)d0;
     a0->x = (uint16_t)(pos >> 16);
     a0->x_frac = (uint16_t)pos;
@@ -983,7 +983,7 @@ void pickup_bomb(Object *a0)
     Object *a1, *a2;
 
     for (i = 0; i < 8; i++)
-        saved[i] = (((uint32_t)(uint16_t)palette_shadow[2 * i] << 16) | (uint16_t)palette_shadow[2 * i + 1]);
+        saved[i] = ((uint32_t)palette_shadow[2 * i] << 16) | palette_shadow[2 * i + 1];
     sfx_cmd = 2;
     for (n = 0x1e; n >= 0; n--) {
         d0 = (uint16_t)random_next();
@@ -1410,7 +1410,7 @@ move:
 /* the pointer in the words $30 and $32 (the drill's target) */
 static Object *get_ptr_30(const Object *o)
 {
-    uint32_t v = (((uint32_t)(uint16_t)o->drill.target_hi << 16) | (uint16_t)o->energy);
+    uint32_t v = ((uint32_t)(uint16_t)o->drill.target_hi << 16) | (uint16_t)o->energy;
 
     return v ? (Object *)GPTR(v) : 0;
 }
