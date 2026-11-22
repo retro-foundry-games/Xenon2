@@ -3,6 +3,8 @@
 #include "game.h"
 #include "amiga/hw.h"
 
+/* the byte COL of the row ROW of a screen (rows of 160 bytes: four planes of 40) */
+#define SCREEN_POS(screen, row, col) ((uint8_t *)(screen) + (row) * SCREEN_ROW_BYTES + (col))
 /* a byte of the screen memory (words): the byte at an even address is the left half of its word, the one at an odd address the right half */
 static inline void put_screen_byte(uint8_t *at, uint8_t v)
 {

@@ -305,7 +305,7 @@ void shop_door_draw(void)
 
     if (xenon2.shop_door_right == 0)
         return;
-    dst = shop_clear_columns(xenon2.draw_screen + 0x475a, (uint16_t)(0x44 - xenon2.shop_door_right));
+    dst = shop_clear_columns(SCREEN_POS(xenon2.draw_screen, 114, 26), (uint16_t)(0x44 - xenon2.shop_door_right));
     shop_put_rows(xenon2.shop_data.pic_slide, dst, (uint16_t)(xenon2.shop_door_right - 1));
 }
 
@@ -316,8 +316,8 @@ void shop_room_draw(void)
     uint8_t *dst;
     uint16_t rows;
 
-    shop_put_rows(xenon2.shop_data.pic_top, xenon2.draw_screen + 0x5ba, 0x33);
-    shop_put_rows(xenon2.shop_data.pic_mid, xenon2.draw_screen + 0x3b7a, 9);
+    shop_put_rows(xenon2.shop_data.pic_top, SCREEN_POS(xenon2.draw_screen, 9, 26), 0x33);
+    shop_put_rows(xenon2.shop_data.pic_mid, SCREEN_POS(xenon2.draw_screen, 95, 26), 9);
     pic = xenon2.shop_data.pic_low;
     if (xenon2.shop_keeper_talking != 0) {
         uint32_t rnd = random_next();
@@ -334,7 +334,7 @@ void shop_room_draw(void)
             pic += 0x770 / 2;
         }
     }
-    shop_put_rows(pic, xenon2.draw_screen + 0x263a, 0x21);
+    shop_put_rows(pic, SCREEN_POS(xenon2.draw_screen, 61, 26), 0x21);
     shop_lights_draw();
     shop_keeper_blink();
     if (xenon2.shop_door_left == 0)
@@ -342,11 +342,11 @@ void shop_room_draw(void)
     if ((int16_t)xenon2.shop_door_left <= 8) {
         /* (the closed doors' pictures are drawn only when more than 8 rows have opened) */
     } else {
-        dst = xenon2.draw_screen + 0x5ba;
+        dst = SCREEN_POS(xenon2.draw_screen, 9, 26);
         pic = xenon2.shop_data.pic_door + (int16_t)((uint16_t)(0x30 - xenon2.shop_door_left) * 0x38 / 2);
         rows = (uint16_t)(xenon2.shop_door_left - 9);
         shop_put_rows(pic, dst, rows);
-        dst = xenon2.draw_screen + 0x46ba - (int16_t)((uint16_t)(xenon2.shop_door_left * SCREEN_ROW_BYTES));
+        dst = SCREEN_POS(xenon2.draw_screen, 113, 26) - (int16_t)((uint16_t)(xenon2.shop_door_left * SCREEN_ROW_BYTES));
         shop_put_rows(xenon2.shop_data.pic_door2, dst, rows);
     }
     draw_bob_masked_at(0xd7, (uint16_t)(xenon2.shop_door_left + 1), xenon2.shop_data.gfx_bar_1);
@@ -358,7 +358,7 @@ void shop_room_draw(void)
     if ((int16_t)xenon2.shop_door_left >= 8)
         return;
     {
-        uint16_t *dst = (uint16_t *)(xenon2.draw_screen + 0x1a), *dst2 = (uint16_t *)(xenon2.draw_screen + 0x41ba);
+        uint16_t *dst = (uint16_t *)SCREEN_POS(xenon2.draw_screen, 0, 26), *dst2 = (uint16_t *)SCREEN_POS(xenon2.draw_screen, 105, 26);
         const uint16_t *lamp_a = xenon2.shop_data.pic_lamp_a, *lamp_b = xenon2.shop_data.pic_lamp_b;
         int16_t n = 8;
 
@@ -427,8 +427,8 @@ void shop_wait(uint16_t frames)
 /* shop $55360: the text board is cleared on both screens */
 void shop_board_clear(void)
 {
-    shop_clear_columns((uint8_t *)xenon2.screen_b + 0x475a, 0x44);
-    shop_clear_columns((uint8_t *)xenon2.screen_a + 0x475a, 0x44);
+    shop_clear_columns(SCREEN_POS(xenon2.screen_b, 114, 26), 0x44);
+    shop_clear_columns(SCREEN_POS(xenon2.screen_a, 114, 26), 0x44);
 }
 
 /* shop $56CA0: the board is cleared and the text begins again at its top */
@@ -442,7 +442,7 @@ void shop_text_home(void)
 /* shop $56CB2: the cash is drawn */
 void shop_cash_draw(void)
 {
-    draw_number(xenon2.player_money, (uint8_t *)xenon2.screen_b + 0x6b91);
+    draw_number(xenon2.player_money, SCREEN_POS(xenon2.screen_b, 172, 17));
 }
 
 /* shop $56CC0: the text (words, $0D = a new line, 0 ends) is drawn a character at a time, the keeper talks at the start of each word, every second character
@@ -1229,7 +1229,7 @@ void shop_blank_screen(void)
         dst += 4;
     } while (n-- != 0);
     {
-        uint16_t *bar = (uint16_t *)(xenon2.draw_screen + 0x3e94);
+        uint16_t *bar = (uint16_t *)SCREEN_POS(xenon2.draw_screen, 100, 20);
 
         bar[0] = 0xf;
         bar[SCREEN_PLANE_WORDS] = 6;

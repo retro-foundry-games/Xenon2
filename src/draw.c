@@ -347,12 +347,12 @@ void redraw_energy_bar(void)
     fill = xenon2.player_energy;
     if ((int16_t)fill > 0x27)
         fill = 0x27;
-    dst_b = &xenon2.screen_b[0x79ea / 2];
-    dst_a = &xenon2.screen_a[0x79ea / 2];
+    dst_b = (uint16_t *)SCREEN_POS(xenon2.screen_b, 195, 10);
+    dst_a = (uint16_t *)SCREEN_POS(xenon2.screen_a, 195, 10);
     bit = 0x10;
     if (xenon2.cur_player) {
-        dst_b = &xenon2.screen_b[0x79f6 / 2];
-        dst_a = &xenon2.screen_a[0x79f6 / 2];
+        dst_b = (uint16_t *)SCREEN_POS(xenon2.screen_b, 195, 22);
+        dst_a = (uint16_t *)SCREEN_POS(xenon2.screen_a, 195, 22);
         bit = 2;
     }
     keep = (uint16_t)~bit;
@@ -371,7 +371,7 @@ void redraw_energy_bar(void)
                 *(dst_a + (2 * SCREEN_PLANE_WORDS) + row_off) |= bit;
                 *(dst_a + (3 * SCREEN_PLANE_WORDS) + row_off) |= bit;
                 row_off = (int16_t)(row_off + SCREEN_ROW_WORDS);
-            } while (row_off <= 0xa0);
+            } while (row_off <= 2 * SCREEN_ROW_WORDS);
         } else {
             do {
                 *(dst_b + row_off) &= keep;
@@ -383,7 +383,7 @@ void redraw_energy_bar(void)
                 *(dst_a + (2 * SCREEN_PLANE_WORDS) + row_off) &= keep;
                 *(dst_a + (3 * SCREEN_PLANE_WORDS) + row_off) &= keep;
                 row_off = (int16_t)(row_off + SCREEN_ROW_WORDS);
-            } while (row_off <= 0xa0);
+            } while (row_off <= 2 * SCREEN_ROW_WORDS);
         }
         {
             uint16_t carry = bit & 1;
@@ -403,14 +403,14 @@ void draw_status_digit(void)
 {
     int16_t lives = (int16_t)xenon2.player_lives;
     const uint8_t *glyph;
-    uint8_t *dst_b = (uint8_t *)xenon2.screen_b + 0x78b1, *dst_a = (uint8_t *)xenon2.screen_a + 0x78b1;
+    uint8_t *dst_b = SCREEN_POS(xenon2.screen_b, 193, 17), *dst_a = SCREEN_POS(xenon2.screen_a, 193, 17);
 
     if (lives > 9)
         lives = 9;
     glyph = &xenon2.digit_gfx[0x140] + (int16_t)(uint16_t)(lives << 5);
     if (xenon2.cur_player) {
-        dst_b = (uint8_t *)xenon2.screen_b + 0x78b6;
-        dst_a = (uint8_t *)xenon2.screen_a + 0x78b6;
+        dst_b = SCREEN_POS(xenon2.screen_b, 193, 22);
+        dst_a = SCREEN_POS(xenon2.screen_a, 193, 22);
     }
     for (int row = 0; row < 8; row++) {
         for (int plane = 0; plane < 4; plane++) {
@@ -546,7 +546,7 @@ typedef void (*tile_fn)(const uint8_t *tiles, uint16_t cell, uint8_t *dest, uint
 static void tile_grid(const uint16_t *cells, uint16_t cols, int16_t rows, int16_t y, uint16_t x, tile_fn put)
 {
     uint8_t *dst = xenon2.draw_screen;
-    uint8_t *screen_end = dst + 0x7800, *split = dst + 0x6ea0;
+    uint8_t *screen_end = dst + SCREEN_ROWS * SCREEN_ROW_BYTES, *split = SCREEN_POS(dst, 177, 0);
     const uint8_t *tiles = xenon2.tile_gfx;
     uint16_t xb = (uint16_t)(x >> 2);
 
@@ -593,7 +593,7 @@ static void tile_grid(const uint16_t *cells, uint16_t cols, int16_t rows, int16_
                     put(tiles, cell, col, 0, 0);
             }
         }
-        dst += 0xa00;
+        dst += 16 * SCREEN_ROW_BYTES;
         if ((int32_t)ADDR(dst) >= (int32_t)ADDR(screen_end))
             return;
         if (rows-- == 0)

@@ -2,6 +2,7 @@
  * pointer members are converted when it is loaded, the words (cells, animations, pictures) are native;
  * a function has `level2 $ADDR` for its address (not `orig $`: level 1's code is at the same addresses).  The addresses of code with no C
  * yet resolve to a function that does nothing (guest_missing_code). */
+#include <string.h>
 #include "weapons.h"
 #include "shop.h"
 #include "game_all.h"
@@ -201,7 +202,7 @@ void l2_scroll(void)
     } else if ((int16_t)xenon2.scroll_pos > 0x9f0) {
         xenon2.scroll_pos = 0x9f0;
         xenon2.scroll_max = 0x9f0;
-        xenon2.map_row_offset = 0x18d8;
+        xenon2.map_row_offset = MAP_ROW(159);
         xenon2.scroll_fine = 0;
     }
     xenon2.l2_left_wall_made = 0;
@@ -270,7 +271,7 @@ void l2_init(void)
         obj->shot_count = obj->shot_rate = 0;
         obj->x = (int16_t)x;
         obj->y = (int16_t)y;
-        obj->gfx = xenon2.level_init_src + (uint16_t)(((uint16_t)(y * 0x14) + x) * 2);
+        obj->gfx = xenon2.level_init_src + (uint16_t)(((uint16_t)(y * MAP_COLS) + x) * 2);
         obj->gate.step = 0;
         obj->gate.number = (int16_t)gate;
     }
@@ -550,7 +551,7 @@ static void l2_restore_blocks(Object *bolt)
         if (!box_overlap(box_x0, box_y0, box_x1, box_y1, x, y, (int16_t)(x + 0xf), (int16_t)(y + 0xf)))
             continue;
         e->state = 1;
-        *(Cell *)(xenon2.level_init_src + (uint16_t)(((uint16_t)y >> 3) * 0x14 + ((uint16_t)x >> 3))) = e->cell;
+        *(Cell *)(xenon2.level_init_src + (uint16_t)(((uint16_t)y >> 3) * MAP_COLS + ((uint16_t)x >> 3))) = e->cell;
         return;
     }
 }
@@ -1052,7 +1053,7 @@ void l2_gate_update(Object *gate)
             (*counter)--;
             src = cells + ((*counter & 2) ? 5 : 1);
             *(uint32_t *)(dst) = *(const uint32_t *)(src);
-            *(uint32_t *)(dst + 0x28) = *(const uint32_t *)(src + 2);
+            *(uint32_t *)(dst + MAP_ROW_BYTES) = *(const uint32_t *)(src + 2);
         }
     }
 }
@@ -1107,8 +1108,7 @@ void l2_gate_hit(Object *attacker, Object *gate, uint16_t damage)
     if (xenon2.l2_gates_left != 0)
         return;
     xenon2.scroll_step_target = 1;
-    for (i = 0; i < 0x1cc * 2; i++)
-        xenon2.level_init_src[0x1950 + i] = 0;
+    memset(xenon2.level_init_src + MAP_ROW(162), 0, 0x1cc * 2);
     for (e = LIST_HEAD(LIST_ENEMY); e->type != 0;) {
         Object *next = owner_chain_next(e);
 

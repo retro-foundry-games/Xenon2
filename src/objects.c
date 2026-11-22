@@ -714,7 +714,7 @@ static Object *marker_tail(Object *marker, uint16_t type, const struct SpawnRec 
     marker->x = (int16_t)x;
     y = (uint16_t)(rec->y - 8);
     marker->y = (int16_t)y;
-    marker->map = (Cell *)(xenon2.level_init_src + (uint16_t)((x >> 3) & 0xfe) + (int16_t)(uint16_t)((uint32_t)(y >> 4) * 0x28));
+    marker->map = (Cell *)(xenon2.level_init_src + (uint16_t)((x >> 3) & 0xfe) + (int16_t)(uint16_t)((uint32_t)MAP_ROW(y >> 4)));
     marker->marker.step = 0;
     marker->marker.launches = 0;
     return marker;

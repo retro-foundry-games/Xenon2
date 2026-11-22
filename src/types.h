@@ -43,6 +43,14 @@ struct PicBox { uint16_t dx, dy, w, h; };
 #define SCREEN_ROW_WORDS (4 * SCREEN_PLANE_WORDS)
 #define SCREEN_PLANE_BYTES (2 * SCREEN_PLANE_WORDS)
 #define SCREEN_ROW_BYTES (2 * SCREEN_ROW_WORDS)
+#define SCREEN_ROWS 192   /* the rows of a screen; the panel (8 rows) follows */
+#define PANEL_ROWS 8
+#define MAP_ROW_BYTES (2 * MAP_COLS)
+#define MAP_ROW(row) ((row) * MAP_ROW_BYTES)   /* the byte offset of a row of the map */
+#define MAP_CELL(row, col) (MAP_ROW(row) + 2 * (col))
+/* the disk's work area in screen_a: the 11 sectors of a track decoded, the raw track as it comes from the drive, the boot sector read to find the game disk */
+struct DiskSector { uint16_t word[256]; };
+struct DiskScratch { struct DiskSector sector[11]; uint16_t track[0x2000]; uint16_t boot[256]; };
 
 /* a 16.16 value from its whole and fraction words, the high word first */
 #define FIXED_16_16(whole, fraction) (((uint32_t)(uint16_t)(whole) << 16) | (uint16_t)(fraction))

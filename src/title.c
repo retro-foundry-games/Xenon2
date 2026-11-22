@@ -34,7 +34,7 @@ static void set_palette(const uint16_t *src)
 /* orig $007EB6: clears the screen being drawn into (32000 bytes) */
 void clear_screen(void)
 {
-    uint32_t *p = (uint32_t *)(xenon2.draw_screen + 0x7d00);
+    uint32_t *p = (uint32_t *)SCREEN_POS(xenon2.draw_screen, SCREEN_ROWS + PANEL_ROWS, 0);
     int i;
 
     for (i = 0; i < 8000; i++)
@@ -403,7 +403,7 @@ void title_draw_logo(void)
     int row, k;
 
     clear_screen();
-    dst = (uint16_t *)(xenon2.draw_screen + 0xc86);
+    dst = (uint16_t *)SCREEN_POS(xenon2.draw_screen, 20, 6);
     for (row = 0; row < 54; row++) {
         for (k = 0; k < 13; k++) {
             dst[k] = *g++;
