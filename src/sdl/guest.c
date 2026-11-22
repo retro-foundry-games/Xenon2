@@ -50,8 +50,8 @@ extern unsigned guest_record_size(const char *type);
 
 /* put the bytes of the original's memory at ADDRESS (as they are in the image: big endian) into the members that cover them, in this machine's byte
  * order; pointers (addresses of the original's memory) become pointers into the block */
-static int blob_raw;   /* 1: the shop's blob is in $54E00-$73E00 (it overlays the level's): the members that lie there are not converted;
-                        * 0, 2 to 5: the blob of that level (0 is level 1): its members (types_blobs.h, guest_blob.h) are converted */
+static int blob_raw;   /* 1: the shop's blob (overlays the level's; the flat members that lie in $54E00-$73E00 are not loaded), 0, 2 to 5: the blob of that level
+                        * (0 is level 1): its members (types_blobs.h, guest_blob.h) are converted */
 #define BLOB_LO 0x54e00u
 #define BLOB_HI 0x74000u
 #define BLOB_LEVEL_LO 0x54e40u
@@ -100,6 +100,7 @@ static const struct blob_member *blob_list(unsigned *n)
 {
     switch (blob_raw) {
     case 0: *n = sizeof blob_members_1 / sizeof blob_members_1[0]; return blob_members_1;
+    case 1: *n = sizeof blob_members_shop / sizeof blob_members_shop[0]; return blob_members_shop;
     case 2: *n = sizeof blob_members_2 / sizeof blob_members_2[0]; return blob_members_2;
     case 3: *n = sizeof blob_members_3 / sizeof blob_members_3[0]; return blob_members_3;
     case 4: *n = sizeof blob_members_4 / sizeof blob_members_4[0]; return blob_members_4;
@@ -214,8 +215,7 @@ void guest_load_range(uint32_t address, const uint8_t *image, uint32_t length)
             }
         }
     }
-    if (blob_raw != 1)
-        blob_load(address, image, length);
+    blob_load(address, image, length);
 }
 
 /* disk 1 from track 82 on is the game's program, data and variables, as the loader of disk 1 puts them at $400 ($6B400 bytes) */
@@ -376,8 +376,7 @@ void host_export_ram_buf(uint8_t *ram)   /* ram: 0x80000 bytes */
             }
         }
     }
-    if (blob_raw != 1)
-        blob_save(ram);
+    blob_save(ram);
 }
 
 /* the memory as the original had it (big endian, 0x80000 bytes) into the block: the raw bytes, then the named members converted (the dev build starts the port from the
@@ -385,6 +384,7 @@ void host_export_ram_buf(uint8_t *ram)   /* ram: 0x80000 bytes */
 void host_import_ram_buf(const uint8_t *ram)
 {
     memcpy(&xenon2, ram, sizeof xenon2);
-    blob_raw = be16(ram + 0xe04) > 1 ? be16(ram + 0xe04) : 0;   /* (level_number: the level) */
+    if (blob_raw != 1)   /* (the shop's blob stays while the shop runs) */
+        blob_raw = be16(ram + 0xe04) > 1 ? be16(ram + 0xe04) : 0;   /* (level_number: the level) */
     guest_load_range(0, ram, 0x80000);
 }

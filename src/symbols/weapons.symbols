@@ -82,3 +82,4 @@ blob level2_data 0x54e40 Level2Data
 blob level3_data 0x54e40 Level3Data
 blob level4_data 0x54e40 Level4Data
 blob level5_data 0x54e40 Level5Data
+blob shop_data 0x54e40 ShopData                     ; the shop's blob (blobs/shop.blob)

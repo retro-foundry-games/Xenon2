@@ -500,6 +500,7 @@ struct Xenon2 {
         struct Level3Data level3_data;
         struct Level4Data level4_data;
         struct Level5Data level5_data;
+        struct ShopData shop_data;
     };
     PAD(21544)
     uint8_t l2_blocks[360];  /* $07CFB8 arr */
@@ -860,6 +861,7 @@ LAYOUT_ASSERT(level2_data, 0x54e40);
 LAYOUT_ASSERT(level3_data, 0x54e40);
 LAYOUT_ASSERT(level4_data, 0x54e40);
 LAYOUT_ASSERT(level5_data, 0x54e40);
+LAYOUT_ASSERT(shop_data, 0x54e40);
 LAYOUT_ASSERT(l2_blocks, 0x7cfb8);
 LAYOUT_ASSERT(level_data_dst, 0x7d120);
 

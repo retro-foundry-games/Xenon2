@@ -172,6 +172,31 @@ struct Level5UnitDir {
 };
 _Static_assert(sizeof(struct Level5UnitDir) == 4, "Level5UnitDir");
 
+struct ShopRec {
+    int16_t state;
+    uint16_t x;
+    uint16_t y;
+    uint16_t kind;
+    const uint8_t *list;
+    struct Object *weapon;
+};
+_Static_assert(sizeof(struct ShopRec) == 16, "ShopRec");
+
+struct ShopPic {
+    const uint8_t *gfx;
+    uint16_t offset;
+    uint16_t width_m1;
+    uint16_t height_m1;
+};
+_Static_assert(sizeof(struct ShopPic) == 10, "ShopPic");
+
+struct ShopLight {
+    uint16_t x;
+    uint16_t y;
+    const uint8_t *list;
+};
+_Static_assert(sizeof(struct ShopLight) == 8, "ShopLight");
+
 struct Level1Data {
     uint8_t shot_params[24];   /* 54E40 */
     uint16_t boss_energy[2];   /* 54E58 */
@@ -1091,5 +1116,178 @@ _Static_assert(offsetof(struct Level5Data, swap_limit_a) == 0x62D22 - BLOB_BASE,
 _Static_assert(offsetof(struct Level5Data, shot_gfx_table) == 0x72EC8 - BLOB_BASE, "Level5Data.shot_gfx_table");
 _Static_assert(offsetof(struct Level5Data, shot_gfx_cells) == 0x72ED8 - BLOB_BASE, "Level5Data.shot_gfx_cells");
 _Static_assert(offsetof(struct Level5Data, swap_limit_b) == 0x7491C - BLOB_BASE, "Level5Data.swap_limit_b");
+
+struct ShopData {
+    BLOB_PAD(728)
+    uint8_t palette_a[32];   /* 55118 */
+    uint8_t txt_thats_it[27];   /* 55138 */
+    uint8_t txt_forget[39];   /* 55153 */
+    uint8_t txt_good_enough[170];   /* 5517A */
+    struct ShopPic tab_pics[7];   /* 55224 */
+    BLOB_PAD(440)
+    uint16_t page;   /* 55422 */
+    BLOB_PAD(364)
+    uint16_t last_x;   /* 55590 */
+    uint16_t last_y;   /* 55592 */
+    BLOB_PAD(522)
+    uint8_t tab_flags[22];   /* 5579E */
+    BLOB_PAD(4)
+    const uint8_t *tab_names[25];   /* 557B8 */
+    const uint8_t *tab_anim[27];   /* 5581C */
+    uint16_t tab_price[25];   /* 55888 */
+    uint8_t txt_no_room[492];   /* 558BA */
+    uint8_t txt_out_of_stock[39];   /* 55AA6 */
+    uint8_t txt_give_cash[21];   /* 55ACD */
+    uint8_t txt_what_else[332];   /* 55AE2 */
+    uint8_t txt_here_cash[404];   /* 55C2E */
+    uint16_t price;   /* 55DC2 */
+    struct ShopRec *rec;   /* 55DC4 */
+    uint8_t txt_pay[14];   /* 55DC8 */
+    uint8_t txt_cost[384];   /* 55DD6 */
+    uint8_t txt_power[8];   /* 55F56 */
+    uint16_t repeat;   /* 55F5E */
+    BLOB_PAD(322)
+    uint8_t selling;   /* 560A2 */
+    uint8_t no_blink;   /* 560A3 */
+    uint8_t blink_a;   /* 560A4 */
+    uint8_t blink_b;   /* 560A5 */
+    BLOB_PAD(98)
+    const uint8_t *lists[223];   /* 56108 */
+    uint16_t kx;   /* 56484 */
+    uint16_t ky;   /* 56486 */
+    const uint8_t *kgfx;   /* 56488 */
+    BLOB_PAD(1546)
+    const uint8_t *tab_spark[9];   /* 56A96 */
+    const uint8_t *tab_puff[2];   /* 56ABA */
+    struct ShopRec recs[20];   /* 56AC2 */
+    BLOB_PAD(590)
+    uint8_t txt_sell[30];   /* 56E50 */
+    uint8_t txt_buy[74];   /* 56E6E */
+    struct ShopLight tab_lights[7];   /* 56EB8 */
+    const uint8_t *light_lists[58];   /* 56EF0 */
+    uint8_t txt_welcome_a[36];   /* 56FD8 */
+    uint8_t txt_welcome_b[19];   /* 56FFC */
+    uint8_t txt_last_chance[29];   /* 5700F */
+    const uint8_t *tab_advice[30];   /* 5702C */
+    BLOB_PAD(376)
+    uint8_t gfx_bar_1[256];   /* 5721C */
+    uint8_t gfx_bar_2[176];   /* 5731C */
+    uint8_t gfx_bar_3[256];   /* 573CC */
+    uint8_t gfx_bar_4[256];   /* 574CC */
+    uint8_t gfx_bar_5[176];   /* 575CC */
+    uint8_t gfx_bar_6[256];   /* 5767C */
+    uint8_t gfx_pillar_a[106];   /* 5777C */
+    uint8_t gfx_pillar_b[106];   /* 577E6 */
+    uint8_t gfx_cursor_on_b[106];   /* 57850 */
+    uint8_t gfx_cursor_on_a[12958];   /* 578BA */
+    uint8_t gfx_exit_on_a[576];   /* 5AB58 */
+    uint8_t gfx_exit_on_c[576];   /* 5AD98 */
+    uint8_t gfx_exit_on_b[576];   /* 5AFD8 */
+    uint8_t gfx_exit_off_a[576];   /* 5B218 */
+    uint8_t gfx_exit_off_c[576];   /* 5B458 */
+    uint8_t gfx_exit_off_b[576];   /* 5B698 */
+    uint8_t gfx_eyes_b[166];   /* 5B8D8 */
+    uint8_t gfx_eyes_a[166];   /* 5B97E */
+    uint8_t gfx_mouth_b[316];   /* 5BA24 */
+    uint8_t gfx_mouth_a[604];   /* 5BB60 */
+    uint8_t gfx_bedroom[816];   /* 5BDBC */
+    uint8_t gfx_bedroom2[1200];   /* 5C0EC */
+    uint8_t gfx_keeper_b[656];   /* 5C59C */
+    uint8_t gfx_keeper_a[656];   /* 5C82C */
+    uint8_t gfx_keeper_c[656];   /* 5CABC */
+    uint8_t gfx_player2[4650];   /* 5CD4C */
+    uint8_t pic_lamp_a[576];   /* 5DF76 */
+    uint8_t pic_lamp_b[4744];   /* 5E1B6 */
+    uint8_t pic_top[2912];   /* 5F43E */
+    uint8_t pic_mid[560];   /* 5FF9E */
+    uint8_t pic_low[7616];   /* 601CE */
+    uint8_t pic_door[2240];   /* 61F8E */
+    uint8_t pic_door2[2240];   /* 6284E */
+    uint8_t pic_slide[3808];   /* 6310E */
+    uint8_t font[1888];   /* 63FEE */
+    uint8_t palette_b[32];   /* 6474E */
+    BLOB_PAD(1523)
+    uint8_t ntsc;   /* 64D61 */
+};
+_Static_assert(sizeof(struct ShopData) == 65314, "ShopData");
+_Static_assert(offsetof(struct ShopData, palette_a) == 0x55118 - BLOB_BASE, "ShopData.palette_a");
+_Static_assert(offsetof(struct ShopData, txt_thats_it) == 0x55138 - BLOB_BASE, "ShopData.txt_thats_it");
+_Static_assert(offsetof(struct ShopData, txt_forget) == 0x55153 - BLOB_BASE, "ShopData.txt_forget");
+_Static_assert(offsetof(struct ShopData, txt_good_enough) == 0x5517A - BLOB_BASE, "ShopData.txt_good_enough");
+_Static_assert(offsetof(struct ShopData, tab_pics) == 0x55224 - BLOB_BASE, "ShopData.tab_pics");
+_Static_assert(offsetof(struct ShopData, page) == 0x55422 - BLOB_BASE, "ShopData.page");
+_Static_assert(offsetof(struct ShopData, last_x) == 0x55590 - BLOB_BASE, "ShopData.last_x");
+_Static_assert(offsetof(struct ShopData, last_y) == 0x55592 - BLOB_BASE, "ShopData.last_y");
+_Static_assert(offsetof(struct ShopData, tab_flags) == 0x5579E - BLOB_BASE, "ShopData.tab_flags");
+_Static_assert(offsetof(struct ShopData, tab_names) == 0x557B8 - BLOB_BASE, "ShopData.tab_names");
+_Static_assert(offsetof(struct ShopData, tab_anim) == 0x5581C - BLOB_BASE, "ShopData.tab_anim");
+_Static_assert(offsetof(struct ShopData, tab_price) == 0x55888 - BLOB_BASE, "ShopData.tab_price");
+_Static_assert(offsetof(struct ShopData, txt_no_room) == 0x558BA - BLOB_BASE, "ShopData.txt_no_room");
+_Static_assert(offsetof(struct ShopData, txt_out_of_stock) == 0x55AA6 - BLOB_BASE, "ShopData.txt_out_of_stock");
+_Static_assert(offsetof(struct ShopData, txt_give_cash) == 0x55ACD - BLOB_BASE, "ShopData.txt_give_cash");
+_Static_assert(offsetof(struct ShopData, txt_what_else) == 0x55AE2 - BLOB_BASE, "ShopData.txt_what_else");
+_Static_assert(offsetof(struct ShopData, txt_here_cash) == 0x55C2E - BLOB_BASE, "ShopData.txt_here_cash");
+_Static_assert(offsetof(struct ShopData, price) == 0x55DC2 - BLOB_BASE, "ShopData.price");
+_Static_assert(offsetof(struct ShopData, rec) == 0x55DC4 - BLOB_BASE, "ShopData.rec");
+_Static_assert(offsetof(struct ShopData, txt_pay) == 0x55DC8 - BLOB_BASE, "ShopData.txt_pay");
+_Static_assert(offsetof(struct ShopData, txt_cost) == 0x55DD6 - BLOB_BASE, "ShopData.txt_cost");
+_Static_assert(offsetof(struct ShopData, txt_power) == 0x55F56 - BLOB_BASE, "ShopData.txt_power");
+_Static_assert(offsetof(struct ShopData, repeat) == 0x55F5E - BLOB_BASE, "ShopData.repeat");
+_Static_assert(offsetof(struct ShopData, selling) == 0x560A2 - BLOB_BASE, "ShopData.selling");
+_Static_assert(offsetof(struct ShopData, no_blink) == 0x560A3 - BLOB_BASE, "ShopData.no_blink");
+_Static_assert(offsetof(struct ShopData, blink_a) == 0x560A4 - BLOB_BASE, "ShopData.blink_a");
+_Static_assert(offsetof(struct ShopData, blink_b) == 0x560A5 - BLOB_BASE, "ShopData.blink_b");
+_Static_assert(offsetof(struct ShopData, lists) == 0x56108 - BLOB_BASE, "ShopData.lists");
+_Static_assert(offsetof(struct ShopData, kx) == 0x56484 - BLOB_BASE, "ShopData.kx");
+_Static_assert(offsetof(struct ShopData, ky) == 0x56486 - BLOB_BASE, "ShopData.ky");
+_Static_assert(offsetof(struct ShopData, kgfx) == 0x56488 - BLOB_BASE, "ShopData.kgfx");
+_Static_assert(offsetof(struct ShopData, tab_spark) == 0x56A96 - BLOB_BASE, "ShopData.tab_spark");
+_Static_assert(offsetof(struct ShopData, tab_puff) == 0x56ABA - BLOB_BASE, "ShopData.tab_puff");
+_Static_assert(offsetof(struct ShopData, recs) == 0x56AC2 - BLOB_BASE, "ShopData.recs");
+_Static_assert(offsetof(struct ShopData, txt_sell) == 0x56E50 - BLOB_BASE, "ShopData.txt_sell");
+_Static_assert(offsetof(struct ShopData, txt_buy) == 0x56E6E - BLOB_BASE, "ShopData.txt_buy");
+_Static_assert(offsetof(struct ShopData, tab_lights) == 0x56EB8 - BLOB_BASE, "ShopData.tab_lights");
+_Static_assert(offsetof(struct ShopData, light_lists) == 0x56EF0 - BLOB_BASE, "ShopData.light_lists");
+_Static_assert(offsetof(struct ShopData, txt_welcome_a) == 0x56FD8 - BLOB_BASE, "ShopData.txt_welcome_a");
+_Static_assert(offsetof(struct ShopData, txt_welcome_b) == 0x56FFC - BLOB_BASE, "ShopData.txt_welcome_b");
+_Static_assert(offsetof(struct ShopData, txt_last_chance) == 0x5700F - BLOB_BASE, "ShopData.txt_last_chance");
+_Static_assert(offsetof(struct ShopData, tab_advice) == 0x5702C - BLOB_BASE, "ShopData.tab_advice");
+_Static_assert(offsetof(struct ShopData, gfx_bar_1) == 0x5721C - BLOB_BASE, "ShopData.gfx_bar_1");
+_Static_assert(offsetof(struct ShopData, gfx_bar_2) == 0x5731C - BLOB_BASE, "ShopData.gfx_bar_2");
+_Static_assert(offsetof(struct ShopData, gfx_bar_3) == 0x573CC - BLOB_BASE, "ShopData.gfx_bar_3");
+_Static_assert(offsetof(struct ShopData, gfx_bar_4) == 0x574CC - BLOB_BASE, "ShopData.gfx_bar_4");
+_Static_assert(offsetof(struct ShopData, gfx_bar_5) == 0x575CC - BLOB_BASE, "ShopData.gfx_bar_5");
+_Static_assert(offsetof(struct ShopData, gfx_bar_6) == 0x5767C - BLOB_BASE, "ShopData.gfx_bar_6");
+_Static_assert(offsetof(struct ShopData, gfx_pillar_a) == 0x5777C - BLOB_BASE, "ShopData.gfx_pillar_a");
+_Static_assert(offsetof(struct ShopData, gfx_pillar_b) == 0x577E6 - BLOB_BASE, "ShopData.gfx_pillar_b");
+_Static_assert(offsetof(struct ShopData, gfx_cursor_on_b) == 0x57850 - BLOB_BASE, "ShopData.gfx_cursor_on_b");
+_Static_assert(offsetof(struct ShopData, gfx_cursor_on_a) == 0x578BA - BLOB_BASE, "ShopData.gfx_cursor_on_a");
+_Static_assert(offsetof(struct ShopData, gfx_exit_on_a) == 0x5AB58 - BLOB_BASE, "ShopData.gfx_exit_on_a");
+_Static_assert(offsetof(struct ShopData, gfx_exit_on_c) == 0x5AD98 - BLOB_BASE, "ShopData.gfx_exit_on_c");
+_Static_assert(offsetof(struct ShopData, gfx_exit_on_b) == 0x5AFD8 - BLOB_BASE, "ShopData.gfx_exit_on_b");
+_Static_assert(offsetof(struct ShopData, gfx_exit_off_a) == 0x5B218 - BLOB_BASE, "ShopData.gfx_exit_off_a");
+_Static_assert(offsetof(struct ShopData, gfx_exit_off_c) == 0x5B458 - BLOB_BASE, "ShopData.gfx_exit_off_c");
+_Static_assert(offsetof(struct ShopData, gfx_exit_off_b) == 0x5B698 - BLOB_BASE, "ShopData.gfx_exit_off_b");
+_Static_assert(offsetof(struct ShopData, gfx_eyes_b) == 0x5B8D8 - BLOB_BASE, "ShopData.gfx_eyes_b");
+_Static_assert(offsetof(struct ShopData, gfx_eyes_a) == 0x5B97E - BLOB_BASE, "ShopData.gfx_eyes_a");
+_Static_assert(offsetof(struct ShopData, gfx_mouth_b) == 0x5BA24 - BLOB_BASE, "ShopData.gfx_mouth_b");
+_Static_assert(offsetof(struct ShopData, gfx_mouth_a) == 0x5BB60 - BLOB_BASE, "ShopData.gfx_mouth_a");
+_Static_assert(offsetof(struct ShopData, gfx_bedroom) == 0x5BDBC - BLOB_BASE, "ShopData.gfx_bedroom");
+_Static_assert(offsetof(struct ShopData, gfx_bedroom2) == 0x5C0EC - BLOB_BASE, "ShopData.gfx_bedroom2");
+_Static_assert(offsetof(struct ShopData, gfx_keeper_b) == 0x5C59C - BLOB_BASE, "ShopData.gfx_keeper_b");
+_Static_assert(offsetof(struct ShopData, gfx_keeper_a) == 0x5C82C - BLOB_BASE, "ShopData.gfx_keeper_a");
+_Static_assert(offsetof(struct ShopData, gfx_keeper_c) == 0x5CABC - BLOB_BASE, "ShopData.gfx_keeper_c");
+_Static_assert(offsetof(struct ShopData, gfx_player2) == 0x5CD4C - BLOB_BASE, "ShopData.gfx_player2");
+_Static_assert(offsetof(struct ShopData, pic_lamp_a) == 0x5DF76 - BLOB_BASE, "ShopData.pic_lamp_a");
+_Static_assert(offsetof(struct ShopData, pic_lamp_b) == 0x5E1B6 - BLOB_BASE, "ShopData.pic_lamp_b");
+_Static_assert(offsetof(struct ShopData, pic_top) == 0x5F43E - BLOB_BASE, "ShopData.pic_top");
+_Static_assert(offsetof(struct ShopData, pic_mid) == 0x5FF9E - BLOB_BASE, "ShopData.pic_mid");
+_Static_assert(offsetof(struct ShopData, pic_low) == 0x601CE - BLOB_BASE, "ShopData.pic_low");
+_Static_assert(offsetof(struct ShopData, pic_door) == 0x61F8E - BLOB_BASE, "ShopData.pic_door");
+_Static_assert(offsetof(struct ShopData, pic_door2) == 0x6284E - BLOB_BASE, "ShopData.pic_door2");
+_Static_assert(offsetof(struct ShopData, pic_slide) == 0x6310E - BLOB_BASE, "ShopData.pic_slide");
+_Static_assert(offsetof(struct ShopData, font) == 0x63FEE - BLOB_BASE, "ShopData.font");
+_Static_assert(offsetof(struct ShopData, palette_b) == 0x6474E - BLOB_BASE, "ShopData.palette_b");
+_Static_assert(offsetof(struct ShopData, ntsc) == 0x64D61 - BLOB_BASE, "ShopData.ntsc");
 
 #endif

@@ -33,7 +33,7 @@ void shop_lights_draw(void);                                       /* shop $56E8
 void shop_text_newline(void);                                      /* shop $56E44 */
 void shop_text_char(uint8_t ch);                                   /* shop $56D8C */
 void shop_records_tick(void);                                      /* shop $56988 */
-void shop_sparkle(const uint8_t *rec);                             /* shop $56C02 */
+void shop_sparkle(const struct ShopRec *rec);                             /* shop $56C02 */
 void shop_records_draw(void);                                      /* shop $569BC */
 void shop_keeper_blink(void);                                      /* shop $56848 */
 void shop_door_draw(void);                                         /* shop $568E6 */
@@ -52,12 +52,12 @@ int32_t shop_can_buy(void);                                        /* shop $5593
 void shop_item_ca2(void);                                          /* shop $558E4 */
 void shop_item_advice(void);                                       /* shop $558EC */
 void shop_item_name(uint16_t kind, uint16_t power);                /* shop $55DE8 */
-void shop_price_text(uint8_t *rec);                                /* shop $55C60 */
+void shop_price_text(struct ShopRec *rec);                                /* shop $55C60 */
 void shop_stock_update(void);                                      /* shop $55424 */
 void shop_stock_sold_out(void);                                    /* shop $55512 */
 void shop_stock_recheck(void);                                     /* shop $55534 */
 void shop_sell_list(void);                                         /* shop $55AFC */
-void shop_sell_show(uint8_t *rec);                                 /* shop $55C9A */
+void shop_sell_show(struct ShopRec *rec);                                 /* shop $55C9A */
 void shop_sell(void);                                              /* shop $55B48 */
 void shop_buy(void);                                               /* shop $55594 */
 void shop_delay(void);                                             /* shop $5504E */
