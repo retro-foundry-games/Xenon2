@@ -308,7 +308,8 @@ static void apply_palette(void)
 
         if (shades_timer)
             v = (v >> 1) & 0x07770777u;
-        split32(&palette_shadow[2 * i], &palette_shadow[2 * i + 1], v);
+        palette_shadow[2 * i] = (uint16_t)(v >> 16);
+        palette_shadow[2 * i + 1] = (uint16_t)v;
         v += v;
         custom->color[2 * i] = (uint16_t)(v >> 16);
         custom->color[2 * i + 1] = (uint16_t)v;

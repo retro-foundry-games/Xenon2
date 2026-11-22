@@ -872,26 +872,32 @@ void obj_script_step(Object *obj)
         return;
     }
 move:
-    d0 = join32(o->x_hi, o->x_lo);
-    d1 = join32(o->y_hi, o->y_lo);
-    d3 = join32(o->angle_hi, o->angle_lo);
+    d0 = (((uint32_t)(uint16_t)o->x_hi << 16) | (uint16_t)o->x_lo);
+    d1 = (((uint32_t)(uint16_t)o->y_hi << 16) | (uint16_t)o->y_lo);
+    d3 = (((uint32_t)(uint16_t)o->angle_hi << 16) | (uint16_t)o->angle_lo);
     d4 = o->turn_fixed;
     d5 = o->turn_step;
     for (;;) {
         d7--;
         if ((int16_t)d7 < 0) {
-            split32(&o->x_hi, &o->x_lo, d0);
-            split32(&o->y_hi, &o->y_lo, d1);
-            split32(&o->angle_hi, &o->angle_lo, d3);
+            o->x_hi = (uint16_t)(d0 >> 16);
+            o->x_lo = (uint16_t)d0;
+            o->y_hi = (uint16_t)(d1 >> 16);
+            o->y_lo = (uint16_t)d1;
+            o->angle_hi = (uint16_t)(d3 >> 16);
+            o->angle_lo = (uint16_t)d3;
             o->turn_fixed = d4;
             return;
         }
         o->wait--;
         if (o->wait < 0) {
             d7++;
-            split32(&o->x_hi, &o->x_lo, d0);
-            split32(&o->y_hi, &o->y_lo, d1);
-            split32(&o->angle_hi, &o->angle_lo, d3);
+            o->x_hi = (uint16_t)(d0 >> 16);
+            o->x_lo = (uint16_t)d0;
+            o->y_hi = (uint16_t)(d1 >> 16);
+            o->y_lo = (uint16_t)d1;
+            o->angle_hi = (uint16_t)(d3 >> 16);
+            o->angle_lo = (uint16_t)d3;
             o->turn_fixed = d4;
             goto next_command;
         }

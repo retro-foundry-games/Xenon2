@@ -373,7 +373,8 @@ void frame_update(void)
             for (i = 0; i < 8; i++) {
                 uint32_t d = rd32(&a0[i]);
 
-                split32(&palette_shadow[i * 2], &palette_shadow[i * 2 + 1], d);
+                palette_shadow[i * 2] = (uint16_t)(d >> 16);
+                palette_shadow[i * 2 + 1] = (uint16_t)d;
                 d += d;
                 custom->color[i * 2] = (uint16_t)(d >> 16);
                 custom->color[i * 2 + 1] = (uint16_t)d;

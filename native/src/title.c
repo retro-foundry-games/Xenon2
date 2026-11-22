@@ -24,7 +24,7 @@ static void set_palette(const uint16_t *src)
     int i;
 
     for (i = 0; i < 16; i += 2) {
-        uint32_t v = join32(src[i], src[i + 1]);
+        uint32_t v = (((uint32_t)(uint16_t)src[i] << 16) | (uint16_t)src[i + 1]);
 
         palette_shadow[i] = src[i];
         palette_shadow[i + 1] = src[i + 1];
