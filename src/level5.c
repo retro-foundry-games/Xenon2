@@ -78,14 +78,6 @@ static void set_anim(Object *o, const uint8_t *anim)
     anim_header_set(o, anim);
 }
 
-static void copy4(uint8_t *dst, const uint8_t *src)
-{
-    int i;
-
-    for (i = 0; i < 4; i++)
-        dst[i] = src[i];
-}
-
 /* the byte at b grows by add; returns the carry */
 static int add_carry(uint8_t *b, uint8_t add)
 {
@@ -908,9 +900,9 @@ void l5_boss2_draw(Object *obj)
 {
     uint32_t offset = (uint32_t)(uint16_t)obj->mover.cell * 0xc;
 
-    copy4(&xenon2.level5_data.boss2_draw_data[0], xenon2.level5_data.boss2_draw_rows + offset);
-    copy4(&xenon2.level5_data.boss2_draw_data[12], xenon2.level5_data.boss2_draw_rows + 4 + offset);
-    copy4(&xenon2.level5_data.boss2_draw_data[24], xenon2.level5_data.boss2_draw_rows + 8 + offset);
+    *(uint32_t *)(&xenon2.level5_data.boss2_draw_data[0]) = *(const uint32_t *)(xenon2.level5_data.boss2_draw_rows + offset);
+    *(uint32_t *)(&xenon2.level5_data.boss2_draw_data[12]) = *(const uint32_t *)(xenon2.level5_data.boss2_draw_rows + 4 + offset);
+    *(uint32_t *)(&xenon2.level5_data.boss2_draw_data[24]) = *(const uint32_t *)(xenon2.level5_data.boss2_draw_rows + 8 + offset);
     draw_tile_grid(xenon2.level5_data.boss2_flash_grid, 5, 5, obj->y, 0x38);
 }
 
@@ -1043,7 +1035,7 @@ void l5_spawn_gates(const uint8_t *record)
         obj->energy = (int16_t)xenon2.level5_data.gates_energy;
         obj->hit[0] = 0x3e8;
         obj->hit[2] = 0x3e8;
-        obj->script = cells;
+        obj->map = (uint8_t (*)[2])cells;
         step = rec->step;
         cells += (int16_t)step;
         x = (int16_t)(x + (int16_t)(step << 3));
@@ -1058,7 +1050,7 @@ void l5_gate_update(Object *obj)
     if (cell >= 0x10)
         cell = 0;
     obj->l5.cell = cell;
-    copy4(obj->script, xenon2.level5_data.gate_update_data + cell);
+    *(uint32_t *)(obj->map[0]) = *(const uint32_t *)(xenon2.level5_data.gate_update_data + cell);
     obj->hit[0] = obj->x;
     obj->hit[2] = (int16_t)(obj->x + 0x20);
     obj->hit[1] = (int16_t)(obj->y - xenon2.scroll_pos + 2);
@@ -1071,7 +1063,7 @@ void l5_wall_update(Object *obj)
     const uint8_t *table = obj->type == 0x128 ? xenon2.level5_data.wall_cells_128 : xenon2.level5_data.wall_cells_other;
 
     obj->l5.cell = (int16_t)((obj->l5.cell + 1) & 3);
-    wr16(obj->script, rd16(table + 2 * (uint32_t)obj->l5.cell));
+    wr16(obj->map[0], rd16(table + 2 * (uint32_t)obj->l5.cell));
     obj->hit[0] = (int16_t)(obj->x + 3);
     obj->hit[2] = (int16_t)(obj->hit[0] + 0xa);
     obj->hit[1] = (int16_t)(obj->y - xenon2.scroll_pos + 3);
@@ -1082,17 +1074,17 @@ void l5_wall_update(Object *obj)
 void l5_wall_hit_a(Object *shot, Object *obj, uint16_t damage)
 {
     Object *second, *third;
-    uint8_t *c;
+    uint8_t (*c)[2];
 
     (void)shot;
     obj->fn_draw = FN(l5_wall_flash_a);
     if (!dies(obj, damage))
         return;
     spawn_effect((int16_t)(obj->x + 8), (int16_t)(obj->y - xenon2.scroll_pos + 8), xenon2.anim_explosion, draw_bob_masked);
-    c = obj->script;
-    wr16(c, 0x87b5);
-    wr32(c + 2, 0);
-    wr16(c + 6, 0x87ab);
+    c = obj->map;
+    wr16(c[0], 0x87b5);
+    wr32(c[1], 0);
+    wr16(c[3], 0x87ab);
     second = obj->prev;
     kill_thunk(obj);
     third = second->prev;
@@ -1105,17 +1097,17 @@ void l5_wall_hit_a(Object *shot, Object *obj, uint16_t damage)
 void l5_wall_hit_b(Object *shot, Object *obj, uint16_t damage)
 {
     Object *second, *third;
-    uint8_t *c;
+    uint8_t (*c)[2];
 
     (void)shot;
     obj->fn_draw = FN(l5_wall_flash_b);
     if (!dies(obj, damage))
         return;
     spawn_effect((int16_t)(obj->x + 8), (int16_t)(obj->y - xenon2.scroll_pos + 8), xenon2.anim_explosion, draw_bob_masked);
-    c = obj->script;
-    wr16(c, 0x87ab);
-    wr32(c - 4, 0);
-    wr16(c - 6, 0x87b5);
+    c = obj->map;
+    wr16(c[0], 0x87ab);
+    wr32(c[-2], 0);
+    wr16(c[-3], 0x87b5);
     second = obj->next;
     kill_thunk(obj);
     third = second->next;
@@ -1144,30 +1136,30 @@ void l5_wall_flash_b(Object *obj)
 void l5_spawn_bridge(const uint8_t *record)
 {
     Object *obj = spawn_marker_enemy(0xf8, record, (void (*)(void))FN(l5_bridge_update));
-    uint8_t *c;
+    uint8_t (*c)[2];
 
     obj->fn_hit = FN(l5_bridge_hit);
     obj->energy = (int16_t)xenon2.level5_data.bridge_energy;
     obj->hit[0] = 0x3e8;
     obj->hit[2] = 0x3e8;
-    c = obj->script;
-    if (rd16(c - 2) == 0x8669) {
-        wr16(c - 2, 0xc7);
-        wr16(c + 0x26, 0x177);
+    c = obj->map;
+    if (rd16(c[-1]) == 0x8669) {
+        wr16(c[-1], 0xc7);
+        wr16(c[MAP_COLS - 1], 0x177);
     }
-    if (rd16(c + 4) == 0x8673) {
-        wr16(c + 4, 0xc7);
-        wr16(c + 0x2c, 0x177);
+    if (rd16(c[2]) == 0x8673) {
+        wr16(c[2], 0xc7);
+        wr16(c[MAP_COLS + 2], 0x177);
     }
-    copy4(c, xenon2.level5_data.bridge_cells);
-    copy4(c + 0x28, xenon2.level5_data.bridge_cells + 4);
+    *(uint32_t *)(c[0]) = *(const uint32_t *)(xenon2.level5_data.bridge_cells);
+    *(uint32_t *)(c[MAP_COLS]) = *(const uint32_t *)(xenon2.level5_data.bridge_cells + 4);
 }
 
 
 /* level5 $056EE2: the piece: its cells go round by v28 and now and then it fires all round */
 void l5_bridge_update(Object *obj)
 {
-    uint8_t *c;
+    uint8_t (*c)[2];
     uint32_t offset;
 
     if ((int16_t)(xenon2.scroll_max + 0xd0) < obj->y) {
@@ -1189,33 +1181,33 @@ void l5_bridge_update(Object *obj)
             set_anim(shot, xenon2.level5_data.bridge_update_data);
         }
     }
-    c = obj->script;
+    c = obj->map;
     offset = (uint32_t)((uint16_t)obj->bridge.cell & 0xe) * 4;
-    copy4(c, xenon2.level5_data.bridge_cells + offset);
-    copy4(c + 0x28, xenon2.level5_data.bridge_cells + 4 + offset);
+    *(uint32_t *)(c[0]) = *(const uint32_t *)(xenon2.level5_data.bridge_cells + offset);
+    *(uint32_t *)(c[MAP_COLS]) = *(const uint32_t *)(xenon2.level5_data.bridge_cells + 4 + offset);
 }
 
 /* level5 $056FDC: the hit of the piece: the burst, the cells go back, the score */
 void l5_bridge_hit(Object *shot, Object *obj, uint16_t damage)
 {
-    uint8_t *c;
+    uint8_t (*c)[2];
 
     (void)shot;
     obj->fn_draw = FN(l5_bridge_flash);
     if (!dies(obj, damage))
         return;
     spawn_effect((int16_t)(obj->x + 0x10), (int16_t)(obj->y - xenon2.scroll_pos + 0x10), xenon2.big_explosion_anim, draw_bob_masked);
-    c = obj->script;
-    if (rd16(c - 2) == 0xc7) {
-        wr16(c - 2, 0x8669);
-        wr16(c + 0x26, 0x8707);
+    c = obj->map;
+    if (rd16(c[-1]) == 0xc7) {
+        wr16(c[-1], 0x8669);
+        wr16(c[MAP_COLS - 1], 0x8707);
     }
-    if (rd16(c + 4) == 0xc7) {
-        wr16(c + 4, 0x8673);
-        wr16(c + 0x2c, 0x8711);
+    if (rd16(c[2]) == 0xc7) {
+        wr16(c[2], 0x8673);
+        wr16(c[MAP_COLS + 2], 0x8711);
     }
-    wr32(c, 0);
-    wr32(c + 0x28, 0);
+    wr32(c[0], 0);
+    wr32(c[MAP_COLS], 0);
     xenon2.player_score += 0x1f4;
     kill_thunk(obj);
 }
@@ -1242,7 +1234,7 @@ void l5_spawn_group(const uint8_t *record)
 Object *l5_spawn_unit(const uint8_t *record)
 {
     Object *obj = spawn_marker_enemy(0xf4, record, (void (*)(void))FN(l5_unit_update));
-    uint8_t *c;
+    uint8_t (*c)[2];
     uint32_t offset;
 
     obj->unit.dir = (obj->unit.dir & 0xffffu) | (uint32_t)(uint16_t)((int16_t)rd16(record + 0xc)) << 16;
@@ -1250,26 +1242,26 @@ Object *l5_spawn_unit(const uint8_t *record)
     obj->energy = (int16_t)xenon2.level5_data.group_energy;
     obj->hit[0] = 0x3e8;
     obj->hit[2] = 0x3e8;
-    c = obj->script;
+    c = obj->map;
     offset = (uint32_t)(uint16_t)(int16_t)(obj->unit.dir >> 16) << 3;
     obj->unit.group = -1;
-    if (rd16(c - 2) == 0x867d) {
-        wr16(c - 2, 0x80d7);
-        wr16(c + 0x26, 0x8187);
+    if (rd16(c[-1]) == 0x867d) {
+        wr16(c[-1], 0x80d7);
+        wr16(c[MAP_COLS - 1], 0x8187);
     }
-    if (rd16(c + 4) == 0x8687) {
-        wr16(c + 4, 0x8287);
-        wr16(c + 0x2c, 0x8339);
+    if (rd16(c[2]) == 0x8687) {
+        wr16(c[2], 0x8287);
+        wr16(c[MAP_COLS + 2], 0x8339);
     }
-    copy4(c, xenon2.level5_data.group_cells + offset);
-    copy4(c + 0x28, xenon2.level5_data.group_cells + 4 + offset);
+    *(uint32_t *)(c[0]) = *(const uint32_t *)(xenon2.level5_data.group_cells + offset);
+    *(uint32_t *)(c[MAP_COLS]) = *(const uint32_t *)(xenon2.level5_data.group_cells + 4 + offset);
     return obj;
 }
 
 /* level5 $05715E: the unit: it turns to the player by one step at a time and fires in its direction */
 void l5_unit_update(Object *obj)
 {
-    uint8_t *c;
+    uint8_t (*c)[2];
     uint32_t offset;
 
     if ((int16_t)(xenon2.scroll_max + 0xd0) < obj->y) {
@@ -1313,16 +1305,16 @@ void l5_unit_update(Object *obj)
         spawn_enemy_shot((uint16_t)x, (uint16_t)y, (uint16_t)(int16_t)(obj->unit.dir >> 16), xenon2.level5_data.unit_shot_steps, (void *)xenon2.level5_data.unit_shot_pictures[dir_offset / 4]);
     }
 cells:
-    c = obj->script;
+    c = obj->map;
     offset = (uint32_t)(uint16_t)(int16_t)(obj->unit.dir >> 16) << 3;
-    copy4(c, xenon2.level5_data.group_cells + offset);
-    copy4(c + 0x28, xenon2.level5_data.group_cells + 4 + offset);
+    *(uint32_t *)(c[0]) = *(const uint32_t *)(xenon2.level5_data.group_cells + offset);
+    *(uint32_t *)(c[MAP_COLS]) = *(const uint32_t *)(xenon2.level5_data.group_cells + 4 + offset);
 }
 
 /* level5 $0572EA: the hit of the unit: at the end the burst, its flag, the cells go back */
 void l5_unit_hit(Object *shot, Object *obj, uint16_t damage)
 {
-    uint8_t *c;
+    uint8_t (*c)[2];
 
     (void)shot;
     obj->fn_draw = FN(l5_unit_flash);
@@ -1331,17 +1323,17 @@ void l5_unit_hit(Object *shot, Object *obj, uint16_t damage)
     if (obj->unit.group >= 0)
         sh_w8(0xd9b + (uint32_t)(uint16_t)obj->unit.group, 0xff);
     spawn_effect((int16_t)(obj->x + 0x10), (int16_t)(obj->y - xenon2.scroll_pos + 0x10), xenon2.big_explosion_anim, draw_bob_masked);
-    c = obj->script;
-    if (rd16(c - 2) == 0x80d7) {
-        wr16(c - 2, 0x867d);
-        wr16(c + 0x26, 0x871b);
+    c = obj->map;
+    if (rd16(c[-1]) == 0x80d7) {
+        wr16(c[-1], 0x867d);
+        wr16(c[MAP_COLS - 1], 0x871b);
     }
-    if (rd16(c + 4) == 0x8287) {
-        wr16(c + 4, 0x8687);
-        wr16(c + 0x2c, 0x8725);
+    if (rd16(c[2]) == 0x8287) {
+        wr16(c[2], 0x8687);
+        wr16(c[MAP_COLS + 2], 0x8725);
     }
-    wr32(c, 0);
-    wr32(c + 0x28, 0);
+    wr32(c[0], 0);
+    wr32(c[MAP_COLS], 0);
     xenon2.player_score += 0x190;
     kill_thunk(obj);
 }
@@ -1368,7 +1360,7 @@ void l5_spawn_gun(const uint8_t *record)
     obj->hit[2] = 0x3e8;
     obj->gfx = (void *)cells;
     obj->anim = anim;
-    wr16(obj->script, rd16(cells));
+    wr16(obj->map[0], rd16(cells));
     obj->score = 0x64;
     obj->part_b.dx = 0;
     obj->part_b.dy = 0;
@@ -1394,7 +1386,7 @@ void l5_gun_update(Object *obj)
     }
     obj->l5.cell = (int16_t)(obj->l5.cell + 1);
     cells = obj->type == 0x108 ? xenon2.level5_data.gun_cells_b : xenon2.level5_data.gun_cells_a;
-    wr16(obj->script, rd16(cells + 2 * (uint32_t)(uint16_t)obj->l5.cell));
+    wr16(obj->map[0], rd16(cells + 2 * (uint32_t)(uint16_t)obj->l5.cell));
     if (obj->l5.cell == 3) {
         int16_t x = (int16_t)(obj->x + 0x18), y = (int16_t)(obj->y - xenon2.scroll_pos + 8);
         uint16_t dir = 2;

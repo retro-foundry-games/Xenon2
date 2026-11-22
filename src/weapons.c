@@ -869,7 +869,7 @@ void hit_tile(Object *shooter, Object *tile, uint16_t damage)
 {
     uint16_t old;
     int16_t x, y, rows, cols;
-    uint8_t *dst;
+    uint8_t (*dst)[2];
     const uint8_t *src;
 
     tile->fn_draw = FN(tile_draw);
@@ -881,17 +881,17 @@ void hit_tile(Object *shooter, Object *tile, uint16_t damage)
     x = (int16_t)(((tile->tile.cols + 1) << 3) + tile->x);
     y = (int16_t)(((tile->tile.rows + 1) << 3) + tile->y - xenon2.scroll_pos);
     spawn_effect(x, y, xenon2.anim_explosion_big, draw_bob_masked);
-    dst = tile->script;
+    dst = tile->map;
     src = tile->anim;
     for (rows = tile->tile.rows; rows >= 0; rows--) {
-        uint8_t *row = dst;
+        uint8_t (*row)[2] = dst;
 
         for (cols = tile->tile.cols; cols >= 0; cols--) {
-            wr16(row, rd16(src));
-            row += 2;
+            wr16(row[0], rd16(src));
+            row++;
             src += 2;
         }
-        dst += 40;
+        dst += MAP_COLS;
     }
     kill_object(tile);
 }

@@ -50,14 +50,6 @@ static const void *level1_shot_gfx(uint16_t idx)
     return GPTR(rd32(xenon2.level1_data.shot_gfx_table[idx]));
 }
 
-static void copy4(uint8_t *dst, const uint8_t *src)
-{
-    dst[0] = src[0];
-    dst[1] = src[1];
-    dst[2] = src[2];
-    dst[3] = src[3];
-}
-
 /* the turret has left the screen: it dies */
 static int level1_turret_gone(Object *turret)
 {
@@ -72,7 +64,6 @@ static int level1_turret_gone(Object *turret)
 void level1_turret_a_update(Object *turret)
 {
     const uint8_t *table;
-    uint8_t *script;
     uint16_t offset, sum;
     int16_t x, y, dir;
 
@@ -85,9 +76,8 @@ void level1_turret_a_update(Object *turret)
     turret->hit[3] = (int16_t)(y + 0x18);
     offset = (uint16_t)(turret->l1_turret.step << 3);
     table = turret->type == 0xe0 ? xenon2.level1_data.turret_a_cells_e0 : xenon2.level1_data.turret_a_cells_e4;
-    script = turret->script;
-    copy4(script, table + offset);
-    copy4(script + 0x28, table + offset + 4);
+    *(uint32_t *)(turret->map[0]) = *(const uint32_t *)(table + offset);
+    *(uint32_t *)(turret->map[MAP_COLS]) = *(const uint32_t *)(table + offset + 4);
     turret->l1_turret.step = (int16_t)((turret->l1_turret.step + 1) & 3);
     sum = (uint16_t)(((ObjMove *)turret)->shot_count + xenon2.level1_data.shot_params[3]);
     ((ObjMove *)turret)->shot_count = (uint8_t)sum;
@@ -108,7 +98,6 @@ void level1_turret_a_update(Object *turret)
 void level1_turret_b_update(Object *turret)
 {
     const uint8_t *table;
-    uint8_t *script;
     uint16_t offset, sum;
     int16_t x, y, dir;
 
@@ -121,9 +110,8 @@ void level1_turret_b_update(Object *turret)
     turret->hit[3] = (int16_t)(y + 0x18);
     offset = (uint16_t)(((uint16_t)turret->l1_turret.step & 0xfffc) << 1);
     table = turret->type == 0xe8 ? xenon2.level1_data.turret_b_cells_e8 : xenon2.level1_data.turret_b_cells_ec;
-    script = turret->script;
-    copy4(script, table + offset);
-    copy4(script + 0x28, table + offset + 4);
+    *(uint32_t *)(turret->map[0]) = *(const uint32_t *)(table + offset);
+    *(uint32_t *)(turret->map[MAP_COLS]) = *(const uint32_t *)(table + offset + 4);
     turret->l1_turret.step = (int16_t)((turret->l1_turret.step + 1) & 0xf);
     sum = (uint16_t)(((ObjMove *)turret)->shot_count + xenon2.level1_data.shot_params[0xf]);
     ((ObjMove *)turret)->shot_count = (uint8_t)sum;
@@ -156,7 +144,7 @@ void level1_turret_c_update(Object *turret)
     turret->hit[3] = (int16_t)(y + 0x10);
     offset = (uint16_t)(((uint16_t)turret->l1_turret.step & 0xfffe) << 1);
     table = turret->type == 0xd8 ? xenon2.level1_data.turret_c_steps_d8 : xenon2.level1_data.turret_c_steps_dc;
-    copy4(turret->script, table + offset);
+    *(uint32_t *)(turret->map[0]) = *(const uint32_t *)(table + offset);
     if (turret->l1_turret.step == 0) {
         sum = (uint16_t)(((ObjMove *)turret)->shot_count + xenon2.level1_data.shot_params[9]);
         ((ObjMove *)turret)->shot_count = (uint8_t)sum;
@@ -244,12 +232,10 @@ static Object *level1_turret(uint16_t type, const uint8_t *rec, void (*update)(v
 /* the end of the turrets' set-up: the first cells are written into the map ($46), the object hides them again when it is shot */
 static void level1_turret_cells(Object *turret, const uint8_t *cells, const uint8_t *anim)
 {
-    uint8_t *script = turret->script;
-
     turret->gfx = cells;
     turret->anim = anim;
-    copy4(script, cells);
-    copy4(script + 0x28, cells + 4);
+    *(uint32_t *)(turret->map[0]) = *(const uint32_t *)(cells);
+    *(uint32_t *)(turret->map[MAP_COLS]) = *(const uint32_t *)(cells + 4);
     turret->score = 0x64;
     turret->tile.cols = 1;
     turret->tile.rows = 1;
@@ -273,10 +259,10 @@ void level1_hook(uint16_t id, const uint8_t *rec, uint16_t scroll)
     case 2:
         obj = level1_turret(flag ? 0xe0 : 0xe4, rec, (void (*)(void))level1_turret_a_update, xenon2.level1_data.boss_energy[1]);
         if (flag) {
-            obj->script += 2;
+            obj->map++;
             obj->x = (int16_t)(obj->x + 0x10);
         }
-        obj->script -= 2;
+        obj->map--;
         obj->x = (int16_t)(obj->x - 0x10);
         level1_turret_cells(obj, flag ? xenon2.level1_data.turret_a_cells_e0 : xenon2.level1_data.turret_a_cells_e4, flag ? xenon2.level1_data.turret_a_anim_e0 : xenon2.level1_data.turret_a_anim_e4);
         return;

@@ -81,19 +81,11 @@ static uint32_t shot_picture(uint16_t index)
     return sh_r32(sh_r32(0x77b70 + 4 * (uint32_t)index));
 }
 
-static void copy4(uint8_t *dst, const uint8_t *src)
-{
-    int i;
-
-    for (i = 0; i < 4; i++)
-        dst[i] = src[i];
-}
-
 /* the two longs of a table entry go to the long at the cell and the one a row below it */
-static void put_cells(uint8_t *cell, const uint8_t *table)
+static void put_cells(uint8_t (*cell)[2], const uint8_t *table)
 {
-    copy4(cell, table);
-    copy4(cell + 0x28, table + 4);
+    *(uint32_t *)(cell[0]) = *(const uint32_t *)(table);
+    *(uint32_t *)(cell[MAP_COLS]) = *(const uint32_t *)(table + 4);
 }
 
 void l4_tower_update(Object *obj);
@@ -194,7 +186,7 @@ void l4_tower_update(Object *obj)
         return;
     }
     cells = (obj->type == 0xd0 ? xenon2.level4_data.tower_cells_d0 : xenon2.level4_data.tower_cells_d4) + ((uint16_t)obj->tower.phase << 3);
-    put_cells(obj->script, cells);
+    put_cells(obj->map, cells);
     obj->tower.phase++;
     if (obj->tower.phase == 4) {
         int16_t x = (int16_t)(obj->x + 0x12), y = (int16_t)(obj->y - xenon2.scroll_pos + 0xe);
@@ -223,7 +215,7 @@ void l4_tower_hit(Object *shot, Object *enemy, uint16_t damage)
         return;
     }
     spawn_effect((int16_t)(enemy->x + 0x10), (int16_t)(enemy->y - xenon2.scroll_pos + 0x10), xenon2.big_explosion_anim, draw_bob_masked);
-    put_cells(enemy->script, enemy->type == 0xd0 ? xenon2.level4_data.tower_hit_cells_d0 : xenon2.level4_data.tower_hit_cells_d4);
+    put_cells(enemy->map, enemy->type == 0xd0 ? xenon2.level4_data.tower_hit_cells_d0 : xenon2.level4_data.tower_hit_cells_d4);
     xenon2.player_score += 0x190;
     kill_thunk(enemy);
 }
@@ -246,7 +238,7 @@ void l4_spawn_tower(const uint8_t *record)
     obj->energy = (int16_t)xenon2.level4_data.tower_energy;
     obj->hit[0] = 0x3e8;
     obj->hit[2] = 0x3e8;
-    put_cells(obj->script, flag ? xenon2.level4_data.tower_cells_d0 : xenon2.level4_data.tower_cells_d4);
+    put_cells(obj->map, flag ? xenon2.level4_data.tower_cells_d0 : xenon2.level4_data.tower_cells_d4);
 }
 
 /* level4 $055090: the scroll: the floor of the scroll ends at $DF0 and between $AE0 and $E50 an enemy comes every 16 pixels */
