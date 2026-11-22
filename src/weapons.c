@@ -232,7 +232,7 @@ Object *weapon_94(Object *caller, Object *last)
     n->score = 0;
     n->energy = 2;
     n->kind = 1;
-    SET_V5E(n, -1);
+    n->shot_count = n->shot_rate = 0xff;
     xenon2.autofire_period = 8;
     return n;
 }
@@ -261,7 +261,7 @@ Object *weapon_c0(Object *caller, Object *last)
     n->score = 0;
     n->energy = 2;
     n->kind = 0xe;
-    SET_V5E(n, -1);
+    n->shot_count = n->shot_rate = 0xff;
     xenon2.autofire_period = 8;
     return n;
 }
@@ -290,7 +290,7 @@ Object *weapon_98(Object *caller, Object *last)
     n->score = 0;
     n->energy = 2;
     n->kind = 0xa;
-    SET_V5E(n, -1);
+    n->shot_count = n->shot_rate = 0xff;
     xenon2.autofire_period = 8;
     return n;
 }
@@ -315,7 +315,7 @@ Object *weapon_28(Object *caller, Object *last)
     n->score = 0;
     n->energy = 0;
     n->kind = 0x15;
-    SET_V5E(n, -1);
+    n->shot_count = n->shot_rate = 0xff;
     xenon2.autofire_period = 0xc;
     return n;
 }
@@ -346,7 +346,7 @@ Object *weapon_48(Object *caller, Object *last)
     n->score = 0;
     n->energy = 0;
     n->kind = 0x17;
-    SET_V5E(n, -1);
+    n->shot_count = n->shot_rate = 0xff;
     xenon2.autofire_period = 0x1e;
     return n;
 }
@@ -374,7 +374,7 @@ Object *weapon_b0(Object *caller, Object *last)
     n->score = 0;
     n->energy = 2;
     n->kind = 0x14;
-    SET_V5E(n, -1);
+    n->shot_count = n->shot_rate = 0xff;
     xenon2.autofire_period = 8;
     return n;
 }
@@ -399,7 +399,7 @@ static Object *weapon_slot5(Object *caller, uint16_t type, obj_fn update, const 
     n->score = score;
     n->energy = energy;
     n->kind = kind;
-    SET_V5E(n, -1);
+    n->shot_count = n->shot_rate = 0xff;
     return n;
 }
 
@@ -488,7 +488,7 @@ static Object *weapon_side(Object *caller, uint16_t type, obj_fn update, const u
     n->score = 0;
     n->energy = energy;
     n->kind = kind;
-    SET_V5E(n, -1);
+    n->shot_count = n->shot_rate = 0xff;
     return n;
 }
 
@@ -596,14 +596,20 @@ void weapon9c_update(Object *obj)
 
     if (xenon2.dive_phase)
         return;
-    if (V5E(obj) >= 0)
-        SET_V5E(obj, V5E(obj) - 1);
-    if (xenon2.fire_press == 0 || V5E(obj) >= 0)
+    int16_t timer = (int16_t)(obj->shot_count << 8 | obj->shot_rate);
+
+    if (timer >= 0) {
+        timer--;
+        obj->shot_count = (uint8_t)(timer >> 8);
+        obj->shot_rate = (uint8_t)timer;
+    }
+    if (xenon2.fire_press == 0 || timer >= 0)
         return;
     for (other = LIST_B->prev; other->type != 0; other = other->prev)
         if (other->type == 0x28)
             return;
-    SET_V5E(obj, 0xf);
+    obj->shot_count = 0;
+    obj->shot_rate = 0xf;
     n = alloc_b(obj);
     n->type = 0x28;
     n->fn_update = shell_update;
@@ -614,7 +620,8 @@ void weapon9c_update(Object *obj)
     y = PLAYER->y - 0xc;
     n->y = y;
     n->shell.phase = -(int16_t)(((uint16_t)y >> 4) + 4);
-    SET_V5E(n, 6);
+    n->shot_count = 0;
+    n->shot_rate = 6;
 }
 
 /* the eight pictures of the drill, by the loop counter */
@@ -628,14 +635,20 @@ void weaponA0_update(Object *obj)
 
     if (xenon2.dive_phase)
         return;
-    if (V5E(obj) >= 0)
-        SET_V5E(obj, V5E(obj) - 1);
-    if (xenon2.fire_press == 0 || V5E(obj) >= 0)
+    int16_t timer = (int16_t)(obj->shot_count << 8 | obj->shot_rate);
+
+    if (timer >= 0) {
+        timer--;
+        obj->shot_count = (uint8_t)(timer >> 8);
+        obj->shot_rate = (uint8_t)timer;
+    }
+    if (xenon2.fire_press == 0 || timer >= 0)
         return;
     for (other = LIST_B->prev; other->type != 0; other = other->prev)
         if (other->type == 0x48)
             return;
-    SET_V5E(obj, 0x12);
+    obj->shot_count = 0;
+    obj->shot_rate = 0x12;
     xenon2.sfx_cmd = 9;
     cur = obj;
     for (cnt = 7; cnt >= 0; cnt -= 2) {
@@ -1845,9 +1858,14 @@ void weapon20_update(Object *obj)
         return;
     }
     obj->fn_draw = draw_bob_masked;
-    if (V5E(obj) >= 0)
-        SET_V5E(obj, V5E(obj) - 1);
-    if (xenon2.fire_press && V5E(obj) < 0) {
+    int16_t timer = (int16_t)(obj->shot_count << 8 | obj->shot_rate);
+
+    if (timer >= 0) {
+        timer--;
+        obj->shot_count = (uint8_t)(timer >> 8);
+        obj->shot_rate = (uint8_t)timer;
+    }
+    if (xenon2.fire_press && timer < 0) {
         xenon2.sfx_cmd = 6;
         beam = alloc_b(obj);
         beam->type = 0x24;
@@ -1856,7 +1874,8 @@ void weapon20_update(Object *obj)
         beam->w20.tick = -0x20;
         beam->target = obj;
         beam->score = obj->score;
-        SET_V5E(obj, 6);
+        obj->shot_count = 0;
+        obj->shot_rate = 6;
     }
 }
 

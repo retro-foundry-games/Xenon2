@@ -162,7 +162,7 @@ void l2_hook(uint16_t hook, const uint8_t *rec, uint16_t rec_scroll)
         obj->fn_update = FN(l2_launcher_update);
         obj->fn_draw = draw_bob_masked;
         set_anim(obj, flag ? xenon2.level2_data.hook_fire_anim_a : xenon2.level2_data.hook_fire_anim_b);
-        SET_V5E(obj, 0);
+        obj->shot_count = obj->shot_rate = 0;
         obj->fn_hit = (void *)hit_enemy;
         obj->energy = (int16_t)xenon2.level2_data.hook_energy_2;
         obj->big = 0;
@@ -243,7 +243,7 @@ void l2_init(void)
     obj->fn_update = FN(l2_boss_update);
     obj->fn_draw = FN(l2_boss_draw);
     obj->fn_hit = (void *)l2_boss_hit;
-    SET_V5E(obj, 0);
+    obj->shot_count = obj->shot_rate = 0;
     obj->persists = -1;
     obj->screen_fixed = -1;
     obj->y = 0x60;
@@ -264,7 +264,7 @@ void l2_init(void)
         obj->energy = (int16_t)xenon2.level2_data.init_energy_2;
         obj->persists = -1;
         obj->screen_fixed = -1;
-        SET_V5E(obj, 0);
+        obj->shot_count = obj->shot_rate = 0;
         obj->x = (int16_t)x;
         obj->y = (int16_t)y;
         obj->gfx = xenon2.level_init_src + (uint16_t)(((uint16_t)(y * 0x14) + x) * 2);
@@ -452,7 +452,7 @@ void l2_marker_f8_update(Object *marker)
         flyer->fn_draw = draw_bob_masked;
         flyer->fn_hit = (void *)hit_enemy;
         set_anim(flyer, xenon2.level2_data.flyer_anim2_e0);
-        SET_V5E(flyer, 0);
+        flyer->shot_count = flyer->shot_rate = 0;
         flyer->x = (int16_t)(marker->x + 0x10);
         flyer->y = (int16_t)(marker->y - xenon2.scroll_pos + 0x10);
         flyer->energy = (int16_t)xenon2.level2_data.marker_f8_energy;
@@ -507,7 +507,7 @@ void l2_marker_fc_update(Object *marker)
         flyer->fn_draw = draw_bob_masked;
         flyer->fn_hit = (void *)hit_enemy;
         set_anim(flyer, xenon2.level2_data.flyer_anim2_other);
-        SET_V5E(flyer, 0);
+        flyer->shot_count = flyer->shot_rate = 0;
         flyer->x = marker->x;
         flyer->y = (int16_t)(marker->y - xenon2.scroll_pos);
         flyer->energy = (int16_t)xenon2.level2_data.marker_fc_energy;
@@ -582,16 +582,16 @@ void l2_roamer_shot_update(Object *bolt)
         bolt->bolt.target = -1;
     }
     if ((uint16_t)bolt->y < 0xc0) {
-        uint16_t sum = (uint16_t)(bolt->v5e_b[0] + xenon2.level2_data.roamer_shot_fire_rate);
+        uint16_t sum = (uint16_t)(bolt->shot_count + xenon2.level2_data.roamer_shot_fire_rate);
 
-        bolt->v5e_b[0] = (uint8_t)sum;
+        bolt->shot_count = (uint8_t)sum;
         carry = sum > 0xff;
         if (carry) {
             uint16_t param = xenon2.level2_data.roamer_shot_param;
             uint16_t angle;
             const void *gfx;
 
-            bolt->v5e_b[0] = (uint8_t)(random_next() & 0x3f);
+            bolt->shot_count = (uint8_t)(random_next() & 0x3f);
             gfx = GPTR(sh_r32(sh_r32(0x6c89c + (uint32_t)param * 4)));
             angle = direction8((int16_t)(PLAYER_X - bolt->x), (int16_t)(PLAYER_Y - bolt->y));
             spawn_enemy_shot((uint16_t)bolt->x, (uint16_t)bolt->y, angle, xenon2.level2_data.roamer_shot_shot_steps, gfx);
@@ -675,7 +675,7 @@ void l2_roamer_update(Object *roamer)
         bolt->fn_hit = (void *)hit_enemy;
         bolt->energy = (int16_t)xenon2.level2_data.roamer_energy;
         bolt->big = 0;
-        SET_V5E(bolt, 0);
+        bolt->shot_count = bolt->shot_rate = 0;
         bolt->score = 0x1e;
         bolt->kind = 0;
         set_anim(bolt, xenon2.level2_data.bolt_anims_by_dir[(uint16_t)(int16_t)(roamer->roamer.dir >> 16)]);
@@ -721,7 +721,7 @@ void l2_front_update(Object *marker)
         part->fn_draw = draw_bob_masked;
         part->fn_hit = (void *)hit_explode;
         set_anim(part, entry->anim);
-        SET_V5E(part, 0);
+        part->shot_count = part->shot_rate = 0;
         part->x = (int16_t)(marker->x + 0x10 + entry->dx);
         part->y = (int16_t)(marker->y - xenon2.scroll_pos + 0x10 + entry->dy);
         part->front.dir = (part->front.dir & 0xffffu) | (uint32_t)(uint16_t)((int16_t)i) << 16;
@@ -911,7 +911,7 @@ static void l2_debris_wall(uint16_t side)
         obj->score = (int16_t)spec->score;
         obj->piece.var = (int16_t)var;
         obj->energy = (int16_t)xenon2.level2_data.debris_wall_energy;
-        SET_V5E(obj, 0);
+        obj->shot_count = obj->shot_rate = 0;
         obj->big = 0;
         obj->anim_delay = 0;
         obj->script = (uint8_t *)path;
@@ -1246,12 +1246,12 @@ void l2_boss_update(Object *boss)
             boss->l2_boss.step = (boss->l2_boss.step & 0xffffu) | (uint32_t)(uint16_t)(-3) << 16;
         }
     }
-    sum = (uint16_t)(boss->v5e_b[0] + xenon2.level2_data.boss_fire_rate);
-    boss->v5e_b[0] = (uint8_t)sum;
+    sum = (uint16_t)(boss->shot_count + xenon2.level2_data.boss_fire_rate);
+    boss->shot_count = (uint8_t)sum;
     if (sum > 0xff) {
         int16_t y = (int16_t)(boss->y - xenon2.scroll_pos + 0x70);
 
-        boss->v5e_b[0] = (uint8_t)(random_next() & 0x3f);
+        boss->shot_count = (uint8_t)(random_next() & 0x3f);
         if ((random_next() & 3) != 0) {
             shot = spawn_enemy_shot(0xa0, (uint16_t)y, 4, xenon2.level2_data.boss_shot_steps, 0);
             set_anim(shot, xenon2.level2_data.boss_update_data);

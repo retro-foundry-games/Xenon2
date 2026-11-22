@@ -269,7 +269,7 @@ void l3_worm_spawn(uint16_t side)
         seg->fn_draw = draw_bob_masked;
         seg->gfx = (void *)entry->gfx;
         seg->score = 0x7d0;
-        SET_V5E(seg, 0);
+        seg->shot_count = seg->shot_rate = 0;
         seg->big = 0;
         seg->is_part = 0;
         seg->anim_delay = 0;
@@ -414,7 +414,7 @@ void l3_spawn_snake(const uint8_t *rec)
         seg->type = flag ? 0xcc : 0xc8;
         seg->gfx = (void *)(flag ? xenon2.level3_data.snake_picture_a : xenon2.level3_data.snake_picture_b);
         seg->anim_delay = 0;
-        SET_V5E(seg, 0);
+        seg->shot_count = seg->shot_rate = 0;
         if (i == 0)
             set_anim(seg, flag ? xenon2.level3_data.snake_anim_a : xenon2.level3_data.snake_anim_b);
         seg->fn_update = FN(l3_snake_body);
@@ -577,7 +577,7 @@ void l3_spawn_diver(const uint8_t *rec)
     obj->type = 0xd0;
     obj->fn_update = FN(l3_diver_update);
     obj->fn_draw = draw_bob_masked;
-    SET_V5E(obj, 0);
+    obj->shot_count = obj->shot_rate = 0;
     obj->x = (int16_t)(rd16(rec + 8) - 8);
     obj->y = (int16_t)(rd16(rec + 0xa) + 8 - xenon2.scroll_pos);
     obj->diver.side = (obj->diver.side & 0xffffu) | (uint32_t)(uint16_t)(2) << 16;
@@ -629,7 +629,7 @@ void l3_spawn_parts(void)
         part->path.wait = 0;
         set_anim(part, entry->anim);
         part->turn = ((uint32_t)(uint16_t)entry->x << 16) | (uint16_t)entry->y;
-        SET_V5E(part, 0);
+        part->shot_count = part->shot_rate = 0;
         part->score = 0x3e8;
         part->big = -1;
         part->script = xenon2.level3_data.spawn_parts_data_2;
@@ -661,13 +661,13 @@ void l3_part_core(Object *obj)
 
     sh_w8(0xd96, 0xff);
     enemy_update(obj);
-    sum = (uint16_t)(obj->v5e_b[0] + xenon2.level3_data.part_core_fire_rate);
-    obj->v5e_b[0] = (uint8_t)sum;
+    sum = (uint16_t)(obj->shot_count + xenon2.level3_data.part_core_fire_rate);
+    obj->shot_count = (uint8_t)sum;
     if (sum > 0xff) {
         Object *shot;
         uint16_t angle;
 
-        obj->v5e_b[0] = (uint8_t)(random_next() & 0x3f);
+        obj->shot_count = (uint8_t)(random_next() & 0x3f);
         angle = direction8((int16_t)(PLAYER_X - obj->x), (int16_t)(PLAYER_Y - obj->y));
         shot = spawn_enemy_shot((uint16_t)(obj->x + 0x10), (uint16_t)(obj->y + 0x3c), angle, xenon2.level3_data.part_core_shot_steps, 0);
         set_anim(shot, xenon2.level3_data.part_core_data);
@@ -707,11 +707,11 @@ void l3_part_gun(Object *obj)
         return;
     }
     {
-        uint16_t sum = (uint16_t)(obj->v5e_b[0] + xenon2.level3_data.part_gun_fire_rate);
+        uint16_t sum = (uint16_t)(obj->shot_count + xenon2.level3_data.part_gun_fire_rate);
 
-        obj->v5e_b[0] = (uint8_t)sum;
+        obj->shot_count = (uint8_t)sum;
         if (sum > 0xff) {
-            obj->v5e_b[0] = (uint8_t)(random_next() & 0x3f);
+            obj->shot_count = (uint8_t)(random_next() & 0x3f);
             set_anim(obj, xenon2.level3_data.part_gun_data_3);
         }
     }
@@ -884,11 +884,11 @@ void l3_gun_update(Object *obj)
     obj->hit[1] = y;
     obj->hit[3] = (int16_t)(y + 0xc);
     if (obj->l3_gun.open == 0) {
-        uint16_t sum = (uint16_t)(obj->v5e_b[0] + xenon2.level3_data.gun_fire_rate);
+        uint16_t sum = (uint16_t)(obj->shot_count + xenon2.level3_data.gun_fire_rate);
 
-        obj->v5e_b[0] = (uint8_t)sum;
+        obj->shot_count = (uint8_t)sum;
         if (sum > 0xff) {
-            obj->v5e_b[0] = (uint8_t)(random_next() & 0x3f);
+            obj->shot_count = (uint8_t)(random_next() & 0x3f);
             obj->l3_gun.open = 1;
         }
         return;
@@ -989,15 +989,15 @@ void l3_boss_update(Object *obj)
         return;
     }
     {
-        uint16_t sum = (uint16_t)(obj->v5e_b[0] + xenon2.level3_data.boss_fire_rate);
+        uint16_t sum = (uint16_t)(obj->shot_count + xenon2.level3_data.boss_fire_rate);
         int16_t x, y;
         uint16_t angle = 4, step;
         uint32_t gfx;
 
-        obj->v5e_b[0] = (uint8_t)sum;
+        obj->shot_count = (uint8_t)sum;
         if (sum <= 0xff)
             return;
-        obj->v5e_b[0] = (uint8_t)(random_next() & 0x3f);
+        obj->shot_count = (uint8_t)(random_next() & 0x3f);
         x = (int16_t)(obj->x + 0x20);
         y = (int16_t)(obj->y - xenon2.scroll_pos + 0x58);
         gfx = sh_r32(sh_r32(0x6ee26 + 4 * (uint32_t)xenon2.level3_data.boss_param));
@@ -1070,12 +1070,12 @@ void l3_boss2_update(Object *obj)
     obj->hit[3] = (int16_t)(cell + 0x17);
     cell = (uint16_t)obj->l3_boss2.cell;
     if (cell == 0) {
-        uint16_t sum = (uint16_t)(obj->v5e_b[0] + xenon2.level3_data.boss2_fire_rate);
+        uint16_t sum = (uint16_t)(obj->shot_count + xenon2.level3_data.boss2_fire_rate);
 
-        obj->v5e_b[0] = (uint8_t)sum;
+        obj->shot_count = (uint8_t)sum;
         if (sum <= 0xff)
             return;
-        obj->v5e_b[0] = (uint8_t)(random_next() & 0x3f);
+        obj->shot_count = (uint8_t)(random_next() & 0x3f);
     }
     map = obj->map;
     map[1] = xenon2.level3_data.boss2_update_data[2 * (cell & ~1u)];
@@ -1138,7 +1138,7 @@ void l3_spawn_walker(const uint8_t *rec)
     obj->fn_update = FN(l3_walker_update);
     obj->fn_draw = draw_bob_masked;
     obj->walker.dir = (obj->walker.dir & 0xffffu) | (uint32_t)(uint16_t)((int16_t)i) << 16;
-    SET_V5E(obj, 0);
+    obj->shot_count = obj->shot_rate = 0;
     obj->x = (int16_t)(rd16(rec + 8) - 8 + xenon2.level3_data.walker_spawn_dx[i]);
     obj->y = (int16_t)(rd16(rec + 10) - 8 - xenon2.scroll_pos + xenon2.level3_data.walker_spawn_dy[i]);
     set_anim(obj, xenon2.level3_data.walker_spawn_anims[i]);
@@ -1207,14 +1207,14 @@ void l3_walker_update(Object *obj)
         }
     }
     {
-        uint16_t sum = (uint16_t)(obj->v5e_b[0] + xenon2.level3_data.walker_fire_rate);
+        uint16_t sum = (uint16_t)(obj->shot_count + xenon2.level3_data.walker_fire_rate);
 
-        obj->v5e_b[0] = (uint8_t)sum;
+        obj->shot_count = (uint8_t)sum;
         if (sum > 0xff) {
             uint32_t gfx = sh_r32(sh_r32(0x6ee26 + 4 * (uint32_t)xenon2.level3_data.walker_param));
             uint16_t angle;
 
-            obj->v5e_b[0] = (uint8_t)(random_next() & 0x3f);
+            obj->shot_count = (uint8_t)(random_next() & 0x3f);
             angle = direction8((int16_t)(PLAYER_X - obj->x), (int16_t)(PLAYER_Y - obj->y));
             spawn_enemy_shot((uint16_t)obj->x, (uint16_t)obj->y, angle, xenon2.level3_data.walker_shot_steps, GPTR(gfx));
         }
@@ -1245,8 +1245,8 @@ void l3_worm_head(Object *obj)
     old_frame = (uint16_t)(((old + 0x10) >> 3) & 0x1c);
     if (old_frame != frame)
         set_anim(obj, xenon2.level3_data.worm_head_anims[frame / 4]);
-    sum = (uint16_t)(obj->v5e_b[0] + xenon2.level3_data.worm_head_fire_rate);
-    obj->v5e_b[0] = (uint8_t)sum;
+    sum = (uint16_t)(obj->shot_count + xenon2.level3_data.worm_head_fire_rate);
+    obj->shot_count = (uint8_t)sum;
     if (sum > 0xff) {
         int i;
 
