@@ -13,32 +13,32 @@ Object *level_collision(int16_t x0, int16_t y0, int16_t x1, int16_t y1, Object *
     return 0;   /* (level 3: $56FEA, no block) */
 }
 
-void level_event(uint16_t d0, const uint8_t *a1)
+void level_event(uint16_t event, const uint8_t *record)
 {
     if (level_number == 2)
-        l2_event(d0, a1);
+        l2_event(event, record);
     else if (level_number == 3)
-        l3_event(d0, a1);
+        l3_event(event, record);
     else if (level_number == 4)
-        l4_event(d0, a1);
+        l4_event(event, record);
     else if (level_number == 5)
-        l5_event(d0, a1);
+        l5_event(event, record);
     else if (level_number == 1)
-        level1_event(d0, a1);
+        level1_event(event, record);
 }
 
-void level_hook(uint16_t d0, const uint8_t *a1, uint16_t d2)
+void level_hook(uint16_t hook, const uint8_t *record, uint16_t slot_value)
 {
     if (level_number == 2)
-        l2_hook(d0, a1, d2);
+        l2_hook(hook, record, slot_value);
     else if (level_number == 3)
-        l3_hook(d0, a1, d2);
+        l3_hook(hook, record, slot_value);
     else if (level_number == 4)
-        l4_hook(d0, a1, d2);
+        l4_hook(hook, record, slot_value);
     else if (level_number == 5)
-        l5_hook(d0, a1, d2);
+        l5_hook(hook, record, slot_value);
     else if (level_number == 1)
-        level1_hook(d0, a1, d2);
+        level1_hook(hook, record, slot_value);
 }
 
 void level_scroll(void)

@@ -6,26 +6,26 @@
 
 
 #define FN(f) ((obj_fn)(f))
-void l5_unit_update(Object *a0);
+void l5_unit_update(Object *obj);
 
-void l5_beam_draw(Object *a0);
-void l5_beam_update(Object *a0);
-void l5_boss2_dead(Object *a0);
-void l5_boss2_draw(Object *a0);
-void l5_boss2_flash(Object *a0);
-void l5_boss_draw(Object *a0);
-void l5_bridge_flash(Object *a0);
-void l5_bridge_hit(Object *a0, Object *a1, uint16_t d0);
-void l5_bridge_update(Object *a0);
-void l5_cannon_update(Object *a0);
-void l5_gunner_update(Object *a0);
-void l5_gun_update(Object *a0);
-void l5_missile_update(Object *a0);
-void l5_pellet_update(Object *a0);
-void l5_unit_flash(Object *a0);
-void l5_unit_hit(Object *a0, Object *a1, uint16_t d0);
-void l5_wall_flash_a(Object *a0);
-void l5_wall_flash_b(Object *a0);
+void l5_beam_draw(Object *obj);
+void l5_beam_update(Object *obj);
+void l5_boss2_dead(Object *obj);
+void l5_boss2_draw(Object *obj);
+void l5_boss2_flash(Object *obj);
+void l5_boss_draw(Object *obj);
+void l5_bridge_flash(Object *obj);
+void l5_bridge_hit(Object *shot, Object *obj, uint16_t damage);
+void l5_bridge_update(Object *obj);
+void l5_cannon_update(Object *obj);
+void l5_gunner_update(Object *obj);
+void l5_gun_update(Object *obj);
+void l5_missile_update(Object *obj);
+void l5_pellet_update(Object *obj);
+void l5_unit_flash(Object *obj);
+void l5_unit_hit(Object *shot, Object *obj, uint16_t damage);
+void l5_wall_flash_a(Object *obj);
+void l5_wall_flash_b(Object *obj);
 
 /* the scratch fields of Object, by the kind that uses them */
 
@@ -102,88 +102,88 @@ static const void *shot_gfx(uint16_t index)
 }
 
 /* the object follows its target ($564C4) */
-static void follow_target_offset(Object *a0)
+static void follow_target_offset(Object *obj)
 {
-    Object *a1 = a0->target;
+    Object *target = obj->target;
 
-    a0->x = (int16_t)(a1->x + a0->part_b.dx);
-    a0->y = (int16_t)(a1->y + a0->part_b.dy);
+    obj->x = (int16_t)(target->x + obj->part_b.dx);
+    obj->y = (int16_t)(target->y + obj->part_b.dy);
 }
 
 /* the burst at the hot spot of the picture of o (the end of the hits: $55D1C... $561F4) */
 static void explode_at(const Object *o, const uint8_t *anim)
 {
     const uint8_t *g = (const uint8_t *)o->gfx;
-    int16_t d0 = (int16_t)(o->x - (int16_t)rd16(g));
-    int16_t d1 = (int16_t)(o->y - (int16_t)rd16(g + 2));
+    int16_t x = (int16_t)(o->x - (int16_t)rd16(g));
+    int16_t y = (int16_t)(o->y - (int16_t)rd16(g + 2));
 
-    d0 = (int16_t)(d0 + d0);
-    d1 = (int16_t)(d1 + d1);
-    d0 = (int16_t)(d0 + (int16_t)rd16(g + 4));
-    d1 = (int16_t)(d1 + (int16_t)rd16(g + 6));
-    spawn_effect((int16_t)(d0 >> 1), (int16_t)(d1 >> 1), anim, draw_bob_masked);
+    x = (int16_t)(x + x);
+    y = (int16_t)(y + y);
+    x = (int16_t)(x + (int16_t)rd16(g + 4));
+    y = (int16_t)(y + (int16_t)rd16(g + 6));
+    spawn_effect((int16_t)(x >> 1), (int16_t)(y >> 1), anim, draw_bob_masked);
 }
 
-static int dies(Object *a1, uint16_t d0)
+static int dies(Object *obj, uint16_t damage)
 {
-    uint16_t old = (uint16_t)a1->energy;
+    uint16_t old = (uint16_t)obj->energy;
 
-    a1->energy = (int16_t)(old - d0);
-    return old <= d0;
+    obj->energy = (int16_t)(old - damage);
+    return old <= damage;
 }
 
-void l5_spawn_gunners(const uint8_t *a1);
-void l5_spawn_cannon(const uint8_t *a1);
-void l5_spawn_boss1(uint16_t d2);
-void l5_spawn_boss2(const uint8_t *a1);
-void l5_spawn_gates(const uint8_t *a1);
-void l5_spawn_gun(const uint8_t *a1);
-void l5_spawn_bridge(const uint8_t *a1);
-void l5_spawn_group(const uint8_t *a1);
-Object *l5_spawn_unit(const uint8_t *a1);
+void l5_spawn_gunners(const uint8_t *record);
+void l5_spawn_cannon(const uint8_t *record);
+void l5_spawn_boss1(uint16_t slot_value);
+void l5_spawn_boss2(const uint8_t *record);
+void l5_spawn_gates(const uint8_t *record);
+void l5_spawn_gun(const uint8_t *record);
+void l5_spawn_bridge(const uint8_t *record);
+void l5_spawn_group(const uint8_t *record);
+Object *l5_spawn_unit(const uint8_t *record);
 
-/* level5 $054E10, $057568: level events by d0: 0 the wave of $326C, 1 to 8 formations */
-void l5_event(uint16_t d0, const uint8_t *a1)
+/* level5 $054E10, $057568: level events by event: 0 the wave of $326C, 1 to 8 formations */
+void l5_event(uint16_t event, const uint8_t *record)
 {
-    if (d0 == 0)
-        spawn_wave_326c(0, a1);   /* $E5A */
-    else if (d0 < 9)
-        spawn_formation(0, a1, level5_data.formations + 0x1a * (d0 - 1));
+    if (event == 0)
+        spawn_wave_326c(0, record);   /* $E5A */
+    else if (event < 9)
+        spawn_formation(0, record, level5_data.formations + 0x1a * (event - 1));
 }
 
-/* level5 $054E18, $0551AA: the hooks by d0 */
-void l5_hook(uint16_t d0, const uint8_t *a1, uint16_t d2)
+/* level5 $054E18, $0551AA: the hooks by hook */
+void l5_hook(uint16_t hook, const uint8_t *record, uint16_t slot_value)
 {
-    switch (d0) {
+    switch (hook) {
     case 0:
-        note_spawn_record(a1, d2);   /* $EA2 */
+        note_spawn_record(record, slot_value);   /* $EA2 */
         break;
     case 1:
-        l5_spawn_gates(a1);
+        l5_spawn_gates(record);
         break;
     case 2:
-        l5_spawn_gun(a1);
+        l5_spawn_gun(record);
         break;
     case 3:
-        l5_spawn_unit(a1);
+        l5_spawn_unit(record);
         break;
     case 4:
-        l5_spawn_bridge(a1);
+        l5_spawn_bridge(record);
         break;
     case 5:
-        l5_spawn_boss2(a1);
+        l5_spawn_boss2(record);
         break;
     case 6:
-        l5_spawn_boss1(d2);
+        l5_spawn_boss1(slot_value);
         break;
     case 7:
-        l5_spawn_gunners(a1);
+        l5_spawn_gunners(record);
         break;
     case 8:
-        l5_spawn_cannon(a1);
+        l5_spawn_cannon(record);
         break;
     case 9:
-        l5_spawn_group(a1);
+        l5_spawn_group(record);
         break;
     }
 }
@@ -222,209 +222,209 @@ void l5_init(void)
 /* ---- the gunners ($551E8): ten of them from a formation table ---- */
 
 /* level5 $0551E8: a formation of ten that fly the path of the table by the record's type */
-void l5_spawn_gunners(const uint8_t *a1)
+void l5_spawn_gunners(const uint8_t *record)
 {
-    const uint8_t *a2 = level5_data.gunner_paths[rd16(a1 + 6)];
-    int16_t d6 = 0;
-    int d7;
+    const uint8_t *path = level5_data.gunner_paths[rd16(record + 6)];
+    int16_t wait = 0;
+    int count;
 
-    for (d7 = 9; d7 >= 0; d7--) {
-        Object *a0 = insert_head(LIST_C);
+    for (count = 9; count >= 0; count--) {
+        Object *obj = insert_head(LIST_C);
 
-        a0->type = 0xdc;
-        a0->fn_update = FN(l5_gunner_update);
-        a0->fn_draw = (obj_fn)draw_bob_masked;
-        a0->fn_hit = (void *)hit_enemy;
-        a0->gfx = (void *)level5_data.gunner_picture;
-        a0->anim_delay = 0;
-        a0->x = (int16_t)rd16(a2 + 2);
-        a0->y = (int16_t)(rd16(a2 + 4) - scroll_pos);
-        a0->energy = (int16_t)level5_data.gunners_energy;
-        a0->big = 0;
-        a0->path.angle_hi = 0;
-        a0->path.angle_lo = 0;
-        a0->turn_hi = 0;
-        a0->turn_lo = 0;
-        a0->turn_step = 0;
-        a0->script = (uint8_t *)a2;
-        a0->cursor = a2 + 6;
-        a0->path.wait = d6;
-        d6 = (int16_t)(d6 - (int16_t)level5_data.gunners_param);
-        a0->hit[0] = 0x3e8;
-        a0->hit[2] = 0x3e8;
-        a0->score = 0xc8;
-        a0->kind = 0;
-        a0->steps = (int16_t)level5_data.gunners_steps;
-        a0->v5e_b[0] = (uint8_t)(d7 * 0x19);
+        obj->type = 0xdc;
+        obj->fn_update = FN(l5_gunner_update);
+        obj->fn_draw = (obj_fn)draw_bob_masked;
+        obj->fn_hit = (void *)hit_enemy;
+        obj->gfx = (void *)level5_data.gunner_picture;
+        obj->anim_delay = 0;
+        obj->x = (int16_t)rd16(path + 2);
+        obj->y = (int16_t)(rd16(path + 4) - scroll_pos);
+        obj->energy = (int16_t)level5_data.gunners_energy;
+        obj->big = 0;
+        obj->path.angle_hi = 0;
+        obj->path.angle_lo = 0;
+        obj->turn_hi = 0;
+        obj->turn_lo = 0;
+        obj->turn_step = 0;
+        obj->script = (uint8_t *)path;
+        obj->cursor = path + 6;
+        obj->path.wait = wait;
+        wait = (int16_t)(wait - (int16_t)level5_data.gunners_param);
+        obj->hit[0] = 0x3e8;
+        obj->hit[2] = 0x3e8;
+        obj->score = 0xc8;
+        obj->kind = 0;
+        obj->steps = (int16_t)level5_data.gunners_steps;
+        obj->v5e_b[0] = (uint8_t)(count * 0x19);
     }
 }
 
 /* level5 $0552DA: a gunner: it flies its script ($EF6), its picture follows the direction, and now and then it fires all round */
-void l5_gunner_update(Object *a0)
+void l5_gunner_update(Object *obj)
 {
-    uint16_t old, d0, d1;
+    uint16_t old, frame, old_frame;
 
-    a0->y = (int16_t)(a0->y + scroll_speed);
-    if (a0->y >= 0x190) {
-        kill_thunk(a0);
+    obj->y = (int16_t)(obj->y + scroll_speed);
+    if (obj->y >= 0x190) {
+        kill_thunk(obj);
         return;
     }
-    old = (uint16_t)a0->gunner.phase;
-    obj_script_run(a0);
-    d0 = (uint16_t)(((uint16_t)(a0->gunner.phase + 0x10) >> 3) & 0x1c);
-    d1 = (uint16_t)(((uint16_t)(old + 0x10) >> 3) & 0x1c);
-    if (d0 != d1)
-        set_anim(a0, level5_data.gunner_anims[d0 / 4]);
-    if (add_carry(&a0->v5e_b[0], level5_data.gunner_fire_rate)) {
-        int d7;
+    old = (uint16_t)obj->gunner.phase;
+    obj_script_run(obj);
+    frame = (uint16_t)(((uint16_t)(obj->gunner.phase + 0x10) >> 3) & 0x1c);
+    old_frame = (uint16_t)(((uint16_t)(old + 0x10) >> 3) & 0x1c);
+    if (frame != old_frame)
+        set_anim(obj, level5_data.gunner_anims[frame / 4]);
+    if (add_carry(&obj->v5e_b[0], level5_data.gunner_fire_rate)) {
+        int dir;
 
-        a0->v5e_b[0] = 0;
-        for (d7 = 7; d7 >= 0; d7--)
-            spawn_enemy_shot((uint16_t)a0->x, (uint16_t)a0->y, (uint16_t)d7, level5_data.gunner_shot_steps, shot_gfx(level5_data.gunner_shot_steps_2));
+        obj->v5e_b[0] = 0;
+        for (dir = 7; dir >= 0; dir--)
+            spawn_enemy_shot((uint16_t)obj->x, (uint16_t)obj->y, (uint16_t)dir, level5_data.gunner_shot_steps, shot_gfx(level5_data.gunner_shot_steps_2));
     }
-    bbox_from_frame(a0);
+    bbox_from_frame(obj);
 }
 
 /* ---- the cannons ($55498) ---- */
 
 /* level5 $055498: a cannon at the side that goes up and down; the record's $C tells the side */
-void l5_spawn_cannon(const uint8_t *a1)
+void l5_spawn_cannon(const uint8_t *record)
 {
-    uint16_t d0 = rd16(a1 + 0xc) ? 0x104 : 0x100;
-    Object *a0 = spawn_marker_enemy(d0, a1, (void (*)(void))FN(l5_cannon_update));
-    const uint8_t *a2 = level5_data.cannon_anim_a;
+    uint16_t type = rd16(record + 0xc) ? 0x104 : 0x100;
+    Object *obj = spawn_marker_enemy(type, record, (void (*)(void))FN(l5_cannon_update));
+    const uint8_t *anim = level5_data.cannon_anim_a;
 
-    a0->y = (int16_t)(a0->y - scroll_pos);
-    a0->fn_draw = (obj_fn)draw_bob_masked;
-    a0->fn_hit = (void *)hit_enemy;
-    a0->energy = (int16_t)level5_data.cannon_energy;
-    a0->big = 0xff;
-    a0->hit[0] = 0x3e8;
-    a0->hit[2] = 0x3e8;
-    a0->score = 0xfa;
-    if (a0->type != 0x100) {
-        a0->x = (int16_t)(a0->x + 0x10);
-        a2 = level5_data.cannon_anim_b;
+    obj->y = (int16_t)(obj->y - scroll_pos);
+    obj->fn_draw = (obj_fn)draw_bob_masked;
+    obj->fn_hit = (void *)hit_enemy;
+    obj->energy = (int16_t)level5_data.cannon_energy;
+    obj->big = 0xff;
+    obj->hit[0] = 0x3e8;
+    obj->hit[2] = 0x3e8;
+    obj->score = 0xfa;
+    if (obj->type != 0x100) {
+        obj->x = (int16_t)(obj->x + 0x10);
+        anim = level5_data.cannon_anim_b;
     }
-    set_anim(a0, a2);
-    a0->kind = 0;
-    a0->cannon.bob = 0x14;
+    set_anim(obj, anim);
+    obj->kind = 0;
+    obj->cannon.bob = 0x14;
 }
 
 /* the pellet: type $E4 of the cannon and the unit ($55682) */
-static void spawn_pellet(int16_t d0, int16_t d1, uint16_t d2)
+static void spawn_pellet(int16_t x, int16_t y, uint16_t dir)
 {
-    Object *a1 = alloc_in(LIST_C);
+    Object *pellet = alloc_in(LIST_C);
 
-    a1->type = 0xe4;
-    a1->fn_update = FN(l5_pellet_update);
-    a1->fn_draw = (obj_fn)draw_bob_masked;
-    a1->fn_hit = (void *)hit_enemy;
-    a1->x = d0;
-    a1->y = d1;
-    a1->pellet.dir = (int16_t)d2;
-    set_anim(a1, level5_data.pellet_anims_by_dir[d2]);
-    a1->energy = (int16_t)level5_data.pellet_energy;
-    a1->big = 0;
-    a1->score = 0x64;
-    a1->pellet.tick = (int16_t)(random_next() & 0x1f);
-    a1->kind = 0;
-    a1->hit[0] = 0x3e8;
-    a1->hit[2] = 0x3e8;
+    pellet->type = 0xe4;
+    pellet->fn_update = FN(l5_pellet_update);
+    pellet->fn_draw = (obj_fn)draw_bob_masked;
+    pellet->fn_hit = (void *)hit_enemy;
+    pellet->x = x;
+    pellet->y = y;
+    pellet->pellet.dir = (int16_t)dir;
+    set_anim(pellet, level5_data.pellet_anims_by_dir[dir]);
+    pellet->energy = (int16_t)level5_data.pellet_energy;
+    pellet->big = 0;
+    pellet->score = 0x64;
+    pellet->pellet.tick = (int16_t)(random_next() & 0x1f);
+    pellet->kind = 0;
+    pellet->hit[0] = 0x3e8;
+    pellet->hit[2] = 0x3e8;
 }
 
 
 /* level5 $0555A6: the cannon: it moves down by the scroll and slowly up and down by v2a, and fires pellets */
-void l5_cannon_update(Object *a0)
+void l5_cannon_update(Object *obj)
 {
-    int16_t d1;
+    int16_t world_y;
 
-    a0->y = (int16_t)(a0->y + scroll_speed);
-    if (a0->y >= 0x190) {
-        kill_thunk(a0);
+    obj->y = (int16_t)(obj->y + scroll_speed);
+    if (obj->y >= 0x190) {
+        kill_thunk(obj);
         return;
     }
-    anim_step(a0);
-    d1 = (int16_t)scroll_pos;
-    if (a0->cannon.bob >= 0) {
-        a0->y = (int16_t)(a0->y + 1);
-        d1 = (int16_t)(d1 + a0->y);
-        if (d1 >= 0xf20) {
-            a0->cannon.bob = -1;
-            set_anim(a0, a0->type == 0x100 ? level5_data.cannon_anim_100 : level5_data.cannon_anim_other);
+    anim_step(obj);
+    world_y = (int16_t)scroll_pos;
+    if (obj->cannon.bob >= 0) {
+        obj->y = (int16_t)(obj->y + 1);
+        world_y = (int16_t)(world_y + obj->y);
+        if (world_y >= 0xf20) {
+            obj->cannon.bob = -1;
+            set_anim(obj, obj->type == 0x100 ? level5_data.cannon_anim_100 : level5_data.cannon_anim_other);
         }
     } else {
-        a0->y = (int16_t)(a0->y - 1);
-        d1 = (int16_t)(d1 + a0->y);
-        if (d1 <= 0xe30) {
-            a0->cannon.bob = 1;
-            set_anim(a0, a0->type == 0x100 ? level5_data.cannon_anim_a : level5_data.cannon_anim_b);
+        obj->y = (int16_t)(obj->y - 1);
+        world_y = (int16_t)(world_y + obj->y);
+        if (world_y <= 0xe30) {
+            obj->cannon.bob = 1;
+            set_anim(obj, obj->type == 0x100 ? level5_data.cannon_anim_a : level5_data.cannon_anim_b);
         }
     }
-    if (add_carry(&a0->v5e_b[0], level5_data.cannon_fire_rate)) {
-        int16_t d0 = (int16_t)(a0->x + 0x20);
-        uint16_t d2 = 2;
+    if (add_carry(&obj->v5e_b[0], level5_data.cannon_fire_rate)) {
+        int16_t x = (int16_t)(obj->x + 0x20);
+        uint16_t dir = 2;
 
-        a0->v5e_b[0] = (uint8_t)(random_next() & 0x3f);
-        if (a0->type != 0x100) {
-            d2 = 6;
-            d0 = (int16_t)(d0 - 0x40);
+        obj->v5e_b[0] = (uint8_t)(random_next() & 0x3f);
+        if (obj->type != 0x100) {
+            dir = 6;
+            x = (int16_t)(x - 0x40);
         }
-        spawn_pellet(d0, a0->y, d2);
+        spawn_pellet(x, obj->y, dir);
     }
-    bbox_from_frame(a0);
+    bbox_from_frame(obj);
 }
 
 /* level5 $05581E: the pellet: it turns towards the player every eighth frame and goes; it ends in a burst */
-void l5_pellet_update(Object *a0)
+void l5_pellet_update(Object *obj)
 {
     int16_t dx, dy;
-    uint16_t d0;
+    uint16_t tick, turn;
 
-    anim_step(a0);
-    a0->pellet.tick = (int16_t)(a0->pellet.tick + 1);
-    d0 = (uint16_t)a0->pellet.tick;
-    if ((int16_t)d0 < (int16_t)level5_data.pellet_param) {
-        if ((d0 & 7) == 0) {
-            d0 = direction8((int16_t)(PLAYER->x - a0->x), (int16_t)(PLAYER->y - a0->y));
-            d0 = (uint16_t)(d0 - (uint16_t)a0->pellet.dir);
-            if (d0 != 0) {
-                if ((int16_t)d0 < 0)
-                    d0 = (uint16_t)(d0 + 8);
-                a0->pellet.dir = (int16_t)(a0->pellet.dir + 1);
-                if (d0 >= 4 && (d0 != 4 || !((uint16_t)a0->x & 1)))
-                    a0->pellet.dir = (int16_t)(a0->pellet.dir - 2);
-                a0->pellet.dir = (int16_t)(a0->pellet.dir & 7);
-                set_anim(a0, level5_data.pellet_anims_by_dir[a0->pellet.dir]);
+    anim_step(obj);
+    obj->pellet.tick = (int16_t)(obj->pellet.tick + 1);
+    tick = (uint16_t)obj->pellet.tick;
+    if ((int16_t)tick < (int16_t)level5_data.pellet_param) {
+        if ((tick & 7) == 0) {
+            turn = direction8((int16_t)(PLAYER->x - obj->x), (int16_t)(PLAYER->y - obj->y));
+            turn = (uint16_t)(turn - (uint16_t)obj->pellet.dir);
+            if (turn != 0) {
+                if ((int16_t)turn < 0)
+                    turn = (uint16_t)(turn + 8);
+                obj->pellet.dir = (int16_t)(obj->pellet.dir + 1);
+                if (turn >= 4 && (turn != 4 || !((uint16_t)obj->x & 1)))
+                    obj->pellet.dir = (int16_t)(obj->pellet.dir - 2);
+                obj->pellet.dir = (int16_t)(obj->pellet.dir & 7);
+                set_anim(obj, level5_data.pellet_anims_by_dir[obj->pellet.dir]);
             }
         }
-        dx = level5_data.pellet_dx_by_dir[a0->pellet.dir];
-        dy = (int16_t)(level5_data.pellet_dy_by_dir[a0->pellet.dir] + scroll_speed);
-        a0->x = (int16_t)(a0->x + dx);
-        a0->y = (int16_t)(a0->y + dy);
-        bbox_from_frame(a0);
+        dx = level5_data.pellet_dx_by_dir[obj->pellet.dir];
+        dy = (int16_t)(level5_data.pellet_dy_by_dir[obj->pellet.dir] + scroll_speed);
+        obj->x = (int16_t)(obj->x + dx);
+        obj->y = (int16_t)(obj->y + dy);
+        bbox_from_frame(obj);
         if (!point_in_player_box(dx, dy))
             return;
         if (shield_timer == 0) {
             PLAYER->fn_draw = (obj_fn)draw_bob_or_first;
-            player_damage(a0, 4);
-            kill_thunk(a0);
+            player_damage(obj, 4);
+            kill_thunk(obj);
             return;
         }
     }
-    explode_at(a0, anim_explosion);
-    kill_thunk(a0);
+    explode_at(obj, anim_explosion);
+    kill_thunk(obj);
 }
 
 /* ---- the big boss of 22 pieces ($55BFA) ---- */
 
 /* level5 $055BFA: the boss: its picture is cells in the level's data, and the 22 pieces hang on the first */
-void l5_spawn_boss1(uint16_t d2)
+void l5_spawn_boss1(uint16_t slot_value)
 {
     uint8_t *p;
     const struct Level5Boss1Piece *rec = level5_data.boss1_pieces;
-    Object *a6 = 0;
-    int d7, i;
+    Object *root = 0;
+    int count, i;
 
     if (B(0xd99))
         return;
@@ -432,7 +432,7 @@ void l5_spawn_boss1(uint16_t d2)
     scroll_y = 0x1a0;
     player_x_saved = 0xa0;
     player_y_saved = 0xb0;
-    latch_slots(d2);
+    latch_slots(slot_value);
     sh_w16(0x62d22, 0xffff);
     sh_w16(0x7491c, 0xffff);
     sh_w16(0xd72, 0xffff);
@@ -440,12 +440,12 @@ void l5_spawn_boss1(uint16_t d2)
     p = level_init_src;
     memset(p, 0, 240);
     p += 240;
-    for (d7 = 0; d7 < 18; d7++) {
+    for (count = 0; count < 18; count++) {
         memset(p, 0, 6);
         p += 6;
         for (i = 0; i < 15; i++) {
-            p[2 * i] = level5_data.boss1_cells[30 * d7 + 2 * i];
-            p[2 * i + 1] = level5_data.boss1_cells[30 * d7 + 2 * i + 1];
+            p[2 * i] = level5_data.boss1_cells[30 * count + 2 * i];
+            p[2 * i + 1] = level5_data.boss1_cells[30 * count + 2 * i + 1];
         }
         p += 30;
         memset(p, 0, 4);
@@ -455,263 +455,263 @@ void l5_spawn_boss1(uint16_t d2)
     map_row_offset = 0x410;
     scroll_pos = 0x1a0;
     scroll_max = 0x1a0;
-    for (d7 = 21; d7 >= 0; d7--, rec++) {
-        Object *a0 = insert_head(LIST_C);
+    for (count = 21; count >= 0; count--, rec++) {
+        Object *obj = insert_head(LIST_C);
 
-        if (a6 == 0)
-            a6 = a0;
-        a0->type = rec->type;
-        a0->fn_update = (obj_fn)rec->update;
-        a0->fn_draw = (obj_fn)rec->draw;
-        a0->fn_hit = (void *)rec->hit;
-        set_anim(a0, rec->anim);
-        a0->x = 0x30;
-        a0->y = (int16_t)0xfec0;
-        a0->part_b.dx = rec->dx;
-        a0->part_b.dy = rec->dy;
-        a0->boss.phase = 0;
-        a0->persists = 0xff;
-        a0->boss.step = 4;
-        a0->energy = rec->energy;
-        a0->big = rec->big;
-        a0->hit[0] = 0x3e8;
-        a0->hit[2] = 0x3e8;
-        a0->target = a6;
-        a0->kind = 0;
+        if (root == 0)
+            root = obj;
+        obj->type = rec->type;
+        obj->fn_update = (obj_fn)rec->update;
+        obj->fn_draw = (obj_fn)rec->draw;
+        obj->fn_hit = (void *)rec->hit;
+        set_anim(obj, rec->anim);
+        obj->x = 0x30;
+        obj->y = (int16_t)0xfec0;
+        obj->part_b.dx = rec->dx;
+        obj->part_b.dy = rec->dy;
+        obj->boss.phase = 0;
+        obj->persists = 0xff;
+        obj->boss.step = 4;
+        obj->energy = rec->energy;
+        obj->big = rec->big;
+        obj->hit[0] = 0x3e8;
+        obj->hit[2] = 0x3e8;
+        obj->target = root;
+        obj->kind = 0;
     }
     sh_w16(0xd7a, 0x12);
 }
 
 /* level5 $055D1C: the flash of the boss, one frame */
-void l5_boss_flash(Object *a0)
+void l5_boss_flash(Object *obj)
 {
-    a0->fn_draw = FN(l5_boss_draw);
-    draw_tile_grid_flash(level5_data.boss1_cells, 0xe, 0x11, a0->y, (uint16_t)((uint16_t)a0->x >> 1));
+    obj->fn_draw = FN(l5_boss_draw);
+    draw_tile_grid_flash(level5_data.boss1_cells, 0xe, 0x11, obj->y, (uint16_t)((uint16_t)obj->x >> 1));
 }
 
 /* level5 $055D3C: a gun of the boss: it hangs on the boss and its box is a bar */
-void l5_boss_gun(Object *a0)
+void l5_boss_gun(Object *obj)
 {
-    int16_t d0, d1;
+    int16_t x, y;
 
-    follow_target_offset(a0);
-    d0 = a0->x;
-    d1 = a0->y;
-    a0->hit[0] = d0;
-    a0->hit[1] = d1;
-    d0 = (int16_t)(d0 + a0->energy);
-    d1 = (int16_t)((d1 & 0xff00) | (uint8_t)((uint8_t)d1 + a0->big));
-    a0->hit[2] = d0;
-    a0->hit[3] = d1;
+    follow_target_offset(obj);
+    x = obj->x;
+    y = obj->y;
+    obj->hit[0] = x;
+    obj->hit[1] = y;
+    x = (int16_t)(x + obj->energy);
+    y = (int16_t)((y & 0xff00) | (uint8_t)((uint8_t)y + obj->big));
+    obj->hit[2] = x;
+    obj->hit[3] = y;
 }
 
 /* level5 $055D62: a piece of the boss that animates */
-void l5_boss_piece(Object *a0)
+void l5_boss_piece(Object *obj)
 {
-    anim_step(a0);
-    follow_target_offset(a0);
-    bbox_from_frame(a0);
+    anim_step(obj);
+    follow_target_offset(obj);
+    bbox_from_frame(obj);
 }
 
 /* level5 $055D6E: the last piece: it has a box when the others are gone */
-void l5_boss_last(Object *a0)
+void l5_boss_last(Object *obj)
 {
-    follow_target_offset(a0);
+    follow_target_offset(obj);
     if (sh_r16(0xd7a) == 0)
-        bbox_from_frame(a0);
+        bbox_from_frame(obj);
 }
 
 /* level5 $055D7E: the boss: the scroll stops at its place, it shifts left and right, and it shakes the screen and fires */
-void l5_boss_update(Object *a0)
+void l5_boss_update(Object *obj)
 {
     scroll_max = 0x1a0;
     if (scroll_pos == 0) {
         scroll_pos_update(scroll_step);
         stars_scroll(scroll_step);
     }
-    a0->y = (int16_t)(a0->y + scroll_speed);
-    if (a0->boss.phase == 0) {
-        if (!add_carry(&a0->v5e_b[0], level5_data.boss_fire_rate))
+    obj->y = (int16_t)(obj->y + scroll_speed);
+    if (obj->boss.phase == 0) {
+        if (!add_carry(&obj->v5e_b[0], level5_data.boss_fire_rate))
             return;
-        a0->v5e_b[0] = (uint8_t)(random_next() & 0x3f);
+        obj->v5e_b[0] = (uint8_t)(random_next() & 0x3f);
         sfx_cmd2 = -1;
-        a0->boss.phase = (frame_tick & 1) ? 2 : -2;
+        obj->boss.phase = (frame_tick & 1) ? 2 : -2;
         return;
     }
-    if (a0->boss.phase > 0) {
-        a0->boss.phase = (int16_t)(a0->boss.phase + 2);
-        if (a0->boss.phase == 0x14) {
+    if (obj->boss.phase > 0) {
+        obj->boss.phase = (int16_t)(obj->boss.phase + 2);
+        if (obj->boss.phase == 0x14) {
             sfx_cmd2 = 0x13;
             return;
         }
-        if (a0->boss.phase == 0x28)
+        if (obj->boss.phase == 0x28)
             goto fire;
-        if (a0->boss.phase == 0x3c)
-            a0->boss.phase = 0;
+        if (obj->boss.phase == 0x3c)
+            obj->boss.phase = 0;
         return;
     }
-    a0->boss.phase = (int16_t)(a0->boss.phase - 2);
-    if (a0->boss.phase == (int16_t)0xffec) {
+    obj->boss.phase = (int16_t)(obj->boss.phase - 2);
+    if (obj->boss.phase == (int16_t)0xffec) {
         sfx_cmd2 = 0x13;
         return;
     }
-    if (a0->boss.phase == (int16_t)0xffd8)
+    if (obj->boss.phase == (int16_t)0xffd8)
         goto fire;
-    if (a0->boss.phase == (int16_t)0xffc4)
-        a0->boss.phase = 0;
+    if (obj->boss.phase == (int16_t)0xffc4)
+        obj->boss.phase = 0;
     return;
 fire:
     {
-        int16_t d0 = (int16_t)(a0->x + 0x77), d1 = 0x65;
-        Object *a1;
+        int16_t x = (int16_t)(obj->x + 0x77), y = 0x65;
+        Object *missile;
 
         sfx_stop_all();
-        if (a0->boss.phase < 0)
-            d1 = 0xf5;
-        d1 = (int16_t)(d1 + a0->y);
-        a1 = insert_head(LIST_C);
-        a1->type = 0xec;
-        a1->fn_update = FN(l5_missile_update);
-        a1->fn_draw = (obj_fn)draw_bob_masked;
-        a1->fn_hit = (void *)hit_enemy;
-        a1->x = d0;
-        a1->y = d1;
-        a1->missile.dir = 0;
-        set_anim(a1, level5_data.boss_update_data);
-        a1->energy = (int16_t)level5_data.boss_energy;
-        a1->big = 0;
-        a1->score = 0x96;
-        a1->boss.phase = 1;
-        a1->kind = 0;
-        a1->hit[0] = 0x3e8;
-        a1->hit[2] = 0x3e8;
+        if (obj->boss.phase < 0)
+            y = 0xf5;
+        y = (int16_t)(y + obj->y);
+        missile = insert_head(LIST_C);
+        missile->type = 0xec;
+        missile->fn_update = FN(l5_missile_update);
+        missile->fn_draw = (obj_fn)draw_bob_masked;
+        missile->fn_hit = (void *)hit_enemy;
+        missile->x = x;
+        missile->y = y;
+        missile->missile.dir = 0;
+        set_anim(missile, level5_data.boss_update_data);
+        missile->energy = (int16_t)level5_data.boss_energy;
+        missile->big = 0;
+        missile->score = 0x96;
+        missile->boss.phase = 1;
+        missile->kind = 0;
+        missile->hit[0] = 0x3e8;
+        missile->hit[2] = 0x3e8;
     }
 }
 
 
 /* level5 $055EDA: the arms of the boss (v28 their stroke): the pictures are drawn at its side */
-void l5_boss_draw(Object *a0)
+void l5_boss_draw(Object *obj)
 {
-    int16_t d1 = 0x55;
-    int16_t d2 = a0->l5_arm.stroke;
-    int16_t d0;
+    int16_t y = 0x55;
+    int16_t stroke = obj->l5_arm.stroke;
+    int16_t x;
 
-    if (d2 == 0)
+    if (stroke == 0)
         return;
-    if (d2 < 0) {
-        d1 = 0xe5;
-        d2 = (int16_t)-d2;
+    if (stroke < 0) {
+        y = 0xe5;
+        stroke = (int16_t)-stroke;
     }
-    d2 = (int16_t)(d2 & 0xfffc);
-    d0 = (int16_t)(a0->x + 0x69);
-    d1 = (int16_t)(d1 + a0->y);
-    draw_bob_masked_at((uint16_t)d0, (uint16_t)d1, level5_data.boss_draw_table[(uint16_t)d2 / 4]);
-    if (d2 < 0x14 || d2 >= 0x28)
+    stroke = (int16_t)(stroke & 0xfffc);
+    x = (int16_t)(obj->x + 0x69);
+    y = (int16_t)(y + obj->y);
+    draw_bob_masked_at((uint16_t)x, (uint16_t)y, level5_data.boss_draw_table[(uint16_t)stroke / 4]);
+    if (stroke < 0x14 || stroke >= 0x28)
         return;
-    d0 = (int16_t)(d0 + 0xe);
-    d1 = (int16_t)(d1 + 0x10);
-    draw_bob_masked_at((uint16_t)d0, (uint16_t)d1, level5_data.boss_arm2_pictures[(uint16_t)d2 / 4 - 5]);
+    x = (int16_t)(x + 0xe);
+    y = (int16_t)(y + 0x10);
+    draw_bob_masked_at((uint16_t)x, (uint16_t)y, level5_data.boss_arm2_pictures[(uint16_t)stroke / 4 - 5]);
 }
 
 /* level5 $05605E: the missile of the boss: it turns to the player by eighths, and goes; it hits the player or the screen's edge */
-void l5_missile_update(Object *a0)
+void l5_missile_update(Object *obj)
 {
-    int16_t d0, d1;
+    int16_t dx, dy;
     uint16_t dir;
 
-    anim_step(a0);
-    a0->missile.tick = (int16_t)(a0->missile.tick + 1);
-    if ((a0->missile.tick & 7) == 0) {
-        dir = direction8((int16_t)(PLAYER->x - a0->x), (int16_t)(PLAYER->y - a0->y));
-        dir = (uint16_t)(dir - (uint16_t)a0->missile.dir);
+    anim_step(obj);
+    obj->missile.tick = (int16_t)(obj->missile.tick + 1);
+    if ((obj->missile.tick & 7) == 0) {
+        dir = direction8((int16_t)(PLAYER->x - obj->x), (int16_t)(PLAYER->y - obj->y));
+        dir = (uint16_t)(dir - (uint16_t)obj->missile.dir);
         if (dir != 0) {
             if ((int16_t)dir < 0)
                 dir = (uint16_t)(dir + 8);
-            a0->missile.dir = (int16_t)(a0->missile.dir + 1);
+            obj->missile.dir = (int16_t)(obj->missile.dir + 1);
             if (dir >= 4)
-                a0->missile.dir = (int16_t)(a0->missile.dir - 2);
-            a0->missile.dir = (int16_t)(a0->missile.dir & 7);
-            set_anim(a0, level5_data.missile_anims_by_dir[a0->missile.dir]);
+                obj->missile.dir = (int16_t)(obj->missile.dir - 2);
+            obj->missile.dir = (int16_t)(obj->missile.dir & 7);
+            set_anim(obj, level5_data.missile_anims_by_dir[obj->missile.dir]);
         }
     }
-    d0 = level5_data.pellet_dx_by_dir[a0->missile.dir];
-    d1 = level5_data.pellet_dy_by_dir[a0->missile.dir];
+    dx = level5_data.pellet_dx_by_dir[obj->missile.dir];
+    dy = level5_data.pellet_dy_by_dir[obj->missile.dir];
     if (sh_r16(0xd7a) == 0) {
-        d0 = (int16_t)(d0 + d0);
-        d1 = (int16_t)(d1 + d1);
+        dx = (int16_t)(dx + dx);
+        dy = (int16_t)(dy + dy);
     }
-    a0->x = (int16_t)(a0->x + d0);
-    a0->y = (int16_t)(a0->y + d1);
-    bbox_from_frame(a0);
-    if (!player_hits(a0))
+    obj->x = (int16_t)(obj->x + dx);
+    obj->y = (int16_t)(obj->y + dy);
+    bbox_from_frame(obj);
+    if (!player_hits(obj))
         return;
     if (shield_timer == 0) {
         PLAYER->fn_draw = (obj_fn)draw_bob_or_first;
-        player_damage(a0, 4);
+        player_damage(obj, 4);
     }
-    kill_thunk(a0);
+    kill_thunk(obj);
 }
 
 /* level5 $05612A: a gun on the boss: its picture at $6158C at the frame 1 fires a beam; now and then it begins to fire */
-void l5_turret_update(Object *a0)
+void l5_turret_update(Object *obj)
 {
-    anim_step(a0);
-    follow_target_offset(a0);
-    if (a0->gfx == GPTR(0x6158c) && a0->anim_delay == 1) {
-        Object *a1 = alloc_in(LIST_B);
+    anim_step(obj);
+    follow_target_offset(obj);
+    if (obj->gfx == GPTR(0x6158c) && obj->anim_delay == 1) {
+        Object *beam = alloc_in(LIST_B);
 
-        a1->type = 0x110;
-        a1->fn_update = FN(l5_beam_update);
-        a1->fn_draw = FN(l5_beam_draw);
-        a1->x = (int16_t)(a0->x - 2);
-        a1->y = (int16_t)(a0->y - 0x18);
-        a1->beam.length = 0;
-        a1->beam.dy = (int16_t)-(int16_t)level5_data.turret_param;
+        beam->type = 0x110;
+        beam->fn_update = FN(l5_beam_update);
+        beam->fn_draw = FN(l5_beam_draw);
+        beam->x = (int16_t)(obj->x - 2);
+        beam->y = (int16_t)(obj->y - 0x18);
+        beam->beam.length = 0;
+        beam->beam.dy = (int16_t)-(int16_t)level5_data.turret_param;
     }
-    if (a0->anim_delay == 0 && a0->y >= 0 && add_carry(&a0->v5e_b[0], level5_data.turret_fire_rate)) {
-        a0->v5e_b[0] = (uint8_t)(random_next() & 0x3f);
-        a0->anim_delay = 1;
+    if (obj->anim_delay == 0 && obj->y >= 0 && add_carry(&obj->v5e_b[0], level5_data.turret_fire_rate)) {
+        obj->v5e_b[0] = (uint8_t)(random_next() & 0x3f);
+        obj->anim_delay = 1;
     }
-    bbox_from_frame(a0);
+    bbox_from_frame(obj);
 }
 
 /* level5 $0561D2: the hit of a piece of the boss: the burst and the score when its energy is gone */
-void l5_piece_hit(Object *a0, Object *a1, uint16_t d0)
+void l5_piece_hit(Object *shot, Object *obj, uint16_t damage)
 {
-    (void)a0;
-    a1->fn_draw = (obj_fn)draw_bob_or_first;
-    if (!dies(a1, d0))
+    (void)shot;
+    obj->fn_draw = (obj_fn)draw_bob_or_first;
+    if (!dies(obj, damage))
         return;
     sh_w16(0xd7a, (uint16_t)(sh_r16(0xd7a) - 1));
     player_score += 0xc8;
-    explode_at(a1, a1->big ? big_explosion_anim : anim_explosion);
-    if (a1->type != 0x114) {
-        kill_thunk(a1);
+    explode_at(obj, obj->big ? big_explosion_anim : anim_explosion);
+    if (obj->type != 0x114) {
+        kill_thunk(obj);
     } else {
-        a1->fn_update = FN(l5_boss2_dead);
-        a1->hit[0] = 0x3e8;
-        a1->hit[2] = 0x3e8;
-        a1->fn_hit = (void *)obj_nop_thunk;
+        obj->fn_update = FN(l5_boss2_dead);
+        obj->hit[0] = 0x3e8;
+        obj->hit[2] = 0x3e8;
+        obj->fn_hit = (void *)obj_nop_thunk;
     }
 }
 
 /* level5 $0562A6: the hit of the heart of the boss: its picture follows its energy; at the end the level's objects go */
-void l5_heart_hit(Object *a0, Object *a1, uint16_t d0)
+void l5_heart_hit(Object *shot, Object *heart, uint16_t damage)
 {
-    Object *a2 = a1->target;
+    Object *boss = heart->target;
 
-    a1->fn_draw = (obj_fn)draw_bob_or_first;
-    a2->fn_draw = FN(l5_boss_flash);
-    if (!dies(a2, d0)) {
-        uint32_t q = ((uint32_t)(uint16_t)a2->energy * 0xb) / level5_data.boss1_pieces[0].energy;
+    heart->fn_draw = (obj_fn)draw_bob_or_first;
+    boss->fn_draw = FN(l5_boss_flash);
+    if (!dies(boss, damage)) {
+        uint32_t index = ((uint32_t)(uint16_t)boss->energy * 0xb) / level5_data.boss1_pieces[0].energy;
 
-        a1->gfx = (void *)level5_data.heart_pictures[q];
+        heart->gfx = (void *)level5_data.heart_pictures[index];
         return;
     }
     memset(level_init_src + 0x1e0, 0, 720);
     free_object_chain(LIST_C->prev);
     spawn_bonuses(9);
-    debris_burst(a0, 0x27, 0, 0, 0x140, 0xc0, big_explosion_anim);
+    debris_burst(shot, 0x27, 0, 0, 0x140, 0xc0, big_explosion_anim);
     boss_dead = 0xff;
     memset(level_init_src, 0, 1560);
 }
@@ -719,68 +719,68 @@ void l5_heart_hit(Object *a0, Object *a1, uint16_t d0)
 /* ---- the second boss of ten pieces ($5642A) ---- */
 
 /* level5 $05642A: the second boss */
-void l5_spawn_boss2(const uint8_t *a1)
+void l5_spawn_boss2(const uint8_t *record)
 {
     const struct Level5Boss2Piece *rec = level5_data.boss2_pieces;
-    Object *a6 = 0;
-    int16_t d1;
-    int d7;
+    Object *root = 0;
+    int16_t y;
+    int count;
 
     if (B(0xd9a))
         return;
     sh_w8(0xd9a, 0xff);
-    d1 = (int16_t)(rd16(a1 + 0xa) - 8 - scroll_pos);
-    for (d7 = 9; d7 >= 0; d7--, rec++) {
-        Object *a0 = insert_head(LIST_C);
+    y = (int16_t)(rd16(record + 0xa) - 8 - scroll_pos);
+    for (count = 9; count >= 0; count--, rec++) {
+        Object *obj = insert_head(LIST_C);
 
-        if (a6 == 0)
-            a6 = a0;
-        a0->type = rec->type;
-        a0->fn_update = (obj_fn)rec->update;
-        a0->fn_draw = (obj_fn)rec->draw;
-        a0->fn_hit = (void *)rec->hit;
-        a0->gfx = (void *)rec->gfx;
-        a0->anim_delay = 0;
-        a0->persists = 0xff;
-        a0->x = 0x70;
-        a0->y = d1;
-        a0->part_b.dx = rec->dx;
-        a0->part_b.dy = rec->dy;
-        a0->mover.tick = 0;
-        a0->mover.step = 4;
-        a0->energy = (int16_t)rec->energy;
-        a0->hit[0] = 0x3e8;
-        a0->hit[2] = 0x3e8;
-        a0->target = a6;
-        a0->kind = 0;
+        if (root == 0)
+            root = obj;
+        obj->type = rec->type;
+        obj->fn_update = (obj_fn)rec->update;
+        obj->fn_draw = (obj_fn)rec->draw;
+        obj->fn_hit = (void *)rec->hit;
+        obj->gfx = (void *)rec->gfx;
+        obj->anim_delay = 0;
+        obj->persists = 0xff;
+        obj->x = 0x70;
+        obj->y = y;
+        obj->part_b.dx = rec->dx;
+        obj->part_b.dy = rec->dy;
+        obj->mover.tick = 0;
+        obj->mover.step = 4;
+        obj->energy = (int16_t)rec->energy;
+        obj->hit[0] = 0x3e8;
+        obj->hit[2] = 0x3e8;
+        obj->target = root;
+        obj->kind = 0;
     }
 }
 
 /* level5 $0564E2: the big wheel: its picture turns by its energy */
-void l5_wheel_update(Object *a0)
+void l5_wheel_update(Object *obj)
 {
-    int16_t d0;
+    int16_t angle;
 
-    follow_target_offset(a0);
-    d0 = (int16_t)(0x100 - a0->energy + a0->wheel.angle);
-    if (d0 >= 0x600)
-        d0 = (int16_t)(d0 - 0x600);
-    a0->wheel.angle = d0;
-    a0->gfx = (void *)level5_data.wheel_pictures[((uint16_t)d0 >> 8) & 0xff];
-    bbox_from_frame(a0);
+    follow_target_offset(obj);
+    angle = (int16_t)(0x100 - obj->energy + obj->wheel.angle);
+    if (angle >= 0x600)
+        angle = (int16_t)(angle - 0x600);
+    obj->wheel.angle = angle;
+    obj->gfx = (void *)level5_data.wheel_pictures[((uint16_t)angle >> 8) & 0xff];
+    bbox_from_frame(obj);
 }
 
 /* level5 $056526: the hit of the wheel: at the end the boss goes with its burst and bonuses */
-void l5_wheel_hit(Object *a0, Object *a1, uint16_t d0)
+void l5_wheel_hit(Object *shot, Object *wheel, uint16_t damage)
 {
-    Object *a2 = a1->target;
+    Object *boss = wheel->target;
     int i;
 
-    a2->fn_draw = FN(l5_boss2_flash);
-    if (!dies(a1, d0))
+    boss->fn_draw = FN(l5_boss2_flash);
+    if (!dies(wheel, damage))
         return;
     free_object_chain(LIST_C->prev);
-    debris_burst(a0, 0x13, 0x70, (uint16_t)(0x8d0 - scroll_pos), 0x60, 0xa0, big_explosion_anim);
+    debris_burst(shot, 0x13, 0x70, (uint16_t)(0x8d0 - scroll_pos), 0x60, 0xa0, big_explosion_anim);
     spawn_bonuses(4);
     for (i = 0; i < 10; i++)
         memset(level_init_src + 0x1614 + 0x28 * i, 0, 16);
@@ -788,232 +788,232 @@ void l5_wheel_hit(Object *a0, Object *a1, uint16_t d0)
 }
 
 /* level5 $056594: a small turning part: its picture by the scroll */
-void l5_spinner_update(Object *a0)
+void l5_spinner_update(Object *obj)
 {
-    const uint8_t *const *t = a0->type == 0x118 ? level5_data.spinner_source_118 : level5_data.spinner_source_other;
+    const uint8_t *const *table = obj->type == 0x118 ? level5_data.spinner_source_118 : level5_data.spinner_source_other;
 
-    follow_target_offset(a0);
-    a0->gfx = (void *)t[(uint16_t)(a0->y + scroll_pos) & 3];
+    follow_target_offset(obj);
+    obj->gfx = (void *)table[(uint16_t)(obj->y + scroll_pos) & 3];
 }
 
 /* level5 $0565E2: a turret of the boss: it turns to the player and fires */
-void l5_boss2_turret(Object *a0)
+void l5_boss2_turret(Object *obj)
 {
-    uint16_t d0;
+    uint16_t dir;
 
-    follow_target_offset(a0);
-    d0 = direction8((int16_t)(PLAYER->x - a0->x), (int16_t)(PLAYER->y - a0->y));
-    a0->l5_turret.dir = (int16_t)d0;
-    a0->gfx = (void *)level5_data.boss2_turret_pictures[d0];
-    if (add_carry(&a0->v5e_b[0], level5_data.boss2_turret_fire_rate)) {
-        a0->v5e_b[0] = (uint8_t)(random_next() & 0x3f);
-        spawn_enemy_shot((uint16_t)(a0->x + 8), (uint16_t)(a0->y + 8), (uint16_t)a0->l5_turret.dir, level5_data.boss2_turret_shot_steps, shot_gfx(level5_data.boss2_turret_shot_steps_2));
+    follow_target_offset(obj);
+    dir = direction8((int16_t)(PLAYER->x - obj->x), (int16_t)(PLAYER->y - obj->y));
+    obj->l5_turret.dir = (int16_t)dir;
+    obj->gfx = (void *)level5_data.boss2_turret_pictures[dir];
+    if (add_carry(&obj->v5e_b[0], level5_data.boss2_turret_fire_rate)) {
+        obj->v5e_b[0] = (uint8_t)(random_next() & 0x3f);
+        spawn_enemy_shot((uint16_t)(obj->x + 8), (uint16_t)(obj->y + 8), (uint16_t)obj->l5_turret.dir, level5_data.boss2_turret_shot_steps, shot_gfx(level5_data.boss2_turret_shot_steps_2));
     }
-    bbox_from_frame(a0);
+    bbox_from_frame(obj);
 }
 
 /* level5 $056678: the hit of the turret: it stops with a burst */
-void l5_boss2_turret_hit(Object *a0, Object *a1, uint16_t d0)
+void l5_boss2_turret_hit(Object *shot, Object *obj, uint16_t damage)
 {
-    (void)a0;
-    a1->fn_draw = (obj_fn)draw_bob_or_first;
-    if (!dies(a1, d0))
+    (void)shot;
+    obj->fn_draw = (obj_fn)draw_bob_or_first;
+    if (!dies(obj, damage))
         return;
-    a1->fn_update = FN(l5_boss2_dead);
-    a1->hit[0] = 0x3e8;
-    a1->hit[2] = 0x3e8;
-    a1->fn_hit = (void *)obj_nop_thunk;
+    obj->fn_update = FN(l5_boss2_dead);
+    obj->hit[0] = 0x3e8;
+    obj->hit[2] = 0x3e8;
+    obj->fn_hit = (void *)obj_nop_thunk;
     player_score += 0xc8;
-    spawn_effect((int16_t)(a1->x + 8), (int16_t)(a1->y + 8), anim_explosion, draw_bob_masked);
+    spawn_effect((int16_t)(obj->x + 8), (int16_t)(obj->y + 8), anim_explosion, draw_bob_masked);
 }
 
 /* level5 $0566CE: the part that is dead */
-void l5_boss2_dead(Object *a0)
+void l5_boss2_dead(Object *obj)
 {
-    follow_target_offset(a0);
-    a0->gfx = (void *)level5_data.boss2_dead_picture;
-    a0->hit[0] = 0x3e8;
-    a0->hit[2] = 0x3e8;
+    follow_target_offset(obj);
+    obj->gfx = (void *)level5_data.boss2_dead_picture;
+    obj->hit[0] = 0x3e8;
+    obj->hit[2] = 0x3e8;
 }
 
 /* level5 $0566E8: the mover of the second boss: it goes up and down by random, fires its beam and its pellets */
-void l5_boss2_mover(Object *a0)
+void l5_boss2_mover(Object *obj)
 {
-    int16_t d0;
+    int16_t range;
 
     if ((int16_t)scroll_max < 0x920)
         scroll_max = 0x920;
-    a0->y = (int16_t)(a0->y + scroll_speed);
-    if (a0->mover.step != 0) {
+    obj->y = (int16_t)(obj->y + scroll_speed);
+    if (obj->mover.step != 0) {
         sfx_cmd = 0x16;
-        if (a0->mover.step > 0) {
-            a0->y = (int16_t)(a0->y + 1);
-            a0->mover.step = (int16_t)(a0->mover.step - 1);
+        if (obj->mover.step > 0) {
+            obj->y = (int16_t)(obj->y + 1);
+            obj->mover.step = (int16_t)(obj->mover.step - 1);
         } else {
-            a0->y = (int16_t)(a0->y - 1);
-            a0->mover.step = (int16_t)(a0->mover.step + 1);
+            obj->y = (int16_t)(obj->y - 1);
+            obj->mover.step = (int16_t)(obj->mover.step + 1);
         }
     } else {
         uint32_t r = random_next();
 
         if ((uint8_t)r < 0xf) {
             if (r & 1) {
-                d0 = (int16_t)(0x910 - a0->y - scroll_pos);
-                if (d0 != 0)
-                    a0->mover.step = (int16_t)(random_below((uint16_t)d0) + 1);
+                range = (int16_t)(0x910 - obj->y - scroll_pos);
+                if (range != 0)
+                    obj->mover.step = (int16_t)(random_below((uint16_t)range) + 1);
             } else {
-                d0 = (int16_t)(a0->y + scroll_pos - 0x8d0);
-                if (d0 != 0)
-                    a0->mover.step = (int16_t)-(int16_t)(random_below((uint16_t)d0) + 1);
+                range = (int16_t)(obj->y + scroll_pos - 0x8d0);
+                if (range != 0)
+                    obj->mover.step = (int16_t)-(int16_t)(random_below((uint16_t)range) + 1);
             }
         }
     }
-    if (a0->mover.tick == 0) {
-        if (!add_carry(&a0->v5e_b[0], level5_data.boss2_mover_fire_rate))
+    if (obj->mover.tick == 0) {
+        if (!add_carry(&obj->v5e_b[0], level5_data.boss2_mover_fire_rate))
             goto pellets;
-        a0->v5e_b[0] = (uint8_t)(random_next() & 0x3f);
+        obj->v5e_b[0] = (uint8_t)(random_next() & 0x3f);
     }
-    a0->mover.tick = (int16_t)(a0->mover.tick + 1);
-    if (a0->mover.tick == 9) {
-        a0->mover.tick = 0;
-    } else if (a0->mover.tick == 3) {
-        Object *a1;
+    obj->mover.tick = (int16_t)(obj->mover.tick + 1);
+    if (obj->mover.tick == 9) {
+        obj->mover.tick = 0;
+    } else if (obj->mover.tick == 3) {
+        Object *beam;
 
         sfx_cmd = 0x84;
-        a1 = alloc_in(LIST_B);
-        a1->type = 0x110;
-        a1->fn_update = FN(l5_beam_update);
-        a1->fn_draw = FN(l5_beam_draw);
-        a1->x = 0x96;
-        a1->y = (int16_t)(a0->y + 0x30);
-        a1->mover.tick = 0;
-        a1->mover.step = (int16_t)level5_data.turret_param;
+        beam = alloc_in(LIST_B);
+        beam->type = 0x110;
+        beam->fn_update = FN(l5_beam_update);
+        beam->fn_draw = FN(l5_beam_draw);
+        beam->x = 0x96;
+        beam->y = (int16_t)(obj->y + 0x30);
+        beam->mover.tick = 0;
+        beam->mover.step = (int16_t)level5_data.turret_param;
     }
 pellets:
-    if (add_carry(&a0->v5e_b[1], level5_data.boss2_mover_fire_rate_2)) {
-        a0->v5e_b[1] = (uint8_t)(random_next() & 0x3f);
-        spawn_pellet(0x6e, (int16_t)(a0->y + 0x30), 6);
-        spawn_pellet(0xd2, (int16_t)(a0->y + 0x30), 2);
+    if (add_carry(&obj->v5e_b[1], level5_data.boss2_mover_fire_rate_2)) {
+        obj->v5e_b[1] = (uint8_t)(random_next() & 0x3f);
+        spawn_pellet(0x6e, (int16_t)(obj->y + 0x30), 6);
+        spawn_pellet(0xd2, (int16_t)(obj->y + 0x30), 2);
     }
 }
 
 /* level5 $056840: the flash of the mover, one frame */
-void l5_boss2_flash(Object *a0)
+void l5_boss2_flash(Object *obj)
 {
-    a0->fn_draw = FN(l5_boss2_draw);
-    draw_tile_grid_flash(level5_data.boss2_flash_grid, 5, 5, a0->y, 0x38);
+    obj->fn_draw = FN(l5_boss2_draw);
+    draw_tile_grid_flash(level5_data.boss2_flash_grid, 5, 5, obj->y, 0x38);
 }
 
 
 /* level5 $05685A: the cells of the mover: three of them change with v28 */
-void l5_boss2_draw(Object *a0)
+void l5_boss2_draw(Object *obj)
 {
-    uint32_t d0 = (uint32_t)(uint16_t)a0->mover.cell * 0xc;
+    uint32_t offset = (uint32_t)(uint16_t)obj->mover.cell * 0xc;
 
-    copy4(&level5_data.boss2_draw_data[0], level5_data.boss2_draw_rows + d0);
-    copy4(&level5_data.boss2_draw_data[12], level5_data.boss2_draw_rows + 4 + d0);
-    copy4(&level5_data.boss2_draw_data[24], level5_data.boss2_draw_rows + 8 + d0);
-    draw_tile_grid(level5_data.boss2_flash_grid, 5, 5, a0->y, 0x38);
+    copy4(&level5_data.boss2_draw_data[0], level5_data.boss2_draw_rows + offset);
+    copy4(&level5_data.boss2_draw_data[12], level5_data.boss2_draw_rows + 4 + offset);
+    copy4(&level5_data.boss2_draw_data[24], level5_data.boss2_draw_rows + 8 + offset);
+    draw_tile_grid(level5_data.boss2_flash_grid, 5, 5, obj->y, 0x38);
 }
 
 /* level5 $056940: the beam: it grows to its length, then it goes; it hurts the player */
-void l5_beam_update(Object *a0)
+void l5_beam_update(Object *obj)
 {
-    int16_t d0;
+    int16_t y;
 
-    a0->hit[0] = a0->x;
-    a0->hit[2] = (int16_t)(a0->x + 0xb);
-    if (a0->beam.length != 0x30) {
-        a0->beam.length = (int16_t)(a0->beam.length + (int16_t)level5_data.turret_param);
-        if (a0->beam.length > 0x30)
-            a0->beam.length = 0x30;
-        a0->y = (int16_t)(a0->y + scroll_speed);
-        if (a0->beam.dy < 0)
-            a0->y = (int16_t)(a0->y - (int16_t)level5_data.turret_param);
+    obj->hit[0] = obj->x;
+    obj->hit[2] = (int16_t)(obj->x + 0xb);
+    if (obj->beam.length != 0x30) {
+        obj->beam.length = (int16_t)(obj->beam.length + (int16_t)level5_data.turret_param);
+        if (obj->beam.length > 0x30)
+            obj->beam.length = 0x30;
+        obj->y = (int16_t)(obj->y + scroll_speed);
+        if (obj->beam.dy < 0)
+            obj->y = (int16_t)(obj->y - (int16_t)level5_data.turret_param);
     } else {
-        a0->y = (int16_t)(a0->y + a0->beam.dy);
-        d0 = a0->y;
-        if (a0->beam.dy >= 0) {
-            if (d0 >= 0xc0)
+        obj->y = (int16_t)(obj->y + obj->beam.dy);
+        y = obj->y;
+        if (obj->beam.dy >= 0) {
+            if (y >= 0xc0)
                 goto gone;
         } else {
-            d0 = (int16_t)(d0 + a0->beam.length);
-            if (d0 < 0)
+            y = (int16_t)(y + obj->beam.length);
+            if (y < 0)
                 goto gone;
         }
     }
-    a0->hit[1] = a0->y;
-    a0->hit[3] = (int16_t)(a0->y + a0->beam.length);
-    if (!player_hits(a0))
+    obj->hit[1] = obj->y;
+    obj->hit[3] = (int16_t)(obj->y + obj->beam.length);
+    if (!player_hits(obj))
         return;
     if (shield_timer == 0) {
-        player_damage(a0, 6);
+        player_damage(obj, 6);
         PLAYER->fn_draw = (obj_fn)draw_bob_or_first;
     }
 gone:
-    kill_thunk(a0);
+    kill_thunk(obj);
 }
 
 /* level5 $056A10: the beam's heads and the bits of its body in the screen's planes */
-void l5_beam_draw(Object *a0)
+void l5_beam_draw(Object *obj)
 {
-    uint8_t *screen = draw_screen, *a1, *limit = screen + 0x7800;
-    uint32_t d0 = 0xfff00000u, d1 = 0xbfd00000u, d2 = 0xfff00000u, d3 = 0xc0300000u;
-    uint16_t sh;
-    uint32_t r0, r1, r2, r3, r4, r5;
-    int16_t d6, d7;
+    uint8_t *screen = draw_screen, *dst, *limit = screen + 0x7800;
+    uint32_t pat0 = 0xfff00000u, pat1 = 0xbfd00000u, pat2 = 0xfff00000u, pat3 = 0xc0300000u;
+    uint16_t shift;
+    uint32_t base0, base1, base2, base3, base4, base5;
+    int16_t y, length;
 
-    if (a0->beam.dy < 0 || a0->beam.length == 0x30)
-        draw_bob_masked_at((uint16_t)a0->x, (uint16_t)a0->y, level5_data.beam_top_picture);
-    if (a0->beam.dy >= 0 || a0->beam.length == 0x30)
-        draw_bob_masked_at((uint16_t)a0->x, (uint16_t)(a0->y + a0->beam.length - 1), level5_data.beam_end_picture);
-    a1 = screen + (((uint16_t)a0->x >> 3) & 0xfffe);
-    sh = (uint16_t)a0->x & 0xf;
-    d0 >>= sh;
-    d1 >>= sh;
-    d2 >>= sh;
-    d3 >>= sh;
-    d0 = ~d0;
-    r0 = ((d2 >> 16) << 16) | (d3 >> 16);
-    r1 = ((d1 >> 16) << 16) | (d2 >> 16);
-    r2 = ((d0 >> 16) << 16) | (d0 >> 16);
-    r3 = ((d2 & 0xffff) << 16) | (d3 & 0xffff);
-    r4 = ((d1 & 0xffff) << 16) | (d2 & 0xffff);
-    r5 = ((d0 & 0xffff) << 16) | (d0 & 0xffff);
-    d7 = a0->beam.length;
-    d6 = a0->y;
-    if (d6 < 0) {
-        d7 = (int16_t)(d7 + d6);
-        if (d7 < 0)
+    if (obj->beam.dy < 0 || obj->beam.length == 0x30)
+        draw_bob_masked_at((uint16_t)obj->x, (uint16_t)obj->y, level5_data.beam_top_picture);
+    if (obj->beam.dy >= 0 || obj->beam.length == 0x30)
+        draw_bob_masked_at((uint16_t)obj->x, (uint16_t)(obj->y + obj->beam.length - 1), level5_data.beam_end_picture);
+    dst = screen + (((uint16_t)obj->x >> 3) & 0xfffe);
+    shift = (uint16_t)obj->x & 0xf;
+    pat0 >>= shift;
+    pat1 >>= shift;
+    pat2 >>= shift;
+    pat3 >>= shift;
+    pat0 = ~pat0;
+    base0 = ((pat2 >> 16) << 16) | (pat3 >> 16);
+    base1 = ((pat1 >> 16) << 16) | (pat2 >> 16);
+    base2 = ((pat0 >> 16) << 16) | (pat0 >> 16);
+    base3 = ((pat2 & 0xffff) << 16) | (pat3 & 0xffff);
+    base4 = ((pat1 & 0xffff) << 16) | (pat2 & 0xffff);
+    base5 = ((pat0 & 0xffff) << 16) | (pat0 & 0xffff);
+    length = obj->beam.length;
+    y = obj->y;
+    if (y < 0) {
+        length = (int16_t)(length + y);
+        if (length < 0)
             return;
-        d6 = 0;
+        y = 0;
     }
-    a1 += (uint32_t)((uint16_t)d6 * 0xa0u);
-    d0 = r0;
-    d1 = r1;
-    d2 = r2;
-    d3 = r3;
+    dst += (uint32_t)((uint16_t)y * 0xa0u);
+    pat0 = base0;
+    pat1 = base1;
+    pat2 = base2;
+    pat3 = base3;
     {
-        uint32_t d4 = r4, d5 = r5;
+        uint32_t pat4 = base4, pat5 = base5;
 
-        while (a1 < limit && d7 != 0) {
-            uint16_t m2 = (uint16_t)d2, h1 = (uint16_t)(d1 >> 16), l1 = (uint16_t)d1, h0 = (uint16_t)(d0 >> 16), l0 = (uint16_t)d0;
+        while (dst < limit && length != 0) {
+            uint16_t m2 = (uint16_t)pat2, h1 = (uint16_t)(pat1 >> 16), l1 = (uint16_t)pat1, h0 = (uint16_t)(pat0 >> 16), l0 = (uint16_t)pat0;
             int p;
 
             for (p = 0; p < 4; p++)
-                wr16(a1 + 0x28 * p, (uint16_t)(rd16(a1 + 0x28 * p) & m2));
-            wr16(a1, (uint16_t)(rd16(a1) | h1));
-            wr16(a1 + 0x28, (uint16_t)(rd16(a1 + 0x28) | l1));
-            wr16(a1 + 0x50, (uint16_t)(rd16(a1 + 0x50) | h0));
-            wr16(a1 + 0x78, (uint16_t)(rd16(a1 + 0x78) | l0));
+                wr16(dst + 0x28 * p, (uint16_t)(rd16(dst + 0x28 * p) & m2));
+            wr16(dst, (uint16_t)(rd16(dst) | h1));
+            wr16(dst + 0x28, (uint16_t)(rd16(dst + 0x28) | l1));
+            wr16(dst + 0x50, (uint16_t)(rd16(dst + 0x50) | h0));
+            wr16(dst + 0x78, (uint16_t)(rd16(dst + 0x78) | l0));
             for (p = 0; p < 4; p++)
-                wr16(a1 + 2 + 0x28 * p, (uint16_t)(rd16(a1 + 2 + 0x28 * p) & (uint16_t)d5));
-            wr16(a1 + 2, (uint16_t)(rd16(a1 + 2) | (uint16_t)(d4 >> 16)));
-            wr16(a1 + 0x2a, (uint16_t)(rd16(a1 + 0x2a) | (uint16_t)d4));
-            wr16(a1 + 0x52, (uint16_t)(rd16(a1 + 0x52) | (uint16_t)(d3 >> 16)));
-            wr16(a1 + 0x7a, (uint16_t)(rd16(a1 + 0x7a) | (uint16_t)d3));
-            a1 += 0xa0;
-            d7--;
+                wr16(dst + 2 + 0x28 * p, (uint16_t)(rd16(dst + 2 + 0x28 * p) & (uint16_t)pat5));
+            wr16(dst + 2, (uint16_t)(rd16(dst + 2) | (uint16_t)(pat4 >> 16)));
+            wr16(dst + 0x2a, (uint16_t)(rd16(dst + 0x2a) | (uint16_t)pat4));
+            wr16(dst + 0x52, (uint16_t)(rd16(dst + 0x52) | (uint16_t)(pat3 >> 16)));
+            wr16(dst + 0x7a, (uint16_t)(rd16(dst + 0x7a) | (uint16_t)pat3));
+            dst += 0xa0;
+            length--;
         }
     }
 }
@@ -1021,138 +1021,138 @@ void l5_beam_draw(Object *a0)
 /* ---- the gates and the guns of tiles ---- */
 
 /* level5 $056B50: three tiles that open and close (the record's position is the cell) */
-void l5_spawn_gates(const uint8_t *a1)
+void l5_spawn_gates(const uint8_t *record)
 {
-    int16_t d0 = (int16_t)(rd16(a1 + 8) - 8), d1 = (int16_t)(rd16(a1 + 0xa) - 8);
-    uint8_t *a2 = level_init_src + (uint16_t)(((uint16_t)d0 >> 3) & 0xfe) + (int16_t)(uint16_t)((uint32_t)((uint16_t)d1 >> 4) * 0x28);
+    int16_t x = (int16_t)(rd16(record + 8) - 8), y = (int16_t)(rd16(record + 0xa) - 8);
+    uint8_t *cells = level_init_src + (uint16_t)(((uint16_t)x >> 3) & 0xfe) + (int16_t)(uint16_t)((uint32_t)((uint16_t)y >> 4) * 0x28);
     const struct Level5Gate *rec = level5_data.gates;
-    int d7;
+    int count;
 
-    wr16(a2, 0x8ad3);
-    wr32(a2 + 2, 0);
-    wr16(a2 + 6, 0x8add);
-    for (d7 = 2; d7 >= 0; d7--, rec++) {
-        Object *a0 = insert_head(LIST_C);
-        uint16_t d2;
+    wr16(cells, 0x8ad3);
+    wr32(cells + 2, 0);
+    wr16(cells + 6, 0x8add);
+    for (count = 2; count >= 0; count--, rec++) {
+        Object *obj = insert_head(LIST_C);
+        uint16_t step;
 
-        a0->type = rec->type;
-        a0->fn_update = (obj_fn)rec->update;
-        a0->fn_draw = (obj_fn)obj_nop_thunk;
-        a0->fn_hit = (void *)rec->hit;
-        a0->x = d0;
-        a0->y = d1;
-        a0->l5.cell = 0;
-        a0->energy = (int16_t)level5_data.gates_energy;
-        a0->hit[0] = 0x3e8;
-        a0->hit[2] = 0x3e8;
-        a0->script = a2;
-        d2 = rec->step;
-        a2 += (int16_t)d2;
-        d0 = (int16_t)(d0 + (int16_t)(d2 << 3));
+        obj->type = rec->type;
+        obj->fn_update = (obj_fn)rec->update;
+        obj->fn_draw = (obj_fn)obj_nop_thunk;
+        obj->fn_hit = (void *)rec->hit;
+        obj->x = x;
+        obj->y = y;
+        obj->l5.cell = 0;
+        obj->energy = (int16_t)level5_data.gates_energy;
+        obj->hit[0] = 0x3e8;
+        obj->hit[2] = 0x3e8;
+        obj->script = cells;
+        step = rec->step;
+        cells += (int16_t)step;
+        x = (int16_t)(x + (int16_t)(step << 3));
     }
 }
 
 /* level5 $056BEE: a gate: its cells go round */
-void l5_gate_update(Object *a0)
+void l5_gate_update(Object *obj)
 {
-    int16_t d0 = (int16_t)(a0->l5.cell + 4);
+    int16_t cell = (int16_t)(obj->l5.cell + 4);
 
-    if (d0 >= 0x10)
-        d0 = 0;
-    a0->l5.cell = d0;
-    copy4(a0->script, level5_data.gate_update_data + d0);
-    a0->hit[0] = a0->x;
-    a0->hit[2] = (int16_t)(a0->x + 0x20);
-    a0->hit[1] = (int16_t)(a0->y - scroll_pos + 2);
-    a0->hit[3] = (int16_t)(a0->hit[1] + 0xc);
+    if (cell >= 0x10)
+        cell = 0;
+    obj->l5.cell = cell;
+    copy4(obj->script, level5_data.gate_update_data + cell);
+    obj->hit[0] = obj->x;
+    obj->hit[2] = (int16_t)(obj->x + 0x20);
+    obj->hit[1] = (int16_t)(obj->y - scroll_pos + 2);
+    obj->hit[3] = (int16_t)(obj->hit[1] + 0xc);
 }
 
 /* level5 $056C40: a gun in the wall: its cell by four */
-void l5_wall_update(Object *a0)
+void l5_wall_update(Object *obj)
 {
-    const uint8_t *a2 = a0->type == 0x128 ? level5_data.wall_cells_128 : level5_data.wall_cells_other;
+    const uint8_t *table = obj->type == 0x128 ? level5_data.wall_cells_128 : level5_data.wall_cells_other;
 
-    a0->l5.cell = (int16_t)((a0->l5.cell + 1) & 3);
-    wr16(a0->script, rd16(a2 + 2 * (uint32_t)a0->l5.cell));
-    a0->hit[0] = (int16_t)(a0->x + 3);
-    a0->hit[2] = (int16_t)(a0->hit[0] + 0xa);
-    a0->hit[1] = (int16_t)(a0->y - scroll_pos + 3);
-    a0->hit[3] = (int16_t)(a0->hit[1] + 0xa);
+    obj->l5.cell = (int16_t)((obj->l5.cell + 1) & 3);
+    wr16(obj->script, rd16(table + 2 * (uint32_t)obj->l5.cell));
+    obj->hit[0] = (int16_t)(obj->x + 3);
+    obj->hit[2] = (int16_t)(obj->hit[0] + 0xa);
+    obj->hit[1] = (int16_t)(obj->y - scroll_pos + 3);
+    obj->hit[3] = (int16_t)(obj->hit[1] + 0xa);
 }
 
 /* level5 $056CA4: the hit of the gun on the left: at the end it and the two before it go */
-void l5_wall_hit_a(Object *a0, Object *a1, uint16_t d0)
+void l5_wall_hit_a(Object *shot, Object *obj, uint16_t damage)
 {
-    Object *a2, *a3;
+    Object *second, *third;
     uint8_t *c;
 
-    (void)a0;
-    a1->fn_draw = FN(l5_wall_flash_a);
-    if (!dies(a1, d0))
+    (void)shot;
+    obj->fn_draw = FN(l5_wall_flash_a);
+    if (!dies(obj, damage))
         return;
-    spawn_effect((int16_t)(a1->x + 8), (int16_t)(a1->y - scroll_pos + 8), anim_explosion, draw_bob_masked);
-    c = a1->script;
+    spawn_effect((int16_t)(obj->x + 8), (int16_t)(obj->y - scroll_pos + 8), anim_explosion, draw_bob_masked);
+    c = obj->script;
     wr16(c, 0x87b5);
     wr32(c + 2, 0);
     wr16(c + 6, 0x87ab);
-    a2 = a1->prev;
-    kill_thunk(a1);
-    a3 = a2->prev;
-    kill_thunk(a2);
-    kill_thunk(a3);
+    second = obj->prev;
+    kill_thunk(obj);
+    third = second->prev;
+    kill_thunk(second);
+    kill_thunk(third);
     player_score += 0xc8;
 }
 
 /* level5 $056D5C: the hit of the gun on the right: it and the two after it go */
-void l5_wall_hit_b(Object *a0, Object *a1, uint16_t d0)
+void l5_wall_hit_b(Object *shot, Object *obj, uint16_t damage)
 {
-    Object *a2, *a3;
+    Object *second, *third;
     uint8_t *c;
 
-    (void)a0;
-    a1->fn_draw = FN(l5_wall_flash_b);
-    if (!dies(a1, d0))
+    (void)shot;
+    obj->fn_draw = FN(l5_wall_flash_b);
+    if (!dies(obj, damage))
         return;
-    spawn_effect((int16_t)(a1->x + 8), (int16_t)(a1->y - scroll_pos + 8), anim_explosion, draw_bob_masked);
-    c = a1->script;
+    spawn_effect((int16_t)(obj->x + 8), (int16_t)(obj->y - scroll_pos + 8), anim_explosion, draw_bob_masked);
+    c = obj->script;
     wr16(c, 0x87ab);
     wr32(c - 4, 0);
     wr16(c - 6, 0x87b5);
-    a2 = a1->next;
-    kill_thunk(a1);
-    a3 = a2->next;
-    kill_thunk(a2);
-    kill_thunk(a3);
+    second = obj->next;
+    kill_thunk(obj);
+    third = second->next;
+    kill_thunk(second);
+    kill_thunk(third);
     player_score += 0xc8;
 }
 
 /* level5 $056E14: the flash of the gun on the left, one frame */
-void l5_wall_flash_a(Object *a0)
+void l5_wall_flash_a(Object *obj)
 {
-    a0->fn_draw = (obj_fn)obj_nop_thunk;
-    draw_tile_grid_flash(level5_data.wall_flash_a_grid, 0, 0, (int16_t)(a0->y - scroll_pos), (uint16_t)((uint16_t)a0->x >> 1));
+    obj->fn_draw = (obj_fn)obj_nop_thunk;
+    draw_tile_grid_flash(level5_data.wall_flash_a_grid, 0, 0, (int16_t)(obj->y - scroll_pos), (uint16_t)((uint16_t)obj->x >> 1));
 }
 
 /* level5 $056E1A: the flash of the gun on the right, one frame */
-void l5_wall_flash_b(Object *a0)
+void l5_wall_flash_b(Object *obj)
 {
-    a0->fn_draw = (obj_fn)obj_nop_thunk;
-    draw_tile_grid_flash(level5_data.wall_flash_b_grid, 0, 0, (int16_t)(a0->y - scroll_pos), (uint16_t)((uint16_t)a0->x >> 1));
+    obj->fn_draw = (obj_fn)obj_nop_thunk;
+    draw_tile_grid_flash(level5_data.wall_flash_b_grid, 0, 0, (int16_t)(obj->y - scroll_pos), (uint16_t)((uint16_t)obj->x >> 1));
 }
 
 /* ---- the bridge pieces ($56E40) ---- */
 
 /* level5 $056E40: a piece of the bridge */
-void l5_spawn_bridge(const uint8_t *a1)
+void l5_spawn_bridge(const uint8_t *record)
 {
-    Object *a0 = spawn_marker_enemy(0xf8, a1, (void (*)(void))FN(l5_bridge_update));
+    Object *obj = spawn_marker_enemy(0xf8, record, (void (*)(void))FN(l5_bridge_update));
     uint8_t *c;
 
-    a0->fn_hit = FN(l5_bridge_hit);
-    a0->energy = (int16_t)level5_data.bridge_energy;
-    a0->hit[0] = 0x3e8;
-    a0->hit[2] = 0x3e8;
-    c = a0->script;
+    obj->fn_hit = FN(l5_bridge_hit);
+    obj->energy = (int16_t)level5_data.bridge_energy;
+    obj->hit[0] = 0x3e8;
+    obj->hit[2] = 0x3e8;
+    c = obj->script;
     if (rd16(c - 2) == 0x8669) {
         wr16(c - 2, 0xc7);
         wr16(c + 0x26, 0x177);
@@ -1167,47 +1167,47 @@ void l5_spawn_bridge(const uint8_t *a1)
 
 
 /* level5 $056EE2: the piece: its cells go round by v28 and now and then it fires all round */
-void l5_bridge_update(Object *a0)
+void l5_bridge_update(Object *obj)
 {
     uint8_t *c;
-    uint32_t d0;
+    uint32_t offset;
 
-    if ((int16_t)(scroll_max + 0xd0) < a0->y) {
-        kill_thunk(a0);
+    if ((int16_t)(scroll_max + 0xd0) < obj->y) {
+        kill_thunk(obj);
         return;
     }
-    a0->hit[0] = (int16_t)(a0->x + 4);
-    a0->hit[2] = (int16_t)(a0->hit[0] + 0x18);
-    a0->hit[1] = (int16_t)(a0->y - scroll_pos + 4);
-    a0->hit[3] = (int16_t)(a0->hit[1] + 0x18);
-    a0->bridge.cell = (int16_t)((a0->bridge.cell + 1) & 0xf);
-    if (add_carry(&a0->v5e_b[0], level5_data.bridge_fire_rate)) {
-        int d7;
+    obj->hit[0] = (int16_t)(obj->x + 4);
+    obj->hit[2] = (int16_t)(obj->hit[0] + 0x18);
+    obj->hit[1] = (int16_t)(obj->y - scroll_pos + 4);
+    obj->hit[3] = (int16_t)(obj->hit[1] + 0x18);
+    obj->bridge.cell = (int16_t)((obj->bridge.cell + 1) & 0xf);
+    if (add_carry(&obj->v5e_b[0], level5_data.bridge_fire_rate)) {
+        int dir;
 
-        a0->v5e_b[0] = (uint8_t)(random_next() & 0x3f);
-        for (d7 = 7; d7 >= 0; d7--) {
-            Object *a1 = spawn_enemy_shot((uint16_t)(a0->x + 0x10), (uint16_t)(a0->y - scroll_pos + 0x10), (uint16_t)d7, level5_data.bridge_shot_steps, 0);
+        obj->v5e_b[0] = (uint8_t)(random_next() & 0x3f);
+        for (dir = 7; dir >= 0; dir--) {
+            Object *shot = spawn_enemy_shot((uint16_t)(obj->x + 0x10), (uint16_t)(obj->y - scroll_pos + 0x10), (uint16_t)dir, level5_data.bridge_shot_steps, 0);
 
-            set_anim(a1, level5_data.bridge_update_data);
+            set_anim(shot, level5_data.bridge_update_data);
         }
     }
-    c = a0->script;
-    d0 = (uint32_t)((uint16_t)a0->bridge.cell & 0xe) * 4;
-    copy4(c, level5_data.bridge_cells + d0);
-    copy4(c + 0x28, level5_data.bridge_cells + 4 + d0);
+    c = obj->script;
+    offset = (uint32_t)((uint16_t)obj->bridge.cell & 0xe) * 4;
+    copy4(c, level5_data.bridge_cells + offset);
+    copy4(c + 0x28, level5_data.bridge_cells + 4 + offset);
 }
 
 /* level5 $056FDC: the hit of the piece: the burst, the cells go back, the score */
-void l5_bridge_hit(Object *a0, Object *a1, uint16_t d0)
+void l5_bridge_hit(Object *shot, Object *obj, uint16_t damage)
 {
     uint8_t *c;
 
-    (void)a0;
-    a1->fn_draw = FN(l5_bridge_flash);
-    if (!dies(a1, d0))
+    (void)shot;
+    obj->fn_draw = FN(l5_bridge_flash);
+    if (!dies(obj, damage))
         return;
-    spawn_effect((int16_t)(a1->x + 0x10), (int16_t)(a1->y - scroll_pos + 0x10), big_explosion_anim, draw_bob_masked);
-    c = a1->script;
+    spawn_effect((int16_t)(obj->x + 0x10), (int16_t)(obj->y - scroll_pos + 0x10), big_explosion_anim, draw_bob_masked);
+    c = obj->script;
     if (rd16(c - 2) == 0xc7) {
         wr16(c - 2, 0x8669);
         wr16(c + 0x26, 0x8707);
@@ -1219,42 +1219,42 @@ void l5_bridge_hit(Object *a0, Object *a1, uint16_t d0)
     wr32(c, 0);
     wr32(c + 0x28, 0);
     player_score += 0x1f4;
-    kill_thunk(a1);
+    kill_thunk(obj);
 }
 
 /* level5 $05706C: the flash of the piece, one frame */
-void l5_bridge_flash(Object *a0)
+void l5_bridge_flash(Object *obj)
 {
-    a0->fn_draw = (obj_fn)obj_nop_thunk;
-    draw_tile_grid_flash(level5_data.bridge_cells, 1, 1, (int16_t)(a0->y - scroll_pos), (uint16_t)((uint16_t)a0->x >> 1));
+    obj->fn_draw = (obj_fn)obj_nop_thunk;
+    draw_tile_grid_flash(level5_data.bridge_cells, 1, 1, (int16_t)(obj->y - scroll_pos), (uint16_t)((uint16_t)obj->x >> 1));
 }
 
 /* ---- the units of eight directions ($570AA) ---- */
 
 /* level5 $057090: the unit of the record's group, once (a flag by the group) */
-void l5_spawn_group(const uint8_t *a1)
+void l5_spawn_group(const uint8_t *record)
 {
-    uint16_t d0 = rd16(a1 + 6);
+    uint16_t group = rd16(record + 6);
 
-    if (sh_r8(0xd9b + d0) == 0)
-        (l5_spawn_unit(a1))->unit.group = (int16_t)d0;
+    if (sh_r8(0xd9b + group) == 0)
+        (l5_spawn_unit(record))->unit.group = (int16_t)group;
 }
 
 /* level5 $0570AA: a unit of eight directions made of cells */
-Object *l5_spawn_unit(const uint8_t *a1)
+Object *l5_spawn_unit(const uint8_t *record)
 {
-    Object *a0 = spawn_marker_enemy(0xf4, a1, (void (*)(void))FN(l5_unit_update));
+    Object *obj = spawn_marker_enemy(0xf4, record, (void (*)(void))FN(l5_unit_update));
     uint8_t *c;
-    uint32_t d0;
+    uint32_t offset;
 
-    a0->unit.dir = (int16_t)rd16(a1 + 0xc);
-    a0->fn_hit = FN(l5_unit_hit);
-    a0->energy = (int16_t)level5_data.group_energy;
-    a0->hit[0] = 0x3e8;
-    a0->hit[2] = 0x3e8;
-    c = a0->script;
-    d0 = (uint32_t)(uint16_t)a0->unit.dir << 3;
-    a0->unit.group = -1;
+    obj->unit.dir = (int16_t)rd16(record + 0xc);
+    obj->fn_hit = FN(l5_unit_hit);
+    obj->energy = (int16_t)level5_data.group_energy;
+    obj->hit[0] = 0x3e8;
+    obj->hit[2] = 0x3e8;
+    c = obj->script;
+    offset = (uint32_t)(uint16_t)obj->unit.dir << 3;
+    obj->unit.group = -1;
     if (rd16(c - 2) == 0x867d) {
         wr16(c - 2, 0x80d7);
         wr16(c + 0x26, 0x8187);
@@ -1263,77 +1263,77 @@ Object *l5_spawn_unit(const uint8_t *a1)
         wr16(c + 4, 0x8287);
         wr16(c + 0x2c, 0x8339);
     }
-    copy4(c, level5_data.group_cells + d0);
-    copy4(c + 0x28, level5_data.group_cells + 4 + d0);
-    return a0;
+    copy4(c, level5_data.group_cells + offset);
+    copy4(c + 0x28, level5_data.group_cells + 4 + offset);
+    return obj;
 }
 
 /* level5 $05715E: the unit: it turns to the player by one step at a time and fires in its direction */
-void l5_unit_update(Object *a0)
+void l5_unit_update(Object *obj)
 {
     uint8_t *c;
-    uint32_t d0;
+    uint32_t offset;
 
-    if ((int16_t)(scroll_max + 0xd0) < a0->y) {
-        kill_thunk(a0);
+    if ((int16_t)(scroll_max + 0xd0) < obj->y) {
+        kill_thunk(obj);
         return;
     }
-    a0->hit[0] = (int16_t)(a0->x + 4);
-    a0->hit[2] = (int16_t)(a0->hit[0] + 0x18);
-    a0->hit[1] = (int16_t)(a0->y - scroll_pos + 4);
-    a0->hit[3] = (int16_t)(a0->hit[1] + 0x18);
-    if (a0->unit.tick == 0 && (int16_t)(a0->y - scroll_pos) < -16)
+    obj->hit[0] = (int16_t)(obj->x + 4);
+    obj->hit[2] = (int16_t)(obj->hit[0] + 0x18);
+    obj->hit[1] = (int16_t)(obj->y - scroll_pos + 4);
+    obj->hit[3] = (int16_t)(obj->hit[1] + 0x18);
+    if (obj->unit.tick == 0 && (int16_t)(obj->y - scroll_pos) < -16)
         goto cells;
-    if (a0->unit.tick != 8) {
-        a0->unit.tick = (int16_t)(a0->unit.tick + 1);
-        a0->unit.dir = (int16_t)((a0->unit.dir + 1) & 7);
+    if (obj->unit.tick != 8) {
+        obj->unit.tick = (int16_t)(obj->unit.tick + 1);
+        obj->unit.dir = (int16_t)((obj->unit.dir + 1) & 7);
         goto cells;
     }
     {
-        uint16_t dir = direction8((int16_t)(PLAYER->x - a0->x - 0x10), (int16_t)(PLAYER->y - a0->y + scroll_pos - 0x10));
+        uint16_t dir = direction8((int16_t)(PLAYER->x - obj->x - 0x10), (int16_t)(PLAYER->y - obj->y + scroll_pos - 0x10));
 
-        dir = (uint16_t)(dir - (uint16_t)a0->unit.dir);
+        dir = (uint16_t)(dir - (uint16_t)obj->unit.dir);
         if (dir != 0) {
             dir &= 7;
             if (dir < 4)
-                a0->unit.dir = (int16_t)(a0->unit.dir + 1);
+                obj->unit.dir = (int16_t)(obj->unit.dir + 1);
             else
-                a0->unit.dir = (int16_t)(a0->unit.dir - 1);
+                obj->unit.dir = (int16_t)(obj->unit.dir - 1);
         }
-        a0->unit.dir = (int16_t)(a0->unit.dir & 7);
+        obj->unit.dir = (int16_t)(obj->unit.dir & 7);
     }
-    if (add_carry(&a0->v5e_b[0], level5_data.unit_fire_rate)) {
-        int16_t x = (int16_t)(a0->x + 0x10), y = (int16_t)(a0->y - scroll_pos + 0x10);
-        uint16_t d3 = (uint16_t)((a0->unit.dir * 4) & 0x1c);
+    if (add_carry(&obj->v5e_b[0], level5_data.unit_fire_rate)) {
+        int16_t x = (int16_t)(obj->x + 0x10), y = (int16_t)(obj->y - scroll_pos + 0x10);
+        uint16_t dir_offset = (uint16_t)((obj->unit.dir * 4) & 0x1c);
 
-        a0->v5e_b[0] = (uint8_t)(random_next() & 0x3f);
-        x = (int16_t)(x + level5_data.unit_dirs[d3 / 4].dx);
-        y = (int16_t)(y + level5_data.unit_dirs[d3 / 4].dy);
-        d3 &= 0xc;
+        obj->v5e_b[0] = (uint8_t)(random_next() & 0x3f);
+        x = (int16_t)(x + level5_data.unit_dirs[dir_offset / 4].dx);
+        y = (int16_t)(y + level5_data.unit_dirs[dir_offset / 4].dy);
+        dir_offset &= 0xc;
         if (!(frame_tick & 1))
-            d3 += 0x10;
-        spawn_enemy_shot((uint16_t)x, (uint16_t)y, (uint16_t)a0->unit.dir, level5_data.unit_shot_steps, (void *)level5_data.unit_shot_pictures[d3 / 4]);
+            dir_offset += 0x10;
+        spawn_enemy_shot((uint16_t)x, (uint16_t)y, (uint16_t)obj->unit.dir, level5_data.unit_shot_steps, (void *)level5_data.unit_shot_pictures[dir_offset / 4]);
     }
 cells:
-    c = a0->script;
-    d0 = (uint32_t)(uint16_t)a0->unit.dir << 3;
-    copy4(c, level5_data.group_cells + d0);
-    copy4(c + 0x28, level5_data.group_cells + 4 + d0);
+    c = obj->script;
+    offset = (uint32_t)(uint16_t)obj->unit.dir << 3;
+    copy4(c, level5_data.group_cells + offset);
+    copy4(c + 0x28, level5_data.group_cells + 4 + offset);
 }
 
 /* level5 $0572EA: the hit of the unit: at the end the burst, its flag, the cells go back */
-void l5_unit_hit(Object *a0, Object *a1, uint16_t d0)
+void l5_unit_hit(Object *shot, Object *obj, uint16_t damage)
 {
     uint8_t *c;
 
-    (void)a0;
-    a1->fn_draw = FN(l5_unit_flash);
-    if (!dies(a1, d0))
+    (void)shot;
+    obj->fn_draw = FN(l5_unit_flash);
+    if (!dies(obj, damage))
         return;
-    if (a1->unit.group >= 0)
-        sh_w8(0xd9b + (uint32_t)(uint16_t)a1->unit.group, 0xff);
-    spawn_effect((int16_t)(a1->x + 0x10), (int16_t)(a1->y - scroll_pos + 0x10), big_explosion_anim, draw_bob_masked);
-    c = a1->script;
+    if (obj->unit.group >= 0)
+        sh_w8(0xd9b + (uint32_t)(uint16_t)obj->unit.group, 0xff);
+    spawn_effect((int16_t)(obj->x + 0x10), (int16_t)(obj->y - scroll_pos + 0x10), big_explosion_anim, draw_bob_masked);
+    c = obj->script;
     if (rd16(c - 2) == 0x80d7) {
         wr16(c - 2, 0x867d);
         wr16(c + 0x26, 0x871b);
@@ -1345,71 +1345,71 @@ void l5_unit_hit(Object *a0, Object *a1, uint16_t d0)
     wr32(c, 0);
     wr32(c + 0x28, 0);
     player_score += 0x190;
-    kill_thunk(a1);
+    kill_thunk(obj);
 }
 
 /* level5 $057388: the flash of the unit, one frame */
-void l5_unit_flash(Object *a0)
+void l5_unit_flash(Object *obj)
 {
-    a0->fn_draw = (obj_fn)obj_nop_thunk;
-    draw_tile_grid_flash(level5_data.group_cells, 1, 1, (int16_t)(a0->y - scroll_pos), (uint16_t)((uint16_t)a0->x >> 1));
+    obj->fn_draw = (obj_fn)obj_nop_thunk;
+    draw_tile_grid_flash(level5_data.group_cells, 1, 1, (int16_t)(obj->y - scroll_pos), (uint16_t)((uint16_t)obj->x >> 1));
 }
 
 /* ---- the guns of cells ($573AC) ---- */
 
 /* level5 $0573AC: a gun in the wall that fires out */
-void l5_spawn_gun(const uint8_t *a1)
+void l5_spawn_gun(const uint8_t *record)
 {
-    int right = rd16(a1 + 0xc) != 0;
-    Object *a0 = spawn_marker_enemy(right ? 0x10c : 0x108, a1, (void (*)(void))FN(l5_gun_update));
-    const uint8_t *a2 = right ? level5_data.gun_cells_a : level5_data.gun_cells_b, *a4 = right ? level5_data.gun_anim_a : level5_data.gun_anim_b;
+    int right = rd16(record + 0xc) != 0;
+    Object *obj = spawn_marker_enemy(right ? 0x10c : 0x108, record, (void (*)(void))FN(l5_gun_update));
+    const uint8_t *cells = right ? level5_data.gun_cells_a : level5_data.gun_cells_b, *anim = right ? level5_data.gun_anim_a : level5_data.gun_anim_b;
 
-    a0->fn_hit = (void *)hit_tile;
-    a0->energy = (int16_t)level5_data.gun_energy;
-    a0->hit[0] = 0x3e8;
-    a0->hit[2] = 0x3e8;
-    a0->gfx = (void *)a2;
-    a0->anim = a4;
-    wr16(a0->script, rd16(a2));
-    a0->score = 0x64;
-    a0->part_b.dx = 0;
-    a0->part_b.dy = 0;
+    obj->fn_hit = (void *)hit_tile;
+    obj->energy = (int16_t)level5_data.gun_energy;
+    obj->hit[0] = 0x3e8;
+    obj->hit[2] = 0x3e8;
+    obj->gfx = (void *)cells;
+    obj->anim = anim;
+    wr16(obj->script, rd16(cells));
+    obj->score = 0x64;
+    obj->part_b.dx = 0;
+    obj->part_b.dy = 0;
 }
 
 /* level5 $05741C: the gun: its cell goes round and it fires every third step */
-void l5_gun_update(Object *a0)
+void l5_gun_update(Object *obj)
 {
-    const uint8_t *a2;
+    const uint8_t *cells;
 
-    if ((int16_t)(scroll_max + 0xd0) < a0->y) {
-        kill_thunk(a0);
+    if ((int16_t)(scroll_max + 0xd0) < obj->y) {
+        kill_thunk(obj);
         return;
     }
-    a0->hit[0] = (int16_t)(a0->x + 2);
-    a0->hit[2] = (int16_t)(a0->hit[0] + 0xc);
-    a0->hit[1] = (int16_t)(a0->y - scroll_pos + 2);
-    a0->hit[3] = (int16_t)(a0->hit[1] + 0xc);
-    if (a0->l5.cell == 0) {
-        if (!add_carry(&a0->v5e_b[0], level5_data.gun_fire_rate))
+    obj->hit[0] = (int16_t)(obj->x + 2);
+    obj->hit[2] = (int16_t)(obj->hit[0] + 0xc);
+    obj->hit[1] = (int16_t)(obj->y - scroll_pos + 2);
+    obj->hit[3] = (int16_t)(obj->hit[1] + 0xc);
+    if (obj->l5.cell == 0) {
+        if (!add_carry(&obj->v5e_b[0], level5_data.gun_fire_rate))
             return;
-        a0->v5e_b[0] = (uint8_t)(random_next() & 0x3f);
+        obj->v5e_b[0] = (uint8_t)(random_next() & 0x3f);
     }
-    a0->l5.cell = (int16_t)(a0->l5.cell + 1);
-    a2 = a0->type == 0x108 ? level5_data.gun_cells_b : level5_data.gun_cells_a;
-    wr16(a0->script, rd16(a2 + 2 * (uint32_t)(uint16_t)a0->l5.cell));
-    if (a0->l5.cell == 3) {
-        int16_t d0 = (int16_t)(a0->x + 0x18), d1 = (int16_t)(a0->y - scroll_pos + 8);
-        uint16_t d2 = 2;
-        Object *a1;
+    obj->l5.cell = (int16_t)(obj->l5.cell + 1);
+    cells = obj->type == 0x108 ? level5_data.gun_cells_b : level5_data.gun_cells_a;
+    wr16(obj->script, rd16(cells + 2 * (uint32_t)(uint16_t)obj->l5.cell));
+    if (obj->l5.cell == 3) {
+        int16_t x = (int16_t)(obj->x + 0x18), y = (int16_t)(obj->y - scroll_pos + 8);
+        uint16_t dir = 2;
+        Object *shot;
 
-        if (a0->type != 0x108) {
-            d2 = 6;
-            d0 = (int16_t)(d0 - 0x18);
+        if (obj->type != 0x108) {
+            dir = 6;
+            x = (int16_t)(x - 0x18);
         }
-        a1 = spawn_enemy_shot((uint16_t)d0, (uint16_t)d1, d2, level5_data.gun_shot_steps, 0);
-        set_anim(a1, a0->type == 0x108 ? level5_data.gun_anim_108 : level5_data.gun_anim_other);
+        shot = spawn_enemy_shot((uint16_t)x, (uint16_t)y, dir, level5_data.gun_shot_steps, 0);
+        set_anim(shot, obj->type == 0x108 ? level5_data.gun_anim_108 : level5_data.gun_anim_other);
         return;
     }
-    if (a0->l5.cell == 7)
-        a0->l5.cell = 0;
+    if (obj->l5.cell == 7)
+        obj->l5.cell = 0;
 }

@@ -51,12 +51,12 @@ static void set_volume(uint16_t v)
     music_volume_lo = (uint8_t)v;
 }
 
-/* divu.w: 0x369E99 / d3; on overflow the destination keeps its low word 0x9E99 */
-static uint16_t rate_divide(uint16_t d3)
+/* divu.w: 0x369E99 / rate; on overflow the destination keeps its low word 0x9E99 */
+static uint16_t rate_divide(uint16_t rate)
 {
-    uint32_t q = 0x369e99u / d3;
+    uint32_t quot = 0x369e99u / rate;
 
-    return q > 0xffff ? 0x9e99 : (uint16_t)q;
+    return quot > 0xffff ? 0x9e99 : (uint16_t)quot;
 }
 
 /* orig $1B536: a delay between audio register writes (HLE: audio) */
@@ -147,18 +147,18 @@ void sound_init_sfx_samples(void)
 {
     const uint8_t *p;
     uint16_t i;
-    uint32_t len, d2;
-    uint16_t rate, q;
+    uint32_t len, scaled;
+    uint16_t rate, quot;
 
     if (sfx_samples_ready)
         return;
     p = sample_bank + 0xff1c;
     for (i = 0; i < 18; i++) {
-        d2 = (uint32_t)word_at(p + 2) * 0x32;
-        q = (uint16_t)(d2 / word_at(p + 4));
-        if (d2 / word_at(p + 4) > 0xffff)
-            q = (uint16_t)d2;
-        sfx_samples[i].duration = (uint8_t)(q + 1);
+        scaled = (uint32_t)word_at(p + 2) * 0x32;
+        quot = (uint16_t)(scaled / word_at(p + 4));
+        if (scaled / word_at(p + 4) > 0xffff)
+            quot = (uint16_t)scaled;
+        sfx_samples[i].duration = (uint8_t)(quot + 1);
         len = long_at(p);
         rate = word_at(p + 4);
         p += 6;
@@ -173,30 +173,30 @@ void sound_init_sfx_samples(void)
 /* orig $19F9E, $19FFC: start song `song` (HLE: audio) */
 void music_start(uint16_t song)
 {
-    const SongHeader *h;
+    const SongHeader *header;
     uint16_t i;
 
     CIAA_PRA |= 2;
     music_silence();
     sound_init_instruments();
     music_transpose = 0;
-    h = (const SongHeader *)((uintptr_t)song_headers + (uint16_t)((uint16_t)(int16_t)(int8_t)song * 10));
-    music_tempo_mul = (uint16_t)(int16_t)(int8_t)h->tempo;
-    music_rate = h->rate;
+    header = (const SongHeader *)((uintptr_t)song_headers + (uint16_t)((uint16_t)(int16_t)(int8_t)song * 10));
+    music_tempo_mul = (uint16_t)(int16_t)(int8_t)header->tempo;
+    music_rate = header->rate;
     music_rate_copy = music_rate;
     for (i = 0; i < 4; i++) {
-        MusicChannel *c = &music_channels[i];
+        MusicChannel *chan = &music_channels[i];
 
-        c->dur = 1;
-        c->flags = 0;
-        c->vib = 0;
-        c->transpose = 0;
-        c->loaded = 0xff;
-        c->env_start = music_env_data;
-        c->env_ptr = music_env_data;
-        c->list_off = h->list[i];
-        c->list_idx = 2;
-        c->stream = at((int16_t)word_at(at((int16_t)h->list[i])));
+        chan->dur = 1;
+        chan->flags = 0;
+        chan->vib = 0;
+        chan->transpose = 0;
+        chan->loaded = 0xff;
+        chan->env_start = music_env_data;
+        chan->env_ptr = music_env_data;
+        chan->list_off = header->list[i];
+        chan->list_idx = 2;
+        chan->stream = at((int16_t)word_at(at((int16_t)header->list[i])));
     }
     set_volume(0x40);
     music_fade_speed = 0;
@@ -262,127 +262,128 @@ void music_tick(void)
         }
     }
     for (ch = 0; ch < 4; ch++) {
-        HwMirror *m = &hw_mirror[ch];
-        MusicChannel *c = &music_channels[ch];
+        HwMirror *mirror = &hw_mirror[ch];
+        MusicChannel *chan = &music_channels[ch];
         volatile struct AudioChannel *hw = &custom->aud[ch];
-        Instrument *ins = c->instr;
-        const uint8_t *a1 = c->stream;
-        uint32_t d0;
-        uint16_t d1;
+        Instrument *ins = chan->instr;
+        const uint8_t *stream = chan->stream;
+        uint32_t code;
+        uint16_t vol;
 
-        m->music_on = 0xff;
-        if (c->loaded == 0) {
-            c->loaded = 0xff;
+        mirror->music_on = 0xff;
+        if (chan->loaded == 0) {
+            chan->loaded = 0xff;
             if (ins->loop_off >= 0) {
-                uint8_t *a2 = ins->sample + ins->loop_off;
+                uint8_t *loop = ins->sample + ins->loop_off;
+                uint16_t loop_len;
 
-                d1 = (uint16_t)(ins->length - (uint16_t)((uint32_t)ins->loop_off >> 1));
-                m->lc = a2;
-                m->len = d1;
-                if (!m->sfx_on) {
-                    hw->lc = ADDR(a2);
-                    hw->len = d1;
+                loop_len = (uint16_t)(ins->length - (uint16_t)((uint32_t)ins->loop_off >> 1));
+                mirror->lc = loop;
+                mirror->len = loop_len;
+                if (!mirror->sfx_on) {
+                    hw->lc = ADDR(loop);
+                    hw->len = loop_len;
                 }
             } else {
-                m->lc = silence_ptr;
-                m->len = 0x20;
-                if (!m->sfx_on) {
+                mirror->lc = silence_ptr;
+                mirror->len = 0x20;
+                if (!mirror->sfx_on) {
                     hw->lc = ADDR(silence_ptr);
                     hw->len = 0x20;
                 }
             }
         }
-        c->dur--;
-        if (c->dur == 0) {
-            c->flags = 0;
+        chan->dur--;
+        if (chan->dur == 0) {
+            chan->flags = 0;
             goto fetch;
         }
-        if (c->dur == 1) {
-            if (!m->sfx_on && *a1 != 0x83)
+        if (chan->dur == 1) {
+            if (!mirror->sfx_on && *stream != 0x83)
                 SETCLR_WRITE(dmacon, (uint16_t)(1 << ch));
             continue;
         }
         goto effects;
 
     fetch:
-        d0 = *a1++;
-        if (!(d0 & 0x80)) {
+        code = *stream++;
+        if (!(code & 0x80)) {
             /* a note */
-            const uint8_t *a2;
+            const uint8_t *vol_data;
             int16_t v;
 
-            c->note = (uint8_t)d0;
-            d0 = (uint8_t)(d0 + music_transpose + c->transpose);
-            a2 = c->vol_start;
-            v = (int8_t)*a2++;
-            c->vol_ptr = a2;
-            c->vol_count = c->vol_speed;
-            m->lc = ins->sample;
-            m->len = ins->length;
-            d1 = (uint16_t)(((uint32_t)(uint16_t)v * get_volume()) & 0xffff) >> 6;
-            m->vol = d1;
-            if (!m->sfx_on) {
+            chan->note = (uint8_t)code;
+            code = (uint8_t)(code + music_transpose + chan->transpose);
+            vol_data = chan->vol_start;
+            v = (int8_t)*vol_data++;
+            chan->vol_ptr = vol_data;
+            chan->vol_count = chan->vol_speed;
+            mirror->lc = ins->sample;
+            mirror->len = ins->length;
+            vol = (uint16_t)(((uint32_t)(uint16_t)v * get_volume()) & 0xffff) >> 6;
+            mirror->vol = vol;
+            if (!mirror->sfx_on) {
                 hw->lc = ADDR(ins->sample);
                 hw->len = ins->length;
-                hw->vol = d1;
+                hw->vol = vol;
             }
-            d0 = ((uint32_t)music_periods[d0 & 0xff] * ins->rate) >> 10;
-            m->per = (uint16_t)d0;
-            if (!m->sfx_on)
-                hw->per = (uint16_t)d0;
-            c->loaded = 0;
+            code = ((uint32_t)music_periods[code & 0xff] * ins->rate) >> 10;
+            mirror->per = (uint16_t)code;
+            if (!mirror->sfx_on)
+                hw->per = (uint16_t)code;
+            chan->loaded = 0;
             goto start;
         }
         /* a control byte */
-        if (d0 >= 0xe0) {
-            c->dur_reload = (uint16_t)(((uint8_t)(d0 - 0xdf)) * music_tempo_mul);
+        if (code >= 0xe0) {
+            chan->dur_reload = (uint16_t)(((uint8_t)(code - 0xdf)) * music_tempo_mul);
             goto fetch;
         }
-        if (d0 >= 0xb0) {
-            ins = &instruments[d0 - 0xb0];
-            c->instr = ins;
+        if (code >= 0xb0) {
+            ins = &instruments[code - 0xb0];
+            chan->instr = ins;
             goto fetch;
         }
-        if (d0 >= 0xa0) {
-            const uint8_t *a2 = at((int16_t)music_vol_env_offsets[d0 - 0xa0]);
+        if (code >= 0xa0) {
+            const uint8_t *vol_env = at((int16_t)music_vol_env_offsets[code - 0xa0]);
 
-            c->vol_start = a2;
-            c->vol_speed = a2[-1];
+            chan->vol_start = vol_env;
+            chan->vol_speed = vol_env[-1];
             goto fetch;
         }
-        if (d0 >= 0x90) {
-            const uint8_t *a2 = at((int16_t)music_env_offsets[d0 - 0x90]);
+        if (code >= 0x90) {
+            const uint8_t *env = at((int16_t)music_env_offsets[code - 0x90]);
 
-            c->env_start = a2;
-            c->env_ptr = a2;
+            chan->env_start = env;
+            chan->env_ptr = env;
             goto fetch;
         }
-        switch (d0) {
+        switch (code) {
         case 0x80: {
-            uint16_t idx = c->list_idx;
-            int16_t off = (int16_t)(c->list_off + idx);
+            uint16_t idx = chan->list_idx;
+            int16_t off = (int16_t)(chan->list_off + idx);
 
             idx += 2;
             if (word_at(at(off)) == 0) {
-                off = (int16_t)c->list_off;
+                off = (int16_t)chan->list_off;
                 idx = 2;
             }
-            a1 = at((int16_t)word_at(at(off)));
-            c->list_idx = idx;
+            stream = at((int16_t)word_at(at(off)));
+            chan->list_idx = idx;
             goto fetch;
         }
         case 0x81:
-            c->slide = 0;
-            c->slide_step = (int8_t)*a1++;
-            c->slide_delay = *a1++;
-            c->flags |= 2;
+            chan->slide = 0;
+            chan->slide_step = (int8_t)*stream++;
+            chan->slide_delay = *stream++;
+            chan->flags |= 2;
             goto fetch;
         case 0x82:
-            c->dur = c->dur_reload;
-            c->stream = a1;
-            m->lc = silence_ptr;
-            m->len = 0x20;
-            if (!m->sfx_on) {
+            chan->dur = chan->dur_reload;
+            chan->stream = stream;
+            mirror->lc = silence_ptr;
+            mirror->len = 0x20;
+            if (!mirror->sfx_on) {
                 hw->lc = ADDR(silence_ptr);
                 hw->len = 0x20;
             }
@@ -393,30 +394,30 @@ void music_tick(void)
             music_stop();
             return;
         case 0x85:
-            music_transpose = *a1++;
+            music_transpose = *stream++;
             goto fetch;
         case 0x86:
-            c->vib = 0xff;
-            c->vib_step = *a1++;
-            c->vib_limit = *a1++;
-            c->vib_pos = 0;
+            chan->vib = 0xff;
+            chan->vib_step = *stream++;
+            chan->vib_limit = *stream++;
+            chan->vib_pos = 0;
             goto fetch;
         case 0x87:
-            c->vib = 0;
+            chan->vib = 0;
             goto fetch;
         case 0x88:
-            c->transpose = *a1++;
+            chan->transpose = *stream++;
             goto fetch;
         case 0x89:
-            c->list_off = (uint16_t)(a1[0] << 8 | a1[1]);
-            a1 += 2;
-            c->list_idx = 0;
+            chan->list_off = (uint16_t)(stream[0] << 8 | stream[1]);
+            stream += 2;
+            chan->list_idx = 0;
             goto fetch;
         case 0x8a:
-            music_tempo_mul = (uint16_t)(int16_t)(int8_t)*a1++;
+            music_tempo_mul = (uint16_t)(int16_t)(int8_t)*stream++;
             goto fetch;
         case 0x8b:
-            music_fade_speed = *a1++;
+            music_fade_speed = *stream++;
             music_fade_count = music_fade_speed;
             goto fetch;
         default:
@@ -424,70 +425,71 @@ void music_tick(void)
         }
 
     start:
-        c->stream = a1;
-        c->dur = c->dur_reload;
+        chan->stream = stream;
+        chan->dur = chan->dur_reload;
         SETCLR_WRITE(dmacon, (uint16_t)(0x8200 | (1 << ch)));
         continue;
 
     effects: {
-            uint8_t d1b;
-            const uint8_t *a2;
+            uint32_t period;
+            uint8_t env_byte;
+            const uint8_t *vol_data;
             int16_t w;
 
-            d0 = (uint8_t)(c->note + music_transpose + c->transpose);
-            a1 = c->env_ptr;
-            d1b = *a1++;
-            if (d1b & 0x80)
-                a1 = c->env_start;
-            d1b &= 0x7f;
-            c->env_ptr = a1;
-            d0 = (uint8_t)(d0 + d1b);
-            d0 = ((uint32_t)music_periods[d0] * ins->rate) >> 10;
-            if (c->flags & 2) {
-                if (c->slide_delay) {
-                    c->slide_delay--;
+            period = (uint8_t)(chan->note + music_transpose + chan->transpose);
+            stream = chan->env_ptr;
+            env_byte = *stream++;
+            if (env_byte & 0x80)
+                stream = chan->env_start;
+            env_byte &= 0x7f;
+            chan->env_ptr = stream;
+            period = (uint8_t)(period + env_byte);
+            period = ((uint32_t)music_periods[period] * ins->rate) >> 10;
+            if (chan->flags & 2) {
+                if (chan->slide_delay) {
+                    chan->slide_delay--;
                 } else {
-                    c->slide = (int16_t)(c->slide + c->slide_step);
-                    d0 = (uint16_t)(d0 - c->slide);
+                    chan->slide = (int16_t)(chan->slide + chan->slide_step);
+                    period = (uint16_t)(period - chan->slide);
                 }
             }
-            if (c->vib) {
+            if (chan->vib) {
                 uint8_t pos;
 
-                if (c->vib & 0x80) {
-                    pos = (uint8_t)(c->vib_pos + c->vib_step);
-                    c->vib_pos = pos;
-                    if (pos == c->vib_limit)
-                        c->vib ^= 0x80;
+                if (chan->vib & 0x80) {
+                    pos = (uint8_t)(chan->vib_pos + chan->vib_step);
+                    chan->vib_pos = pos;
+                    if (pos == chan->vib_limit)
+                        chan->vib ^= 0x80;
                 } else {
-                    pos = (uint8_t)(c->vib_pos - c->vib_step);
-                    c->vib_pos = pos;
+                    pos = (uint8_t)(chan->vib_pos - chan->vib_step);
+                    chan->vib_pos = pos;
                     if (pos == 0)
-                        c->vib ^= 0x80;
+                        chan->vib ^= 0x80;
                 }
-                if (c->vib_pos == 0)
-                    c->vib ^= 1;
+                if (chan->vib_pos == 0)
+                    chan->vib ^= 1;
                 w = (int8_t)pos;
-                if (c->vib & 1)
-                    d0 = (uint16_t)(d0 + w);
+                if (chan->vib & 1)
+                    period = (uint16_t)(period + w);
                 else
-                    d0 = (uint16_t)(d0 - w);
+                    period = (uint16_t)(period - w);
             }
-            m->per = (uint16_t)d0;
-            if (!m->sfx_on)
-                hw->per = (uint16_t)d0;
-            if (c->vol_count-- == 0) {
+            mirror->per = (uint16_t)period;
+            if (!mirror->sfx_on)
+                hw->per = (uint16_t)period;
+            if (chan->vol_count-- == 0) {
                 int8_t b;
 
-                c->vol_count = c->vol_speed;
-                a2 = c->vol_ptr;
-                b = (int8_t)*a2++;
+                chan->vol_count = chan->vol_speed;
+                vol_data = chan->vol_ptr;
+                b = (int8_t)*vol_data++;
                 if (b >= 0)
-                    c->vol_ptr = a2;
-                d1 = (uint16_t)(((uint32_t)(b & 0x7f) * get_volume()) & 0xffff) >> 6;
-                m->vol = d1;
-                if (!m->sfx_on)
-                    hw->vol = d1;
+                    chan->vol_ptr = vol_data;
+                vol = (uint16_t)(((uint32_t)(b & 0x7f) * get_volume()) & 0xffff) >> 6;
+                mirror->vol = vol;
+                if (!mirror->sfx_on)
+                    hw->vol = vol;
             }
         }
     }
@@ -497,9 +499,9 @@ void music_tick(void)
 /* orig $19FD6, $1B26A: start sound effect `request` = (channel << 8) | effect (HLE: audio) */
 void sfx_play(uint16_t request)
 {
-    uint16_t ch, d2;
+    uint16_t ch, dma_bit;
     int8_t id;
-    SfxChannel *r;
+    SfxChannel *sfx;
     volatile struct AudioChannel *hw;
 
     CIAA_PRA |= 2;
@@ -511,9 +513,9 @@ void sfx_play(uint16_t request)
         sfx_channels[ch].active = 0;
     sound_init_instruments();
     hw_mirror[ch].sfx_on = 0xff;
-    r = &sfx_channels[ch];
+    sfx = &sfx_channels[ch];
     hw = &custom->aud[ch];
-    d2 = (uint16_t)(1 << ch);
+    dma_bit = (uint16_t)(1 << ch);
     id = (int8_t)request;
 
     if (id >= 0) {
@@ -523,58 +525,58 @@ void sfx_play(uint16_t request)
         hw->len = 1;
         hw->per = 0x7c;
         audio_delay();
-        SETCLR_WRITE(dmacon, d2);
+        SETCLR_WRITE(dmacon, dma_bit);
         audio_delay();
-        r->step = def->step;
-        r->period_reset = def->period_reset;
-        r->pair_a = def->pair_a;
-        r->period = def->period;
-        r->pair_b = def->pair_b;
-        r->reload_e = def->reload_e;
-        r->reload_f = def->reload_f;
-        r->rot_a = def->rot_a;
-        r->rot_b = def->rot_b;
-        r->timer = def->timer;
-        r->env_speed = def->env_speed;
-        r->env_index = def->env_index;
-        r->sample_id = def->sample_id;
-        r->length = def->length;
-        hw->len = r->length;
-        r->count_e = r->reload_e;
-        r->count_f = r->reload_f;
-        r->env_count = 1;
-        e = (int8_t)r->env_index;
-        r->env_ptr = at((int16_t)sfx_env_offsets[e]);
+        sfx->step = def->step;
+        sfx->period_reset = def->period_reset;
+        sfx->pair_a = def->pair_a;
+        sfx->period = def->period;
+        sfx->pair_b = def->pair_b;
+        sfx->reload_e = def->reload_e;
+        sfx->reload_f = def->reload_f;
+        sfx->rot_a = def->rot_a;
+        sfx->rot_b = def->rot_b;
+        sfx->timer = def->timer;
+        sfx->env_speed = def->env_speed;
+        sfx->env_index = def->env_index;
+        sfx->sample_id = def->sample_id;
+        sfx->length = def->length;
+        hw->len = sfx->length;
+        sfx->count_e = sfx->reload_e;
+        sfx->count_f = sfx->reload_f;
+        sfx->env_count = 1;
+        e = (int8_t)sfx->env_index;
+        sfx->env_ptr = at((int16_t)sfx_env_offsets[e]);
         audio_delay();
-        r->active = 0xff;
+        sfx->active = 0xff;
         return;
     } else {
-        const SfxSample *s;
-        int32_t d0;
+        const SfxSample *sample;
+        int32_t loop_off;
 
         sound_init_sfx_samples();
-        r->sample_id = (uint8_t)id;
-        SETCLR_WRITE(dmacon, d2);
+        sfx->sample_id = (uint8_t)id;
+        SETCLR_WRITE(dmacon, dma_bit);
         hw->per = 0x7c;
         hw->len = 1;
         audio_delay();
-        s = &sfx_samples[r->sample_id & 0x7f];
-        r->timer = s->duration;
-        if (s->endless)
-            r->timer = 0;
-        hw->len = s->length;
-        hw->lc = ADDR(s->sample);
-        hw->per = s->period;
-        r->cur_period = s->period;
-        r->slide_period = s->period;
+        sample = &sfx_samples[sfx->sample_id & 0x7f];
+        sfx->timer = sample->duration;
+        if (sample->endless)
+            sfx->timer = 0;
+        hw->len = sample->length;
+        hw->lc = ADDR(sample->sample);
+        hw->per = sample->period;
+        sfx->cur_period = sample->period;
+        sfx->slide_period = sample->period;
         hw->vol = 0x40;
-        SETCLR_WRITE(dmacon, (uint16_t)(d2 | 0x8200));
-        r->active = 0xff;
+        SETCLR_WRITE(dmacon, (uint16_t)(dma_bit | 0x8200));
+        sfx->active = 0xff;
         audio_delay();
-        d0 = s->loop_off;
-        if (d0 >= 0) {
-            hw->len = (uint16_t)(s->length - (uint16_t)((uint32_t)d0 >> 1));
-            hw->lc = ADDR(s->sample + d0);
+        loop_off = sample->loop_off;
+        if (loop_off >= 0) {
+            hw->len = (uint16_t)(sample->length - (uint16_t)((uint32_t)loop_off >> 1));
+            hw->lc = ADDR(sample->sample + loop_off);
         } else {
             hw->lc = ADDR(silence_ptr);
             hw->len = 0x20;
@@ -583,75 +585,75 @@ void sfx_play(uint16_t request)
 }
 
 /* orig $1B5A2: one tick of a sound effect channel (HLE: audio) */
-static void sfx_channel_tick(SfxChannel *r, volatile struct AudioChannel *hw, uint16_t d2, HwMirror *m)
+static void sfx_channel_tick(SfxChannel *sfx, volatile struct AudioChannel *hw, uint16_t dma_bit, HwMirror *mirror)
 {
-    uint16_t d0, d1;
+    uint16_t period, slide_val;
 
-    if (r->timer != 0) {
-        r->timer--;
-        if (r->timer == 0)
+    if (sfx->timer != 0) {
+        sfx->timer--;
+        if (sfx->timer == 0)
             goto stop;
     }
-    if (r->sample_id != 0) {
-        const SfxSample *s = &sfx_samples[r->sample_id & 0x7f];
+    if (sfx->sample_id != 0) {
+        const SfxSample *s = &sfx_samples[sfx->sample_id & 0x7f];
 
-        d0 = r->slide_period;
-        d1 = (uint16_t)s->slide;
-        if (d1 != 0) {
-            d0 = (uint16_t)(d0 + d1);
-            if ((int16_t)d0 < 0x7c)
+        period = sfx->slide_period;
+        slide_val = (uint16_t)s->slide;
+        if (slide_val != 0) {
+            period = (uint16_t)(period + slide_val);
+            if ((int16_t)period < 0x7c)
                 goto stop;
-            r->slide_period = d0;
-            hw->per = d0;
+            sfx->slide_period = period;
+            hw->per = period;
             return;
         }
-        hw->per = r->slide_period;
+        hw->per = sfx->slide_period;
         return;
     }
-    if (r->reload_f != 0) {
-        r->count_f--;
-        if (r->count_f == 0) {
-            uint32_t d4 = r->pair_a;
+    if (sfx->reload_f != 0) {
+        sfx->count_f--;
+        if (sfx->count_f == 0) {
+            uint32_t pair = sfx->pair_a;
             uint8_t b;
 
-            r->count_f = r->reload_f;
-            b = r->rot_a;
+            sfx->count_f = sfx->reload_f;
+            b = sfx->rot_a;
             if (b & 1)
                 b = (uint8_t)((b >> 1) | 0x80);
             else {
                 b = (uint8_t)(b >> 1);
-                d4 = (d4 << 16) | (d4 >> 16);
+                pair = (pair << 16) | (pair >> 16);
             }
-            r->rot_a = b;
-            r->period = (uint16_t)(r->period + (uint16_t)d4);
+            sfx->rot_a = b;
+            sfx->period = (uint16_t)(sfx->period + (uint16_t)pair);
         }
     }
-    r->period = (uint16_t)(r->period + (uint16_t)r->step);
-    if (r->reload_e != 0) {
-        r->count_e--;
-        if (r->count_e == 0) {
-            r->count_e = r->reload_e;
-            r->period = r->period_reset;
+    sfx->period = (uint16_t)(sfx->period + (uint16_t)sfx->step);
+    if (sfx->reload_e != 0) {
+        sfx->count_e--;
+        if (sfx->count_e == 0) {
+            sfx->count_e = sfx->reload_e;
+            sfx->period = sfx->period_reset;
         }
     }
-    r->env_count--;
-    if (r->env_count == 0) {
+    sfx->env_count--;
+    if (sfx->env_count == 0) {
         int8_t b;
-        const uint8_t *a2 = r->env_ptr;
+        const uint8_t *env = sfx->env_ptr;
 
-        r->env_count = r->env_speed;
-        b = (int8_t)*a2++;
+        sfx->env_count = sfx->env_speed;
+        b = (int8_t)*env++;
         if (b == 0)
             goto stop;
         if (b > 0) {
-            r->env_ptr = a2;
+            sfx->env_ptr = env;
             hw->vol = (uint16_t)(int16_t)b;
         }
     }
     {
-        int16_t per = (int16_t)r->period;
-        uint32_t d1l = r->pair_b;
-        uint8_t b = r->rot_b;
+        int16_t per = (int16_t)sfx->period;
+        uint32_t pair = sfx->pair_b;
+        uint8_t b = sfx->rot_b;
 
         if (per < 0x7c)
             per = 0x7c;
@@ -660,27 +662,27 @@ static void sfx_channel_tick(SfxChannel *r, volatile struct AudioChannel *hw, ui
             b = (uint8_t)((b >> 1) | 0x80);
         else {
             b = (uint8_t)(b >> 1);
-            d1l = (d1l << 16) | (d1l >> 16);
+            pair = (pair << 16) | (pair >> 16);
         }
-        r->rot_b = b;
-        hw->lc = ADDR(sfx_wave_base + (int16_t)d1l);
-        SETCLR_WRITE(dmacon, (uint16_t)(d2 | 0x8200));
+        sfx->rot_b = b;
+        hw->lc = ADDR(sfx_wave_base + (int16_t)pair);
+        SETCLR_WRITE(dmacon, (uint16_t)(dma_bit | 0x8200));
     }
     return;
 
 stop:
-    r->active = 0;
-    SETCLR_WRITE(dmacon, d2);
-    m->sfx_on = 0;
-    if (m->music_on) {
+    sfx->active = 0;
+    SETCLR_WRITE(dmacon, dma_bit);
+    mirror->sfx_on = 0;
+    if (mirror->music_on) {
         hw->per = 0x7c;
-        SETCLR_WRITE(dmacon, d2);
+        SETCLR_WRITE(dmacon, dma_bit);
         audio_delay();
-        hw->lc = ADDR(m->lc);
-        hw->len = m->len;
-        hw->per = m->per;
-        hw->vol = m->vol;
-        SETCLR_WRITE(dmacon, (uint16_t)(d2 | 0x8200));
+        hw->lc = ADDR(mirror->lc);
+        hw->len = mirror->len;
+        hw->per = mirror->per;
+        hw->vol = mirror->vol;
+        SETCLR_WRITE(dmacon, (uint16_t)(dma_bit | 0x8200));
     }
 }
 

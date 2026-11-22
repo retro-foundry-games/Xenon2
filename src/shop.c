@@ -94,7 +94,7 @@
 
 /* ---- drawing helpers ---- */
 
-/* shop $553F8: a picture on both screens (draw_bob_masked_at: a0 = picture, d0 = x, d1 = y) */
+/* shop $553F8: a picture on both screens (draw_bob_masked_at) */
 void shop_draw_both(uint16_t x, uint16_t y, const uint8_t *gfx)
 {
     uint8_t *saved = draw_screen;
@@ -106,15 +106,15 @@ void shop_draw_both(uint16_t x, uint16_t y, const uint8_t *gfx)
     draw_screen = saved;
 }
 
-/* shop $5537A, $553F2: d0 rows of 7 words (the first word keeps its top 7 bits, the next five are cleared, the last keeps its low 9 bits) of 4 interleaved planes;
+/* shop $5537A, $553F2: `rows` rows of 7 words (the first word keeps its top 7 bits, the next five are cleared, the last keeps its low 9 bits) of 4 interleaved planes;
  * returns the address after the rows */
-uint8_t *shop_clear_columns(uint8_t *a1, uint16_t d0)
+uint8_t *shop_clear_columns(uint8_t *dst, uint16_t rows)
 {
-    while (d0-- != 0) {
+    while (rows-- != 0) {
         int p;
 
         for (p = 0; p < 4; p++) {
-            uint8_t *b = a1 + p * 0x28;
+            uint8_t *b = dst + p * 0x28;
             int c;
 
             wr16(b, (uint16_t)(rd16(b) & 0xfe00));
@@ -122,12 +122,12 @@ uint8_t *shop_clear_columns(uint8_t *a1, uint16_t d0)
                 wr16(b + c * 2, 0);
             wr16(b + 12, (uint16_t)(rd16(b + 12) & 0x01ff));
         }
-        a1 += 0xa0;
+        dst += 0xa0;
     }
-    return a1;
+    return dst;
 }
 
-/* shop $55200: a block of w+1 words by h+1 rows of 4 planes from a0 to a1 (a row is $A0 bytes) */
+/* shop $55200: a block of w+1 words by h+1 rows of 4 planes from src to dst (a row is $A0 bytes) */
 void shop_copy_block(const uint8_t *src, uint8_t *dst, uint16_t w, uint16_t h)
 {
     do {
@@ -146,31 +146,31 @@ void shop_copy_block(const uint8_t *src, uint8_t *dst, uint16_t w, uint16_t h)
     } while (h-- != 0);
 }
 
-/* shop $56912: d0+1 rows of 28 words of a picture over the screen: 7 columns of 4 planes, the first and the last mixed in under masks */
-void shop_put_rows(const uint8_t *a0, uint8_t *a1, uint16_t d0)
+/* shop $56912: rows+1 rows of 28 words of a picture over the screen: 7 columns of 4 planes, the first and the last mixed in under masks */
+void shop_put_rows(const uint8_t *src, uint8_t *dst, uint16_t rows)
 {
     do {
         int p, c;
 
         for (p = 0; p < 4; p++)
-            wr16(a1 + p * 0x28, (uint16_t)(rd16(a1 + p * 0x28) & 0xfe00));
+            wr16(dst + p * 0x28, (uint16_t)(rd16(dst + p * 0x28) & 0xfe00));
         for (p = 0; p < 4; p++) {
-            wr16(a1 + p * 0x28, (uint16_t)(rd16(a1 + p * 0x28) | rd16(a0)));
-            a0 += 2;
+            wr16(dst + p * 0x28, (uint16_t)(rd16(dst + p * 0x28) | rd16(src)));
+            src += 2;
         }
         for (c = 1; c <= 5; c++)
             for (p = 0; p < 4; p++) {
-                wr16(a1 + c * 2 + p * 0x28, rd16(a0));
-                a0 += 2;
+                wr16(dst + c * 2 + p * 0x28, rd16(src));
+                src += 2;
             }
         for (p = 0; p < 4; p++)
-            wr16(a1 + 12 + p * 0x28, (uint16_t)(rd16(a1 + 12 + p * 0x28) & 0x01ff));
+            wr16(dst + 12 + p * 0x28, (uint16_t)(rd16(dst + 12 + p * 0x28) & 0x01ff));
         for (p = 0; p < 4; p++) {
-            wr16(a1 + 12 + p * 0x28, (uint16_t)(rd16(a1 + 12 + p * 0x28) | rd16(a0)));
-            a0 += 2;
+            wr16(dst + 12 + p * 0x28, (uint16_t)(rd16(dst + 12 + p * 0x28) | rd16(src)));
+            src += 2;
         }
-        a1 += 0xa0;
-    } while (d0-- != 0);
+        dst += 0xa0;
+    } while (rows-- != 0);
 }
 
 /* the next picture of a looping list at the long SLOT: the list is addresses, 0 then the address of the list to loop to */
@@ -214,43 +214,43 @@ void shop_text_newline(void)
 /* shop $56D8C: a character of the text at the text position (4 pixels wide: even positions write a byte, odd ones the low nibble) */
 void shop_text_char(uint8_t ch)
 {
-    uint8_t *a0, *a1;
-    const uint8_t *a2;
-    int16_t d7;
+    uint8_t *dst_b, *dst_a;
+    const uint8_t *glyph;
+    int16_t row;
 
     if (ch == 0x0d) {
         shop_text_newline();
         return;
     }
-    a0 = screen_b + (int16_t)row_offset[text_y];
-    a0 += (int16_t)(text_x >> 1);
-    a1 = screen_a + (a0 - screen_b);
-    a2 = (const uint8_t *)GPTR(SH_FONT) + (int16_t)((uint16_t)(ch - 0x20) << 5);
+    dst_b = screen_b + (int16_t)row_offset[text_y];
+    dst_b += (int16_t)(text_x >> 1);
+    dst_a = screen_a + (dst_b - screen_b);
+    glyph = (const uint8_t *)GPTR(SH_FONT) + (int16_t)((uint16_t)(ch - 0x20) << 5);
     if (!(text_x & 1)) {
-        for (d7 = 7; d7 >= 0; d7--) {
+        for (row = 7; row >= 0; row--) {
             int p;
 
             for (p = 0; p < 4; p++) {
-                uint8_t d0 = *a2++;
+                uint8_t bits = *glyph++;
 
-                a0[p * 0x28] = d0;
-                a1[p * 0x28] = d0;
+                dst_b[p * 0x28] = bits;
+                dst_a[p * 0x28] = bits;
             }
-            a0 += 0xa0;
-            a1 += 0xa0;
+            dst_b += 0xa0;
+            dst_a += 0xa0;
         }
     } else {
-        for (d7 = 7; d7 >= 0; d7--) {
+        for (row = 7; row >= 0; row--) {
             int p;
 
             for (p = 0; p < 4; p++) {
-                uint8_t d0 = (uint8_t)(*a2++ >> 4);
+                uint8_t bits = (uint8_t)(*glyph++ >> 4);
 
-                a0[p * 0x28] |= d0;
-                a1[p * 0x28] |= d0;
+                dst_b[p * 0x28] |= bits;
+                dst_a[p * 0x28] |= bits;
             }
-            a0 += 0xa0;
-            a1 += 0xa0;
+            dst_b += 0xa0;
+            dst_a += 0xa0;
         }
     }
     text_x++;
@@ -260,18 +260,18 @@ void shop_text_char(uint8_t ch)
 /* shop $56988: the countdown of each record: an empty one stays 0, the others start again at $14-$113 */
 void shop_records_tick(void)
 {
-    uint8_t *a0 = GPTR(SH_RECS);
+    uint8_t *rec = GPTR(SH_RECS);
     int16_t n = 0x13;
 
     do {
-        if (rd16(a0 + 6) == 0) {
-            wr16(a0, 0);
+        if (rd16(rec + 6) == 0) {
+            wr16(rec, 0);
         } else {
-            wr16(a0, (uint16_t)(rd16(a0) - 1));
-            if ((int16_t)rd16(a0) <= 0)
-                wr16(a0, (uint16_t)((random_next() & 0xff) + 0x14));
+            wr16(rec, (uint16_t)(rd16(rec) - 1));
+            if ((int16_t)rd16(rec) <= 0)
+                wr16(rec, (uint16_t)((random_next() & 0xff) + 0x14));
         }
-        a0 += 0x10;
+        rec += 0x10;
     } while (n-- != 0);
 }
 
@@ -279,85 +279,85 @@ void shop_records_tick(void)
 void shop_sparkle(const uint8_t *rec)
 {
     uint16_t x = rd16(rec + 2), y = rd16(rec + 4);
-    uint8_t *a0 = draw_screen + (int16_t)row_offset[y];
-    uint16_t d0 = x & 0xf, d1, d3, mask, inv, r;
+    uint8_t *dst = draw_screen + (int16_t)row_offset[y];
+    uint16_t shift = x & 0xf, noise, head, mask, inv, rnd;
     int16_t n = 0x1b;
 
-    a0 += (int16_t)((uint16_t)(x ^ d0) >> 3);
-    mask = (uint16_t)(0xffff >> d0);
+    dst += (int16_t)((uint16_t)(x ^ shift) >> 3);
+    mask = (uint16_t)(0xffff >> shift);
     inv = (uint16_t)~mask;
-    r = (uint16_t)random_next();
+    rnd = (uint16_t)random_next();
     do {
-        d1 = r;
-        r = (uint16_t)(((r << 8) & 0xff00) | 0x0a);
-        r = (uint16_t)(r - d1);
-        r = (uint16_t)(r + r);
-        r = (uint16_t)(r + r);
-        r = (uint16_t)(r + d1);
-        r = (uint16_t)(r + 1);
-        d1 = (uint16_t)((r >> 8) ^ r);
-        d3 = (uint16_t)(d1 & mask);
-        wr16(a0, (uint16_t)(rd16(a0) & inv));
-        wr16(a0 + 0x28, (uint16_t)(rd16(a0 + 0x28) & inv));
-        wr16(a0 + 0x50, (uint16_t)(rd16(a0 + 0x50) & inv));
-        wr16(a0 + 0x78, (uint16_t)(rd16(a0 + 0x78) & inv));
-        wr16(a0, (uint16_t)(rd16(a0) | d3));
-        wr16(a0 + 0x28, (uint16_t)(rd16(a0 + 0x28) | d3));
-        wr16(a0 + 0x50, (uint16_t)(rd16(a0 + 0x50) | d3));
-        wr16(a0 + 2, d1);
-        wr16(a0 + 0x2a, d1);
-        wr16(a0 + 0x52, d1);
-        wr16(a0 + 0x7a, 0);
-        d1 = (uint16_t)(d1 & inv);
-        wr16(a0 + 4, (uint16_t)(rd16(a0 + 4) & mask));
-        wr16(a0 + 0x2c, (uint16_t)(rd16(a0 + 0x2c) & mask));
-        wr16(a0 + 0x54, (uint16_t)(rd16(a0 + 0x54) & mask));
-        wr16(a0 + 0x7c, (uint16_t)(rd16(a0 + 0x7c) & mask));
-        wr16(a0 + 4, (uint16_t)(rd16(a0 + 4) | d1));
-        wr16(a0 + 0x2c, (uint16_t)(rd16(a0 + 0x2c) | d1));
-        wr16(a0 + 0x54, (uint16_t)(rd16(a0 + 0x54) | d1));
-        a0 += 0xa0;
+        noise = rnd;
+        rnd = (uint16_t)(((rnd << 8) & 0xff00) | 0x0a);
+        rnd = (uint16_t)(rnd - noise);
+        rnd = (uint16_t)(rnd + rnd);
+        rnd = (uint16_t)(rnd + rnd);
+        rnd = (uint16_t)(rnd + noise);
+        rnd = (uint16_t)(rnd + 1);
+        noise = (uint16_t)((rnd >> 8) ^ rnd);
+        head = (uint16_t)(noise & mask);
+        wr16(dst, (uint16_t)(rd16(dst) & inv));
+        wr16(dst + 0x28, (uint16_t)(rd16(dst + 0x28) & inv));
+        wr16(dst + 0x50, (uint16_t)(rd16(dst + 0x50) & inv));
+        wr16(dst + 0x78, (uint16_t)(rd16(dst + 0x78) & inv));
+        wr16(dst, (uint16_t)(rd16(dst) | head));
+        wr16(dst + 0x28, (uint16_t)(rd16(dst + 0x28) | head));
+        wr16(dst + 0x50, (uint16_t)(rd16(dst + 0x50) | head));
+        wr16(dst + 2, noise);
+        wr16(dst + 0x2a, noise);
+        wr16(dst + 0x52, noise);
+        wr16(dst + 0x7a, 0);
+        noise = (uint16_t)(noise & inv);
+        wr16(dst + 4, (uint16_t)(rd16(dst + 4) & mask));
+        wr16(dst + 0x2c, (uint16_t)(rd16(dst + 0x2c) & mask));
+        wr16(dst + 0x54, (uint16_t)(rd16(dst + 0x54) & mask));
+        wr16(dst + 0x7c, (uint16_t)(rd16(dst + 0x7c) & mask));
+        wr16(dst + 4, (uint16_t)(rd16(dst + 4) | noise));
+        wr16(dst + 0x2c, (uint16_t)(rd16(dst + 0x2c) | noise));
+        wr16(dst + 0x54, (uint16_t)(rd16(dst + 0x54) | noise));
+        dst += 0xa0;
     } while (n-- != 0);
 }
 
 /* shop $569BC: each record's picture: opening (state -9..-1) the pictures of SH_TAB_SPARK, closing the sparkle (1, 2), in between (more than 2) the puff and the item's animation */
 void shop_records_draw(void)
 {
-    uint8_t *a1 = GPTR(SH_RECS);
+    uint8_t *rec = GPTR(SH_RECS);
     uint16_t cnt = 0x14;
 
     do {
-        int16_t st = (int16_t)rd16(a1);
+        int16_t st = (int16_t)rd16(rec);
 
         if (st > 0) {
             if (st <= 2) {
                 if (st == 2 && (int16_t)sfx_cmd < 0)
                     sfx_cmd2 = 0xb;
-                shop_sparkle(a1);
+                shop_sparkle(rec);
             } else {
-                const uint8_t *a0 = GPTR(sh_r32(SH_TAB_PUFF + 4u * (cnt & 1)));
-                uint16_t d0, d1, d2;
+                const uint8_t *pic = GPTR(sh_r32(SH_TAB_PUFF + 4u * (cnt & 1)));
+                uint16_t px, py, adj;
 
-                draw_bob_masked_at(rd16(a1 + 2), rd16(a1 + 4), a0);
-                a0 = GPTR(list_next(GADDR(a1) + 8));
-                d0 = (uint16_t)(rd16(a1 + 2) + rd16(a0));
-                d1 = (uint16_t)(rd16(a1 + 4) + rd16(a0 + 2));
-                d2 = (uint16_t)((rd16(a0 + 4) >> 1) - 0x10);
-                d0 = (uint16_t)(d0 - d2);
-                d2 = (uint16_t)(((uint16_t)(rd16(a0 + 6) + 1) >> 1) - 0xe);
-                d1 = (uint16_t)(d1 - d2);
-                draw_bob_masked_at(d0, d1, a0);
+                draw_bob_masked_at(rd16(rec + 2), rd16(rec + 4), pic);
+                pic = GPTR(list_next(GADDR(rec) + 8));
+                px = (uint16_t)(rd16(rec + 2) + rd16(pic));
+                py = (uint16_t)(rd16(rec + 4) + rd16(pic + 2));
+                adj = (uint16_t)((rd16(pic + 4) >> 1) - 0x10);
+                px = (uint16_t)(px - adj);
+                adj = (uint16_t)(((uint16_t)(rd16(pic + 6) + 1) >> 1) - 0xe);
+                py = (uint16_t)(py - adj);
+                draw_bob_masked_at(px, py, pic);
             }
         } else {
             if (st != (int16_t)0xfff8) {
-                shop_sparkle(a1);
-                if (rd16(a1) == 0)
+                shop_sparkle(rec);
+                if (rd16(rec) == 0)
                     goto next;
             }
-            draw_bob_masked_at(rd16(a1 + 2), rd16(a1 + 4), GPTR(sh_r32(SH_TAB_SPARK + 4u * (uint16_t)(st + 9))));
+            draw_bob_masked_at(rd16(rec + 2), rd16(rec + 4), GPTR(sh_r32(SH_TAB_SPARK + 4u * (uint16_t)(st + 9))));
         }
     next:
-        a1 += 0x10;
+        rec += 0x10;
     } while (--cnt != 0);
 }
 
@@ -394,40 +394,40 @@ mouth:
 /* shop $568E6: the door pillar of the right: the rows it still covers cleared, the rest of it drawn */
 void shop_door_draw(void)
 {
-    uint8_t *a1;
+    uint8_t *dst;
 
     if (shop_door_right == 0)
         return;
-    a1 = shop_clear_columns(draw_screen + 0x475a, (uint16_t)(0x44 - shop_door_right));
-    shop_put_rows(GPTR(SH_PIC_SLIDE), a1, (uint16_t)(shop_door_right - 1));
+    dst = shop_clear_columns(draw_screen + 0x475a, (uint16_t)(0x44 - shop_door_right));
+    shop_put_rows(GPTR(SH_PIC_SLIDE), dst, (uint16_t)(shop_door_right - 1));
 }
 
 /* shop $5662A: the room: its pictures, the keeper's lights, the doors */
 void shop_room_draw(void)
 {
-    const uint8_t *a0;
-    uint8_t *a1;
-    uint16_t d0;
+    const uint8_t *pic;
+    uint8_t *dst;
+    uint16_t rows;
 
     shop_put_rows(GPTR(SH_PIC_TOP), draw_screen + 0x5ba, 0x33);
     shop_put_rows(GPTR(SH_PIC_MID), draw_screen + 0x3b7a, 9);
-    a0 = GPTR(SH_PIC_LOW);
+    pic = GPTR(SH_PIC_LOW);
     if (shop_keeper_talking != 0) {
-        uint32_t r = random_next();
-        int16_t d1 = 3;
+        uint32_t rnd = random_next();
+        int16_t tries = 3;
 
         for (;;) {
-            int carry = r & 1;
+            int carry = rnd & 1;
 
-            r = (r & 0xffff0000u) | ((r & 0xffff) >> 1);
+            rnd = (rnd & 0xffff0000u) | ((rnd & 0xffff) >> 1);
             if (carry)
                 break;
-            if (--d1 == -1)
+            if (--tries == -1)
                 break;
-            a0 += 0x770;
+            pic += 0x770;
         }
     }
-    shop_put_rows(a0, draw_screen + 0x263a, 0x21);
+    shop_put_rows(pic, draw_screen + 0x263a, 0x21);
     shop_lights_draw();
     shop_keeper_blink();
     if (shop_door_left == 0)
@@ -435,12 +435,12 @@ void shop_room_draw(void)
     if ((int16_t)shop_door_left <= 8) {
         /* (the closed doors' pictures are drawn only when more than 8 rows have opened) */
     } else {
-        a1 = draw_screen + 0x5ba;
-        a0 = (const uint8_t *)GPTR(SH_PIC_DOOR) + (int16_t)((uint16_t)(0x30 - shop_door_left) * 0x38);
-        d0 = (uint16_t)(shop_door_left - 9);
-        shop_put_rows(a0, a1, d0);
-        a1 = draw_screen + 0x46ba - (int16_t)((uint16_t)(shop_door_left * 0xa0));
-        shop_put_rows(GPTR(SH_PIC_DOOR2), a1, d0);
+        dst = draw_screen + 0x5ba;
+        pic = (const uint8_t *)GPTR(SH_PIC_DOOR) + (int16_t)((uint16_t)(0x30 - shop_door_left) * 0x38);
+        rows = (uint16_t)(shop_door_left - 9);
+        shop_put_rows(pic, dst, rows);
+        dst = draw_screen + 0x46ba - (int16_t)((uint16_t)(shop_door_left * 0xa0));
+        shop_put_rows(GPTR(SH_PIC_DOOR2), dst, rows);
     }
     draw_bob_masked_at(0xd7, (uint16_t)(shop_door_left + 1), GPTR(SH_GFX_BAR_1));
     draw_bob_masked_at(0xf7, (uint16_t)(shop_door_left + 1), GPTR(SH_GFX_BAR_2));
@@ -452,7 +452,7 @@ void shop_room_draw(void)
         return;
     {
         uint8_t *dst = draw_screen + 0x1a, *dst2 = draw_screen + 0x41ba;
-        const uint8_t *s2 = GPTR(SH_PIC_LAMP_A), *s3 = GPTR(SH_PIC_LAMP_B);
+        const uint8_t *lamp_a = GPTR(SH_PIC_LAMP_A), *lamp_b = GPTR(SH_PIC_LAMP_B);
         int16_t n = 8;
 
         do {
@@ -460,20 +460,20 @@ void shop_room_draw(void)
 
             for (g = 0; g < 7; g++) {
                 for (p = 0; p < 4; p++) {
-                    wr16(dst + p * 0x28, rd16(s2));
-                    s2 += 2;
+                    wr16(dst + p * 0x28, rd16(lamp_a));
+                    lamp_a += 2;
                 }
                 for (p = 0; p < 4; p++) {
-                    wr16(dst2 + p * 0x28, rd16(s3));
-                    s3 += 2;
+                    wr16(dst2 + p * 0x28, rd16(lamp_b));
+                    lamp_b += 2;
                 }
                 dst += 2;
                 dst2 += 2;
             }
             dst += 0x92;
             dst2 += 0x92;
-            s2 += 8;
-            s3 += 8;
+            lamp_a += 8;
+            lamp_b += 8;
         } while (n-- != 0);
     }
 }
@@ -496,8 +496,8 @@ void shop_keeper_draw(void)
     clip_bottom = saved;
 }
 
-/* shop $564B2: d0 frames of the room and the keeper */
-void shop_hold(uint16_t d0)
+/* shop $564B2: `frames` frames of the room and the keeper */
+void shop_hold(uint16_t frames)
 {
     do {
         swap_screens_200();
@@ -505,18 +505,18 @@ void shop_hold(uint16_t d0)
         shop_records_draw();
         shop_room_draw();
         shop_keeper_draw();
-    } while (--d0 != 0);
+    } while (--frames != 0);
 }
 
-/* shop $551E6: d0 frames of the room (the records' sparkles run) */
-void shop_wait(uint16_t d0)
+/* shop $551E6: `frames` frames of the room (the records' sparkles run) */
+void shop_wait(uint16_t frames)
 {
     do {
         shop_room_draw();
         shop_records_tick();
         shop_records_draw();
         swap_screens_200();
-    } while (--d0 != 0);
+    } while (--frames != 0);
 }
 
 /* shop $55360: the text board is cleared on both screens */
@@ -542,25 +542,25 @@ void shop_cash_draw(void)
 
 /* shop $56CC0: the text (words, $0D = a new line, 0 ends) is drawn a character at a time, the keeper talks at the start of each word, every second character
  * a frame of the room goes by */
-void shop_print(const uint8_t *a0)
+void shop_print(const uint8_t *text)
 {
     for (;;) {
-        uint16_t d0;
-        const uint8_t *a1;
+        uint16_t rnd, width;
+        const uint8_t *p;
 
         shop_keeper_talking = 0xff;
         do
-            d0 = (uint16_t)random_next() & 3;
-        while (d0 == 0);
-        shop_sound_cmd((uint16_t)((d0 - 1) | 0x80));
-        d0 = 0;
-        for (a1 = a0; *a1 != 0 && *a1 != 0x20 && *a1 != 0x0d; a1++)
-            d0++;
-        d0 = (uint16_t)(d0 + text_x);
-        if ((int16_t)d0 > 0x4b)
+            rnd = (uint16_t)random_next() & 3;
+        while (rnd == 0);
+        shop_sound_cmd((uint16_t)((rnd - 1) | 0x80));
+        width = 0;
+        for (p = text; *p != 0 && *p != 0x20 && *p != 0x0d; p++)
+            width++;
+        width = (uint16_t)(width + text_x);
+        if ((int16_t)width > 0x4b)
             shop_text_newline();
         for (;;) {
-            uint8_t ch = *a0++;
+            uint8_t ch = *text++;
 
             if (ch == 0) {
                 shop_keeper_talking = 0;
@@ -569,7 +569,7 @@ void shop_print(const uint8_t *a0)
             if (ch == 0x20) {
                 for (;;) {
                     text_x++;
-                    ch = *a0++;
+                    ch = *text++;
                     if (ch == 0) {
                         shop_keeper_talking = 0;
                         return;
@@ -577,7 +577,7 @@ void shop_print(const uint8_t *a0)
                     if (ch != 0x20)
                         break;
                 }
-                a0--;
+                text--;
                 break;
             }
             if (ch == 0x0d) {
@@ -595,19 +595,19 @@ void shop_print(const uint8_t *a0)
     }
 }
 
-/* shop $56D56: the number in d0 (a word, decimal) is drawn, a frame goes by */
-void shop_print_number(uint16_t d0)
+/* shop $56D56: the number in value (a word, decimal) is drawn, a frame goes by */
+void shop_print_number(uint16_t value)
 {
     shop_keeper_talking = 0xff;
-    if ((int16_t)d0 >= 10) {
-        uint32_t q = (uint32_t)(int32_t)(int16_t)d0;
+    if ((int16_t)value >= 10) {
+        uint32_t q = (uint32_t)(int32_t)(int16_t)value;
         uint32_t d = (q / 10u) & 0xffff;
         uint32_t rem = q % 10u;
 
         shop_print_number((uint16_t)d);
-        d0 = (uint16_t)rem;
+        value = (uint16_t)rem;
     }
-    shop_text_char((uint8_t)(d0 + 0x30));
+    shop_text_char((uint8_t)(value + 0x30));
     swap_screens_200();
     shop_records_tick();
     shop_records_draw();
@@ -618,25 +618,25 @@ void shop_print_number(uint16_t d0)
 /* shop $56040 (the cursor drawn), $560A6 (the cursor taken away): the picture of the cursor at the item under it, or of the buttons below the grid */
 static void cursor_show(uint32_t on_item, uint32_t exit_a, uint32_t exit_b, uint32_t exit_c)
 {
-    uint16_t d0 = shop_cursor_row, d1;
-    const uint8_t *a0;
+    uint16_t row = shop_cursor_row, x, y, offset;
+    const uint8_t *pic;
 
-    if (d0 == 4) {
-        d0 = 4;
-        a0 = GPTR(exit_a);
+    if (row == 4) {
+        x = 4;
+        pic = GPTR(exit_a);
         if (shop_cursor_col != 0) {
-            d0 = 0x2d;
-            a0 = GPTR(exit_b);
+            x = 0x2d;
+            pic = GPTR(exit_b);
             if (sh_r8(SH_SELLING) == 0)
-                a0 = GPTR(exit_c);
+                pic = GPTR(exit_c);
         }
-        shop_draw_both(d0, 0xa8, a0);
+        shop_draw_both(x, 0xa8, pic);
         return;
     }
-    d0 = (uint16_t)((uint16_t)(d0 * 5 + shop_cursor_col) * 0x10);
-    d1 = sh_r16(SH_RECS + (int16_t)d0 + 4);
-    d0 = sh_r16(SH_RECS + (int16_t)d0 + 2);
-    shop_draw_both((uint16_t)(d0 + 0xa), (uint16_t)(d1 + 0x1f), GPTR(on_item));
+    offset = (uint16_t)((uint16_t)(row * 5 + shop_cursor_col) * 0x10);
+    y = sh_r16(SH_RECS + (int16_t)offset + 4);
+    x = sh_r16(SH_RECS + (int16_t)offset + 2);
+    shop_draw_both((uint16_t)(x + 0xa), (uint16_t)(y + 0x1f), GPTR(on_item));
 }
 
 void shop_cursor_draw(void) { cursor_show(SH_GFX_CURSOR_ON_A, SH_GFX_EXIT_ON_A, SH_GFX_EXIT_ON_B, SH_GFX_EXIT_ON_C); }
@@ -695,7 +695,7 @@ void shop_stick(void)
 int32_t shop_can_buy(void)
 {
     uint16_t kind = sh_r16(sh_r32(SH_REC) + 6);
-    const Object *a1;
+    const Object *weapon;
     uint8_t flags;
     int i;
 
@@ -717,8 +717,8 @@ int32_t shop_can_buy(void)
     }
     flags = sh_r8(SH_TAB_FLAGS + (uint16_t)(kind - 1));
     if (flags & 1) {
-        a1 = weapon_slots[0].obj;
-        if (kind != (uint16_t)a1->kind) {
+        weapon = weapon_slots[0].obj;
+        if (kind != (uint16_t)weapon->kind) {
             if (weapon_slots[0].type == 0 || weapon_slots[0].type == 0x94)
                 return -1;
             return 0;
@@ -731,8 +731,8 @@ int32_t shop_can_buy(void)
     } else if (flags & 4) {
         if (weapon_slots[5].type == 0)
             return -1;
-        a1 = weapon_slots[5].obj;
-        if (kind != (uint16_t)a1->kind)
+        weapon = weapon_slots[5].obj;
+        if (kind != (uint16_t)weapon->kind)
             return 0;
     } else if (flags & 0x10) {
         if (weapon_slots[6].type == 0 || weapon_slots[5].type == 0)
@@ -741,13 +741,13 @@ int32_t shop_can_buy(void)
     } else if (flags & 8) {
         if (weapon_slots[6].type == 0)
             return -1;
-        a1 = weapon_slots[6].obj;
-        if (kind != (uint16_t)a1->kind)
+        weapon = weapon_slots[6].obj;
+        if (kind != (uint16_t)weapon->kind)
             return 0;
     } else {
         return -1;
     }
-    return (uint16_t)a1->score != (uint16_t)a1->energy ? -1 : 0;
+    return (uint16_t)weapon->score != (uint16_t)weapon->energy ? -1 : 0;
 }
 
 /* shop $558E4, $558EC, $55930, $55938: the items that are not a weapon */
@@ -756,14 +756,14 @@ void shop_item_ca2(void) { nashwan_timer = 0xaa; }
 /* shop $558EC: the keeper's advice: the next sentence for the level and the number of hints so far */
 void shop_item_advice(void)
 {
-    uint16_t d0;
+    uint16_t index;
 
     sh_w8(SH_BLINK_A, 0xc);
     shop_text_home();
-    d0 = (uint16_t)((uint16_t)(level_number - 1) * 0x18 + advice_hints);
+    index = (uint16_t)((uint16_t)(level_number - 1) * 0x18 + advice_hints);
     if (advice_hints != 8 && advice_hints != 0x14)
         advice_hints += 4;
-    shop_print((const uint8_t *)GPTR(sh_r32(SH_TAB_ADVICE + (int16_t)d0)));
+    shop_print((const uint8_t *)GPTR(sh_r32(SH_TAB_ADVICE + (int16_t)index)));
     sh_w8(SH_BLINK_A, 0);
 }
 
@@ -802,7 +802,7 @@ static void item_grant(uint16_t kind)
     }
 }
 
-/* shop $55DE8: the item's name is shown; while selling, the power of the weapon (d1 + 1) for the ones that have one */
+/* shop $55DE8: the item's name is shown; while selling, the power of the weapon (power + 1) for the ones that have one */
 void shop_item_name(uint16_t kind, uint16_t power)
 {
     shop_text_home();
@@ -818,169 +818,169 @@ void shop_item_name(uint16_t kind, uint16_t power)
 /* shop $55C60: "THAT WILL COST" and the price of the item of the record (halved on the level 5 setting) */
 void shop_price_text(uint8_t *rec)
 {
-    uint16_t d0;
+    uint16_t price;
 
     sh_w32(SH_REC, GADDR(rec));
     shop_print((const uint8_t *)GPTR(SH_TXT_COST));
     rec = (uint8_t *)GPTR(sh_r32(SH_REC));
-    d0 = sh_r16(SH_TAB_PRICE + (uint16_t)(rd16(rec + 6) * 2) - 2);
+    price = sh_r16(SH_TAB_PRICE + (uint16_t)(rd16(rec + 6) * 2) - 2);
     if (level_number == 5)
-        d0 >>= 1;
-    sh_w16(SH_PRICE, d0);
-    shop_print_number(d0);
+        price >>= 1;
+    sh_w16(SH_PRICE, price);
+    shop_print_number(price);
 }
 
-/* the price of item d (1 on) on this setting */
+/* the price of item price (1 on) on this setting */
 static uint16_t item_price_at(uint32_t table_entry)
 {
-    uint16_t d = sh_r16(table_entry);
+    uint16_t price = sh_r16(table_entry);
 
     if (level_number == 5)
-        d >>= 1;
-    return d;
+        price >>= 1;
+    return price;
 }
 
 /* shop $55424: the records of the page of the stock: an item that is affordable (price not above the cash and not above the limit $9FA) is at its animation, the others
  * are sold out ($1A); a page that runs out of items is padded with empty records, the last record is the next page ($1B) unless it is the first page and ends there */
 void shop_stock_update(void)
 {
-    uint32_t a0, a1, a2;
-    uint16_t d0;
-    int32_t d1;
-    int16_t d2;
+    uint32_t rec, price_ptr, anim_ptr;
+    uint16_t price, item;
+    int32_t cash;
+    int16_t cost;
 
-    d0 = (uint16_t)(sh_r16(SH_PAGE) * 2);
-    d0 = sh_r16(SH_TAB_PRICE + 2 + (int16_t)d0);
+    price = (uint16_t)(sh_r16(SH_PAGE) * 2);
+    price = sh_r16(SH_TAB_PRICE + 2 + (int16_t)price);
     if (level_number == 5)
-        d0 >>= 1;
-    if ((int32_t)(int16_t)d0 > (int32_t)player_money)
+        price >>= 1;
+    if ((int32_t)(int16_t)price > (int32_t)player_money)
         sh_w16(SH_PAGE, 0);
-    a0 = SH_RECS;
-    d0 = (uint16_t)(sh_r16(SH_PAGE) + 2);
-    a1 = SH_TAB_PRICE + (uint32_t)(int32_t)(int16_t)(uint16_t)((uint16_t)(d0 - 1) * 2);
-    a2 = SH_TAB_ANIM + (uint32_t)(int32_t)(int16_t)(uint16_t)((uint16_t)(d0 - 1) * 4);
-    d1 = (int32_t)player_money;
+    rec = SH_RECS;
+    item = (uint16_t)(sh_r16(SH_PAGE) + 2);
+    price_ptr = SH_TAB_PRICE + (uint32_t)(int32_t)(int16_t)(uint16_t)((uint16_t)(item - 1) * 2);
+    anim_ptr = SH_TAB_ANIM + (uint32_t)(int32_t)(int16_t)(uint16_t)((uint16_t)(item - 1) * 4);
+    cash = (int32_t)player_money;
     for (;;) {
-        d2 = (int16_t)item_price_at(a1);
-        if (d2 > (int16_t)shop_price_cap || d1 < (int32_t)d2) {
+        cost = (int16_t)item_price_at(price_ptr);
+        if (cost > (int16_t)shop_price_cap || cash < (int32_t)cost) {
 sold:
-            sh_w16(a0 + 6, 0x1a);
-            sh_w32(a0 + 8, SH_LIST_SOLD_OUT);
+            sh_w16(rec + 6, 0x1a);
+            sh_w32(rec + 8, SH_LIST_SOLD_OUT);
         } else {
-            sh_w16(a0 + 6, d0);
-            sh_w32(a0 + 8, sh_r32(a2));
+            sh_w16(rec + 6, item);
+            sh_w32(rec + 8, sh_r32(anim_ptr));
         }
-        d0++;
-        a1 += 2;
-        a2 += 4;
-        a0 += 0x10;
-        if (d0 == 0x1a) {
-            while (a0 != SH_RECS_END) {
-                sh_w16(a0 + 6, 0);
-                a0 += 0x10;
+        item++;
+        price_ptr += 2;
+        anim_ptr += 4;
+        rec += 0x10;
+        if (item == 0x1a) {
+            while (rec != SH_RECS_END) {
+                sh_w16(rec + 6, 0);
+                rec += 0x10;
             }
             if (sh_r16(SH_PAGE) == 0) {
-                sh_w16(a0 + 6, 0);
+                sh_w16(rec + 6, 0);
                 return;
             }
             break;
         }
-        if (a0 < SH_RECS_END)
+        if (rec < SH_RECS_END)
             continue;
-        if (a0 > SH_RECS_END)
+        if (rec > SH_RECS_END)
             return;
         if (sh_r16(SH_PAGE) == 0) {
-            d2 = (int16_t)item_price_at(a1);
-            if (d2 > (int16_t)shop_price_cap || d1 < (int32_t)d2)
+            cost = (int16_t)item_price_at(price_ptr);
+            if (cost > (int16_t)shop_price_cap || cash < (int32_t)cost)
                 goto sold;
         }
         break;
     }
-    sh_w16(a0 + 6, 0x1b);
-    sh_w32(a0 + 8, SH_LIST_NEXT);
+    sh_w16(rec + 6, 0x1b);
+    sh_w32(rec + 8, SH_LIST_NEXT);
 }
 
 /* shop $55512: every record but the last is sold out */
 void shop_stock_sold_out(void)
 {
-    uint32_t a0 = SH_RECS;
+    uint32_t rec = SH_RECS;
 
     do {
-        sh_w16(a0 + 6, 0x1a);
-        sh_w32(a0 + 8, SH_LIST_SOLD_OUT);
-        a0 += 0x10;
-    } while (a0 < SH_RECS_END);
+        sh_w16(rec + 6, 0x1a);
+        sh_w32(rec + 8, SH_LIST_SOLD_OUT);
+        rec += 0x10;
+    } while (rec < SH_RECS_END);
 }
 
 /* shop $55534: after a purchase the items that cost more than the cash left are sold out, and the next page record becomes sold out when the one before it is */
 void shop_stock_recheck(void)
 {
-    uint32_t a0 = SH_RECS;
-    int32_t d1 = (int32_t)player_money;
+    uint32_t rec = SH_RECS;
+    int32_t cash = (int32_t)player_money;
     int16_t n = 0x13;
 
     do {
-        uint16_t d2 = sh_r16(a0 + 6);
+        uint16_t item = sh_r16(rec + 6);
 
-        if (d2 != 0) {
+        if (item != 0) {
             int sold = 0;
 
-            if (d2 == 0x1b) {
-                if (sh_r16(a0 - 0xa) == 0x1a)
+            if (item == 0x1b) {
+                if (sh_r16(rec - 0xa) == 0x1a)
                     sold = 1;
-            } else if ((int16_t)d2 < 0x1a) {
-                uint16_t d3 = sh_r16(SH_TAB_PRICE - 2 + (uint16_t)(d2 * 2));
+            } else if ((int16_t)item < 0x1a) {
+                uint16_t price = sh_r16(SH_TAB_PRICE - 2 + (uint16_t)(item * 2));
 
                 if (level_number == 5)
-                    d3 >>= 1;
-                if (!(d1 >= (int32_t)(int16_t)d3))
+                    price >>= 1;
+                if (!(cash >= (int32_t)(int16_t)price))
                     sold = 1;
             }
             if (sold) {
-                sh_w16(a0 + 6, 0x1a);
-                sh_w32(a0 + 8, SH_LIST_SOLD_OUT);
+                sh_w16(rec + 6, 0x1a);
+                sh_w32(rec + 8, SH_LIST_SOLD_OUT);
             }
         }
-        a0 += 0x10;
+        rec += 0x10;
     } while (n-- != 0);
 }
 
 /* shop $55AFC: the records of the player's own weapons: the objects of the ship's list, each with the animation of its kind (the ones of kind $94 are not for sale) */
 void shop_sell_list(void)
 {
-    uint32_t a0 = SH_RECS;
-    Object *a1 = obj_list[1].prev;
+    uint32_t rec = SH_RECS;
+    Object *weapon = obj_list[1].prev;
 
-    while (a1->type != 0) {
-        if (a1->type != 0x94) {
-            uint16_t d0 = (uint16_t)a1->kind;
+    while (weapon->type != 0) {
+        if (weapon->type != 0x94) {
+            uint16_t kind = (uint16_t)weapon->kind;
 
-            sh_w16(a0 + 6, d0);
-            sh_w32(a0 + 0xc, GADDR(a1));
-            sh_w32(a0 + 8, sh_r32(SH_TAB_ANIM - 4 + (uint16_t)(d0 * 4)));
-            a0 += 0x10;
+            sh_w16(rec + 6, kind);
+            sh_w32(rec + 0xc, GADDR(weapon));
+            sh_w32(rec + 8, sh_r32(SH_TAB_ANIM - 4 + (uint16_t)(kind * 4)));
+            rec += 0x10;
         }
-        a1 = a1->prev;
+        weapon = weapon->prev;
     }
     do {
-        sh_w16(a0 + 6, 0);
-        a0 += 0x10;
-    } while (a0 <= SH_RECS_END);
+        sh_w16(rec + 6, 0);
+        rec += 0x10;
+    } while (rec <= SH_RECS_END);
 }
 
 /* the record under the cursor (the grid is 5 wide) */
 static uint8_t *cursor_record(void)
 {
-    uint16_t d0 = (uint16_t)(shop_cursor_row * 5 + shop_cursor_col);
+    uint16_t index = (uint16_t)(shop_cursor_row * 5 + shop_cursor_col);
 
-    return (uint8_t *)GPTR(SH_RECS + (int16_t)(uint16_t)(d0 * 0x10));
+    return (uint8_t *)GPTR(SH_RECS + (int16_t)(uint16_t)(index * 0x10));
 }
 
 /* shop $55C9A: the keeper shows the item (his picture goes up, blinks, comes down), and what the keeper pays for it is shown: (price of the item + $7D0 times its power) / 2 */
 void shop_sell_show(uint8_t *rec)
 {
-    uint16_t d0, d1;
-    const Object *a1;
+    uint16_t price, bonus;
+    const Object *weapon;
 
     sh_w32(SH_REC, GADDR(rec));
     sh_w16(SH_KX, 0xf7);
@@ -1013,13 +1013,13 @@ void shop_sell_show(uint8_t *rec)
     } while ((int16_t)sh_r16(SH_KY) < 0x80);
     shop_print((const uint8_t *)GPTR(SH_TXT_PAY));
     rec = (uint8_t *)GPTR(sh_r32(SH_REC));
-    d0 = sh_r16(SH_TAB_PRICE - 2 + (uint16_t)(rd16(rec + 6) * 2));
-    a1 = (const Object *)GPTR(rd32(rec + 0xc));
-    d1 = (uint16_t)(a1->score * 0x7d0);
-    d0 = (uint16_t)(d0 + d1);
-    d0 >>= 1;
-    sh_w16(SH_PRICE, d0);
-    shop_print_number(d0);
+    price = sh_r16(SH_TAB_PRICE - 2 + (uint16_t)(rd16(rec + 6) * 2));
+    weapon = (const Object *)GPTR(rd32(rec + 0xc));
+    bonus = (uint16_t)(weapon->score * 0x7d0);
+    price = (uint16_t)(price + bonus);
+    price >>= 1;
+    sh_w16(SH_PRICE, price);
+    shop_print_number(price);
 }
 
 /* shop $55B48: the player sells: the weapons on the ship are the records; the fire button on one shows it and what the keeper pays, a second one on the same
@@ -1100,11 +1100,11 @@ void shop_buy(void)
                 continue;
             }
             if (kind == 0x1b) {
-                uint16_t d0 = (uint16_t)(sh_r16(SH_PAGE) + 0x13);
+                uint16_t page = (uint16_t)(sh_r16(SH_PAGE) + 0x13);
 
-                if ((int16_t)d0 >= 0x19)
-                    d0 = 0;
-                sh_w16(SH_PAGE, d0);
+                if ((int16_t)page >= 0x19)
+                    page = 0;
+                sh_w16(SH_PAGE, page);
                 shop_stock_update();
                 sh_w16(SH_PRICE, 0xffff);
                 continue;
@@ -1127,20 +1127,20 @@ void shop_buy(void)
         shop_text_home();
         shop_print((const uint8_t *)GPTR(SH_TXT_GIVE_CASH));
         {
-            int32_t d0 = (int32_t)(int16_t)sh_r16(SH_PRICE);
+            int32_t price = (int32_t)(int16_t)sh_r16(SH_PRICE);
             const uint8_t *rec;
 
-            while (d0 >= 0x64) {
+            while (price >= 0x64) {
                 sfx_cmd = 0xd;
                 player_money -= 0x64;
-                d0 -= 0x64;
+                price -= 0x64;
                 shop_cash_draw();
                 shop_room_draw();
                 shop_records_tick();
                 shop_records_draw();
                 swap_screens_200();
             }
-            player_money -= (uint32_t)d0;
+            player_money -= (uint32_t)price;
             rec = (const uint8_t *)GPTR(sh_r32(SH_REC));
             item_grant(rd16(rec + 6));
             sh_w16(SH_PRICE, 0xffff);
@@ -1266,20 +1266,20 @@ void shop_keeper_in(void)
 /* shop $56568: the items appear: the records open one frame after the other, then four frames of the finished room */
 void shop_open(void)
 {
-    uint32_t a0;
+    uint32_t rec;
     int16_t n;
 
     for (;;) {
         swap_screens_200();
-        for (a0 = SH_RECS, n = 0x13; n >= 0; n--, a0 += 0x10)
-            sh_w16(a0, (uint16_t)(sh_r16(a0) + 1));
+        for (rec = SH_RECS, n = 0x13; n >= 0; n--, rec += 0x10)
+            sh_w16(rec, (uint16_t)(sh_r16(rec) + 1));
         if (sh_r16(SH_RECS) == 0)
             break;
         shop_records_draw();
         shop_room_draw();
     }
-    for (a0 = SH_RECS, n = 0x13; n >= 0; n--, a0 += 0x10)
-        sh_w16(a0, 1);
+    for (rec = SH_RECS, n = 0x13; n >= 0; n--, rec += 0x10)
+        sh_w16(rec, 1);
     n = 4;
     for (;;) {
         shop_records_draw();
@@ -1293,15 +1293,15 @@ void shop_open(void)
 /* shop $565C2: the items go away: the records close one frame after the other, then ten frames of the room */
 void shop_close(void)
 {
-    uint32_t a0;
+    uint32_t rec;
     int16_t n;
 
-    for (a0 = SH_RECS, n = 0x13; n >= 0; n--, a0 += 0x10)
-        sh_w16(a0, 0);
+    for (rec = SH_RECS, n = 0x13; n >= 0; n--, rec += 0x10)
+        sh_w16(rec, 0);
     for (;;) {
         swap_screens_200();
-        for (a0 = SH_RECS, n = 0x13; n >= 0; n--, a0 += 0x10)
-            sh_w16(a0, (uint16_t)(sh_r16(a0) - 1));
+        for (rec = SH_RECS, n = 0x13; n >= 0; n--, rec += 0x10)
+            sh_w16(rec, (uint16_t)(sh_r16(rec) - 1));
         if (sh_r16(SH_RECS) == 0xfff7)
             break;
         shop_records_draw();
@@ -1320,27 +1320,27 @@ void shop_close(void)
 /* shop $55198: the screen is cleared and two rows of the picture of the end of the broadcast are drawn */
 void shop_blank_screen(void)
 {
-    uint8_t *a0 = draw_screen;
+    uint8_t *dst = draw_screen;
     int16_t n = 0x1f3f;
 
     do {
-        wr32(a0, 0);
-        a0 += 4;
+        wr32(dst, 0);
+        dst += 4;
     } while (n-- != 0);
-    a0 = draw_screen + 0x3e94;
-    wr16(a0, 0xf);
-    wr16(a0 + 0x28, 6);
-    wr16(a0 + 0x50, 0xf);
-    wr16(a0 + 0xa0, 0xf);
-    wr16(a0 + 0xc8, 0xf);
-    wr16(a0 + 0xf0, 0xf);
-    wr16(a0 + 0x140, 0xf);
-    wr16(a0 + 0x168, 6);
-    wr16(a0 + 0x190, 0xf);
+    dst = draw_screen + 0x3e94;
+    wr16(dst, 0xf);
+    wr16(dst + 0x28, 6);
+    wr16(dst + 0x50, 0xf);
+    wr16(dst + 0xa0, 0xf);
+    wr16(dst + 0xc8, 0xf);
+    wr16(dst + 0xf0, 0xf);
+    wr16(dst + 0x140, 0xf);
+    wr16(dst + 0x168, 6);
+    wr16(dst + 0x190, 0xf);
 }
 
-/* the weapon slots' latch of the level ($352E) without its test of nashwan_timer: type and score of each of the 7 slots to slot_snapshot; an empty slot repeats d2 */
-static void latch_slots_all(uint16_t d2)
+/* the weapon slots' latch of the level ($352E) without its test of nashwan_timer: type and score of each of the 7 slots to slot_snapshot; an empty slot repeats last_score */
+static void latch_slots_all(uint16_t last_score)
 {
     uint16_t *out = slot_snapshot;
     int i;
@@ -1348,8 +1348,8 @@ static void latch_slots_all(uint16_t d2)
     for (i = 0; i < 7; i++) {
         *out++ = weapon_slots[i].type;
         if (weapon_slots[i].type != 0)
-            d2 = (uint16_t)weapon_slots[i].obj->score;
-        *out++ = d2;
+            last_score = (uint16_t)weapon_slots[i].obj->score;
+        *out++ = last_score;
     }
 }
 
@@ -1418,9 +1418,9 @@ void shop_end_of_broadcast(void)
  * weapons are given back */
 void shop_main(void)
 {
-    uint8_t *a0;
-    uint32_t a2;
-    int16_t d0, d1;
+    uint8_t *screen;
+    uint32_t pic, rec;
+    int16_t x, y, i;
     int32_t n;
 
     clip_bottom = 0xc7;
@@ -1430,27 +1430,27 @@ void shop_main(void)
     sh_w8(SH_NTSC, 0);
     if (!(CIAA_CRA & 0x80))
         sh_w8(SH_NTSC, 0xff);
-    a0 = draw_screen;
+    screen = draw_screen;
     for (n = 0; n < 0x1f40; n++)
-        wr32(a0 + 4 * n, 0);
-    for (d1 = 0; d1 < 0xa4; d1 = (int16_t)(d1 + 0x29))
-        for (d0 = 0; d0 < 0xcd; d0 = (int16_t)(d0 + 0x29)) {
-            draw_bob_masked_at((uint16_t)d0, (uint16_t)d1, GPTR(SH_GFX_BEDROOM));
-            draw_bob_masked_at((uint16_t)d0, (uint16_t)d1, GPTR(SH_GFX_BEDROOM2));
+        wr32(screen + 4 * n, 0);
+    for (y = 0; y < 0xa4; y = (int16_t)(y + 0x29))
+        for (x = 0; x < 0xcd; x = (int16_t)(x + 0x29)) {
+            draw_bob_masked_at((uint16_t)x, (uint16_t)y, GPTR(SH_GFX_BEDROOM));
+            draw_bob_masked_at((uint16_t)x, (uint16_t)y, GPTR(SH_GFX_BEDROOM2));
         }
-    for (a2 = SH_TAB_PICS; sh_r32(a2) != 0; a2 += 10)
-        shop_copy_block((const uint8_t *)GPTR(sh_r32(a2)), draw_screen + (int16_t)sh_r16(a2 + 4), sh_r16(a2 + 6), sh_r16(a2 + 8));
+    for (pic = SH_TAB_PICS; sh_r32(pic) != 0; pic += 10)
+        shop_copy_block((const uint8_t *)GPTR(sh_r32(pic)), draw_screen + (int16_t)sh_r16(pic + 4), sh_r16(pic + 6), sh_r16(pic + 8));
     if (cur_player != 0)
         draw_bob_masked_at(0xc1, 0xbc, GPTR(SH_GFX_PLAYER2));
-    a0 = draw_screen;
+    screen = draw_screen;
     for (n = 0; n < 0x1f40; n++)
-        wr32(show_screen + 4 * n, rd32(a0 + 4 * n));
+        wr32(show_screen + 4 * n, rd32(screen + 4 * n));
     sh_w8(SH_SELLING, 0xff);
     sh_w8(SH_NO_BLINK, 0xff);
     sh_w8(SH_BLINK_A, 0);
     sh_w16(SH_PAGE, 0);
-    for (a2 = SH_RECS, d0 = 0x13; d0 >= 0; d0--, a2 += 0x10)
-        sh_w16(a2, 0xfff7);
+    for (rec = SH_RECS, i = 0x13; i >= 0; i--, rec += 0x10)
+        sh_w16(rec, 0xfff7);
     shop_door_left = 0x30;
     shop_door_right = 0x44;
     shop_keeper_talking = 0;
@@ -1465,8 +1465,8 @@ void shop_main(void)
     {
         uint16_t colors[16];
 
-        for (d0 = 0; d0 < 16; d0++)
-            colors[d0] = sh_r16(SH_PALETTE + 2u * (uint16_t)d0);
+        for (i = 0; i < 16; i++)
+            colors[i] = sh_r16(SH_PALETTE + 2u * (uint16_t)i);
         palette_fade_in(colors);
     }
     sfx_cmd = 8;

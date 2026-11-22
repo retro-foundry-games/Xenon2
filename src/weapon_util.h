@@ -13,7 +13,7 @@ static inline void kill_object_thunk(Object *o)
     o->persists = 0;
 }
 
-static inline Object *alloc_b(Object *a0)
+static inline Object *alloc_b(Object *caller)
 {
     Object *o = obj_free_pop(), *tail = LIST_B->prev;
 
@@ -25,7 +25,7 @@ static inline Object *alloc_b(Object *a0)
 }
 
 /* list B from the other end: the object goes first (baa), links swapped */
-static inline Object *alloc_b_front(Object *a0)
+static inline Object *alloc_b_front(Object *caller)
 {
     Object *o = obj_free_pop(), *head = LIST_B->next;
 

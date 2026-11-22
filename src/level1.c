@@ -22,24 +22,24 @@
 
 /* ---- level 1's blob ($54E00): the jump table at $54E0C and the routines the engine calls ---- */
 
-/* orig $054E0C (-> $5566A4): the level's extra collision test finds nothing (d4 = 0, Z) */
+/* orig $054E0C (-> $5566A4): the level's extra collision test finds nothing (Z) */
 int level1_collision_hook(void)
 {
     return 0;
 }
 
-/* orig $054E10 (-> $055B94): level events by d0 (a1 = the record that fired): a table of the level engine ($E60) for each */
-void level1_event(uint16_t d0, const uint8_t *a1)
+/* orig $054E10 (-> $055B94): level events by id (rec = the record that fired): a table of the level engine ($E60) for each */
+void level1_event(uint16_t id, const uint8_t *rec)
 {
     static const uint8_t *const tabs[10] = { level1_data.formation_1, level1_data.formation_2, level1_data.formation_3, level1_data.formation_4, level1_data.formation_5,
                                              level1_data.formation_6, level1_data.formation_7, level1_data.formation_8, level1_data.formation_9, level1_data.formation_10 };
 
-    if (d0 == 0) {
-        spawn_wave_326c(0, a1);   /* $E5A */
+    if (id == 0) {
+        spawn_wave_326c(0, rec);   /* $E5A */
         return;
     }
-    if (d0 <= 10)
-        spawn_formation(0, a1, tabs[d0 - 1]);   /* $E60 */
+    if (id <= 10)
+        spawn_formation(0, rec, tabs[id - 1]);   /* $E60 */
 }
 
 /* ---- level 1's turrets: markers that draw themselves into the map ---- */
@@ -59,249 +59,249 @@ static void copy4(uint8_t *dst, const uint8_t *src)
 }
 
 /* the turret has left the screen: it dies */
-static int level1_turret_gone(Object *a0)
+static int level1_turret_gone(Object *turret)
 {
-    if ((int16_t)(scroll_max + 0xd0) < a0->y) {
-        kill_object_thunk(a0);
+    if ((int16_t)(scroll_max + 0xd0) < turret->y) {
+        kill_object_thunk(turret);
         return 1;
     }
     return 0;
 }
 
 /* orig $0552CE: update of the turret $E0 / $E4: its box, the map cells it shows (four steps), and now and then a shot */
-void level1_turret_a_update(Object *a0)
+void level1_turret_a_update(Object *turret)
 {
-    const uint8_t *a2;
-    uint8_t *a1;
-    uint16_t d0, sum;
-    int16_t x, y, d2;
+    const uint8_t *table;
+    uint8_t *script;
+    uint16_t offset, sum;
+    int16_t x, y, dir;
 
-    if (level1_turret_gone(a0))
+    if (level1_turret_gone(turret))
         return;
-    a0->hit[0] = (int16_t)(a0->x + 4);
-    a0->hit[2] = (int16_t)(a0->x + 4 + 0x18);
-    y = (int16_t)(a0->y - scroll_pos + 4);
-    a0->hit[1] = y;
-    a0->hit[3] = (int16_t)(y + 0x18);
-    d0 = (uint16_t)(a0->l1_turret.step << 3);
-    a2 = a0->type == 0xe0 ? level1_data.turret_a_cells_e0 : level1_data.turret_a_cells_e4;
-    a1 = a0->script;
-    copy4(a1, a2 + d0);
-    copy4(a1 + 0x28, a2 + d0 + 4);
-    a0->l1_turret.step = (int16_t)((a0->l1_turret.step + 1) & 3);
-    sum = (uint16_t)(((ObjMove *)a0)->shot_count + level1_data.shot_params[3]);
-    ((ObjMove *)a0)->shot_count = (uint8_t)sum;
+    turret->hit[0] = (int16_t)(turret->x + 4);
+    turret->hit[2] = (int16_t)(turret->x + 4 + 0x18);
+    y = (int16_t)(turret->y - scroll_pos + 4);
+    turret->hit[1] = y;
+    turret->hit[3] = (int16_t)(y + 0x18);
+    offset = (uint16_t)(turret->l1_turret.step << 3);
+    table = turret->type == 0xe0 ? level1_data.turret_a_cells_e0 : level1_data.turret_a_cells_e4;
+    script = turret->script;
+    copy4(script, table + offset);
+    copy4(script + 0x28, table + offset + 4);
+    turret->l1_turret.step = (int16_t)((turret->l1_turret.step + 1) & 3);
+    sum = (uint16_t)(((ObjMove *)turret)->shot_count + level1_data.shot_params[3]);
+    ((ObjMove *)turret)->shot_count = (uint8_t)sum;
     if (!(sum & 0x100))
         return;
-    ((ObjMove *)a0)->shot_count = (uint8_t)(random_next() & 0x3f);
-    x = (int16_t)(a0->x + 0x10);
-    y = (int16_t)(a0->y - scroll_pos + 0xe);
-    d2 = 2;
-    if (a0->type != 0xe4) {
-        d2 = 6;
+    ((ObjMove *)turret)->shot_count = (uint8_t)(random_next() & 0x3f);
+    x = (int16_t)(turret->x + 0x10);
+    y = (int16_t)(turret->y - scroll_pos + 0xe);
+    dir = 2;
+    if (turret->type != 0xe4) {
+        dir = 6;
         x = (int16_t)(x - 0x10);
     }
-    spawn_enemy_shot((uint16_t)x, (uint16_t)y, (uint16_t)d2, rd16(level1_data.shot_params + 6), level1_shot_gfx(rd16(level1_data.shot_params + 4)));
+    spawn_enemy_shot((uint16_t)x, (uint16_t)y, (uint16_t)dir, rd16(level1_data.shot_params + 6), level1_shot_gfx(rd16(level1_data.shot_params + 4)));
 }
 
 /* orig $0555A2: update of the turret $E8 / $EC (sixteen steps of cells) */
-void level1_turret_b_update(Object *a0)
+void level1_turret_b_update(Object *turret)
 {
-    const uint8_t *a2;
-    uint8_t *a1;
-    uint16_t d0, sum;
-    int16_t x, y, d2;
+    const uint8_t *table;
+    uint8_t *script;
+    uint16_t offset, sum;
+    int16_t x, y, dir;
 
-    if (level1_turret_gone(a0))
+    if (level1_turret_gone(turret))
         return;
-    a0->hit[0] = (int16_t)(a0->x + 0xa);
-    a0->hit[2] = (int16_t)(a0->x + 0xa + 0x12);
-    y = (int16_t)(a0->y - scroll_pos + 4);
-    a0->hit[1] = y;
-    a0->hit[3] = (int16_t)(y + 0x18);
-    d0 = (uint16_t)(((uint16_t)a0->l1_turret.step & 0xfffc) << 1);
-    a2 = a0->type == 0xe8 ? level1_data.turret_b_cells_e8 : level1_data.turret_b_cells_ec;
-    a1 = a0->script;
-    copy4(a1, a2 + d0);
-    copy4(a1 + 0x28, a2 + d0 + 4);
-    a0->l1_turret.step = (int16_t)((a0->l1_turret.step + 1) & 0xf);
-    sum = (uint16_t)(((ObjMove *)a0)->shot_count + level1_data.shot_params[0xf]);
-    ((ObjMove *)a0)->shot_count = (uint8_t)sum;
+    turret->hit[0] = (int16_t)(turret->x + 0xa);
+    turret->hit[2] = (int16_t)(turret->x + 0xa + 0x12);
+    y = (int16_t)(turret->y - scroll_pos + 4);
+    turret->hit[1] = y;
+    turret->hit[3] = (int16_t)(y + 0x18);
+    offset = (uint16_t)(((uint16_t)turret->l1_turret.step & 0xfffc) << 1);
+    table = turret->type == 0xe8 ? level1_data.turret_b_cells_e8 : level1_data.turret_b_cells_ec;
+    script = turret->script;
+    copy4(script, table + offset);
+    copy4(script + 0x28, table + offset + 4);
+    turret->l1_turret.step = (int16_t)((turret->l1_turret.step + 1) & 0xf);
+    sum = (uint16_t)(((ObjMove *)turret)->shot_count + level1_data.shot_params[0xf]);
+    ((ObjMove *)turret)->shot_count = (uint8_t)sum;
     if (!(sum & 0x100))
         return;
-    ((ObjMove *)a0)->shot_count = (uint8_t)(random_next() & 0x3f);
-    x = (int16_t)(a0->x + 0x20);
-    y = (int16_t)(a0->y - scroll_pos + 0xe);
-    d2 = 2;
-    if (a0->type != 0xec) {
-        d2 = 6;
+    ((ObjMove *)turret)->shot_count = (uint8_t)(random_next() & 0x3f);
+    x = (int16_t)(turret->x + 0x20);
+    y = (int16_t)(turret->y - scroll_pos + 0xe);
+    dir = 2;
+    if (turret->type != 0xec) {
+        dir = 6;
         x = (int16_t)(x - 0x20);
     }
-    spawn_enemy_shot((uint16_t)x, (uint16_t)y, (uint16_t)d2, rd16(level1_data.shot_params + 0x12), level1_shot_gfx(rd16(level1_data.shot_params + 0x10)));
+    spawn_enemy_shot((uint16_t)x, (uint16_t)y, (uint16_t)dir, rd16(level1_data.shot_params + 0x12), level1_shot_gfx(rd16(level1_data.shot_params + 0x10)));
 }
 
 /* orig $055402: update of the turret $D8 / $DC (twenty steps of cells, a shot every 40 steps) */
-void level1_turret_c_update(Object *a0)
+void level1_turret_c_update(Object *turret)
 {
-    const uint8_t *a2;
-    uint16_t d0, sum;
-    int16_t x, y, d2;
+    const uint8_t *table;
+    uint16_t offset, sum;
+    int16_t x, y, dir;
 
-    if (level1_turret_gone(a0))
+    if (level1_turret_gone(turret))
         return;
-    a0->hit[0] = (int16_t)(a0->x + 8);
-    a0->hit[2] = (int16_t)(a0->x + 8 + 0x10);
-    y = (int16_t)(a0->y - scroll_pos + 8);
-    a0->hit[1] = y;
-    a0->hit[3] = (int16_t)(y + 0x10);
-    d0 = (uint16_t)(((uint16_t)a0->l1_turret.step & 0xfffe) << 1);
-    a2 = a0->type == 0xd8 ? level1_data.turret_c_steps_d8 : level1_data.turret_c_steps_dc;
-    copy4(a0->script, a2 + d0);
-    if (a0->l1_turret.step == 0) {
-        sum = (uint16_t)(((ObjMove *)a0)->shot_count + level1_data.shot_params[9]);
-        ((ObjMove *)a0)->shot_count = (uint8_t)sum;
+    turret->hit[0] = (int16_t)(turret->x + 8);
+    turret->hit[2] = (int16_t)(turret->x + 8 + 0x10);
+    y = (int16_t)(turret->y - scroll_pos + 8);
+    turret->hit[1] = y;
+    turret->hit[3] = (int16_t)(y + 0x10);
+    offset = (uint16_t)(((uint16_t)turret->l1_turret.step & 0xfffe) << 1);
+    table = turret->type == 0xd8 ? level1_data.turret_c_steps_d8 : level1_data.turret_c_steps_dc;
+    copy4(turret->script, table + offset);
+    if (turret->l1_turret.step == 0) {
+        sum = (uint16_t)(((ObjMove *)turret)->shot_count + level1_data.shot_params[9]);
+        ((ObjMove *)turret)->shot_count = (uint8_t)sum;
         if (!(sum & 0x100))
             return;
-        ((ObjMove *)a0)->shot_count = (uint8_t)(random_next() & 0x3f);
+        ((ObjMove *)turret)->shot_count = (uint8_t)(random_next() & 0x3f);
     }
-    a0->l1_turret.step++;
-    if (a0->l1_turret.step == 0x28) {
-        a0->l1_turret.step = 0;
+    turret->l1_turret.step++;
+    if (turret->l1_turret.step == 0x28) {
+        turret->l1_turret.step = 0;
         return;
     }
-    if (a0->l1_turret.step != 0x18)
+    if (turret->l1_turret.step != 0x18)
         return;
-    x = (int16_t)(a0->x + 0x1a);
-    y = (int16_t)(a0->y - scroll_pos + 2);
-    d2 = 2;
-    if (a0->type != 0xdc) {
-        d2 = 6;
+    x = (int16_t)(turret->x + 0x1a);
+    y = (int16_t)(turret->y - scroll_pos + 2);
+    dir = 2;
+    if (turret->type != 0xdc) {
+        dir = 6;
         x = (int16_t)(x - 0x1a);
     }
-    spawn_enemy_shot((uint16_t)x, (uint16_t)y, (uint16_t)d2, rd16(level1_data.shot_params + 0xc), level1_shot_gfx(rd16(level1_data.shot_params + 0xa)));
+    spawn_enemy_shot((uint16_t)x, (uint16_t)y, (uint16_t)dir, rd16(level1_data.shot_params + 0xc), level1_shot_gfx(rd16(level1_data.shot_params + 0xa)));
 }
 
 /* the launcher's use of the scratch fields of Object */
 
 /* orig $0556DC: update of the launcher $D0 / $D4: it moves up and down (v28 is its step, v30 its place between 0 and v2a); when the
  * player is level with it (now and then) it goes into list B and fires three shots */
-void level1_launcher_update(Object *a0)
+void level1_launcher_update(Object *launcher)
 {
-    int16_t d0;
-    int d7;
+    int16_t dy, step;
+    int i;
 
-    if ((int16_t)(scroll_max + 0xd0 - scroll_pos) < a0->y) {
-        kill_object_thunk(a0);
+    if ((int16_t)(scroll_max + 0xd0 - scroll_pos) < launcher->y) {
+        kill_object_thunk(launcher);
         return;
     }
-    anim_step(a0);
-    a0->y = (int16_t)(a0->y + scroll_speed);
-    if (a0->launcher.step == 0)
+    anim_step(launcher);
+    launcher->y = (int16_t)(launcher->y + scroll_speed);
+    if (launcher->launcher.step == 0)
         return;
-    d0 = (int16_t)(a0->y - PLAYER->y);
-    if (d0 <= 0xa && d0 >= -0x1e && (uint8_t)random_next() < 0x32) {
+    dy = (int16_t)(launcher->y - PLAYER->y);
+    if (dy <= 0xa && dy >= -0x1e && (uint8_t)random_next() < 0x32) {
         Object *tail;
-        const uint8_t *a2;
+        const uint8_t *anim;
 
-        a0->launcher.step = 0;
-        a0->next->prev = a0->prev;
-        a0->prev->next = a0->next;
+        launcher->launcher.step = 0;
+        launcher->next->prev = launcher->prev;
+        launcher->prev->next = launcher->next;
         tail = LIST_B->prev;
-        LIST_B->prev = a0;
-        a0->prev = tail;
-        a0->next = LIST_B;
-        tail->next = a0;
-        a2 = a0->type == 0xd4 ? level1_data.anim_launcher_d4_fire : level1_data.anim_launcher_d0_fire;
-        set_anim(a0, a2);
-        for (d7 = 2; d7 >= 0; d7--) {
-            int16_t d2 = a0->type == 0xd4 ? 5 : 1;
+        LIST_B->prev = launcher;
+        launcher->prev = tail;
+        launcher->next = LIST_B;
+        tail->next = launcher;
+        anim = launcher->type == 0xd4 ? level1_data.anim_launcher_d4_fire : level1_data.anim_launcher_d0_fire;
+        set_anim(launcher, anim);
+        for (i = 2; i >= 0; i--) {
+            int16_t angle = launcher->type == 0xd4 ? 5 : 1;
 
-            spawn_enemy_shot((uint16_t)a0->x, (uint16_t)(a0->y + 7), (uint16_t)(d2 + d7), rd16(level1_data.shot_params + 0x16),
+            spawn_enemy_shot((uint16_t)launcher->x, (uint16_t)(launcher->y + 7), (uint16_t)(angle + i), rd16(level1_data.shot_params + 0x16),
                              level1_shot_gfx(rd16(level1_data.shot_params + 0x14)));
         }
         return;
     }
-    d0 = a0->launcher.step;
-    a0->y = (int16_t)(a0->y + d0);
-    a0->launcher.pos = (int16_t)(a0->launcher.pos + d0);
-    if (a0->launcher.pos == 0 || a0->launcher.pos == a0->launcher.range)
-        a0->launcher.step = (int16_t)-a0->launcher.step;
-    bbox_from_frame(a0);
+    step = launcher->launcher.step;
+    launcher->y = (int16_t)(launcher->y + step);
+    launcher->launcher.pos = (int16_t)(launcher->launcher.pos + step);
+    if (launcher->launcher.pos == 0 || launcher->launcher.pos == launcher->launcher.range)
+        launcher->launcher.step = (int16_t)-launcher->launcher.step;
+    bbox_from_frame(launcher);
 }
 
 /* a turret marker (spawn_marker_enemy with the update routine), hit by hit_tile, energy, no box yet */
-static Object *level1_turret(uint16_t type, const uint8_t *a1, void (*update)(void), uint16_t energy)
+static Object *level1_turret(uint16_t type, const uint8_t *rec, void (*update)(void), uint16_t energy)
 {
-    Object *a0 = spawn_marker_enemy(type, a1, update);
+    Object *turret = spawn_marker_enemy(type, rec, update);
 
-    a0->fn_hit = (void *)hit_tile;
-    a0->energy = (int16_t)energy;
-    a0->hit[0] = 0x3e8;
-    a0->hit[2] = 0x3e8;
-    return a0;
+    turret->fn_hit = (void *)hit_tile;
+    turret->energy = (int16_t)energy;
+    turret->hit[0] = 0x3e8;
+    turret->hit[2] = 0x3e8;
+    return turret;
 }
 
 /* the end of the turrets' set-up: the first cells are written into the map ($46), the object hides them again when it is shot */
-static void level1_turret_cells(Object *a0, const uint8_t *a2, const uint8_t *a4)
+static void level1_turret_cells(Object *turret, const uint8_t *cells, const uint8_t *anim)
 {
-    uint8_t *a3 = a0->script;
+    uint8_t *script = turret->script;
 
-    a0->gfx = a2;
-    a0->anim = a4;
-    copy4(a3, a2);
-    copy4(a3 + 0x28, a2 + 4);
-    a0->score = 0x64;
-    a0->tile.cols = 1;
-    a0->tile.rows = 1;
+    turret->gfx = cells;
+    turret->anim = anim;
+    copy4(script, cells);
+    copy4(script + 0x28, cells + 4);
+    turret->score = 0x64;
+    turret->tile.cols = 1;
+    turret->tile.rows = 1;
 }
 
-/* orig $054E18 (-> $055942): level hooks by d0 (a1 = the record that fired, d2 its scroll value): 0 remembers the record, 1 to 3 put
+/* orig $054E18 (-> $055942): level hooks by id (rec = the record that fired, scroll its scroll value): 0 remembers the record, 1 to 3 put
  * a turret (type $E8/$EC, $E0/$E4, $D8/$DC; w0c of the record says which side) into the map, 4 a launcher ($D0/$D4) */
-void level1_hook(uint16_t d0, const uint8_t *a1, uint16_t d2)
+void level1_hook(uint16_t id, const uint8_t *rec, uint16_t scroll)
 {
-    int flag = rd16(a1 + 0xc) != 0;
-    Object *a0;
+    int flag = rd16(rec + 0xc) != 0;
+    Object *obj;
 
-    switch (d0) {
+    switch (id) {
     case 0:
-        note_spawn_record(a1, d2);   /* $EA2 */
+        note_spawn_record(rec, scroll);   /* $EA2 */
         return;
     case 1:
-        a0 = level1_turret(flag ? 0xe8 : 0xec, a1, (void (*)(void))level1_turret_b_update, level1_data.turret_energy[0]);
-        level1_turret_cells(a0, flag ? level1_data.turret_b_cells_e8 : level1_data.turret_b_cells_ec, flag ? level1_data.turret_b_anim_e8 : level1_data.turret_b_anim_ec);
+        obj = level1_turret(flag ? 0xe8 : 0xec, rec, (void (*)(void))level1_turret_b_update, level1_data.turret_energy[0]);
+        level1_turret_cells(obj, flag ? level1_data.turret_b_cells_e8 : level1_data.turret_b_cells_ec, flag ? level1_data.turret_b_anim_e8 : level1_data.turret_b_anim_ec);
         return;
     case 2:
-        a0 = level1_turret(flag ? 0xe0 : 0xe4, a1, (void (*)(void))level1_turret_a_update, level1_data.boss_energy[1]);
+        obj = level1_turret(flag ? 0xe0 : 0xe4, rec, (void (*)(void))level1_turret_a_update, level1_data.boss_energy[1]);
         if (flag) {
-            a0->script += 2;
-            a0->x = (int16_t)(a0->x + 0x10);
+            obj->script += 2;
+            obj->x = (int16_t)(obj->x + 0x10);
         }
-        a0->script -= 2;
-        a0->x = (int16_t)(a0->x - 0x10);
-        level1_turret_cells(a0, flag ? level1_data.turret_a_cells_e0 : level1_data.turret_a_cells_e4, flag ? level1_data.turret_a_anim_e0 : level1_data.turret_a_anim_e4);
+        obj->script -= 2;
+        obj->x = (int16_t)(obj->x - 0x10);
+        level1_turret_cells(obj, flag ? level1_data.turret_a_cells_e0 : level1_data.turret_a_cells_e4, flag ? level1_data.turret_a_anim_e0 : level1_data.turret_a_anim_e4);
         return;
     case 3:
-        a0 = level1_turret(flag ? 0xd8 : 0xdc, a1, (void (*)(void))level1_turret_c_update, level1_data.turret_energy[1]);
-        level1_turret_cells(a0, flag ? level1_data.turret_c_cells_d8 : level1_data.turret_c_cells_dc, level1_data.turret_c_anim);
+        obj = level1_turret(flag ? 0xd8 : 0xdc, rec, (void (*)(void))level1_turret_c_update, level1_data.turret_energy[1]);
+        level1_turret_cells(obj, flag ? level1_data.turret_c_cells_d8 : level1_data.turret_c_cells_dc, level1_data.turret_c_anim);
         return;
     case 4:
-        a0 = alloc_c();
-        a0->type = flag ? 0xd4 : 0xd0;
-        set_anim(a0, flag ? level1_data.anim_launcher_d4 : level1_data.anim_launcher_d0);
-        a0->fn_update = FN(level1_launcher_update);
-        a0->fn_draw = draw_bob_masked;
-        a0->fn_hit = (void *)hit_enemy;
-        a0->energy = (int16_t)level1_data.turret_energy[2];
-        a0->big = -1;
-        a0->score = 0xfa;
-        SET_V5E(a0, 0);
-        a0->x = (int16_t)(rd16(a1 + 8) - 8 + (flag ? 0x10 : 0));
-        a0->y = (int16_t)(rd16(a1 + 10) - 8 - scroll_pos);
-        a0->launcher.step = -1;
-        a0->launcher.range = (int16_t)(rd16(a1 + 6) << 4);
-        a0->launcher.pos = a0->launcher.range;
-        a0->kind = 0;
-        bbox_from_frame(a0);
+        obj = alloc_c();
+        obj->type = flag ? 0xd4 : 0xd0;
+        set_anim(obj, flag ? level1_data.anim_launcher_d4 : level1_data.anim_launcher_d0);
+        obj->fn_update = FN(level1_launcher_update);
+        obj->fn_draw = draw_bob_masked;
+        obj->fn_hit = (void *)hit_enemy;
+        obj->energy = (int16_t)level1_data.turret_energy[2];
+        obj->big = -1;
+        obj->score = 0xfa;
+        SET_V5E(obj, 0);
+        obj->x = (int16_t)(rd16(rec + 8) - 8 + (flag ? 0x10 : 0));
+        obj->y = (int16_t)(rd16(rec + 10) - 8 - scroll_pos);
+        obj->launcher.step = -1;
+        obj->launcher.range = (int16_t)(rd16(rec + 6) << 4);
+        obj->launcher.pos = obj->launcher.range;
+        obj->kind = 0;
+        bbox_from_frame(obj);
         return;
     }
 }
@@ -309,9 +309,9 @@ void level1_hook(uint16_t d0, const uint8_t *a1, uint16_t d2)
 /* orig $054E24 (-> $055806): the level's scroll events */
 void level1_scroll(void)
 {
-    const uint16_t *a1 = level1_data.level_patches;
-    uint16_t *a4 = level_vars;
-    int d7, i;
+    const uint16_t *patches = level1_data.level_patches;
+    uint16_t *vars = level_vars;
+    int count, i;
 
     if (l1_boss_zone_entered == 0 && (int16_t)(scroll_pos + PLAYER->y) < 0xa80) {
         level_over = 0xff;
@@ -325,15 +325,15 @@ void level1_scroll(void)
         if ((int16_t)scroll_max < 0xd10)
             scroll_max = 0xd10;
         level1_spawn_units();
-        for (d7 = 15; d7 >= 0; d7--) {
-            if (*a4 != 0) {
-                uint8_t *a2 = level_init_src + (int16_t)a1[0];
+        for (count = 15; count >= 0; count--) {
+            if (*vars != 0) {
+                uint8_t *dst = level_init_src + (int16_t)patches[0];
 
-                (*a4)--;
-                wr16(a2, a1[1 + (*a4 & 3)]);
+                (*vars)--;
+                wr16(dst, patches[1 + (*vars & 3)]);
             }
-            a4++;
-            a1 += 5;
+            vars++;
+            patches += 5;
         }
     }
     for (i = 0; i < 5; i++)
@@ -341,12 +341,12 @@ void level1_scroll(void)
 }
 
 /* orig $0563AA: update of the level 1 boss (type $50) */
-void level1_boss_update(Object *a0)
+void level1_boss_update(Object *boss)
 {
-    Object *a1, *a2, *a5;
-    int d7;
-    int16_t d0, d5;
-    int32_t l;
+    Object *part, *prev_part, *link;
+    int i;
+    int16_t wave, new_y, lost, box_y;
+    int32_t turn;
     const uint8_t *src;
     static const uint8_t *const sources[4] = { level1_data.boss_draw_sources, level1_data.boss_draw_sources + 16, level1_data.boss_draw_sources + 32, level1_data.boss_draw_sources + 16 };
 
@@ -354,144 +354,144 @@ void level1_boss_update(Object *a0)
         goto hide;
     if (l1_boss_spawned == 0) {
         l1_boss_spawned = 0xff;
-        a2 = a0;
-        for (d7 = 7; d7 >= 0; d7--) {
-            a1 = obj_free_pop();
-            if (d7 == 7) {
-                a5 = LIST_C->prev;
-                LIST_C->prev = a1;
-                a1->prev = a5;
-                a1->next = LIST_C;
-                a5->next = a1;
+        prev_part = boss;
+        for (i = 7; i >= 0; i--) {
+            part = obj_free_pop();
+            if (i == 7) {
+                link = LIST_C->prev;
+                LIST_C->prev = part;
+                part->prev = link;
+                part->next = LIST_C;
+                link->next = part;
             } else {
-                a5 = a2->prev;
-                a2->prev = a1;
-                a1->prev = a5;
-                a1->next = a2;
-                a5->next = a1;
+                link = prev_part->prev;
+                prev_part->prev = part;
+                part->prev = link;
+                part->next = prev_part;
+                link->next = part;
             }
-            a1->type = 0xfc;
-            if (d7 == 0)
-                a1->type = 0x100;
-            a1->fn_update = level1_boss_part_update;
-            a1->fn_draw = draw_bob_masked;
-            a1->fn_hit = (void *)hit_kill_shooter;
-            a1->gfx = level1_data.boss_part_picture;
-            a1->anim_delay = 0;
-            SET_V5E(a1, 0);
-            a1->anim = (const uint8_t *)a2;
-            a2 = a1;
-            a1->big = 0;
-            a1->persists = -1;
-            a1->y = -100;
-            a1->hit[0] = 0x3e8;
-            a1->hit[2] = 0x3e8;
+            part->type = 0xfc;
+            if (i == 0)
+                part->type = 0x100;
+            part->fn_update = level1_boss_part_update;
+            part->fn_draw = draw_bob_masked;
+            part->fn_hit = (void *)hit_kill_shooter;
+            part->gfx = level1_data.boss_part_picture;
+            part->anim_delay = 0;
+            SET_V5E(part, 0);
+            part->anim = (const uint8_t *)prev_part;
+            prev_part = part;
+            part->big = 0;
+            part->persists = -1;
+            part->y = -100;
+            part->hit[0] = 0x3e8;
+            part->hit[2] = 0x3e8;
         }
-        a0->l1.angle_hi = 0;
-        a0->l1.angle_lo = 0;
-        a0->turn_hi = 0;
-        a0->turn_lo = 0;
-        a0->turn_step = 0;
+        boss->l1.angle_hi = 0;
+        boss->l1.angle_lo = 0;
+        boss->turn_hi = 0;
+        boss->turn_lo = 0;
+        boss->turn_step = 0;
     }
     if ((int16_t)scroll_max <= 0x1c0)
         scroll_max = 0x1c0;
-    a0->hit[0] = 0x80;
-    a0->hit[2] = 0xc8;
-    d5 = (int16_t)(a0->y - scroll_pos + 4);
-    a0->hit[1] = d5;
-    a0->hit[3] = (int16_t)(d5 + 0x50);
-    if (a0->l1_boss.phase == 0) {
+    boss->hit[0] = 0x80;
+    boss->hit[2] = 0xc8;
+    box_y = (int16_t)(boss->y - scroll_pos + 4);
+    boss->hit[1] = box_y;
+    boss->hit[3] = (int16_t)(box_y + 0x50);
+    if (boss->l1_boss.phase == 0) {
         if ((int16_t)scroll_pos > 0x30)
             goto draw_table;
-        a0->l1_boss.phase = 1;
-        a0->l1_boss.move = 0;
-        a0->l1_boss.wait = 0xaa;
+        boss->l1_boss.phase = 1;
+        boss->l1_boss.move = 0;
+        boss->l1_boss.wait = 0xaa;
     }
-    if (a0->l1_boss.phase < 0) {
-        if (a0->steps != 0)
-            a0->steps--;
-    } else if (a0->steps < 0xb) {
-        if (a0->steps == 0)
+    if (boss->l1_boss.phase < 0) {
+        if (boss->steps != 0)
+            boss->steps--;
+    } else if (boss->steps < 0xb) {
+        if (boss->steps == 0)
             sfx_cmd2 = 0xf;
-        a0->steps++;
+        boss->steps++;
     }
-    a0->l1_boss.phase++;
-    if (a0->l1_boss.phase == 0)
-        a0->l1_boss.phase++;
-    if (a0->l1_boss.phase >= 0x64)
-        a0->l1_boss.phase = -40;
-    d0 = frame_tick & 0x7f;
-    if (d0 & 0x40)
-        d0 = (int16_t)-(d0 - 0x7f);
-    d0 = (int8_t)d0;
-    a0->l1.angle_lo = (int16_t)(d0 + 0x20);
-    d0 = (int16_t)((frame_tick + 0x50) & 0xff);
-    if (d0 & 0x80)
-        d0 = (~d0) & 0xff;
-    l = (int32_t)(int16_t)(d0 - 0x40) << 10;
-    a0->turn_fixed = (uint32_t)l;
-    d0 = (int16_t)((frame_tick + 0xa0) & 0x1ff);
-    if (d0 & 0x100)
-        d0 ^= 0x1ff;
-    d0 -= 0x80;
-    a0->turn_step = (uint16_t)(d0 << 5);
-    d0 = (int16_t)(a0->l1_boss.move + a0->y);
-    if (d0 < 0x10) {
-        d0 = 0x10;
-        a0->l1_boss.wait = 0;
+    boss->l1_boss.phase++;
+    if (boss->l1_boss.phase == 0)
+        boss->l1_boss.phase++;
+    if (boss->l1_boss.phase >= 0x64)
+        boss->l1_boss.phase = -40;
+    wave = frame_tick & 0x7f;
+    if (wave & 0x40)
+        wave = (int16_t)-(wave - 0x7f);
+    wave = (int8_t)wave;
+    boss->l1.angle_lo = (int16_t)(wave + 0x20);
+    wave = (int16_t)((frame_tick + 0x50) & 0xff);
+    if (wave & 0x80)
+        wave = (~wave) & 0xff;
+    turn = (int32_t)(int16_t)(wave - 0x40) << 10;
+    boss->turn_fixed = (uint32_t)turn;
+    wave = (int16_t)((frame_tick + 0xa0) & 0x1ff);
+    if (wave & 0x100)
+        wave ^= 0x1ff;
+    wave -= 0x80;
+    boss->turn_step = (uint16_t)(wave << 5);
+    new_y = (int16_t)(boss->l1_boss.move + boss->y);
+    if (new_y < 0x10) {
+        new_y = 0x10;
+        boss->l1_boss.wait = 0;
     }
-    if (d0 > 0x1e0) {
-        d0 = 0x1e0;
-        a0->l1_boss.wait = 0;
+    if (new_y > 0x1e0) {
+        new_y = 0x1e0;
+        boss->l1_boss.wait = 0;
     }
-    a0->y = d0;
-    a0->l1_boss.wait--;
-    if (a0->l1_boss.wait < 0) {
-        if (a0->l1_boss.move == -1) {
-            a0->l1_boss.move = 0;
-            a0->l1_boss.wait = 0xaa;
-        } else if (a0->l1_boss.move == 1) {
-            a0->l1_boss.move = 0;
-            a0->l1_boss.wait = 0x3c;
+    boss->y = new_y;
+    boss->l1_boss.wait--;
+    if (boss->l1_boss.wait < 0) {
+        if (boss->l1_boss.move == -1) {
+            boss->l1_boss.move = 0;
+            boss->l1_boss.wait = 0xaa;
+        } else if (boss->l1_boss.move == 1) {
+            boss->l1_boss.move = 0;
+            boss->l1_boss.wait = 0x3c;
         } else {
-            a0->l1_boss.wait = 0x32;
-            a0->l1_boss.move = 1;
-            if (a0->y != 0x10)
-                a0->l1_boss.move = -1;
+            boss->l1_boss.wait = 0x32;
+            boss->l1_boss.move = 1;
+            if (boss->y != 0x10)
+                boss->l1_boss.move = -1;
         }
     }
-    d0 = (int16_t)(0x1e - a0->energy);
-    l1_eyes_phase = (uint16_t)((l1_eyes_phase & 0xff00) | ((l1_eyes_phase + d0) & 0xff));
+    lost = (int16_t)(0x1e - boss->energy);
+    l1_eyes_phase = (uint16_t)((l1_eyes_phase & 0xff00) | ((l1_eyes_phase + lost) & 0xff));
 draw_table:
     src = sources[(frame_tick & 0xc) >> 2];
     copy_long(&level1_data.boss_draw_table[0], src);
     copy_long(&level1_data.boss_draw_table[4], src + 4);
     copy_long(&level1_data.boss_draw_table[12], src + 8);
     copy_long(&level1_data.boss_draw_table[16], src + 12);
-    if (a0->l1_boss.phase != 0)
+    if (boss->l1_boss.phase != 0)
         return;
 hide:
-    a0->hit[0] = 0x3e8;
-    a0->hit[2] = 0x3e8;
+    boss->hit[0] = 0x3e8;
+    boss->hit[2] = 0x3e8;
 }
 
 /* orig $05661A: draw routine of the level 1 boss */
-void level1_boss_draw(Object *a0)
+void level1_boss_draw(Object *boss)
 {
     static const void *const eyes[4] = { level1_data.eyes_a, level1_data.eyes_b, level1_data.eyes_c, level1_data.eyes_b };
-    uint16_t d7;
+    uint16_t eye;
 
     if ((int16_t)scroll_pos >= 0x280)
         return;
-    draw_tile_grid(level1_data.boss_grid, 5, 6, (uint16_t)(a0->y - scroll_pos), 0x38);
-    d7 = (l1_eyes_phase >> 4) & 0xc;
-    draw_bob_masked_at(0x98, (uint16_t)(a0->y - scroll_pos + 0x42), eyes[d7 >> 2]);
+    draw_tile_grid(level1_data.boss_grid, 5, 6, (uint16_t)(boss->y - scroll_pos), 0x38);
+    eye = (l1_eyes_phase >> 4) & 0xc;
+    draw_bob_masked_at(0x98, (uint16_t)(boss->y - scroll_pos + 0x42), eyes[eye >> 2]);
 }
 
 /* orig $054E20 (-> $5566A8): level 1 starts: its data is copied once, the boss is made */
 void level1_init(void)
 {
-    Object *a0, *a5;
+    Object *boss, *link;
     int i;
 
     if (level_init_src == level1_data.data_src) {
@@ -502,23 +502,23 @@ void level1_init(void)
     scroll_min = 0;
     scroll_max = 0x11ff;
     l1_eyes_phase = 0;
-    a0 = obj_free_pop();
-    a5 = LIST_C->prev;
-    LIST_C->prev = a0;
-    a0->prev = a5;
-    a0->next = LIST_C;
-    a5->next = a0;
-    a0->type = 0x50;
-    a0->fn_update = FN(level1_boss_update);
-    a0->fn_draw = FN(level1_boss_draw);
-    a0->fn_hit = (void *)level1_boss_hit;
-    SET_V5E(a0, 0);
-    a0->persists = -1;
-    a0->screen_fixed = -1;
-    a0->y = 0x10;
-    a0->energy = level1_data.boss_energy[0];
-    a0->l1_boss.phase = 0;
-    a0->steps = 0;
+    boss = obj_free_pop();
+    link = LIST_C->prev;
+    LIST_C->prev = boss;
+    boss->prev = link;
+    boss->next = LIST_C;
+    link->next = boss;
+    boss->type = 0x50;
+    boss->fn_update = FN(level1_boss_update);
+    boss->fn_draw = FN(level1_boss_draw);
+    boss->fn_hit = (void *)level1_boss_hit;
+    SET_V5E(boss, 0);
+    boss->persists = -1;
+    boss->screen_fixed = -1;
+    boss->y = 0x10;
+    boss->energy = level1_data.boss_energy[0];
+    boss->l1_boss.phase = 0;
+    boss->steps = 0;
     l1_boss_spawned = 0;
     for (i = 0; i < 5; i++)
         unit_live[i] = 0;
@@ -538,295 +538,295 @@ void level1_init(void)
 /* orig $0055E2C: level 1: starts every unit (a chain of enemies on a path) that is not on the screen; unit_live flags the live ones */
 void level1_spawn_units(void)
 {
-    uint16_t d6;
+    uint16_t unit;
 
-    for (d6 = 0; d6 < 5; d6++) {
-        if (unit_live[d6] == 0) {
-            unit_live[d6] = 0xff;
-            level1_spawn_unit(d6);
+    for (unit = 0; unit < 5; unit++) {
+        if (unit_live[unit] == 0) {
+            unit_live[unit] = 0xff;
+            level1_spawn_unit(unit);
         }
     }
 }
 
-/* orig $055E50: unit d6 starts: a place of the table is picked from the random state of the unit (the five longs at $D46 rotate right by
+/* orig $055E50: unit starts: a place of the table is picked from the random state of the unit (the five longs at $D46 rotate right by
  * 5), then objects are made: the first one and a marker pair around the unit's pieces (type $BC after the last piece, $B8 first), the
  * head (type $10C, it follows the path) and the pieces (level1_data.segs, each follows the object before it) */
-void level1_spawn_unit(uint16_t d6)
+void level1_spawn_unit(uint16_t unit)
 {
-    uint32_t r = unit_seed[d6];
+    uint32_t r = unit_seed[unit];
     const struct LevelSpawn *s;
-    Object *first, *a0;
-    int16_t x, y, d2, d3, n, i;
+    Object *first, *obj;
+    int16_t x, y, wait, counter, n, i;
 
     r = (r >> 5) | (r << 27);
-    unit_seed[d6] = r;
+    unit_seed[unit] = r;
     s = &level1_data.unit_starts[r & 0xf];
     x = s->x;
     y = (int16_t)(s->y - scroll_step - scroll_pos);
     if (level_vars[(uint16_t)s->index] == 0)
         level_vars[(uint16_t)s->index] = 0x14;
-    d3 = s->flag;
-    d2 = 0;
+    counter = s->flag;
+    wait = 0;
     n = (int16_t)level1_data.unit_pieces_less_one;
     first = alloc_c();
-    a0 = alloc_c();
-    a0->type = 0x10c;
-    a0->fn_update = FN(level1_head_update);
-    a0->fn_draw = obj_nop_thunk;
-    a0->fn_hit = (void *)level1_hit_free;
-    a0->unit.counter = d3;
-    SET_V5E(a0, 0);
-    a0->script = (uint8_t *)s->path;
-    ((ObjMove *)a0)->cursor = s->path;
-    a0->x = x;
-    a0->y = y;
-    a0->unit.wait = d2;
-    a0->steps = (int16_t)level1_data.boss_steps;
-    a0->unit.id = (int16_t)d6;
-    a0->hit[0] = 0x3e8;
-    a0->hit[2] = 0x3e8;
-    a0->score = 0;
+    obj = alloc_c();
+    obj->type = 0x10c;
+    obj->fn_update = FN(level1_head_update);
+    obj->fn_draw = obj_nop_thunk;
+    obj->fn_hit = (void *)level1_hit_free;
+    obj->unit.counter = counter;
+    SET_V5E(obj, 0);
+    obj->script = (uint8_t *)s->path;
+    ((ObjMove *)obj)->cursor = s->path;
+    obj->x = x;
+    obj->y = y;
+    obj->unit.wait = wait;
+    obj->steps = (int16_t)level1_data.boss_steps;
+    obj->unit.id = (int16_t)unit;
+    obj->hit[0] = 0x3e8;
+    obj->hit[2] = 0x3e8;
+    obj->score = 0;
     for (i = 0; i <= n; i++) {
         const struct LevelSeg *seg = &level1_data.segs[i];
 
-        a0 = alloc_c();
-        a0->type = seg->type;
-        a0->fn_update = FN(level1_segment_update);
-        a0->fn_draw = obj_nop_thunk;
-        a0->fn_hit = (void *)seg->hit;
-        a0->gfx = seg->gfx;
-        a0->score = (int16_t)seg->score;
-        a0->unit.counter = d3;
-        a0->energy = 1;
-        a0->big = 0;
-        SET_V5E(a0, 0);
-        a0->anim_delay = 0;
-        a0->script = (uint8_t *)s->path;
-        ((ObjMove *)a0)->cursor = s->path;
-        a0->x = x;
-        a0->y = y;
-        a0->kind = 0;
-        a0->unit.wait = d2;
-        a0->steps = 4;
-        a0->unit.id = (int16_t)d6;
-        d2 = (int16_t)(d2 - 7);
-        bbox_from_frame(a0);
+        obj = alloc_c();
+        obj->type = seg->type;
+        obj->fn_update = FN(level1_segment_update);
+        obj->fn_draw = obj_nop_thunk;
+        obj->fn_hit = (void *)seg->hit;
+        obj->gfx = seg->gfx;
+        obj->score = (int16_t)seg->score;
+        obj->unit.counter = counter;
+        obj->energy = 1;
+        obj->big = 0;
+        SET_V5E(obj, 0);
+        obj->anim_delay = 0;
+        obj->script = (uint8_t *)s->path;
+        ((ObjMove *)obj)->cursor = s->path;
+        obj->x = x;
+        obj->y = y;
+        obj->kind = 0;
+        obj->unit.wait = wait;
+        obj->steps = 4;
+        obj->unit.id = (int16_t)unit;
+        wait = (int16_t)(wait - 7);
+        bbox_from_frame(obj);
     }
-    a0 = alloc_c();
-    a0->type = 0xb8;
-    a0->fn_update = obj_nop_thunk;
-    a0->fn_draw = obj_nop_thunk;
-    a0->fn_hit = (void *)obj_nop_thunk;
-    a0->hit[0] = 0x3e8;
-    a0->hit[2] = 0x3e8;
-    a0->chain = first;
+    obj = alloc_c();
+    obj->type = 0xb8;
+    obj->fn_update = obj_nop_thunk;
+    obj->fn_draw = obj_nop_thunk;
+    obj->fn_hit = (void *)obj_nop_thunk;
+    obj->hit[0] = 0x3e8;
+    obj->hit[2] = 0x3e8;
+    obj->chain = first;
     first->type = 0xbc;
     first->fn_update = FN(group_box_update);
     first->fn_draw = obj_nop_thunk;
     first->fn_hit = (void *)obj_nop_thunk;
     first->hit[0] = 0x3e8;
     first->hit[2] = 0x3e8;
-    first->target = a0;
+    first->target = obj;
 }
 
 /* orig $0561B4: update of the head of a unit (type $10C): it follows its path (scrolled by scroll_speed), keeps the unit marked live */
-void level1_head_update(Object *a0)
+void level1_head_update(Object *head)
 {
-    a0->y = (int16_t)(a0->y + scroll_speed);
-    unit_live[(uint16_t)a0->unit.id] = 0xff;
-    obj_script_step(a0);
-    if (a0->type == 4)
-        a0->fn_update(a0);
+    head->y = (int16_t)(head->y + scroll_speed);
+    unit_live[(uint16_t)head->unit.id] = 0xff;
+    obj_script_step(head);
+    if (head->type == 4)
+        head->fn_update(head);
 }
 
-/* orig $056034: hit routine of the head: the object hit (a1) is freed */
-void level1_hit_free(Object *a0, Object *a1, uint16_t d0)
+/* orig $056034: hit routine of the head: the object hit is freed */
+void level1_hit_free(Object *shooter, Object *target, uint16_t damage)
 {
-    kill_object_thunk(a1);
+    kill_object_thunk(target);
 }
 
 /* orig $0560C2: update of a piece of a unit (types $110, $114): it takes the place and the direction of the object before it in the list;
  * the last piece (the next is the marker $BC) keeps the unit's counter alive and goes */
-void level1_segment_update(Object *a0)
+void level1_segment_update(Object *seg)
 {
-    Object *a1;
-    uint16_t d2;
+    Object *ahead;
+    uint16_t offset;
     const uint8_t *const *tab;
 
-    unit_live[(uint16_t)a0->unit.id] = 0xff;
-    a1 = OBJ_FWD(a0);
-    if (a1->type == 0xbc) {
-        if (level_vars[(uint16_t)a0->unit.counter] == 0)
-            level_vars[(uint16_t)a0->unit.counter] = 0x14;
-        kill_object_thunk(a0);
-        a0->fn_update(a0);
+    unit_live[(uint16_t)seg->unit.id] = 0xff;
+    ahead = OBJ_FWD(seg);
+    if (ahead->type == 0xbc) {
+        if (level_vars[(uint16_t)seg->unit.counter] == 0)
+            level_vars[(uint16_t)seg->unit.counter] = 0x14;
+        kill_object_thunk(seg);
+        seg->fn_update(seg);
         return;
     }
-    a0->x = a1->x;
-    a0->y = (int16_t)(a1->y + scroll_speed);
-    a0->l1.angle_hi = a1->l1.angle_hi;
-    a0->l1.angle_lo = a1->l1.angle_lo;
-    a0->unit.wait = a1->unit.wait;
-    if (a0->fn_draw == obj_nop_thunk && a0->unit.wait >= 0)
-        a0->fn_draw = draw_bob_masked;
-    d2 = (uint16_t)(((uint16_t)(a0->l1.angle_lo + 0x10) >> 3) & 0x1c);
-    tab = &level1_data.piece_pictures[a0->type == 0x110 ? 8 : 0];
-    a0->gfx = tab[d2 / 4];
-    bbox_from_frame(a0);
+    seg->x = ahead->x;
+    seg->y = (int16_t)(ahead->y + scroll_speed);
+    seg->l1.angle_hi = ahead->l1.angle_hi;
+    seg->l1.angle_lo = ahead->l1.angle_lo;
+    seg->unit.wait = ahead->unit.wait;
+    if (seg->fn_draw == obj_nop_thunk && seg->unit.wait >= 0)
+        seg->fn_draw = draw_bob_masked;
+    offset = (uint16_t)(((uint16_t)(seg->l1.angle_lo + 0x10) >> 3) & 0x1c);
+    tab = &level1_data.piece_pictures[seg->type == 0x110 ? 8 : 0];
+    seg->gfx = tab[offset / 4];
+    bbox_from_frame(seg);
 }
 
-/* the end of $055C2E and $055C46: the piece a1 bursts into a piece that flies away (animation a2), its score is added, the object goes */
-static void level1_piece_burst(Object *a1, const uint8_t *a2)
+/* the end of $055C2E and $055C46: the piece bursts into a piece that flies away (animation anim), its score is added, the object goes */
+static void level1_piece_burst(Object *piece, const uint8_t *anim)
 {
     Object *n = alloc_b(0);
 
-    n->type = a1->type;
+    n->type = piece->type;
     n->fn_update = FN(level1_debris_update);
     n->fn_draw = draw_bob_masked;
-    n->x = a1->x;
-    n->y = a1->y;
-    set_anim(n, a2);
+    n->x = piece->x;
+    n->y = piece->y;
+    set_anim(n, anim);
     n->l1.angle_hi = 0;
     n->l1.angle_lo = (int16_t)(random_next() & 0xff);
-    player_score += (uint16_t)a1->score;
-    kill_object_thunk(a1);
+    player_score += (uint16_t)piece->score;
+    kill_object_thunk(piece);
 }
 
 /* orig $055C2E: hit routine of a piece: it flashes; with no energy left it bursts (anim $55250) */
-void level1_hit_piece_a(Object *a0, Object *a1, uint16_t d0)
+void level1_hit_piece_a(Object *shooter, Object *target, uint16_t damage)
 {
-    uint16_t old = (uint16_t)a1->energy;
+    uint16_t old = (uint16_t)target->energy;
 
-    a1->fn_draw = draw_bob_or_first;
-    a1->energy = (int16_t)(old - d0);
-    if (old > d0)
+    target->fn_draw = draw_bob_or_first;
+    target->energy = (int16_t)(old - damage);
+    if (old > damage)
         return;
-    level1_piece_burst(a1, level1_data.anim_piece_a);
+    level1_piece_burst(target, level1_data.anim_piece_a);
 }
 
 /* orig $055C46: the same with the animation $55274 */
-void level1_hit_piece_b(Object *a0, Object *a1, uint16_t d0)
+void level1_hit_piece_b(Object *shooter, Object *target, uint16_t damage)
 {
-    uint16_t old = (uint16_t)a1->energy;
+    uint16_t old = (uint16_t)target->energy;
 
-    a1->fn_draw = draw_bob_or_first;
-    a1->energy = (int16_t)(old - d0);
-    if (old > d0)
+    target->fn_draw = draw_bob_or_first;
+    target->energy = (int16_t)(old - damage);
+    if (old > damage)
         return;
-    level1_piece_burst(a1, level1_data.anim_piece_b);
+    level1_piece_burst(target, level1_data.anim_piece_b);
 }
 
 /* orig $05605A: update of a burst piece: it moves by a fixed step from the table at piece_directions picked by its random byte ($2D) and goes when it
  * leaves the screen */
-void level1_debris_update(Object *a0)
+void level1_debris_update(Object *debris)
 {
-    uint16_t d2;
-    int16_t d0, d1;
+    uint16_t angle;
+    int16_t x, y;
 
-    anim_step(a0);
-    d2 = (uint16_t)a0->l1.angle_lo;
-    d1 = (int16_t)(piece_directions[d2] >> 2);
-    d0 = (int16_t)(piece_directions[(uint16_t)(d2 + 0x40)] >> 2);
-    d0 = (int16_t)(d0 + a0->x);
-    d1 = (int16_t)(d1 + a0->y);
-    if ((uint16_t)d0 >= 0x140 || (uint16_t)d1 >= 0xc0) {
-        kill_object_thunk(a0);
+    anim_step(debris);
+    angle = (uint16_t)debris->l1.angle_lo;
+    y = (int16_t)(piece_directions[angle] >> 2);
+    x = (int16_t)(piece_directions[(uint16_t)(angle + 0x40)] >> 2);
+    x = (int16_t)(x + debris->x);
+    y = (int16_t)(y + debris->y);
+    if ((uint16_t)x >= 0x140 || (uint16_t)y >= 0xc0) {
+        kill_object_thunk(debris);
         return;
     }
-    a0->x = d0;
-    a0->y = d1;
-    a0->fn_draw = draw_bob_masked;
+    debris->x = x;
+    debris->y = y;
+    debris->fn_draw = draw_bob_masked;
 }
 
 /* orig $056676: the draw of the boss after a hit: back to the normal draw ($5661A) and the picture drawn as a flash */
-void level1_boss_flash(Object *a0)
+void level1_boss_flash(Object *boss)
 {
-    a0->fn_draw = FN(level1_boss_draw);
+    boss->fn_draw = FN(level1_boss_draw);
     if ((int16_t)scroll_pos >= 0x280)
         return;
-    draw_tile_grid_flash(level1_data.boss_grid, 5, 6, (int16_t)(a0->y - scroll_pos), 0x38);
+    draw_tile_grid_flash(level1_data.boss_grid, 5, 6, (int16_t)(boss->y - scroll_pos), 0x38);
 }
 
 /* orig $0561DA: hit routine of the level 1 boss: when the shooter's box meets the part of the boss that can be hurt the boss flashes
  * and loses energy; at no energy it goes: bonuses fall, the screen is full of explosions, the enemies are freed and the level is done */
-void level1_boss_hit(Object *a0, Object *a1, uint16_t d0)
+void level1_boss_hit(Object *shooter, Object *boss, uint16_t damage)
 {
     uint16_t old;
     int16_t y;
 
     if (l1_boss_spawned == 0)
         return;
-    y = (int16_t)(a1->y - scroll_pos + 0x44);
+    y = (int16_t)(boss->y - scroll_pos + 0x44);
     if (!box_overlap((int16_t)hit_box[0], (int16_t)hit_box[1], (int16_t)hit_box[2], (int16_t)hit_box[3], 0x98, y, 0xa7, (int16_t)(y + 0xe)))
         return;
-    a1->fn_draw = FN(level1_boss_flash);
-    old = (uint16_t)a1->energy;
-    a1->energy = (int16_t)(old - d0);
-    if (old > d0)
+    boss->fn_draw = FN(level1_boss_flash);
+    old = (uint16_t)boss->energy;
+    boss->energy = (int16_t)(old - damage);
+    if (old > damage)
         return;
     l1_boss_spawned = 0;
-    kill_object_thunk(a1);
+    kill_object_thunk(boss);
     spawn_bonuses(8);
-    debris_burst(a0, 0x13, 0, 0, 0x140, 0xc0, big_explosion_anim);
+    debris_burst(shooter, 0x13, 0, 0, 0x140, 0xc0, big_explosion_anim);
     free_object_chain(LIST_HEAD(LIST_ENEMY));
     boss_dead = 0xff;
 }
 
 /* orig $056278: update of a part of the level 1 boss ($FC, the last $100): it takes the place and the numbers of the part before it
  * ($1C), the first one the boss's; the last part turns towards the player and shoots */
-void level1_boss_part_update(Object *a0)
+void level1_boss_part_update(Object *part)
 {
-    ObjMove *m = (ObjMove *)a0;
-    Object *a1;
+    ObjMove *part_move = (ObjMove *)part;
+    Object *prev;
 
     if (l1_boss_spawned == 0) {
-        kill_object_thunk(a0);
+        kill_object_thunk(part);
         return;
     }
-    a1 = (Object *)a0->anim;
-    a0->x = a1->x;
-    a0->x_frac = a1->x_frac;
-    a0->y = a1->y;
-    a0->y_frac = a1->y_frac;
-    a0->l1.angle_hi = a1->l1.angle_hi;
-    a0->l1.angle_lo = a1->l1.angle_lo;
-    a0->turn_hi = a1->turn_hi;
-    a0->turn_lo = a1->turn_lo;
-    a0->turn_step = a1->turn_step;
-    a0->steps = a1->steps;
-    if (a1->type == 0x50) {
-        a0->x = 0xa0;
-        a0->x_frac = 0;
-        a0->y = (int16_t)(a0->y + 0x60);
-        a0->y_frac = 0;
-        a0->y = (int16_t)(a0->y - scroll_pos);
+    prev = (Object *)part->anim;
+    part->x = prev->x;
+    part->x_frac = prev->x_frac;
+    part->y = prev->y;
+    part->y_frac = prev->y_frac;
+    part->l1.angle_hi = prev->l1.angle_hi;
+    part->l1.angle_lo = prev->l1.angle_lo;
+    part->turn_hi = prev->turn_hi;
+    part->turn_lo = prev->turn_lo;
+    part->turn_step = prev->turn_step;
+    part->steps = prev->steps;
+    if (prev->type == 0x50) {
+        part->x = 0xa0;
+        part->x_frac = 0;
+        part->y = (int16_t)(part->y + 0x60);
+        part->y_frac = 0;
+        part->y = (int16_t)(part->y - scroll_pos);
     }
-    a0->l1.wait = 0x64;
-    enemy_update_no_anim(a0);
-    if (a0->steps == 0) {
-        a0->hit[0] = 0x3e8;
-        a0->hit[2] = 0x3e8;
+    part->l1.wait = 0x64;
+    enemy_update_no_anim(part);
+    if (part->steps == 0) {
+        part->hit[0] = 0x3e8;
+        part->hit[2] = 0x3e8;
         return;
     }
-    if (a0->type == 0x100) {
-        uint16_t dir = direction8((int16_t)(PLAYER->x - a0->x), (int16_t)(PLAYER->y - a0->y));
+    if (part->type == 0x100) {
+        uint16_t dir = direction8((int16_t)(PLAYER->x - part->x), (int16_t)(PLAYER->y - part->y));
 
-        a0->l1.angle_hi = (int16_t)dir;
-        a0->gfx = level1_data.boss_part_pictures[dir];
-        if (a0->steps >= 0xb) {
-            uint16_t sum = (uint16_t)(m->shot_count + 0xf);
+        part->l1.angle_hi = (int16_t)dir;
+        part->gfx = level1_data.boss_part_pictures[dir];
+        if (part->steps >= 0xb) {
+            uint16_t sum = (uint16_t)(part_move->shot_count + 0xf);
 
-            m->shot_count = (uint8_t)sum;
+            part_move->shot_count = (uint8_t)sum;
             if (sum & 0x100) {
                 Object *shot;
 
-                m->shot_count = (uint8_t)(random_next() & 0x3f);
-                shot = spawn_enemy_shot((uint16_t)a0->x, (uint16_t)a0->y, (uint16_t)a0->l1.angle_hi, 4, 0);
+                part_move->shot_count = (uint8_t)(random_next() & 0x3f);
+                shot = spawn_enemy_shot((uint16_t)part->x, (uint16_t)part->y, (uint16_t)part->l1.angle_hi, 4, 0);
                 set_anim(shot, level1_data.anim_shot);
             }
         }
     }
-    bbox_from_frame(a0);
+    bbox_from_frame(part);
 }
 
 /* orig $054E2C: the level's hook for a change of players: none in level 1 */
