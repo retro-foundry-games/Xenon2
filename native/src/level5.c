@@ -37,8 +37,6 @@ void l5_wall_flash_b(Object *obj);
 /* the scratch fields of Object, by the kind that uses them */
 
 
-#define W(a) sh_r16(a)
-#define B(a) sh_r8(a)
 
 static Object *alloc_in(Object *list)
 {
@@ -89,7 +87,7 @@ static int add_carry(uint8_t *b, uint8_t add)
 /* the picture of the shot by the table at $72EC8 */
 static const void *shot_gfx(uint16_t index)
 {
-    return GPTR(sh_r32(sh_r32(0x72ec8 + 4 * (uint32_t)index)));
+    return GPTR(rd32(xenon2.level5_data.shot_gfx_table[index]));
 }
 
 /* the object follows its target ($564C4) */
@@ -182,8 +180,8 @@ void l5_hook(uint16_t hook, const uint8_t *record, uint16_t slot_value)
 /* level5 $054E2C, $054E80: the two limits are kept for the swap */
 void l5_swap_hook(void)
 {
-    sh_w16(0x62d22, sh_r16(0xd72));
-    sh_w16(0x7491c, sh_r16(0xd76));
+    wr16(xenon2.level5_data.swap_limit_a.b, xenon2.l5_limit_a);
+    wr16(xenon2.level5_data.swap_limit_b.b, xenon2.l5_limit_b);
 }
 
 /* level5 $054E20, $0575EA: the data is copied once (backwards: the copy lies above its source) */
@@ -191,21 +189,21 @@ void l5_init(void)
 {
     int i;
 
-    if (xenon2.level_init_src == (uint8_t *)GPTR(0x78d44)) {
+    if (xenon2.level_init_src != xenon2.level_data_dst) {
         for (i = 11999; i >= 0; i--)
-            ((uint8_t *)GPTR(0x7d120))[i] = ((const uint8_t *)GPTR(0x78d44))[i];
-        xenon2.level_init_src = (uint8_t *)GPTR(0x7d120);
+            xenon2.level_data_dst[i] = xenon2.level_init_src[i];
+        xenon2.level_init_src = xenon2.level_data_dst;
     }
     xenon2.scroll_min = 0;
     xenon2.scroll_max = 0x11ff;
-    sh_w8(0xd99, 0);
-    sh_w8(0xd9a, 0);
-    sh_w16(0xd72, 0x1200);
-    sh_w16(0xd76, 0x11a0);
+    xenon2.l5_boss1_spawned = 0;
+    xenon2.l5_gunners_spawned = 0;
+    xenon2.l5_limit_a = 0x1200;
+    xenon2.l5_limit_b = 0x11a0;
     xenon2.level5_data.boss1_pieces[0].energy = xenon2.level5_data.init_patch;
     xenon2.level5_data.boss2_pieces[5].energy = xenon2.level5_data.init_patch_2;
-    sh_w8(0xd9b, 0);
-    sh_w8(0xd9c, 0);
+    xenon2.l5_group_done[0] = 0;
+    xenon2.l5_group_done[1] = 0;
     xenon2.difficulty_x1 = (uint16_t)(xenon2.difficulty * 0xc);
     xenon2.difficulty_x2 = (uint16_t)(xenon2.difficulty * 0xe);
 }
@@ -415,17 +413,17 @@ void l5_spawn_boss1(uint16_t slot_value)
     Object *root = 0;
     int count, i;
 
-    if (B(0xd99))
+    if (xenon2.l5_boss1_spawned)
         return;
-    sh_w8(0xd99, 0xff);
+    xenon2.l5_boss1_spawned = 0xff;
     xenon2.scroll_y = 0x1a0;
     xenon2.player_x_saved = 0xa0;
     xenon2.player_y_saved = 0xb0;
     latch_slots(slot_value);
-    sh_w16(0x62d22, 0xffff);
-    sh_w16(0x7491c, 0xffff);
-    sh_w16(0xd72, 0xffff);
-    sh_w16(0xd76, 0xffff);
+    wr16(xenon2.level5_data.swap_limit_a.b, 0xffff);
+    wr16(xenon2.level5_data.swap_limit_b.b, 0xffff);
+    xenon2.l5_limit_a = 0xffff;
+    xenon2.l5_limit_b = 0xffff;
     p = xenon2.level_init_src;
     memset(p, 0, 240);
     p += 240;
@@ -468,7 +466,7 @@ void l5_spawn_boss1(uint16_t slot_value)
         obj->target = root;
         obj->kind = 0;
     }
-    sh_w16(0xd7a, 0x12);
+    xenon2.l5_boss_pieces_left = 0x12;
 }
 
 /* level5 $055D1C: the flash of the boss, one frame */
@@ -506,7 +504,7 @@ void l5_boss_piece(Object *obj)
 void l5_boss_last(Object *obj)
 {
     follow_target_offset(obj);
-    if (sh_r16(0xd7a) == 0)
+    if (xenon2.l5_boss_pieces_left == 0)
         bbox_from_frame(obj);
 }
 
@@ -625,7 +623,7 @@ void l5_missile_update(Object *obj)
     }
     dx = xenon2.level5_data.pellet_dx_by_dir[(int16_t)(obj->missile.dir >> 16)];
     dy = xenon2.level5_data.pellet_dy_by_dir[(int16_t)(obj->missile.dir >> 16)];
-    if (sh_r16(0xd7a) == 0) {
+    if (xenon2.l5_boss_pieces_left == 0) {
         dx = (int16_t)(dx + dx);
         dy = (int16_t)(dy + dy);
     }
@@ -671,7 +669,7 @@ void l5_piece_hit(Object *shot, Object *obj, uint16_t damage)
     obj->fn_draw = (obj_fn)draw_bob_or_first;
     if (!dies(obj, damage))
         return;
-    sh_w16(0xd7a, (uint16_t)(sh_r16(0xd7a) - 1));
+    xenon2.l5_boss_pieces_left = (uint16_t)(xenon2.l5_boss_pieces_left - 1);
     xenon2.player_score += 0xc8;
     explode_at(obj, obj->big ? xenon2.big_explosion_anim : xenon2.anim_explosion);
     if (obj->type != 0x114) {
@@ -715,9 +713,9 @@ void l5_spawn_boss2(const uint8_t *record)
     int16_t y;
     int count;
 
-    if (B(0xd9a))
+    if (xenon2.l5_gunners_spawned)
         return;
-    sh_w8(0xd9a, 0xff);
+    xenon2.l5_gunners_spawned = 0xff;
     y = (int16_t)(rd16(record + 0xa) - 8 - xenon2.scroll_pos);
     for (count = 9; count >= 0; count--, rec++) {
         Object *obj = insert_head(LIST_C);
@@ -1230,7 +1228,7 @@ void l5_spawn_group(const uint8_t *record)
 {
     uint16_t group = rd16(record + 6);
 
-    if (sh_r8(0xd9b + group) == 0)
+    if (xenon2.l5_group_done[group] == 0)
         (l5_spawn_unit(record))->unit.group = (int16_t)group;
 }
 
@@ -1329,7 +1327,7 @@ void l5_unit_hit(Object *shot, Object *obj, uint16_t damage)
     if (!dies(obj, damage))
         return;
     if (obj->unit.group >= 0)
-        sh_w8(0xd9b + (uint32_t)(uint16_t)obj->unit.group, 0xff);
+        xenon2.l5_group_done[(uint32_t)(uint16_t)obj->unit.group] = 0xff;
     spawn_effect((int16_t)(obj->x + 0x10), (int16_t)(obj->y - xenon2.scroll_pos + 0x10), xenon2.big_explosion_anim, draw_bob_masked);
     c = obj->map;
     if (rd16(c[-1].b) == 0x80d7) {

@@ -100,3 +100,5 @@ end
 572aa boss_cells u8 32
 5b5d6 roamer_picture u8 5920
 5ccf6 launcher_shot_picture u8 32
+6c89c shot_gfx_table ptr 5
+6c8b0 shot_gfx_cells u8 12

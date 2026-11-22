@@ -338,6 +338,7 @@ static const struct blob_member blob_members_2[] = {
     { 0x2006, 2, 4, 1 },
     { 0x200E, 2, 4, 1 },
     { 0x20E4, 4, 4, 0 },
+    { 0x17A5C, 5, 4, 1 },
 };
 static const struct blob_member blob_members_3[] = {
     { 0x2, 1, 2, 0 },
@@ -534,6 +535,8 @@ static const struct blob_member blob_members_3[] = {
     { 0x21A0, 1, 2, 0 },
     { 0x2284, 1, 2, 0 },
     { 0x2286, 1, 2, 0 },
+    { 0x19FE6, 5, 4, 1 },
+    { 0x1A0F6, 12, 4, 1 },
 };
 static const struct blob_member blob_members_4[] = {
     { 0x2, 1, 2, 0 },
@@ -829,6 +832,7 @@ static const struct blob_member blob_members_4[] = {
     { 0x1A92, 8, 4, 1 },
     { 0x2192, 11, 2, 0 },
     { 0x21A8, 11, 2, 0 },
+    { 0x22D30, 5, 4, 1 },
 };
 static const struct blob_member blob_members_5[] = {
     { 0x2, 1, 2, 0 },
@@ -1127,4 +1131,5 @@ static const struct blob_member blob_members_5[] = {
     { 0x2486, 1, 2, 0 },
     { 0x2488, 1, 2, 0 },
     { 0x248A, 8, 4, 1 },
+    { 0x1E088, 4, 4, 1 },
 };

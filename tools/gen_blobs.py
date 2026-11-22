@@ -11,7 +11,7 @@ COUNT defaults to 1; a u8 member without it runs to the next one.  What no membe
 import re, sys, pathlib
 
 BASE = 0x54E40
-END = 0x74000   # (the shop's blob and the levels' end here)
+END = 0x7d120   # (the first byte of level_data_dst: the loaded level files end below it)
 SIZE = {'u8': 1, 'cell': 2, 'u16': 2, 's16': 2, 'u32': 4, 'ptr': 4, 'code': 4}
 KIND = {'u8': 0, 'cell': 0, 'u16': 0, 's16': 0, 'u32': 0, 'ptr': 1, 'code': 2}
 CT = {'u8': 'uint8_t', 'cell': 'Cell', 'u16': 'uint16_t', 's16': 'int16_t', 'u32': 'uint32_t', 'ptr': 'const uint8_t *', 'code': 'void (*'}

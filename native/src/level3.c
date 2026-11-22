@@ -23,8 +23,6 @@
 /* the scratch fields of Object, by the kind that uses them */
 
 
-#define W(a) sh_r16(a)
-#define B(a) sh_r8(a)
 #define PLAYER_X (PLAYER->x)
 #define PLAYER_Y (PLAYER->y)
 
@@ -145,19 +143,19 @@ void l3_scroll(void)
         scroll_pos_update(xenon2.scroll_step);
         stars_scroll(xenon2.scroll_step);
         xenon2.scroll_step = 0;
-        if (B(0xd96) != 0)
-            sh_w8(0xd96, 0);
+        if (xenon2.l3_end_active != 0)
+            xenon2.l3_end_active = 0;
         else
             xenon2.scroll_min = 0;
     }
     if ((int16_t)xenon2.scroll_pos <= 0xd0) {
         if ((int16_t)xenon2.scroll_max < 0x20)
             xenon2.scroll_max = 0x20;
-        if (B(0xd92) == 0 && B(0xd94) == 0)
+        if (xenon2.l3_worm_dead[0] == 0 && xenon2.l3_worm_shown[0] == 0)
             l3_worm_spawn(0);
-        sh_w8(0xd94, 0);
-        sh_w8(0xd95, 0);
-        if (B(0xd92) != 0 && B(0xd93) != 0 && xenon2.boss_dead == 0) {
+        xenon2.l3_worm_shown[0] = 0;
+        xenon2.l3_worm_shown[1] = 0;
+        if (xenon2.l3_worm_dead[0] != 0 && xenon2.l3_worm_dead[1] != 0 && xenon2.boss_dead == 0) {
             spawn_bonuses(9);
             xenon2.boss_dead = 0xff;
         }
@@ -173,10 +171,10 @@ void l3_init(void)
     Object *end_obj, *front, *old;
     int i;
 
-    if (xenon2.level_init_src == (uint8_t *)GPTR(0x74386)) {
+    if (xenon2.level_init_src != xenon2.level_data_dst) {
         for (i = 11999; i >= 0; i--)
-            ((uint8_t *)GPTR(0x7d120))[i] = ((const uint8_t *)GPTR(0x74386))[i];
-        xenon2.level_init_src = (uint8_t *)GPTR(0x7d120);
+            xenon2.level_data_dst[i] = xenon2.level_init_src[i];
+        xenon2.level_init_src = xenon2.level_data_dst;
     }
     xenon2.scroll_min = 0xaf0;
     xenon2.scroll_max = 0x11ff;
@@ -193,17 +191,17 @@ void l3_init(void)
     end_obj->persists = -1;
     xenon2.unit_seed[0] = 0xe496aa8a;
     xenon2.unit_seed[1] = 0x5274b949;
-    sh_w8(0xd92, 0);
-    sh_w8(0xd93, 0xff);
-    sh_w8(0xd94, 0);
-    sh_w8(0xd95, 0);
-    sh_w16(0xd64, 0);
-    sh_w16(0xd66, xenon2.level3_data.init_patch);
-    sh_w16(0xd68, xenon2.level3_data.init_patch);
-    sh_w8(0xd96, 0);
-    sh_w16(0xd6a, 2);
-    sh_w16(0xd60, xenon2.level3_data.init_patch_2);
-    sh_w16(0xd62, xenon2.level3_data.init_patch_2);
+    xenon2.l3_worm_dead[0] = 0;
+    xenon2.l3_worm_dead[1] = 0xff;
+    xenon2.l3_worm_shown[0] = 0;
+    xenon2.l3_worm_shown[1] = 0;
+    xenon2.l3_worm_path = 0;
+    xenon2.l3_worm_energy[0] = xenon2.level3_data.init_patch;
+    xenon2.l3_worm_energy[1] = xenon2.level3_data.init_patch;
+    xenon2.l3_end_active = 0;
+    xenon2.l3_guns_left = 2;
+    xenon2.l3_gun_energy[0] = xenon2.level3_data.init_patch_2;
+    xenon2.l3_gun_energy[1] = xenon2.level3_data.init_patch_2;
     xenon2.difficulty_x1 = (uint16_t)(xenon2.difficulty * 2);
     xenon2.difficulty_x2 = (uint16_t)(xenon2.difficulty * 3);
 }
@@ -216,7 +214,7 @@ void l3_end_draw(Object *obj)
     const struct Level3EndPiece *piece = xenon2.level3_data.end_pieces;
 
     (void)obj;
-    if (B(0xd94) == 0 && B(0xd95) == 0)
+    if (xenon2.l3_worm_shown[0] == 0 && xenon2.l3_worm_shown[1] == 0)
         return;
     for (; piece->cells != 0; piece++) {
         int16_t sy = (int16_t)(piece->y - xenon2.scroll_pos);
@@ -233,14 +231,14 @@ void l3_worm_spawn(uint16_t side)
 {
     uint16_t path_index;
     const struct Level3WormPiece *entry = xenon2.level3_data.worm_spawn.pieces;
-    uint32_t path;
+    const uint8_t *path;
     int16_t delay = 0, x, y;
     int n, count;
     Object *head = 0, *prev = 0;
 
-    if (W(0xd64) != 1) {
-        path_index = W(0xd64);
-        sh_w16(0xd64, (uint16_t)(path_index + 1));
+    if (xenon2.l3_worm_path != 1) {
+        path_index = xenon2.l3_worm_path;
+        xenon2.l3_worm_path = (uint16_t)(path_index + 1);
     } else {
         uint32_t *seed = &xenon2.unit_seed[side == 0 ? 0 : 1];
 
@@ -249,9 +247,9 @@ void l3_worm_spawn(uint16_t side)
             path_index = (uint16_t)(*seed & 7);
         } while (path_index < 1 || path_index == 7);
     }
-    path = sh_r32(0x6ef36 + 4 * (uint32_t)path_index);
-    x = (int16_t)W(path + 2);
-    y = (int16_t)(W(path + 4) - xenon2.scroll_pos - xenon2.scroll_step);
+    path = xenon2.level3_data.worm_paths[path_index];
+    x = (int16_t)rd16(path + 2);
+    y = (int16_t)(rd16(path + 4) - xenon2.scroll_pos - xenon2.scroll_step);
     count = xenon2.level3_data.worm_spawn.last + 1;
     for (n = 0; n < count; n++) {
         Object *seg = alloc_in(LIST_C);
@@ -272,8 +270,8 @@ void l3_worm_spawn(uint16_t side)
         seg->big = 0;
         seg->is_part = 0;
         seg->anim_delay = 0;
-        seg->script = (uint8_t *)GPTR(path);
-        seg->cursor = (const uint8_t *)GPTR(path);
+        seg->script = (uint8_t *)path;
+        seg->cursor = path;
         seg->worm.phase = (seg->worm.phase & 0xffff0000u) | (uint16_t)(0xc0);
         seg->x = x;
         seg->y = y;
@@ -649,8 +647,8 @@ void l3_spawn_parts(void)
         part->arm_b.swing = 0;
         prev = part;
     } while (entry->update != 0);
-    sh_w8(0xd96, 0xff);
-    sh_w8(0xd85, 0xff);
+    xenon2.l3_end_active = 0xff;
+    xenon2.skip_map_draw = 0xff;
 }
 
 /* level3 $055A88: the first part: it keeps the end'shot flag d96 set and fires a shot at the player now and then */
@@ -658,7 +656,7 @@ void l3_part_core(Object *obj)
 {
     uint16_t sum;
 
-    sh_w8(0xd96, 0xff);
+    xenon2.l3_end_active = 0xff;
     enemy_update(obj);
     sum = (uint16_t)(obj->shot_count + xenon2.level3_data.part_core_fire_rate);
     obj->shot_count = (uint8_t)sum;
@@ -693,7 +691,7 @@ void l3_part_gun(Object *obj)
     int16_t side;
 
     l3_part_follow(obj);
-    side = (int16_t)W(obj->gun.side == 0x40 ? 0xd60 : 0xd62);
+    side = (int16_t)xenon2.l3_gun_energy[obj->gun.side == 0x40 ? 0 : 1];
     if (side <= 0) {
         obj->gfx = (void *)(obj->gun.side == 0x40 ? xenon2.level3_data.part_gun_picture_side_40 : xenon2.level3_data.part_gun_picture_other);
         obj->anim_delay = 0;
@@ -722,26 +720,26 @@ void l3_part_gun(Object *obj)
 void l3_part_hit(Object *shot, Object *part, uint16_t damage)
 {
     Object *piece;
-    uint32_t addr = part->gun.side == 0x40 ? 0xd60 : 0xd62;
-    uint16_t old = W(addr);
+    uint16_t *energy = &xenon2.l3_gun_energy[part->gun.side == 0x40 ? 0 : 1];
+    uint16_t old = *energy;
     int16_t x, y;
 
     for (piece = part->target; piece; piece = piece->chain)
         piece->fn_draw = draw_bob_or_first;
-    sh_w16(addr, (uint16_t)(old - damage));
+    *energy = (uint16_t)(old - damage);
     if (old > damage)
         return;
     part->hit[0] = 0x3e8;
     part->fn_hit = (void *)obj_nop_thunk;
     l3_centre(part, &x, &y);
-    spawn_effect(x, y, (const uint8_t *)GPTR(sh_r32(0xf70)), draw_bob_masked);
-    sh_w16(0xd6a, (uint16_t)(W(0xd6a) - 1));
-    if (W(0xd6a) != 0)
+    spawn_effect(x, y, xenon2.explosion_anim_f70, draw_bob_masked);
+    xenon2.l3_guns_left = (uint16_t)(xenon2.l3_guns_left - 1);
+    if (xenon2.l3_guns_left != 0)
         return;
     part->target->energy = 0;
     hit_part(shot, part, 1);
     spawn_bonuses(4);
-    sh_w8(0xd85, 0);
+    xenon2.skip_map_draw = 0;
 }
 
 
@@ -999,7 +997,7 @@ void l3_boss_update(Object *obj)
         obj->shot_count = (uint8_t)(random_next() & 0x3f);
         x = (int16_t)(obj->x + 0x20);
         y = (int16_t)(obj->y - xenon2.scroll_pos + 0x58);
-        gfx = sh_r32(sh_r32(0x6ee26 + 4 * (uint32_t)xenon2.level3_data.boss_param));
+        gfx = rd32(xenon2.level3_data.shot_gfx_table[xenon2.level3_data.boss_param]);
         step = (uint16_t)(obj->l3_boss.cell & ~1);
         if (step == 6)
             angle = 3;
@@ -1210,7 +1208,7 @@ void l3_walker_update(Object *obj)
 
         obj->shot_count = (uint8_t)sum;
         if (sum > 0xff) {
-            uint32_t gfx = sh_r32(sh_r32(0x6ee26 + 4 * (uint32_t)xenon2.level3_data.walker_param));
+            uint32_t gfx = rd32(xenon2.level3_data.shot_gfx_table[xenon2.level3_data.walker_param]);
             uint16_t angle;
 
             obj->shot_count = (uint8_t)(random_next() & 0x3f);
@@ -1226,7 +1224,7 @@ static void l3_worm_follow(Object *obj, const uint8_t *const *table)
 {
     obj->y = (int16_t)(obj->y + xenon2.scroll_speed);
     if (table == xenon2.level3_data.worm_follow_pictures)
-        sh_w8(0xd94 + (uint16_t)obj->worm.side, 0xff);
+        xenon2.l3_worm_shown[(uint16_t)obj->worm.side] = 0xff;
     enemy_update_no_anim(obj);
     obj->gfx = (void *)table[(((uint16_t)(int16_t)obj->worm.phase + 0x10) >> 5) & 7];
     bbox_from_frame(obj);
@@ -1280,16 +1278,16 @@ void l3_worm_c(Object *obj)
 void l3_worm_hit(Object *shot, Object *worm, uint16_t damage)
 {
     Object *o;
-    uint32_t addr = 0xd66 + 2 * (uint32_t)(uint16_t)worm->worm.side;
-    uint16_t old = W(addr);
+    uint16_t *energy = &xenon2.l3_worm_energy[(uint16_t)worm->worm.side];
+    uint16_t old = *energy;
 
     for (o = worm; o; o = o->chain)
         o->fn_draw = draw_bob_or_first;
-    sh_w16(addr, (uint16_t)(old - damage));
+    *energy = (uint16_t)(old - damage);
     if (old > damage)
         return;
-    sh_w8(0xd92 + (uint16_t)worm->worm.side, 0xff);
-    sh_w8(0xd94 + (uint16_t)worm->worm.side, 0);
+    xenon2.l3_worm_dead[(uint16_t)worm->worm.side] = 0xff;
+    xenon2.l3_worm_shown[(uint16_t)worm->worm.side] = 0;
     for (o = worm->chain; o;) {
         Object *next = o->chain;
 

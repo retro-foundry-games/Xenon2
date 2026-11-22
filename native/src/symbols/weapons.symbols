@@ -61,6 +61,7 @@ tab weapon_damage 0x7966 uint16_t 4               ; damage: $7966 bomb pieces, $
 tab blast_damage 0x7974 uint16_t 3                ; $7974 per level of the $34 beam, $7976 the shell, $7978 the blast of weapon $38/$3C
 var area_damage_kept 0x30dc uint16_t                        ; the damage $3096 keeps while it calls the hit routines
 var piece_directions 0xf60 int8_t *                         ; table of the pieces' directions (two bytes each, 64 apart)
+var explosion_anim_f70 0xf70 uint8_t *                    ; an explosion's animation header (level 3's part bursts)
 var big_explosion_anim 0xf64 uint8_t *                        ; the big explosion's animation header
 tab anim_drill_head_1 0x2936 uint8_t 6
 tab anim_drill_head_2 0x2954 uint8_t 6

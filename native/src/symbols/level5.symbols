@@ -1,0 +1,7 @@
+; level5: the variables level 5's blob ($54E00 while level 5 is loaded) uses
+var l5_limit_a 0xd72 uint16_t                           ; level 5: a limit kept for the swap ($62D22 gets it)
+var l5_limit_b 0xd76 uint16_t                           ; level 5: a limit kept for the swap ($7491C gets it)
+var l5_boss_pieces_left 0xd7a uint16_t                  ; level 5: the pieces of the boss that still stand
+var l5_boss1_spawned 0xd99 uint8_t                      ; level 5: $FF once the first boss is made
+var l5_gunners_spawned 0xd9a uint8_t                    ; level 5: $FF once the row of gunners is made
+arr l5_group_done 0xd9b uint8_t 2                       ; level 5: $FF when the unit of the group is destroyed
