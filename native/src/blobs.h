@@ -6,7 +6,6 @@
 #include "draw.h"
 
 #define BLOB_BASE 0x54E00
-#define BLOB_ADDR(S, f) (BLOB_BASE + offsetof(struct S, f))
 
 #define BLOB_PAD_CAT2(a, b) a##b
 #define BLOB_PAD_CAT(a, b) BLOB_PAD_CAT2(a, b)
@@ -116,6 +115,45 @@ struct Level4Boss2Piece {
     uint8_t big;
 };
 _Static_assert(sizeof(struct Level4Boss2Piece) == 20, "Level4Boss2Piece");
+
+struct Level5Boss1Piece {
+    uint16_t type;
+    void (*update)(void);
+    void (*draw)(void);
+    void (*hit)(void);
+    const uint8_t *anim;
+    int16_t dx;
+    int16_t dy;
+    uint8_t energy;
+    uint8_t big;
+};
+_Static_assert(sizeof(struct Level5Boss1Piece) == 24, "Level5Boss1Piece");
+
+struct Level5Boss2Piece {
+    uint16_t type;
+    void (*update)(void);
+    void (*draw)(void);
+    void (*hit)(void);
+    const uint8_t *gfx;
+    int16_t dx;
+    int16_t dy;
+    uint16_t energy;
+};
+_Static_assert(sizeof(struct Level5Boss2Piece) == 24, "Level5Boss2Piece");
+
+struct Level5Gate {
+    uint16_t type;
+    void (*update)(void);
+    void (*hit)(void);
+    uint16_t step;
+};
+_Static_assert(sizeof(struct Level5Gate) == 12, "Level5Gate");
+
+struct Level5UnitDir {
+    int16_t dx;
+    int16_t dy;
+};
+_Static_assert(sizeof(struct Level5UnitDir) == 4, "Level5UnitDir");
 
 struct Level2Blob {
     BLOB_PAD(66)
@@ -704,7 +742,8 @@ struct Level5Blob {
     uint8_t boss_fire_rate;   /* 54E51 */
     uint16_t boss_energy;   /* 54E52 */
     BLOB_PAD(1)
-    uint8_t turret_fire_rate[2];   /* 54E55 */
+    uint8_t turret_fire_rate;   /* 54E55 */
+    BLOB_PAD(1)
     uint8_t boss2_turret_fire_rate;   /* 54E57 */
     uint16_t boss2_turret_shot_steps;   /* 54E58 */
     BLOB_PAD(1)
@@ -722,7 +761,8 @@ struct Level5Blob {
     uint16_t gun_shot_steps;   /* 54E6C */
     uint16_t boss2_turret_shot_steps_2;   /* 54E6E */
     BLOB_PAD(1)
-    uint8_t init_patch[2];   /* 54E71 */
+    uint8_t init_patch;   /* 54E71 */
+    BLOB_PAD(1)
     uint8_t bridge_fire_rate;   /* 54E73 */
     uint16_t bridge_shot_steps;   /* 54E74 */
     uint16_t init_patch_2;   /* 54E76 */
@@ -731,76 +771,71 @@ struct Level5Blob {
     uint16_t gunner_shot_steps;   /* 54E7A */
     uint16_t gunner_shot_steps_2;   /* 54E7C */
     BLOB_PAD(1)
-    uint8_t boss2_mover_fire_rate_2[861];   /* 54E7F */
-    uint32_t spawn_gunners_table;   /* 551DC */
-    BLOB_PAD(218)
-    uint32_t gunner_anims;   /* 552BA */
-    BLOB_PAD(600)
-    uint8_t spawn_cannon_data[36];   /* 55516 */
-    uint8_t spawn_cannon_data_2[36];   /* 5553A */
+    uint8_t boss2_mover_fire_rate_2;   /* 54E7F */
+    BLOB_PAD(18)
+    uint8_t formations[208];   /* 54E92 */
+    BLOB_PAD(634)
+    const uint8_t *gunner_paths[3];   /* 551DC */
+    BLOB_PAD(210)
+    const uint8_t *gunner_anims[8];   /* 552BA */
+    BLOB_PAD(572)
+    uint8_t cannon_anim_a[36];   /* 55516 */
+    uint8_t cannon_anim_b[36];   /* 5553A */
     uint8_t cannon_anim_100[36];   /* 5555E */
     uint8_t cannon_anim_other[604];   /* 55582 */
-    uint32_t pellet_anims_by_dir;   /* 557DE */
-    BLOB_PAD(28)
-    uint16_t pellet_dx_by_dir;   /* 557FE */
-    BLOB_PAD(14)
-    uint16_t pellet_dy_by_dir;   /* 5580E */
-    BLOB_PAD(318)
-    uint8_t spawn_boss1_data[22];   /* 5594E */
-    uint8_t init_data[1462];   /* 55964 */
-    uint32_t boss_draw_table_2;   /* 55F1A */
-    BLOB_PAD(36)
-    uint32_t boss_draw_table;   /* 55F42 */
-    BLOB_PAD(56)
+    const uint8_t *pellet_anims_by_dir[8];   /* 557DE */
+    int16_t pellet_dx_by_dir[8];   /* 557FE */
+    int16_t pellet_dy_by_dir[8];   /* 5580E */
+    BLOB_PAD(304)
+    struct Level5Boss1Piece boss1_pieces[22];   /* 5594E */
+    BLOB_PAD(976)
+    const uint8_t *boss_arm2_pictures[5];   /* 55F2E */
+    const uint8_t *boss_draw_table[15];   /* 55F42 */
     uint8_t boss_update_data[192];   /* 55F7E */
-    uint32_t missile_anims_by_dir;   /* 5603E */
-    BLOB_PAD(564)
-    uint32_t heart_pictures;   /* 56276 */
-    BLOB_PAD(192)
-    uint8_t spawn_boss2_data[142];   /* 5633A */
-    uint16_t init_data_2;   /* 563C8 */
-    BLOB_PAD(324)
-    uint32_t wheel_pictures;   /* 5650E */
-    BLOB_PAD(176)
-    uint8_t spinner_source_118[16];   /* 565C2 */
-    uint8_t spinner_source_other[134];   /* 565D2 */
-    uint32_t boss2_turret_pictures;   /* 56658 */
-    BLOB_PAD(560)
-    uint32_t boss2_draw_table;   /* 5688C */
-    uint32_t boss2_draw_table_2;   /* 56890 */
-    uint32_t boss2_draw_table_3;   /* 56894 */
-    BLOB_PAD(96)
+    const uint8_t *missile_anims_by_dir[8];   /* 5603E */
+    BLOB_PAD(536)
+    const uint8_t *heart_pictures[12];   /* 56276 */
+    BLOB_PAD(148)
+    struct Level5Boss2Piece boss2_pieces[10];   /* 5633A */
+    BLOB_PAD(228)
+    const uint8_t *wheel_pictures[6];   /* 5650E */
+    BLOB_PAD(156)
+    const uint8_t *spinner_source_118[4];   /* 565C2 */
+    const uint8_t *spinner_source_other[4];   /* 565D2 */
+    BLOB_PAD(118)
+    const uint8_t *boss2_turret_pictures[8];   /* 56658 */
+    BLOB_PAD(532)
+    uint8_t boss2_draw_rows[108];   /* 5688C */
     uint8_t boss2_flash_grid[16];   /* 568F8 */
-    uint8_t boss2_draw_data[12];   /* 56908 */
-    uint8_t boss2_draw_data_2[12];   /* 56914 */
-    uint8_t boss2_draw_data_3[524];   /* 56920 */
-    uint8_t spawn_gates_data[260];   /* 56B2C */
+    uint8_t boss2_draw_data[36];   /* 56908 */
+    BLOB_PAD(512)
+    struct Level5Gate gates[3];   /* 56B2C */
+    BLOB_PAD(224)
     uint8_t gate_update_data[100];   /* 56C30 */
     uint8_t wall_cells_128[8];   /* 56C94 */
-    uint8_t wall_cells_other[416];   /* 56C9C */
+    uint8_t wall_cells_other[8];   /* 56C9C */
+    BLOB_PAD(408)
     uint8_t wall_flash_a_grid[2];   /* 56E3C */
-    uint8_t wall_flash_b_grid[100];   /* 56E3E */
-    uint8_t spawn_bridge_data[4];   /* 56EA2 */
-    uint8_t spawn_bridge_data_2[274];   /* 56EA6 */
+    uint8_t wall_flash_b_grid[2];   /* 56E3E */
+    BLOB_PAD(98)
+    uint8_t bridge_cells[278];   /* 56EA2 */
     uint8_t bridge_update_data[358];   /* 56FB8 */
-    uint8_t spawn_group_data[4];   /* 5711E */
-    uint8_t spawn_group_data_2[392];   /* 57122 */
-    uint16_t unit_dx_by_dir;   /* 572AA */
-    uint16_t unit_dy_by_dir;   /* 572AC */
-    BLOB_PAD(28)
-    uint32_t unit_shot_pictures;   /* 572CA */
-    BLOB_PAD(582)
-    uint8_t spawn_gun_data[16];   /* 57514 */
-    uint8_t spawn_gun_data_2[16];   /* 57524 */
-    uint8_t spawn_gun_data_4[2];   /* 57534 */
-    uint8_t spawn_gun_data_3[2];   /* 57536 */
+    uint8_t group_cells[396];   /* 5711E */
+    struct Level5UnitDir unit_dirs[8];   /* 572AA */
+    const uint8_t *unit_shot_pictures[8];   /* 572CA */
+    BLOB_PAD(554)
+    uint8_t gun_cells_a[16];   /* 57514 */
+    uint8_t gun_cells_b[16];   /* 57524 */
+    uint8_t gun_anim_b[2];   /* 57534 */
+    uint8_t gun_anim_a[2];   /* 57536 */
     uint8_t gun_anim_108[24];   /* 57538 */
     uint8_t gun_anim_other[278];   /* 57550 */
-    uint8_t spawn_boss1_data_2[19332];   /* 57666 */
-    uint8_t spawn_gunners_data[7596];   /* 5C1EA */
-    uint8_t boss2_dead_data[4968];   /* 5DF96 */
+    uint8_t boss1_cells[540];   /* 57666 */
+    BLOB_PAD(18792)
+    uint8_t gunner_picture[7596];   /* 5C1EA */
+    uint8_t boss2_dead_picture[4968];   /* 5DF96 */
     uint8_t beam_top_picture[66];   /* 5F2FE */
-    uint8_t beam_end_picture;   /* 5F340 */
+    uint8_t beam_end_picture[32];   /* 5F340 */
 };
 _Static_assert(offsetof(struct Level5Blob, gunners_energy) == 0x54E42 - BLOB_BASE, "Level5Blob.gunners_energy");
 _Static_assert(offsetof(struct Level5Blob, gunners_param) == 0x54E44 - BLOB_BASE, "Level5Blob.gunners_param");
@@ -833,58 +868,50 @@ _Static_assert(offsetof(struct Level5Blob, gunner_fire_rate) == 0x54E79 - BLOB_B
 _Static_assert(offsetof(struct Level5Blob, gunner_shot_steps) == 0x54E7A - BLOB_BASE, "Level5Blob.gunner_shot_steps");
 _Static_assert(offsetof(struct Level5Blob, gunner_shot_steps_2) == 0x54E7C - BLOB_BASE, "Level5Blob.gunner_shot_steps_2");
 _Static_assert(offsetof(struct Level5Blob, boss2_mover_fire_rate_2) == 0x54E7F - BLOB_BASE, "Level5Blob.boss2_mover_fire_rate_2");
-_Static_assert(offsetof(struct Level5Blob, spawn_gunners_table) == 0x551DC - BLOB_BASE, "Level5Blob.spawn_gunners_table");
+_Static_assert(offsetof(struct Level5Blob, formations) == 0x54E92 - BLOB_BASE, "Level5Blob.formations");
+_Static_assert(offsetof(struct Level5Blob, gunner_paths) == 0x551DC - BLOB_BASE, "Level5Blob.gunner_paths");
 _Static_assert(offsetof(struct Level5Blob, gunner_anims) == 0x552BA - BLOB_BASE, "Level5Blob.gunner_anims");
-_Static_assert(offsetof(struct Level5Blob, spawn_cannon_data) == 0x55516 - BLOB_BASE, "Level5Blob.spawn_cannon_data");
-_Static_assert(offsetof(struct Level5Blob, spawn_cannon_data_2) == 0x5553A - BLOB_BASE, "Level5Blob.spawn_cannon_data_2");
+_Static_assert(offsetof(struct Level5Blob, cannon_anim_a) == 0x55516 - BLOB_BASE, "Level5Blob.cannon_anim_a");
+_Static_assert(offsetof(struct Level5Blob, cannon_anim_b) == 0x5553A - BLOB_BASE, "Level5Blob.cannon_anim_b");
 _Static_assert(offsetof(struct Level5Blob, cannon_anim_100) == 0x5555E - BLOB_BASE, "Level5Blob.cannon_anim_100");
 _Static_assert(offsetof(struct Level5Blob, cannon_anim_other) == 0x55582 - BLOB_BASE, "Level5Blob.cannon_anim_other");
 _Static_assert(offsetof(struct Level5Blob, pellet_anims_by_dir) == 0x557DE - BLOB_BASE, "Level5Blob.pellet_anims_by_dir");
 _Static_assert(offsetof(struct Level5Blob, pellet_dx_by_dir) == 0x557FE - BLOB_BASE, "Level5Blob.pellet_dx_by_dir");
 _Static_assert(offsetof(struct Level5Blob, pellet_dy_by_dir) == 0x5580E - BLOB_BASE, "Level5Blob.pellet_dy_by_dir");
-_Static_assert(offsetof(struct Level5Blob, spawn_boss1_data) == 0x5594E - BLOB_BASE, "Level5Blob.spawn_boss1_data");
-_Static_assert(offsetof(struct Level5Blob, init_data) == 0x55964 - BLOB_BASE, "Level5Blob.init_data");
-_Static_assert(offsetof(struct Level5Blob, boss_draw_table_2) == 0x55F1A - BLOB_BASE, "Level5Blob.boss_draw_table_2");
+_Static_assert(offsetof(struct Level5Blob, boss1_pieces) == 0x5594E - BLOB_BASE, "Level5Blob.boss1_pieces");
+_Static_assert(offsetof(struct Level5Blob, boss_arm2_pictures) == 0x55F2E - BLOB_BASE, "Level5Blob.boss_arm2_pictures");
 _Static_assert(offsetof(struct Level5Blob, boss_draw_table) == 0x55F42 - BLOB_BASE, "Level5Blob.boss_draw_table");
 _Static_assert(offsetof(struct Level5Blob, boss_update_data) == 0x55F7E - BLOB_BASE, "Level5Blob.boss_update_data");
 _Static_assert(offsetof(struct Level5Blob, missile_anims_by_dir) == 0x5603E - BLOB_BASE, "Level5Blob.missile_anims_by_dir");
 _Static_assert(offsetof(struct Level5Blob, heart_pictures) == 0x56276 - BLOB_BASE, "Level5Blob.heart_pictures");
-_Static_assert(offsetof(struct Level5Blob, spawn_boss2_data) == 0x5633A - BLOB_BASE, "Level5Blob.spawn_boss2_data");
-_Static_assert(offsetof(struct Level5Blob, init_data_2) == 0x563C8 - BLOB_BASE, "Level5Blob.init_data_2");
+_Static_assert(offsetof(struct Level5Blob, boss2_pieces) == 0x5633A - BLOB_BASE, "Level5Blob.boss2_pieces");
 _Static_assert(offsetof(struct Level5Blob, wheel_pictures) == 0x5650E - BLOB_BASE, "Level5Blob.wheel_pictures");
 _Static_assert(offsetof(struct Level5Blob, spinner_source_118) == 0x565C2 - BLOB_BASE, "Level5Blob.spinner_source_118");
 _Static_assert(offsetof(struct Level5Blob, spinner_source_other) == 0x565D2 - BLOB_BASE, "Level5Blob.spinner_source_other");
 _Static_assert(offsetof(struct Level5Blob, boss2_turret_pictures) == 0x56658 - BLOB_BASE, "Level5Blob.boss2_turret_pictures");
-_Static_assert(offsetof(struct Level5Blob, boss2_draw_table) == 0x5688C - BLOB_BASE, "Level5Blob.boss2_draw_table");
-_Static_assert(offsetof(struct Level5Blob, boss2_draw_table_2) == 0x56890 - BLOB_BASE, "Level5Blob.boss2_draw_table_2");
-_Static_assert(offsetof(struct Level5Blob, boss2_draw_table_3) == 0x56894 - BLOB_BASE, "Level5Blob.boss2_draw_table_3");
+_Static_assert(offsetof(struct Level5Blob, boss2_draw_rows) == 0x5688C - BLOB_BASE, "Level5Blob.boss2_draw_rows");
 _Static_assert(offsetof(struct Level5Blob, boss2_flash_grid) == 0x568F8 - BLOB_BASE, "Level5Blob.boss2_flash_grid");
 _Static_assert(offsetof(struct Level5Blob, boss2_draw_data) == 0x56908 - BLOB_BASE, "Level5Blob.boss2_draw_data");
-_Static_assert(offsetof(struct Level5Blob, boss2_draw_data_2) == 0x56914 - BLOB_BASE, "Level5Blob.boss2_draw_data_2");
-_Static_assert(offsetof(struct Level5Blob, boss2_draw_data_3) == 0x56920 - BLOB_BASE, "Level5Blob.boss2_draw_data_3");
-_Static_assert(offsetof(struct Level5Blob, spawn_gates_data) == 0x56B2C - BLOB_BASE, "Level5Blob.spawn_gates_data");
+_Static_assert(offsetof(struct Level5Blob, gates) == 0x56B2C - BLOB_BASE, "Level5Blob.gates");
 _Static_assert(offsetof(struct Level5Blob, gate_update_data) == 0x56C30 - BLOB_BASE, "Level5Blob.gate_update_data");
 _Static_assert(offsetof(struct Level5Blob, wall_cells_128) == 0x56C94 - BLOB_BASE, "Level5Blob.wall_cells_128");
 _Static_assert(offsetof(struct Level5Blob, wall_cells_other) == 0x56C9C - BLOB_BASE, "Level5Blob.wall_cells_other");
 _Static_assert(offsetof(struct Level5Blob, wall_flash_a_grid) == 0x56E3C - BLOB_BASE, "Level5Blob.wall_flash_a_grid");
 _Static_assert(offsetof(struct Level5Blob, wall_flash_b_grid) == 0x56E3E - BLOB_BASE, "Level5Blob.wall_flash_b_grid");
-_Static_assert(offsetof(struct Level5Blob, spawn_bridge_data) == 0x56EA2 - BLOB_BASE, "Level5Blob.spawn_bridge_data");
-_Static_assert(offsetof(struct Level5Blob, spawn_bridge_data_2) == 0x56EA6 - BLOB_BASE, "Level5Blob.spawn_bridge_data_2");
+_Static_assert(offsetof(struct Level5Blob, bridge_cells) == 0x56EA2 - BLOB_BASE, "Level5Blob.bridge_cells");
 _Static_assert(offsetof(struct Level5Blob, bridge_update_data) == 0x56FB8 - BLOB_BASE, "Level5Blob.bridge_update_data");
-_Static_assert(offsetof(struct Level5Blob, spawn_group_data) == 0x5711E - BLOB_BASE, "Level5Blob.spawn_group_data");
-_Static_assert(offsetof(struct Level5Blob, spawn_group_data_2) == 0x57122 - BLOB_BASE, "Level5Blob.spawn_group_data_2");
-_Static_assert(offsetof(struct Level5Blob, unit_dx_by_dir) == 0x572AA - BLOB_BASE, "Level5Blob.unit_dx_by_dir");
-_Static_assert(offsetof(struct Level5Blob, unit_dy_by_dir) == 0x572AC - BLOB_BASE, "Level5Blob.unit_dy_by_dir");
+_Static_assert(offsetof(struct Level5Blob, group_cells) == 0x5711E - BLOB_BASE, "Level5Blob.group_cells");
+_Static_assert(offsetof(struct Level5Blob, unit_dirs) == 0x572AA - BLOB_BASE, "Level5Blob.unit_dirs");
 _Static_assert(offsetof(struct Level5Blob, unit_shot_pictures) == 0x572CA - BLOB_BASE, "Level5Blob.unit_shot_pictures");
-_Static_assert(offsetof(struct Level5Blob, spawn_gun_data) == 0x57514 - BLOB_BASE, "Level5Blob.spawn_gun_data");
-_Static_assert(offsetof(struct Level5Blob, spawn_gun_data_2) == 0x57524 - BLOB_BASE, "Level5Blob.spawn_gun_data_2");
-_Static_assert(offsetof(struct Level5Blob, spawn_gun_data_4) == 0x57534 - BLOB_BASE, "Level5Blob.spawn_gun_data_4");
-_Static_assert(offsetof(struct Level5Blob, spawn_gun_data_3) == 0x57536 - BLOB_BASE, "Level5Blob.spawn_gun_data_3");
+_Static_assert(offsetof(struct Level5Blob, gun_cells_a) == 0x57514 - BLOB_BASE, "Level5Blob.gun_cells_a");
+_Static_assert(offsetof(struct Level5Blob, gun_cells_b) == 0x57524 - BLOB_BASE, "Level5Blob.gun_cells_b");
+_Static_assert(offsetof(struct Level5Blob, gun_anim_b) == 0x57534 - BLOB_BASE, "Level5Blob.gun_anim_b");
+_Static_assert(offsetof(struct Level5Blob, gun_anim_a) == 0x57536 - BLOB_BASE, "Level5Blob.gun_anim_a");
 _Static_assert(offsetof(struct Level5Blob, gun_anim_108) == 0x57538 - BLOB_BASE, "Level5Blob.gun_anim_108");
 _Static_assert(offsetof(struct Level5Blob, gun_anim_other) == 0x57550 - BLOB_BASE, "Level5Blob.gun_anim_other");
-_Static_assert(offsetof(struct Level5Blob, spawn_boss1_data_2) == 0x57666 - BLOB_BASE, "Level5Blob.spawn_boss1_data_2");
-_Static_assert(offsetof(struct Level5Blob, spawn_gunners_data) == 0x5C1EA - BLOB_BASE, "Level5Blob.spawn_gunners_data");
-_Static_assert(offsetof(struct Level5Blob, boss2_dead_data) == 0x5DF96 - BLOB_BASE, "Level5Blob.boss2_dead_data");
+_Static_assert(offsetof(struct Level5Blob, boss1_cells) == 0x57666 - BLOB_BASE, "Level5Blob.boss1_cells");
+_Static_assert(offsetof(struct Level5Blob, gunner_picture) == 0x5C1EA - BLOB_BASE, "Level5Blob.gunner_picture");
+_Static_assert(offsetof(struct Level5Blob, boss2_dead_picture) == 0x5DF96 - BLOB_BASE, "Level5Blob.boss2_dead_picture");
 _Static_assert(offsetof(struct Level5Blob, beam_top_picture) == 0x5F2FE - BLOB_BASE, "Level5Blob.beam_top_picture");
 _Static_assert(offsetof(struct Level5Blob, beam_end_picture) == 0x5F340 - BLOB_BASE, "Level5Blob.beam_end_picture");
 #define level5_blob (*(struct Level5Blob *)GPTR(BLOB_BASE))

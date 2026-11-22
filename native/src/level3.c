@@ -1,4 +1,4 @@
-/* level3: level 3's own code (the blob at $54E00 while level 3 is loaded), written like level2.c: raw big-endian memory through sh_r16 and the like;
+/* level3: level 3's own code (the blob at $54E00 while level 3 is loaded), as level3_blob (struct Level3Blob, blobs.h), written like level2.c;
  * a function has `level3 $ADDR` for its address. */
 #include "weapons.h"
 #include "shop.h"
