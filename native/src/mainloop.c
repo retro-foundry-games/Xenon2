@@ -6,10 +6,6 @@
 extern void guest_stick_restore(void);   /* sdl/guest.c: undoes what the lockstep put into joy_stick */
 #endif
 
-#define CIAA_CRA CIA_BYTE(0xbfe001, 0xe)    /* bit 7: the mains frequency (50 Hz) */
-#define CIAA_ICR CIA_BYTE(0xbfe001, 0xd)
-#define CIAA_SDR CIA_BYTE(0xbfe001, 0xc)    /* the serial data register: the keyboard's key code */
-#define CIAB_ICR CIA_BYTE(0xbfd000, 0xd)
 
 /* The starfield of the game keeps in each record of `stars` (struct Star of title): x = offset in the screen, y = bit mask, z = fractional line. */
 #define STAR_OFF(s) ((s)->x)

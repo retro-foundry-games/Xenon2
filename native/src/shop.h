@@ -1,8 +1,7 @@
 #ifndef SHOP_H
 #define SHOP_H
 /* The shop: the program the game loads from disk 2 (248 sectors from sector 1476) over the level's blob at $54E00 and calls (menus shop_run).
- * Its code, its tables and its pictures are that blob; the C reads and writes it as the raw big-endian memory it is (GPTR, rd16/wr16: no member of
- * struct Xenon describes it, the level's members that lie there are left alone while it is loaded: guest_blob_raw).  A function has `shop $ADDR` for the
+ * Its code, its tables and its pictures are that blob; its members are shop_data (struct ShopData, blobs/shop.blob; the level's members that lie there are left alone while it is loaded: guest_blob_raw).  A function has `shop $ADDR` for the
  * address it has in the original (not `orig $`: the level's code is at the same addresses, the code table is the level's). */
 #include "game.h"
 #include "draw.h"
@@ -17,12 +16,6 @@ uint32_t guest_address(const void *p);
 #endif
 
 /* raw words, longs and bytes of the original's memory at an address of the blob */
-static inline uint8_t sh_r8(uint32_t a) { return *(const uint8_t *)GPTR(a); }
-static inline void sh_w8(uint32_t a, uint8_t v) { *(uint8_t *)GPTR(a) = v; }
-static inline uint16_t sh_r16(uint32_t a) { return rd16(GPTR(a)); }
-static inline void sh_w16(uint32_t a, uint16_t v) { wr16(GPTR(a), v); }
-static inline uint32_t sh_r32(uint32_t a) { return rd32(GPTR(a)); }
-static inline void sh_w32(uint32_t a, uint32_t v) { wr32(GPTR(a), v); }
 
 /* the shop's code (shop.c) and its sound (shop_sound.c): the interrupt calls shop_irq_tick ($2090), shop_sound_cmd is $2094 */
 void shop_draw_both(uint16_t x, uint16_t y, const uint8_t *gfx);   /* shop $553F8 */

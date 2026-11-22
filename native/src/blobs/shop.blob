@@ -1,4 +1,67 @@
 ; the shop: its blob at $54E00 (see tools/gen_blobs.py)
+record ShopHead 24
+0 step s16
+2 period_reset u16
+4 pair_a u32
+8 period u16
+10 pair_b u32
+14 reload_e u8
+15 reload_f u8
+16 rot_a u8
+17 rot_b u8
+18 timer u8
+19 env_speed u8
+20 env_index u8
+21 sample_id u8
+22 length u16
+end
+record ShopChan 36
+0 head ShopHead
+24 count_e u8
+25 count_f u8
+26 active u8
+27 env_count u8
+28 env_ptr ptr
+32 cur_period u16
+34 slide_period u16
+end
+record ShopMirror 12
+0 lc ptr
+4 len u16
+6 per u16
+8 vol u16
+10 had u8
+11 has u8
+end
+record ShopSample 16
+0 lc ptr
+4 loop_off u32
+8 len u16
+10 period u16
+12 steps u8
+13 once u8
+14 slide u16
+end
+record ShopWave 12
+0 lc ptr
+8 len u16
+10 period u16
+end
+record ShopSound 2412
+232 built1 u8
+233 running u8
+236 silence ptr
+432 wave ShopWave
+598 built2 u8
+832 samples ShopSample 4
+1502 chan ShopChan 4
+1646 cmd u16
+1648 mirror ShopMirror 4
+1696 synth ShopHead 23
+2248 waves ptr
+2252 env_off u16 11
+2274 env_data u8 138
+end
 record ShopRec 16
 0 state s16
 2 x u16
@@ -96,4 +159,5 @@ end
 6310e pic_slide u8
 63fee font u8
 6474e palette_b u8 32
-64d61 ntsc u8 1
+6476e snd ShopSound
+650da bank u8 98014

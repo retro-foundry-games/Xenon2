@@ -138,7 +138,7 @@ static const uint8_t *tile_mask_ptr(uint16_t w)
         const uint8_t *m = xenon2.tile_gfx + ((uint32_t)(w & 0x7fff) << 4);
 
 #ifdef GAME_SDL
-        if (GADDR(m) + 0xa0 > 0x80000) {   /* the original's memory beyond 512 KB (the lockstep gives it) */
+        if (GADDR(m) + 0xa0 > sizeof xenon2) {   /* the original's memory beyond 512 KB (the lockstep gives it) */
             m = guest_high_ptr(GADDR(m));
             return m ? m : xenon2.mask_empty;
         }
@@ -156,7 +156,7 @@ extern uint16_t guest_high_word(uint32_t address);   /* sdl/guest.c */
 static const uint8_t *tile_mask_ptr_at(const uint8_t *cell)
 {
 #ifdef GAME_SDL
-    if (GADDR(cell) + 2 > 0x80000)
+    if (GADDR(cell) + 2 > sizeof xenon2)
         return tile_mask_ptr(guest_high_word(GADDR(cell)));
 #endif
     return tile_mask_ptr(rd16(cell));

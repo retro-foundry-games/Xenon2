@@ -502,7 +502,6 @@ struct Xenon2 {
         struct Level5Data level5_data;
         struct ShopData shop_data;
     };
-    PAD(21544)
     uint8_t l2_blocks[360];  /* $07CFB8 arr */
     uint8_t level_data_dst[12000];  /* $07D120 arr */
 };
