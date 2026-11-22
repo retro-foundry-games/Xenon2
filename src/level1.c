@@ -429,8 +429,7 @@ void level1_boss_update(Object *a0)
     if (d0 & 0x80)
         d0 = (~d0) & 0xff;
     l = (int32_t)(int16_t)(d0 - 0x40) << 10;
-    a0->turn[0] = (uint16_t)(l >> 16);
-    a0->turn[1] = (uint16_t)l;
+    split32(&a0->turn[0], &a0->turn[1], (uint32_t)l);
     d0 = (int16_t)((frame_tick + 0xa0) & 0x1ff);
     if (d0 & 0x100)
         d0 ^= 0x1ff;
@@ -526,11 +525,11 @@ void level1_init(void)
     l1_boss_zone_entered = 0;
     for (i = 0; i < 16; i++)
         level_vars[i] = 0;
-    level_vars[16] = 0x45d2; level_vars[17] = 0x72ba;
-    level_vars[18] = 0xaa6a; level_vars[19] = 0x4a56;
-    level_vars[20] = 0x4aba; level_vars[21] = 0x5d4d;
-    level_vars[22] = 0xd225; level_vars[23] = 0x12c5;
-    level_vars[24] = 0x28e5; level_vars[25] = 0x1aec;
+    unit_seed[0] = 0x45d272ba;
+    unit_seed[1] = 0xaa6a4a56;
+    unit_seed[2] = 0x4aba5d4d;
+    unit_seed[3] = 0xd22512c5;
+    unit_seed[4] = 0x28e51aec;
     difficulty_x1 = (uint16_t)(difficulty * 1);
     difficulty_x2 = (uint16_t)(difficulty * 2);
 }
@@ -554,15 +553,13 @@ void level1_spawn_units(void)
  * head (type $10C, it follows the path) and the pieces (level1_data.segs, each follows the object before it) */
 void level1_spawn_unit(uint16_t d6)
 {
-    uint16_t *state = &level_vars[16 + 2 * d6];
-    uint32_t r = ((uint32_t)state[0] << 16) | state[1];
+    uint32_t r = unit_seed[d6];
     const struct LevelSpawn *s;
     Object *first, *a0;
     int16_t x, y, d2, d3, n, i;
 
     r = (r >> 5) | (r << 27);
-    state[0] = (uint16_t)(r >> 16);
-    state[1] = (uint16_t)r;
+    unit_seed[d6] = r;
     s = &level1_data.unit_starts[r & 0xf];
     x = s->x;
     y = (int16_t)(s->y - scroll_step - scroll_pos);

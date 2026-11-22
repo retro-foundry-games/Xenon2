@@ -43,13 +43,12 @@ static void set_ptr_2a(Object *o, Object *p)
 {
     uint32_t v = p ? GADDR(p) : 0;   /* (the original's address: the two words are compared and exported as they are) */
 
-    o->link.ptr_hi = (int16_t)(v >> 16);
-    o->link.ptr_lo = (int16_t)v;
+    split32(&o->link.ptr_hi, &o->link.ptr_lo, v);
 }
 
 static Object *get_ptr_2a(const Object *o)
 {
-    uint32_t v = ((uint32_t)(uint16_t)o->link.ptr_hi << 16) | (uint16_t)o->link.ptr_lo;
+    uint32_t v = join32(o->link.ptr_hi, o->link.ptr_lo);
 
     return v ? (Object *)GPTR(v) : 0;
 }
@@ -676,11 +675,10 @@ void shot_fixed_update(Object *a0)
     anim_step(a0);
     if (a0->type == 4)
         return;
-    d0 = (int32_t)(((uint32_t)(uint16_t)a0->shot.speed_hi << 16) | (uint16_t)a0->shot.speed_lo) >> 6;
-    pos = ((uint32_t)(uint16_t)a0->x << 16) | a0->x_frac;
+    d0 = (int32_t)join32(a0->shot.speed_hi, a0->shot.speed_lo) >> 6;
+    pos = join32(a0->x, a0->x_frac);
     pos += (uint32_t)d0;
-    a0->x = (int16_t)(pos >> 16);
-    a0->x_frac = (uint16_t)pos;
+    split32(&a0->x, &a0->x_frac, pos);
     if ((uint16_t)a0->x >= 0x140) {
         shot_gone(a0);
         return;
@@ -983,7 +981,7 @@ void pickup_bomb(Object *a0)
     Object *a1, *a2;
 
     for (i = 0; i < 8; i++)
-        saved[i] = ((uint32_t)palette_shadow[2 * i] << 16) | palette_shadow[2 * i + 1];
+        saved[i] = join32(palette_shadow[2 * i], palette_shadow[2 * i + 1]);
     sfx_cmd = 2;
     for (n = 0x1e; n >= 0; n--) {
         d0 = (uint16_t)random_next();
@@ -1002,8 +1000,7 @@ void pickup_bomb(Object *a0)
     for (i = 0; i < 8; i++) {
         uint32_t v = saved[i];
 
-        palette_shadow[2 * i] = (uint16_t)(v >> 16);
-        palette_shadow[2 * i + 1] = (uint16_t)v;
+        split32(&palette_shadow[2 * i], &palette_shadow[2 * i + 1], v);
         v += v;
         custom->color[2 * i] = (uint16_t)(v >> 16);
         custom->color[2 * i + 1] = (uint16_t)v;
@@ -1410,7 +1407,7 @@ move:
 /* the pointer in the words $30 and $32 (the drill's target) */
 static Object *get_ptr_30(const Object *o)
 {
-    uint32_t v = ((uint32_t)(uint16_t)o->drill.target_hi << 16) | (uint16_t)o->energy;
+    uint32_t v = join32(o->drill.target_hi, o->energy);
 
     return v ? (Object *)GPTR(v) : 0;
 }
@@ -1419,8 +1416,7 @@ static void set_ptr_30(Object *o, Object *p)
 {
     uint32_t v = p ? GADDR(p) : 0;
 
-    o->drill.target_hi = (int16_t)(v >> 16);
-    o->energy = (int16_t)v;
+    split32(&o->drill.target_hi, &o->energy, v);
 }
 
 /* orig $006912: the draw of a weapon object while respawn_shield is not 0 (after a respawn: 8 down to 0; at $10 nothing is drawn): the position

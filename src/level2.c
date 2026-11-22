@@ -63,14 +63,10 @@ static void set_anim(Object *o, const uint8_t *anim)
     anim_header_set(o, anim);
 }
 
-static uint32_t ror5(uint16_t *pair)
+static uint32_t ror5(uint32_t *seed)
 {
-    uint32_t l = ((uint32_t)pair[0] << 16) | pair[1];
-
-    l = (l >> 5) | (l << 27);
-    pair[0] = (uint16_t)(l >> 16);
-    pair[1] = (uint16_t)l;
-    return l;
+    *seed = (*seed >> 5) | (*seed << 27);
+    return *seed;
 }
 
 /* ---- the entries the engine calls ($54E0C..$54E2C) ---- */
@@ -303,10 +299,8 @@ void l2_init(void)
     l2_block_object.fn_update = (obj_fn)obj_nop_thunk;
     l2_block_object.fn_draw = (obj_fn)obj_nop_thunk;
     l2_block_object.fn_hit = (void *)l2_block_hit;
-    level_vars[16] = 0x45d2;
-    level_vars[17] = 0x72ba;
-    level_vars[18] = 0xaa6a;
-    level_vars[19] = 0x4a56;
+    unit_seed[0] = 0x45d272ba;
+    unit_seed[1] = 0xaa6a4a56;
     difficulty_x1 = (uint16_t)(difficulty * 1);
     difficulty_x2 = (uint16_t)(difficulty * 2);
     for (i = 0; i < 0xb4; i++) {
@@ -894,12 +888,12 @@ static void l2_debris_wall(uint16_t d6)
     Object *a0;
 
     if (l2_gates_left == 1) {
-        r = ror5(&level_vars[d6 ? 18 : 16]) & 6;
+        r = ror5(&unit_seed[d6 ? 1 : 0]) & 6;
     } else if (l2_debris_waves != 0) {
         l2_debris_waves--;
-        r = ror5(&level_vars[d6 ? 18 : 16]) & 6;
+        r = ror5(&unit_seed[d6 ? 1 : 0]) & 6;
     } else {
-        r = (ror5(&level_vars[d6 ? 18 : 16]) & 6) + 8;
+        r = (ror5(&unit_seed[d6 ? 1 : 0]) & 6) + 8;
     }
     w = &level2_data.debris_wall_records[(uint16_t)(r + d6)];
     d0 = w->x;
@@ -1107,10 +1101,8 @@ void l2_gate_hit(Object *a0, Object *a1, uint16_t d0)
     l2_gates_left--;
     if (l2_gates_left == 1) {
         scroll_step_target = 0xffff;
-        level_vars[16] = 0xd251;
-        level_vars[17] = 0x35d3;
-        level_vars[18] = 0x894d;
-        level_vars[19] = 0x5d53;
+        unit_seed[0] = 0xd25135d3;
+        unit_seed[1] = 0x894d5d53;
     }
     if (l2_gates_left != 0)
         return;

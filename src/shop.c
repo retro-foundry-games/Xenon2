@@ -1399,8 +1399,7 @@ void shop_end_of_broadcast(void)
         swap_screens_200();
         for (i = 0; i < 8; i++) {
             c[i] = sh_r32(SH_PALETTE_END + 4u * i);
-            palette_shadow[2 * i] = (uint16_t)(c[i] >> 16);
-            palette_shadow[2 * i + 1] = (uint16_t)c[i];
+            split32(&palette_shadow[2 * i], &palette_shadow[2 * i + 1], c[i]);
         }
         for (i = 0; i < 8; i++) {
             c[i] += c[i];
