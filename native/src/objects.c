@@ -805,14 +805,13 @@ void enemy_shot_update(Object *a0)
 
     anim_step(a0);
     d2 = (uint16_t)a0->enemy_shot.dir;
-    d0 = ((uint32_t)(uint16_t)a0->x << 16) | a0->x_frac;
-    d1 = ((uint32_t)(uint16_t)a0->y << 16) | a0->y_frac;
+    d0 = join32(a0->x, a0->x_frac);
+    d1 = join32(a0->y, a0->y_frac);
     m = (int32_t)enemy_shot_dx[d2] * (int16_t)a0->steps;
     d0 += (uint32_t)m << 2;
     m = (int32_t)enemy_shot_dy[d2] * (int16_t)a0->steps;
     d1 += (uint32_t)m << 2;
-    a0->x = (int16_t)(d0 >> 16);
-    a0->x_frac = (uint16_t)d0;
+    split32(&a0->x, &a0->x_frac, d0);
     a0->y_frac = (uint16_t)d1;
     d0 >>= 16;
     d1 = (uint16_t)((d1 >> 16) + scroll_speed);

@@ -192,10 +192,8 @@ void l3_init(void)
     a0->fn_update = (obj_fn)obj_nop_thunk;
     a0->fn_draw = FN(l3_end_draw);
     a0->persists = -1;
-    level_vars[16] = 0xe496;
-    level_vars[17] = 0xaa8a;
-    level_vars[18] = 0x5274;
-    level_vars[19] = 0xb949;
+    unit_seed[0] = 0xe496aa8a;
+    unit_seed[1] = 0x5274b949;
     sh_w8(0xd92, 0);
     sh_w8(0xd93, 0xff);
     sh_w8(0xd94, 0);
@@ -245,15 +243,11 @@ void l3_worm_spawn(uint16_t d6)
         d0 = W(0xd64);
         sh_w16(0xd64, (uint16_t)(d0 + 1));
     } else {
-        uint16_t *seed = d6 == 0 ? &level_vars[16] : &level_vars[18];
+        uint32_t *seed = &unit_seed[d6 == 0 ? 0 : 1];
 
         do {
-            uint32_t r = ((uint32_t)seed[0] << 16) | seed[1];
-
-            r = (r >> 5) | (r << 27);
-            seed[0] = (uint16_t)(r >> 16);
-            seed[1] = (uint16_t)r;
-            d0 = (uint16_t)(r & 7);
+            *seed = (*seed >> 5) | (*seed << 27);
+            d0 = (uint16_t)(*seed & 7);
         } while (d0 < 1 || d0 == 7);
     }
     path = sh_r32(0x6ef36 + 4 * (uint32_t)d0);
@@ -786,15 +780,13 @@ void l3_part_arm(Object *a0)
         a1->arm.angle_hi = 0;
         a1->arm.angle_lo = (int16_t)d0;
         r = (((random_next() & 0x1f) + 0x20) << 8) << 2;
-        a1->turn[0] = (uint16_t)(r >> 16);
-        a1->turn[1] = (uint16_t)r;
+        split32(&a1->turn[0], &a1->turn[1], r);
         a1->turn[2] = 0;
         a1->steps = 1;
         if (a0->part.slot == 0x60) {
             a1->arm.angle_lo = (int16_t)((a1->arm.angle_lo & 0xff00) | (uint8_t)(a1->arm.angle_lo + 0x40));
             r = -r;
-            a1->turn[0] = (uint16_t)(r >> 16);
-            a1->turn[1] = (uint16_t)r;
+            split32(&a1->turn[0], &a1->turn[1], r);
         }
     }
     bbox_from_frame(a0);

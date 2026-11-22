@@ -850,8 +850,6 @@ void work_area_restore(void)
 /* orig $F38, $9740: an object's path: steps along the angle (position += sin/cos, the angle changes by turn) for steps calls; when
  * the current command has run out the script at cursor gives the next one: 0 end (the object dies), 2 new heading and turn and
  * duration, 4 wait, 6 jump to one of 8 random places, 8 jump, 10 skip */
-#define L32(hi, lo) ((((uint32_t)(hi)) << 16) | (uint16_t)(lo))
-#define S32(hi, lo, v) do { (hi) = (uint16_t)((uint32_t)(v) >> 16); (lo) = (uint16_t)(v); } while (0)
 
 void obj_script_step(Object *obj)
 {
@@ -874,27 +872,27 @@ void obj_script_step(Object *obj)
         return;
     }
 move:
-    d0 = L32(o->x_hi, o->x_lo);
-    d1 = L32(o->y_hi, o->y_lo);
-    d3 = L32(o->angle_hi, o->angle_lo);
-    d4 = L32(o->turn_hi, o->turn_lo);
+    d0 = join32(o->x_hi, o->x_lo);
+    d1 = join32(o->y_hi, o->y_lo);
+    d3 = join32(o->angle_hi, o->angle_lo);
+    d4 = join32(o->turn_hi, o->turn_lo);
     d5 = o->turn_step;
     for (;;) {
         d7--;
         if ((int16_t)d7 < 0) {
-            S32(o->x_hi, o->x_lo, d0);
-            S32(o->y_hi, o->y_lo, d1);
-            S32(o->angle_hi, o->angle_lo, d3);
-            S32(o->turn_hi, o->turn_lo, d4);
+            split32(&o->x_hi, &o->x_lo, d0);
+            split32(&o->y_hi, &o->y_lo, d1);
+            split32(&o->angle_hi, &o->angle_lo, d3);
+            split32(&o->turn_hi, &o->turn_lo, d4);
             return;
         }
         o->wait--;
         if (o->wait < 0) {
             d7++;
-            S32(o->x_hi, o->x_lo, d0);
-            S32(o->y_hi, o->y_lo, d1);
-            S32(o->angle_hi, o->angle_lo, d3);
-            S32(o->turn_hi, o->turn_lo, d4);
+            split32(&o->x_hi, &o->x_lo, d0);
+            split32(&o->y_hi, &o->y_lo, d1);
+            split32(&o->angle_hi, &o->angle_lo, d3);
+            split32(&o->turn_hi, &o->turn_lo, d4);
             goto next_command;
         }
         d1 += (uint32_t)((int32_t)((uint32_t)(int16_t)sine[(int16_t)d3] << 16) >> 6);
@@ -950,7 +948,7 @@ next_command:
         case 2:
             o->angle_hi = 0;
             o->angle_lo = rd16(cmd + 2);
-            S32(o->turn_hi, o->turn_lo, (uint32_t)((int32_t)((uint32_t)rd16(cmd + 4) << 16) >> 8));
+            split32(&o->turn_hi, &o->turn_lo, (uint32_t)((int32_t)((uint32_t)rd16(cmd + 4) << 16) >> 8));
             o->turn_step = (int16_t)rd16(cmd + 6);
             o->wait = (int16_t)rd16(cmd + 8);
             o->cursor = cmd + 10;

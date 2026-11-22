@@ -6,7 +6,8 @@ var player_y_prev 0x4e6 uint16_t
 var trail_x 0x4e8 int16_t
 var fire_press 0xa6a uint8_t
 var l1_eyes_phase 0xd5a uint16_t
-arr level_vars 0xd26 uint16_t 26                      ; level 1 boss state, cleared by the level's init
+arr level_vars 0xd26 uint16_t 16                      ; level 1 boss state, cleared by the level's init
+arr unit_seed 0xd46 uint32_t 5                      ; levels 1 to 3: the random state of each unit (rotated right by 5 for each pick)
 arr unit_live 0xd86 uint8_t 5
 var l1_boss_spawned 0xd8b uint8_t
 var l1_boss_zone_entered 0xd8c uint8_t

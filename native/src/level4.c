@@ -71,13 +71,12 @@ static int add_carry(uint8_t *b, uint8_t add)
 
 static uint32_t get4e(const Object *o)
 {
-    return ((uint32_t)o->turn[0] << 16) | o->turn[1];
+    return join32(o->turn[0], o->turn[1]);
 }
 
 static void put4e(Object *o, uint32_t v)
 {
-    o->turn[0] = (uint16_t)(v >> 16);
-    o->turn[1] = (uint16_t)v;
+    split32(&o->turn[0], &o->turn[1], v);
 }
 
 /* the player's direction from the object (the eight of direction8), the offsets are the original's */

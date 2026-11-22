@@ -142,7 +142,8 @@ struct Xenon2 {
     Object * list_a_prev_saved;  /* $000CF4 var */
     Object * list_a_next_saved;  /* $000CF8 var */
     struct Slot weapon_slots_saved[7];  /* $000CFC arr */
-    uint16_t level_vars[26];  /* $000D26 arr */
+    uint16_t level_vars[16];  /* $000D26 arr */
+    uint32_t unit_seed[5];  /* $000D46 arr */
     uint16_t l1_eyes_phase;  /* $000D5A var */
     uint16_t l2_gates_left;  /* $000D5C var */
     uint8_t l2_walls_made;  /* $000D5E var */
@@ -583,6 +584,7 @@ LAYOUT_ASSERT(list_a_prev_saved, 0xcf4);
 LAYOUT_ASSERT(list_a_next_saved, 0xcf8);
 LAYOUT_ASSERT(weapon_slots_saved, 0xcfc);
 LAYOUT_ASSERT(level_vars, 0xd26);
+LAYOUT_ASSERT(unit_seed, 0xd46);
 LAYOUT_ASSERT(l1_eyes_phase, 0xd5a);
 LAYOUT_ASSERT(l2_gates_left, 0xd5c);
 LAYOUT_ASSERT(l2_walls_made, 0xd5e);
@@ -917,6 +919,7 @@ LAYOUT_ASSERT(level_data_dst, 0x7d120);
 #define list_a_next_saved (xenon2.list_a_next_saved)
 #define weapon_slots_saved (xenon2.weapon_slots_saved)
 #define level_vars (xenon2.level_vars)
+#define unit_seed (xenon2.unit_seed)
 #define l1_eyes_phase (xenon2.l1_eyes_phase)
 #define l2_gates_left (xenon2.l2_gates_left)
 #define l2_walls_made (xenon2.l2_walls_made)
