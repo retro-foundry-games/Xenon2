@@ -27,7 +27,7 @@
 
 static uint8_t *at(int32_t off)
 {
-    return (uint8_t *)((uintptr_t)music_base + (uint32_t)off);
+    return (uint8_t *)((uintptr_t)xenon2.music_base + (uint32_t)off);
 }
 
 static uint16_t word_at(const uint8_t *p)
@@ -42,13 +42,13 @@ static uint32_t long_at(const uint8_t *p)
 
 static uint16_t get_volume(void)
 {
-    return (uint16_t)((music_volume_hi << 8) | music_volume_lo);
+    return (uint16_t)((xenon2.music_volume_hi << 8) | xenon2.music_volume_lo);
 }
 
 static void set_volume(uint16_t v)
 {
-    music_volume_hi = (uint8_t)(v >> 8);
-    music_volume_lo = (uint8_t)v;
+    xenon2.music_volume_hi = (uint8_t)(v >> 8);
+    xenon2.music_volume_lo = (uint8_t)v;
 }
 
 /* divu.w: 0x369E99 / rate; on overflow the destination keeps its low word 0x9E99 */
@@ -73,11 +73,11 @@ void music_silence(void)
 {
     uint16_t i;
 
-    music_playing = 0;
+    xenon2.music_playing = 0;
     for (i = 0; i < 4; i++) {
-        sfx_channels[i].active = 0;
-        hw_mirror[i].music_on = 0;
-        hw_mirror[i].sfx_on = 0;
+        xenon2.sfx_channels[i].active = 0;
+        xenon2.hw_mirror[i].music_on = 0;
+        xenon2.hw_mirror[i].sfx_on = 0;
     }
     SETCLR_WRITE(dmacon, 0x000f);
     SETCLR_WRITE(adkcon, 0x00ff);
@@ -90,27 +90,27 @@ void music_silence(void)
 /* orig $19FE4, $1A0F4: every sound effect channel ends at its next tick */
 void sfx_stop_all(void)
 {
-    sfx_channels[0].timer = 1;
-    sfx_channels[1].timer = 1;
-    sfx_channels[2].timer = 1;
-    sfx_channels[3].timer = 1;
+    xenon2.sfx_channels[0].timer = 1;
+    xenon2.sfx_channels[1].timer = 1;
+    xenon2.sfx_channels[2].timer = 1;
+    xenon2.sfx_channels[3].timer = 1;
 }
 
 /* orig $19FC8, $1A112: audio DMA on for the four channels (HLE: audio) */
 void music_resume(void)
 {
-    if (music_enabled) {
+    if (xenon2.music_enabled) {
         SETCLR_WRITE(adkcon, 0x00ff);
         SETCLR_WRITE(dmacon, 0x820f);
-        music_playing = 0xff;
+        xenon2.music_playing = 0xff;
     }
 }
 
 /* orig $19FF2, $1A13C: start fading the music out */
 void music_fade_out(void)
 {
-    music_fade_speed = 3;
-    music_fade_count = 3;
+    xenon2.music_fade_speed = 3;
+    xenon2.music_fade_count = 3;
 }
 
 /* orig $1B1B6: build the instrument table from the sample bank (once) */
@@ -121,25 +121,25 @@ void sound_init_instruments(void)
     uint32_t len;
     uint16_t rate;
 
-    if (instruments_ready)
+    if (xenon2.instruments_ready)
         return;
-    p = sample_bank;
+    p = xenon2.sample_bank;
     for (i = 0; i < 20; i++) {
         len = long_at(p);
         rate = word_at(p + 4);
         p += 6;
-        instruments[i].sample = (uint8_t *)p;
+        xenon2.instruments[i].sample = (uint8_t *)p;
         p += len;
-        instruments[i].length = (uint16_t)(len >> 1);
-        instruments[i].rate = rate_divide(rate);
+        xenon2.instruments[i].length = (uint16_t)(len >> 1);
+        xenon2.instruments[i].rate = rate_divide(rate);
     }
-    silence_ptr = (uint8_t *)p;
-    sfx_wave_base = (uint8_t *)p + 0x40;
-    instruments_ready = 0xff;
-    instruments[5].rate -= 8;
-    instruments[6].rate -= 8;
-    instruments[7].rate -= 2;
-    instruments[11].rate -= 2;
+    xenon2.silence_ptr = (uint8_t *)p;
+    xenon2.sfx_wave_base = (uint8_t *)p + 0x40;
+    xenon2.instruments_ready = 0xff;
+    xenon2.instruments[5].rate -= 8;
+    xenon2.instruments[6].rate -= 8;
+    xenon2.instruments[7].rate -= 2;
+    xenon2.instruments[11].rate -= 2;
 }
 
 /* orig $1B216: build the table of sampled sound effects from the second part of the sample bank (once) */
@@ -150,24 +150,24 @@ void sound_init_sfx_samples(void)
     uint32_t len, scaled;
     uint16_t rate, quot;
 
-    if (sfx_samples_ready)
+    if (xenon2.sfx_samples_ready)
         return;
-    p = sample_bank + 0xff1c;
+    p = xenon2.sample_bank + 0xff1c;
     for (i = 0; i < 18; i++) {
         scaled = (uint32_t)word_at(p + 2) * 0x32;
         quot = (uint16_t)(scaled / word_at(p + 4));
         if (scaled / word_at(p + 4) > 0xffff)
             quot = (uint16_t)scaled;
-        sfx_samples[i].duration = (uint8_t)(quot + 1);
+        xenon2.sfx_samples[i].duration = (uint8_t)(quot + 1);
         len = long_at(p);
         rate = word_at(p + 4);
         p += 6;
-        sfx_samples[i].sample = (uint8_t *)p;
+        xenon2.sfx_samples[i].sample = (uint8_t *)p;
         p += len;
-        sfx_samples[i].length = (uint16_t)(len >> 1);
-        sfx_samples[i].period = rate_divide(rate);
+        xenon2.sfx_samples[i].length = (uint16_t)(len >> 1);
+        xenon2.sfx_samples[i].period = rate_divide(rate);
     }
-    sfx_samples_ready = 0xff;
+    xenon2.sfx_samples_ready = 0xff;
 }
 
 /* orig $19F9E, $19FFC: start song `song` (HLE: audio) */
@@ -179,44 +179,44 @@ void music_start(uint16_t song)
     CIAA_PRA |= 2;
     music_silence();
     sound_init_instruments();
-    music_transpose = 0;
-    header = (const SongHeader *)((uintptr_t)song_headers + (uint16_t)((uint16_t)(int16_t)(int8_t)song * 10));
-    music_tempo_mul = (uint16_t)(int16_t)(int8_t)header->tempo;
-    music_rate = header->rate;
-    music_rate_copy = music_rate;
+    xenon2.music_transpose = 0;
+    header = (const SongHeader *)((uintptr_t)xenon2.song_headers + (uint16_t)((uint16_t)(int16_t)(int8_t)song * 10));
+    xenon2.music_tempo_mul = (uint16_t)(int16_t)(int8_t)header->tempo;
+    xenon2.music_rate = header->rate;
+    xenon2.music_rate_copy = xenon2.music_rate;
     for (i = 0; i < 4; i++) {
-        MusicChannel *chan = &music_channels[i];
+        MusicChannel *chan = &xenon2.music_channels[i];
 
         chan->dur = 1;
         chan->flags = 0;
         chan->vib = 0;
         chan->transpose = 0;
         chan->loaded = 0xff;
-        chan->env_start = music_env_data;
-        chan->env_ptr = music_env_data;
+        chan->env_start = xenon2.music_env_data;
+        chan->env_ptr = xenon2.music_env_data;
         chan->list_off = header->list[i];
         chan->list_idx = 2;
         chan->stream = at((int16_t)word_at(at((int16_t)header->list[i])));
     }
     set_volume(0x40);
-    music_fade_speed = 0;
-    music_playing = 0xff;
-    music_enabled = 0xff;
+    xenon2.music_fade_speed = 0;
+    xenon2.music_playing = 0xff;
+    xenon2.music_enabled = 0xff;
 }
 
 /* the end of the music: everything off (orig $1A4D8) */
 static void music_stop(void)
 {
-    music_enabled = 0;
-    music_playing = 0;
-    sfx_channels[0].active = 0;
-    sfx_channels[1].active = 0;
-    sfx_channels[2].active = 0;
-    sfx_channels[3].active = 0;
-    hw_mirror[0].music_on = hw_mirror[0].sfx_on = 0;
-    hw_mirror[1].music_on = hw_mirror[1].sfx_on = 0;
-    hw_mirror[2].music_on = hw_mirror[2].sfx_on = 0;
-    hw_mirror[3].music_on = hw_mirror[3].sfx_on = 0;
+    xenon2.music_enabled = 0;
+    xenon2.music_playing = 0;
+    xenon2.sfx_channels[0].active = 0;
+    xenon2.sfx_channels[1].active = 0;
+    xenon2.sfx_channels[2].active = 0;
+    xenon2.sfx_channels[3].active = 0;
+    xenon2.hw_mirror[0].music_on = xenon2.hw_mirror[0].sfx_on = 0;
+    xenon2.hw_mirror[1].music_on = xenon2.hw_mirror[1].sfx_on = 0;
+    xenon2.hw_mirror[2].music_on = xenon2.hw_mirror[2].sfx_on = 0;
+    xenon2.hw_mirror[3].music_on = xenon2.hw_mirror[3].sfx_on = 0;
     SETCLR_WRITE(dmacon, 0x000f);
     SETCLR_WRITE(adkcon, 0x00ff);
 }
@@ -226,44 +226,44 @@ void music_tick(void)
 {
     uint16_t ch;
 
-    if (!music_playing) {
+    if (!xenon2.music_playing) {
         sfx_tick();
         return;
     }
-    if (music_paused) {
-        music_pause_count--;
-        if (music_pause_count == 0) {
-            music_pause_count = 6;
+    if (xenon2.music_paused) {
+        xenon2.music_pause_count--;
+        if (xenon2.music_pause_count == 0) {
+            xenon2.music_pause_count = 6;
             return;
         }
     }
     {
-        uint16_t sum = (uint16_t)music_accum + music_rate;
+        uint16_t sum = (uint16_t)xenon2.music_accum + xenon2.music_rate;
 
-        music_accum = (uint8_t)sum;
+        xenon2.music_accum = (uint8_t)sum;
         if (sum > 0xff) {
             sfx_tick();
             return;
         }
     }
-    if (music_fade_speed) {
+    if (xenon2.music_fade_speed) {
         if (get_volume() == 0) {
             music_stop();
             return;
         }
-        music_fade_count--;
-        if (music_fade_count == 0) {
+        xenon2.music_fade_count--;
+        if (xenon2.music_fade_count == 0) {
             set_volume(get_volume() - 1);
             if (get_volume() == 0) {
                 music_stop();
                 return;
             }
-            music_fade_count = music_fade_speed;
+            xenon2.music_fade_count = xenon2.music_fade_speed;
         }
     }
     for (ch = 0; ch < 4; ch++) {
-        HwMirror *mirror = &hw_mirror[ch];
-        MusicChannel *chan = &music_channels[ch];
+        HwMirror *mirror = &xenon2.hw_mirror[ch];
+        MusicChannel *chan = &xenon2.music_channels[ch];
         volatile struct AudioChannel *hw = &custom->aud[ch];
         Instrument *ins = chan->instr;
         const uint8_t *stream = chan->stream;
@@ -285,10 +285,10 @@ void music_tick(void)
                     hw->len = loop_len;
                 }
             } else {
-                mirror->lc = silence_ptr;
+                mirror->lc = xenon2.silence_ptr;
                 mirror->len = 0x20;
                 if (!mirror->sfx_on) {
-                    hw->lc = ADDR(silence_ptr);
+                    hw->lc = ADDR(xenon2.silence_ptr);
                     hw->len = 0x20;
                 }
             }
@@ -313,7 +313,7 @@ void music_tick(void)
             int16_t v;
 
             chan->note = (uint8_t)code;
-            code = (uint8_t)(code + music_transpose + chan->transpose);
+            code = (uint8_t)(code + xenon2.music_transpose + chan->transpose);
             vol_data = chan->vol_start;
             v = (int8_t)*vol_data++;
             chan->vol_ptr = vol_data;
@@ -327,7 +327,7 @@ void music_tick(void)
                 hw->len = ins->length;
                 hw->vol = vol;
             }
-            code = ((uint32_t)music_periods[code & 0xff] * ins->rate) >> 10;
+            code = ((uint32_t)xenon2.music_periods[code & 0xff] * ins->rate) >> 10;
             mirror->per = (uint16_t)code;
             if (!mirror->sfx_on)
                 hw->per = (uint16_t)code;
@@ -336,23 +336,23 @@ void music_tick(void)
         }
         /* a control byte */
         if (code >= 0xe0) {
-            chan->dur_reload = (uint16_t)(((uint8_t)(code - 0xdf)) * music_tempo_mul);
+            chan->dur_reload = (uint16_t)(((uint8_t)(code - 0xdf)) * xenon2.music_tempo_mul);
             goto fetch;
         }
         if (code >= 0xb0) {
-            ins = &instruments[code - 0xb0];
+            ins = &xenon2.instruments[code - 0xb0];
             chan->instr = ins;
             goto fetch;
         }
         if (code >= 0xa0) {
-            const uint8_t *vol_env = at((int16_t)music_vol_env_offsets[code - 0xa0]);
+            const uint8_t *vol_env = at((int16_t)xenon2.music_vol_env_offsets[code - 0xa0]);
 
             chan->vol_start = vol_env;
             chan->vol_speed = vol_env[-1];
             goto fetch;
         }
         if (code >= 0x90) {
-            const uint8_t *env = at((int16_t)music_env_offsets[code - 0x90]);
+            const uint8_t *env = at((int16_t)xenon2.music_env_offsets[code - 0x90]);
 
             chan->env_start = env;
             chan->env_ptr = env;
@@ -381,10 +381,10 @@ void music_tick(void)
         case 0x82:
             chan->dur = chan->dur_reload;
             chan->stream = stream;
-            mirror->lc = silence_ptr;
+            mirror->lc = xenon2.silence_ptr;
             mirror->len = 0x20;
             if (!mirror->sfx_on) {
-                hw->lc = ADDR(silence_ptr);
+                hw->lc = ADDR(xenon2.silence_ptr);
                 hw->len = 0x20;
             }
             continue;
@@ -394,7 +394,7 @@ void music_tick(void)
             music_stop();
             return;
         case 0x85:
-            music_transpose = *stream++;
+            xenon2.music_transpose = *stream++;
             goto fetch;
         case 0x86:
             chan->vib = 0xff;
@@ -414,11 +414,11 @@ void music_tick(void)
             chan->list_idx = 0;
             goto fetch;
         case 0x8a:
-            music_tempo_mul = (uint16_t)(int16_t)(int8_t)*stream++;
+            xenon2.music_tempo_mul = (uint16_t)(int16_t)(int8_t)*stream++;
             goto fetch;
         case 0x8b:
-            music_fade_speed = *stream++;
-            music_fade_count = music_fade_speed;
+            xenon2.music_fade_speed = *stream++;
+            xenon2.music_fade_count = xenon2.music_fade_speed;
             goto fetch;
         default:
             return;   /* the original jumps through the data after the table */
@@ -436,7 +436,7 @@ void music_tick(void)
             const uint8_t *vol_data;
             int16_t w;
 
-            period = (uint8_t)(chan->note + music_transpose + chan->transpose);
+            period = (uint8_t)(chan->note + xenon2.music_transpose + chan->transpose);
             stream = chan->env_ptr;
             env_byte = *stream++;
             if (env_byte & 0x80)
@@ -444,7 +444,7 @@ void music_tick(void)
             env_byte &= 0x7f;
             chan->env_ptr = stream;
             period = (uint8_t)(period + env_byte);
-            period = ((uint32_t)music_periods[period] * ins->rate) >> 10;
+            period = ((uint32_t)xenon2.music_periods[period] * ins->rate) >> 10;
             if (chan->flags & 2) {
                 if (chan->slide_delay) {
                     chan->slide_delay--;
@@ -507,19 +507,19 @@ void sfx_play(uint16_t request)
     CIAA_PRA |= 2;
     SETCLR_WRITE(adkcon, 0x00ff);
     request &= 0x3ff;
-    sfx_request = request;
-    ch = sfx_request >> 8;
+    xenon2.sfx_request = request;
+    ch = xenon2.sfx_request >> 8;
     if (ch < 4)
-        sfx_channels[ch].active = 0;
+        xenon2.sfx_channels[ch].active = 0;
     sound_init_instruments();
-    hw_mirror[ch].sfx_on = 0xff;
-    sfx = &sfx_channels[ch];
+    xenon2.hw_mirror[ch].sfx_on = 0xff;
+    sfx = &xenon2.sfx_channels[ch];
     hw = &custom->aud[ch];
     dma_bit = (uint16_t)(1 << ch);
     id = (int8_t)request;
 
     if (id >= 0) {
-        const SfxDef *def = &sfx_defs[(uint8_t)id];
+        const SfxDef *def = &xenon2.sfx_defs[(uint8_t)id];
         int8_t e;
 
         hw->len = 1;
@@ -546,7 +546,7 @@ void sfx_play(uint16_t request)
         sfx->count_f = sfx->reload_f;
         sfx->env_count = 1;
         e = (int8_t)sfx->env_index;
-        sfx->env_ptr = at((int16_t)sfx_env_offsets[e]);
+        sfx->env_ptr = at((int16_t)xenon2.sfx_env_offsets[e]);
         audio_delay();
         sfx->active = 0xff;
         return;
@@ -560,7 +560,7 @@ void sfx_play(uint16_t request)
         hw->per = 0x7c;
         hw->len = 1;
         audio_delay();
-        sample = &sfx_samples[sfx->sample_id & 0x7f];
+        sample = &xenon2.sfx_samples[sfx->sample_id & 0x7f];
         sfx->timer = sample->duration;
         if (sample->endless)
             sfx->timer = 0;
@@ -578,7 +578,7 @@ void sfx_play(uint16_t request)
             hw->len = (uint16_t)(sample->length - (uint16_t)((uint32_t)loop_off >> 1));
             hw->lc = ADDR(sample->sample + loop_off);
         } else {
-            hw->lc = ADDR(silence_ptr);
+            hw->lc = ADDR(xenon2.silence_ptr);
             hw->len = 0x20;
         }
     }
@@ -595,7 +595,7 @@ static void sfx_channel_tick(SfxChannel *sfx, volatile struct AudioChannel *hw, 
             goto stop;
     }
     if (sfx->sample_id != 0) {
-        const SfxSample *s = &sfx_samples[sfx->sample_id & 0x7f];
+        const SfxSample *s = &xenon2.sfx_samples[sfx->sample_id & 0x7f];
 
         period = sfx->slide_period;
         slide_val = (uint16_t)s->slide;
@@ -665,7 +665,7 @@ static void sfx_channel_tick(SfxChannel *sfx, volatile struct AudioChannel *hw, 
             pair = (pair << 16) | (pair >> 16);
         }
         sfx->rot_b = b;
-        hw->lc = ADDR(sfx_wave_base + (int16_t)pair);
+        hw->lc = ADDR(xenon2.sfx_wave_base + (int16_t)pair);
         SETCLR_WRITE(dmacon, (uint16_t)(dma_bit | 0x8200));
     }
     return;
@@ -692,6 +692,6 @@ void sfx_tick(void)
     uint16_t i;
 
     for (i = 0; i < 4; i++)
-        if (sfx_channels[i].active)
-            sfx_channel_tick(&sfx_channels[i], &custom->aud[i], (uint16_t)(1 << i), &hw_mirror[i]);
+        if (xenon2.sfx_channels[i].active)
+            sfx_channel_tick(&xenon2.sfx_channels[i], &custom->aud[i], (uint16_t)(1 << i), &xenon2.hw_mirror[i]);
 }

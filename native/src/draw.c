@@ -15,8 +15,8 @@ void free_object(Object *obj)
 
     next->prev = prev;
     prev->next = next;
-    obj->next = free_obj;
-    free_obj = obj;
+    obj->next = xenon2.free_obj;
+    xenon2.free_obj = obj;
     obj->type = 0;
 }
 
@@ -54,14 +54,14 @@ static int clip_bob(Clip *c, int16_t x, int16_t y, int with_map)
     row = (int16_t)(row - (int16_t)rd16(p)); p += 2;
     if (with_map)   /* $105C: the masks of the map under the bob first (inlined: $2F66) */
         map_tile_mask2((uint16_t)shift, (uint16_t)row, rd16(p + 2));
-    room = (int16_t)(clip_bottom - row);
+    room = (int16_t)(xenon2.clip_bottom - row);
     if (room < 0)
         return 0;
     top = row;
     if (top < 0)
         row = 0;
     xend = shift;
-    c->dst = draw_screen + (int16_t)row_offset[(uint16_t)row];
+    c->dst = xenon2.draw_screen + (int16_t)xenon2.row_offset[(uint16_t)row];
     col = shift;
     shift &= 0xf;
     col = (int16_t)(col - shift);
@@ -277,17 +277,17 @@ HLE_WEAK void draw_text(const uint8_t *text, uint8_t *dest)
         if (c == 0)
             return;
         if (c != 0x20) {
-            const uint8_t *p = text_chars;   /* the search of $7EF8 */
+            const uint8_t *p = xenon2.text_chars;   /* the search of $7EF8 */
             uint16_t index = 0xffff;
             const uint8_t *glyph;
 
             while (*p) {
                 if (*p++ == c) {
-                    index = (uint16_t)(p - text_chars - 1);
+                    index = (uint16_t)(p - xenon2.text_chars - 1);
                     break;
                 }
             }
-            glyph = font_gfx + (int16_t)(uint16_t)(index << 7);
+            glyph = xenon2.font_gfx + (int16_t)(uint16_t)(index << 7);
             custom->bltcon0 = 0x09f0;
             custom->bltcon1 = 0;
             custom->bltamod = 0;
@@ -308,7 +308,7 @@ HLE_WEAK void draw_text(const uint8_t *text, uint8_t *dest)
 void draw_number(uint32_t value, uint8_t *dest)
 {
     uint8_t *other = dest - 0x8700;
-    const uint32_t *p = pow10;
+    const uint32_t *p = xenon2.pow10;
 
     for (; *p != 0; p++) {
         uint16_t digit = 0;
@@ -321,7 +321,7 @@ void draw_number(uint32_t value, uint8_t *dest)
             digit++;
         }
         value += *p;
-        g = &digit_gfx[(uint16_t)(digit << 5)];
+        g = &xenon2.digit_gfx[(uint16_t)(digit << 5)];
         for (int row = 0; row < 8; row++) {
             for (int plane = 0; plane < 4; plane++) {
                 uint8_t b = *g++;
@@ -341,18 +341,18 @@ void redraw_energy_bar(void)
     uint8_t *dst_b, *dst_a;
     uint16_t fill, bit, keep;
 
-    if (!energy_dirty)
+    if (!xenon2.energy_dirty)
         return;
-    energy_dirty = 0;
-    fill = player_energy;
+    xenon2.energy_dirty = 0;
+    fill = xenon2.player_energy;
     if ((int16_t)fill > 0x27)
         fill = 0x27;
-    dst_b = &screen_b[0x79ea];
-    dst_a = &screen_a[0x79ea];
+    dst_b = &xenon2.screen_b[0x79ea];
+    dst_a = &xenon2.screen_a[0x79ea];
     bit = 0x10;
-    if (cur_player) {
-        dst_b = &screen_b[0x79f6];
-        dst_a = &screen_a[0x79f6];
+    if (xenon2.cur_player) {
+        dst_b = &xenon2.screen_b[0x79f6];
+        dst_a = &xenon2.screen_a[0x79f6];
         bit = 2;
     }
     keep = (uint16_t)~bit;
@@ -401,16 +401,16 @@ void redraw_energy_bar(void)
 /* orig $176E: copy 8 lines of 4 plane bytes of the digit glyph cca (0-9, 32 bytes each) into both screens */
 void draw_status_digit(void)
 {
-    int16_t lives = (int16_t)player_lives;
+    int16_t lives = (int16_t)xenon2.player_lives;
     const uint8_t *glyph;
-    uint8_t *dst_b = &screen_b[0x78b1], *dst_a = &screen_a[0x78b1];
+    uint8_t *dst_b = &xenon2.screen_b[0x78b1], *dst_a = &xenon2.screen_a[0x78b1];
 
     if (lives > 9)
         lives = 9;
-    glyph = &digit_gfx[0x140] + (int16_t)(uint16_t)(lives << 5);
-    if (cur_player) {
-        dst_b = &screen_b[0x78b6];
-        dst_a = &screen_a[0x78b6];
+    glyph = &xenon2.digit_gfx[0x140] + (int16_t)(uint16_t)(lives << 5);
+    if (xenon2.cur_player) {
+        dst_b = &xenon2.screen_b[0x78b6];
+        dst_a = &xenon2.screen_a[0x78b6];
     }
     for (int row = 0; row < 8; row++) {
         for (int plane = 0; plane < 4; plane++) {
@@ -469,10 +469,10 @@ static void put_tile(const uint8_t *tiles, uint16_t cell, uint8_t *dest, uint16_
 /* orig $17D6: draw the background: the picture scrolled by the strip at $436, then the map's tiles over it; HLE: blitter */
 HLE_WEAK void draw_background(void)
 {
-    uint16_t scroll = (uint16_t)(background_scroll >> 16);
+    uint16_t scroll = (uint16_t)(xenon2.background_scroll >> 16);
     uint16_t lines = (uint16_t)(0xc0 - scroll);
-    uint8_t *src = map_image + (int16_t)(uint16_t)(scroll * 0x50u);
-    uint8_t *dst = draw_screen;
+    uint8_t *src = xenon2.map_image + (int16_t)(uint16_t)(scroll * 0x50u);
+    uint8_t *dst = xenon2.draw_screen;
 
     custom->bltapt = ADDR(src);
     custom->bltdpt = ADDR(dst);
@@ -486,7 +486,7 @@ HLE_WEAK void draw_background(void)
     BLIT_WAIT();
     lines = scroll;
     if (lines) {
-        custom->bltapt = ADDR(map_image);
+        custom->bltapt = ADDR(xenon2.map_image);
         BLTSIZE_WRITE((uint16_t)((uint16_t)(lines << 6) + 0x28));
         BLIT_WAIT();
     }
@@ -496,10 +496,10 @@ HLE_WEAK void draw_background(void)
     custom->bltadat = 0;
     BLTSIZE_WRITE(0x3028);
     BLIT_WAIT();
-    if (skip_map_draw)
+    if (xenon2.skip_map_draw)
         return;
 
-    draw_tile_grid(level_init_src + (int16_t)map_row_offset, 0x13, 0xc, (int16_t)-(int16_t)scroll_fine, 0);
+    draw_tile_grid(xenon2.level_init_src + (int16_t)xenon2.map_row_offset, 0x13, 0xc, (int16_t)-(int16_t)xenon2.scroll_fine, 0);
 }
 
 /* one tile as $1BD0 puts it: a plain cell is the fixed block at $1EA2, a cell with bit 15 is OR-ed into planes 0 to 2 by its mask and
@@ -515,7 +515,7 @@ static void put_tile_flash(const uint8_t *tiles, uint16_t cell, uint8_t *dest, u
         custom->bltdmod = 0x26;
         custom->bltafwm = 0xffff;
         custom->bltalwm = 0xffff;
-        custom->bltapt = ADDR(tile_mask_block);
+        custom->bltapt = ADDR(xenon2.tile_mask_block);
         custom->bltdpt = ADDR(dest);
         BLTSIZE_WRITE(partial ? (uint16_t)((uint16_t)(rows_size << 2) - 3) : 0x1001);
         BLIT_WAIT();
@@ -545,9 +545,9 @@ typedef void (*tile_fn)(const uint8_t *tiles, uint16_t cell, uint8_t *dest, uint
  * cells a row, rows + 1 rows of 16 lines; from the row that reaches line $6EA0 / $A0 on, one blit a cell as far as the end of the screen */
 static void tile_grid(const uint8_t *cells, uint16_t cols, int16_t rows, int16_t y, uint16_t x, tile_fn put)
 {
-    uint8_t *dst = draw_screen;
+    uint8_t *dst = xenon2.draw_screen;
     uint8_t *screen_end = dst + 0x7800, *split = dst + 0x6ea0;
-    const uint8_t *tiles = tile_gfx;
+    const uint8_t *tiles = xenon2.tile_gfx;
     uint16_t xb = (uint16_t)(x >> 2);
 
     dst += (int16_t)xb;
@@ -629,8 +629,8 @@ static void bob_behind_map(Object *obj)
     dst = c.dst;
     size = c.size;
     custom->bltapt = ADDR(src + 8);
-    custom->bltcpt = ADDR(tile_mask_buf);
-    custom->bltdpt = ADDR(tile_mask_buf);
+    custom->bltcpt = ADDR(xenon2.tile_mask_buf);
+    custom->bltdpt = ADDR(xenon2.tile_mask_buf);
     custom->bltamod = 6;
     custom->bltcmod = 0;
     custom->bltdmod = 0;
@@ -653,7 +653,7 @@ static void bob_behind_map(Object *obj)
     custom->bltcon1 = bltcon;
     custom->bltcon0 = 0x0fca;
     for (int plane = 0; plane < 4; plane++) {
-        custom->bltapt = ADDR(tile_mask_buf);
+        custom->bltapt = ADDR(xenon2.tile_mask_buf);
         custom->bltbpt = ADDR(src);
         custom->bltcpt = ADDR(dst);
         custom->bltdpt = ADDR(dst);
@@ -671,5 +671,5 @@ HLE_WEAK void draw_bob_behind_map(Object *obj)
     tile_mask2_words = 0;
     bob_behind_map(obj);
     for (uint16_t i = 0; i < tile_mask2_words && i < 75; i++)
-        tile_mask_buf[i] = rd16(&tile_mask_buf[i]);
+        xenon2.tile_mask_buf[i] = rd16(&xenon2.tile_mask_buf[i]);
 }

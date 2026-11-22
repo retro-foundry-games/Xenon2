@@ -18,11 +18,11 @@ void weapon9c_update(Object *obj); void weaponA0_update(Object *obj);
 void enemy_killed(Object *shooter, Object *enemy);
 
 /* the object lists: $AD8, $B3A and $B9C are sentinels in obj_list */
-#define LIST_A ((Object *)&obj_list[1])
-#define LIST_C ((Object *)&obj_list[2])
-#define LIST_B ((Object *)&obj_list[3])
-#define PLAYER ((Object *)&player)
-#define SLOT(i) (&weapon_slots[i])
+#define LIST_A ((Object *)&xenon2.obj_list[1])
+#define LIST_C ((Object *)&xenon2.obj_list[2])
+#define LIST_B ((Object *)&xenon2.obj_list[3])
+#define PLAYER ((Object *)&xenon2.player)
+#define SLOT(i) (&xenon2.weapon_slots[i])
 
 Object *weapon_select(uint16_t type, Object *caller, Object *last);               /* orig $004822 */
 Object *refill_slot0(Object *caller, Object *last);                                /* orig $005540 */

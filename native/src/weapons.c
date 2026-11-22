@@ -60,8 +60,8 @@ static void unlink_to_free(Object *o)
 
     n->prev = p;
     p->next = n;
-    o->next = free_obj;
-    free_obj = o;
+    o->next = xenon2.free_obj;
+    xenon2.free_obj = o;
     o->type = 0;
 }
 
@@ -82,7 +82,7 @@ int player_hits(Object *obj)
 {
     const Object *p = PLAYER;
 
-    if (dive_phase)
+    if (xenon2.dive_phase)
         return 0;
     return !(p->hit[2] < obj->hit[0] || p->hit[0] > obj->hit[2] || p->hit[3] < obj->hit[1] || p->hit[1] > obj->hit[3]);
 }
@@ -92,7 +92,7 @@ int point_in_player_box(int16_t x, int16_t y)
 {
     const Object *p = PLAYER;
 
-    if (dive_phase)
+    if (xenon2.dive_phase)
         return 0;
     return !(p->hit[0] > x || p->hit[2] < x || p->hit[1] > y || p->hit[3] < y);
 }
@@ -130,7 +130,7 @@ static void slot_free(void *fn_hit)
 {
     Slot *s = (Slot *)fn_hit;
 
-    if ((s >= weapon_slots && s < weapon_slots + 7) || (s >= weapon_slots_saved && s < weapon_slots_saved + 7))
+    if ((s >= xenon2.weapon_slots && s < xenon2.weapon_slots + 7) || (s >= xenon2.weapon_slots_saved && s < xenon2.weapon_slots_saved + 7))
         s->type = 0;
 }
 
@@ -196,7 +196,7 @@ static void dismiss_slot5(void)
 /* orig $005540: the basic weapon comes back when slot 0 is empty */
 Object *refill_slot0(Object *caller, Object *last)
 {
-    if (weapon_slots[0].type == 0)
+    if (xenon2.weapon_slots[0].type == 0)
         weapon_94(caller, last);
     return last;
 }
@@ -234,7 +234,7 @@ Object *weapon_94(Object *caller, Object *last)
     n->energy = 2;
     n->kind = 1;
     SET_V5E(n, -1);
-    autofire_period = 8;
+    xenon2.autofire_period = 8;
     return n;
 }
 
@@ -255,7 +255,7 @@ Object *weapon_c0(Object *caller, Object *last)
     n->fn_update = weaponc0_update;
     n->fn_draw = draw_bob_masked;
     n->fn_hit = s;
-    n->gfx = weaponc0_picture;
+    n->gfx = xenon2.weaponc0_picture;
     n->anim_delay = 0;
     n->x = PLAYER->x;
     n->y = PLAYER->y;
@@ -263,7 +263,7 @@ Object *weapon_c0(Object *caller, Object *last)
     n->energy = 2;
     n->kind = 0xe;
     SET_V5E(n, -1);
-    autofire_period = 8;
+    xenon2.autofire_period = 8;
     return n;
 }
 
@@ -292,7 +292,7 @@ Object *weapon_98(Object *caller, Object *last)
     n->energy = 2;
     n->kind = 0xa;
     SET_V5E(n, -1);
-    autofire_period = 8;
+    xenon2.autofire_period = 8;
     return n;
 }
 
@@ -317,7 +317,7 @@ Object *weapon_28(Object *caller, Object *last)
     n->energy = 0;
     n->kind = 0x15;
     SET_V5E(n, -1);
-    autofire_period = 0xc;
+    xenon2.autofire_period = 0xc;
     return n;
 }
 
@@ -348,7 +348,7 @@ Object *weapon_48(Object *caller, Object *last)
     n->energy = 0;
     n->kind = 0x17;
     SET_V5E(n, -1);
-    autofire_period = 0x1e;
+    xenon2.autofire_period = 0x1e;
     return n;
 }
 
@@ -369,14 +369,14 @@ Object *weapon_b0(Object *caller, Object *last)
     n->fn_update = weaponb0_update;
     n->fn_draw = draw_bob_masked;
     n->fn_hit = s;
-    set_anim(n, anim_weaponb0);
+    set_anim(n, xenon2.anim_weaponb0);
     n->x = PLAYER->x;
     n->y = PLAYER->y;
     n->score = 0;
     n->energy = 2;
     n->kind = 0x14;
     SET_V5E(n, -1);
-    autofire_period = 8;
+    xenon2.autofire_period = 8;
     return n;
 }
 
@@ -410,7 +410,7 @@ Object *weapon_2c(Object *caller, Object *last)
     if (SLOT(5)->type == 0x2c)
         return grow_weapon(SLOT(5));
     dismiss_slot5();
-    return weapon_slot5(caller, 0x2c, weapon2c_update, anim_weapon2c, 2, 0, 0x13, 0x19);
+    return weapon_slot5(caller, 0x2c, weapon2c_update, xenon2.anim_weapon2c, 2, 0, 0x13, 0x19);
 }
 
 /* orig $005014: weapon $4C (slot 5) */
@@ -419,7 +419,7 @@ Object *weapon_4c(Object *caller, Object *last)
     if (SLOT(5)->type == 0x4c)
         return grow_weapon(SLOT(5));
     dismiss_slot5();
-    return weapon_slot5(caller, 0x4c, weapon4c_update, anim_weapon4c, 0, 0, 0xb, 0x19);
+    return weapon_slot5(caller, 0x4c, weapon4c_update, xenon2.anim_weapon4c, 0, 0, 0xb, 0x19);
 }
 
 /* orig $0050AC: weapon $38 (slot 5) */
@@ -430,8 +430,8 @@ Object *weapon_38(Object *caller, Object *last)
     if (SLOT(5)->type == 0x38 || SLOT(5)->type == 0x3c)
         return grow_weapon(SLOT(5));
     dismiss_slot5();
-    n = weapon_slot5(caller, 0x38, weapon38_update, anim_weapon38, 1, 0, 9, 0x19);
-    trail_x = -100;
+    n = weapon_slot5(caller, 0x38, weapon38_update, xenon2.anim_weapon38, 1, 0, 9, 0x19);
+    xenon2.trail_x = -100;
     return n;
 }
 
@@ -443,8 +443,8 @@ Object *weapon_3c(Object *caller, Object *last)
     if (SLOT(5)->type == 0x38 || SLOT(5)->type == 0x3c)
         return grow_weapon(SLOT(5));
     dismiss_slot5();
-    n = weapon_slot5(caller, 0x3c, weapon38_update, anim_weapon3c, 1, 1, 0xd, 0x19);
-    trail_x = -100;
+    n = weapon_slot5(caller, 0x3c, weapon38_update, xenon2.anim_weapon3c, 1, 1, 0xd, 0x19);
+    xenon2.trail_x = -100;
     return n;
 }
 
@@ -460,7 +460,7 @@ Object *weapon_44(Object *caller, Object *last)
         s6->type = 0;
     }
     dismiss_slot5();
-    return weapon_slot5(caller, 0x44, FN(weapon44_update), anim_weapon44, 2, 0, 8, 0);
+    return weapon_slot5(caller, 0x44, FN(weapon44_update), xenon2.anim_weapon44, 2, 0, 8, 0);
 }
 
 /* the weapons of the side slots: orig $0052E0 ($90), $00538C ($20), $00543A ($34); 0 when the four slots are taken */
@@ -479,8 +479,8 @@ static Object *weapon_side(Object *caller, uint16_t type, obj_fn update, const u
     n->fn_update = update;
     n->fn_draw = draw_bob_masked;
     n->fn_hit = slot;
-    n->weapon.dx = weapon_slot_offsets[2 * rev_index];
-    n->weapon.dy = weapon_slot_offsets[2 * rev_index + 1];
+    n->weapon.dx = xenon2.weapon_slot_offsets[2 * rev_index];
+    n->weapon.dy = xenon2.weapon_slot_offsets[2 * rev_index + 1];
     set_anim(n, anim);
     n->x = PLAYER->x + n->weapon.dx;
     n->y = PLAYER->y + n->weapon.dy;
@@ -496,7 +496,7 @@ static Object *weapon_side(Object *caller, uint16_t type, obj_fn update, const u
 /* orig $0052E0 */
 Object *weapon_90(Object *caller, Object *last)
 {
-    Object *n = weapon_side(caller, 0x90, weapon90_update, anim_weapon90, 0, 0x11, 1);
+    Object *n = weapon_side(caller, 0x90, weapon90_update, xenon2.anim_weapon90, 0, 0x11, 1);
 
     return refill_slot0(caller, n ? n : last);
 }
@@ -504,7 +504,7 @@ Object *weapon_90(Object *caller, Object *last)
 /* orig $00538C */
 Object *weapon_20(Object *caller, Object *last)
 {
-    Object *n = weapon_side(caller, 0x20, weapon20_update, anim_weapon20, 2, 0x12, 1);
+    Object *n = weapon_side(caller, 0x20, weapon20_update, xenon2.anim_weapon20, 2, 0x12, 1);
 
     return refill_slot0(caller, n ? n : last);
 }
@@ -512,7 +512,7 @@ Object *weapon_20(Object *caller, Object *last)
 /* orig $00543A */
 Object *weapon_34(Object *caller, Object *last)
 {
-    Object *n = weapon_side(caller, 0x34, weapon34_update, anim_weapon34, 0, 0xf, 0), *d;
+    Object *n = weapon_side(caller, 0x34, weapon34_update, xenon2.anim_weapon34, 0, 0xf, 0), *d;
 
     if (n == 0)
         return refill_slot0(caller, last);
@@ -522,7 +522,7 @@ Object *weapon_34(Object *caller, Object *last)
         d->fn_update = pod_decoration_update;
         d->fn_draw = draw_bob_masked;
         d->persists = -1;
-        set_anim(d, anim_pod_decoration);
+        set_anim(d, xenon2.anim_pod_decoration);
         set_ptr_2a(d, n);
         d->x = n->x;
         d->y = n->y;
@@ -555,20 +555,20 @@ Object *weapon_select(uint16_t type, Object *caller, Object *last)
 /* orig $005592: update of weapon $94 */
 void weapon94_update(Object *obj)
 {
-    if (dive_phase)
+    if (xenon2.dive_phase)
         return;
-    if (fire_press)
-        spawn_shot_object(obj, 0, -9, 0, -6, (void *const *)&player_shot_pictures[3]);
+    if (xenon2.fire_press)
+        spawn_shot_object(obj, 0, -9, 0, -6, (void *const *)&xenon2.player_shot_pictures[3]);
 }
 
 /* orig $0055B2: update of weapon $98 */
 void weapon98_update(Object *obj)
 {
-    if (dive_phase)
+    if (xenon2.dive_phase)
         return;
-    if (fire_press) {
-        spawn_shot_object(obj, -9, 0, -2, -3, (void *const *)&player_shot_pictures[0]);
-        spawn_shot_object(obj, 9, 0, 2, -3, (void *const *)&player_shot_pictures[6]);
+    if (xenon2.fire_press) {
+        spawn_shot_object(obj, -9, 0, -2, -3, (void *const *)&xenon2.player_shot_pictures[0]);
+        spawn_shot_object(obj, 9, 0, 2, -3, (void *const *)&xenon2.player_shot_pictures[6]);
     }
 }
 
@@ -578,14 +578,14 @@ void weapon44_update(Object *obj)
     anim_step(obj);
     obj->x = PLAYER->x;
     obj->y = PLAYER->y;
-    if (respawn_shield) {
+    if (xenon2.respawn_shield) {
         weapon_shield_draw(obj);
         return;
     }
     obj->fn_draw = draw_bob_masked;
-    if (fire_press) {
+    if (xenon2.fire_press) {
         obj->anim_delay = 1;
-        spawn_shot_object(obj, 0, 9, 0, 0x12, (void *const *)&player_shot_pictures[9]);
+        spawn_shot_object(obj, 0, 9, 0, 0x12, (void *const *)&xenon2.player_shot_pictures[9]);
     }
 }
 
@@ -595,11 +595,11 @@ void weapon9c_update(Object *obj)
     Object *other, *n;
     int16_t y;
 
-    if (dive_phase)
+    if (xenon2.dive_phase)
         return;
     if (V5E(obj) >= 0)
         SET_V5E(obj, V5E(obj) - 1);
-    if (fire_press == 0 || V5E(obj) >= 0)
+    if (xenon2.fire_press == 0 || V5E(obj) >= 0)
         return;
     for (other = LIST_B->prev; other->type != 0; other = other->prev)
         if (other->type == 0x28)
@@ -610,7 +610,7 @@ void weapon9c_update(Object *obj)
     n->fn_update = shell_update;
     n->fn_draw = draw_bob_masked;
     n->persists = -1;
-    set_anim(n, anim_shell_9c);
+    set_anim(n, xenon2.anim_shell_9c);
     n->x = PLAYER->x;
     y = PLAYER->y - 0xc;
     n->y = y;
@@ -619,7 +619,7 @@ void weapon9c_update(Object *obj)
 }
 
 /* the eight pictures of the drill, by the loop counter */
-static const uint8_t *const drill_anim[8] = { anim_drill_0, anim_drill_1, anim_drill_2, anim_drill_3, anim_drill_4, anim_drill_5, anim_drill_6, anim_drill_7 };
+static const uint8_t *const drill_anim[8] = { xenon2.anim_drill_0, xenon2.anim_drill_1, xenon2.anim_drill_2, xenon2.anim_drill_3, xenon2.anim_drill_4, xenon2.anim_drill_5, xenon2.anim_drill_6, xenon2.anim_drill_7 };
 
 /* orig $0056D6: update of weapon $a0 (slot 5 or 6, type $48) */
 void weaponA0_update(Object *obj)
@@ -627,17 +627,17 @@ void weaponA0_update(Object *obj)
     Object *other, *cur;
     int16_t cnt;
 
-    if (dive_phase)
+    if (xenon2.dive_phase)
         return;
     if (V5E(obj) >= 0)
         SET_V5E(obj, V5E(obj) - 1);
-    if (fire_press == 0 || V5E(obj) >= 0)
+    if (xenon2.fire_press == 0 || V5E(obj) >= 0)
         return;
     for (other = LIST_B->prev; other->type != 0; other = other->prev)
         if (other->type == 0x48)
             return;
     SET_V5E(obj, 0x12);
-    sfx_cmd = 9;
+    xenon2.sfx_cmd = 9;
     cur = obj;
     for (cnt = 7; cnt >= 0; cnt -= 2) {
         cur = alloc_b(cur);
@@ -669,7 +669,7 @@ void shot_fixed_update(Object *obj)
     int32_t speed;
     uint16_t damage;
 
-    if (player_dead) {
+    if (xenon2.player_dead) {
         shot_gone(obj);
         return;
     }
@@ -695,7 +695,7 @@ void shot_fixed_update(Object *obj)
     enemy = collide_enemies(obj);
     if (enemy == 0)
         return;
-    damage = (uint16_t)(obj->score + kill_scores[1]);
+    damage = (uint16_t)(obj->score + xenon2.kill_scores[1]);
     shot_gone(obj);
     apply_damage(obj, enemy, damage);
 }
@@ -706,7 +706,7 @@ void shot_update(Object *obj)
     Object *enemy;
     uint16_t damage;
 
-    if (player_dead) {
+    if (xenon2.player_dead) {
         shot_gone(obj);
         return;
     }
@@ -724,7 +724,7 @@ void shot_update(Object *obj)
     enemy = point_in_enemy(obj->x, obj->y);
     if (enemy == 0)
         return;
-    damage = (uint16_t)(obj->score + kill_scores[0]);
+    damage = (uint16_t)(obj->score + xenon2.kill_scores[0]);
     shot_gone(obj);
     apply_damage(obj, enemy, damage);
 }
@@ -763,7 +763,7 @@ void hit_part(Object *shooter, Object *enemy, uint16_t damage)
             int16_t x, y;
 
             centre(part, &x, &y);
-            spawn_effect(x, y, enemy->big ? anim_explosion_big : anim_explosion, draw_bob_masked);
+            spawn_effect(x, y, enemy->big ? xenon2.anim_explosion_big : xenon2.anim_explosion, draw_bob_masked);
         }
         kill_object(part);
     }
@@ -814,13 +814,13 @@ static void explosion_at(Object *obj, const uint8_t *anim)
 /* orig $EE4, $005A1A: an enemy dies: explosion, maybe a bonus, its score */
 void enemy_killed(Object *shooter, Object *enemy)
 {
-    uint16_t *e = pickup_groups;
+    uint16_t *e = xenon2.pickup_groups;
     Object *n;
     const uint8_t *bonus_anim;
     int i, found = 0;
     int16_t kind;
 
-    explosion_at(enemy, enemy->big ? anim_explosion_big : anim_explosion);
+    explosion_at(enemy, enemy->big ? xenon2.anim_explosion_big : xenon2.anim_explosion);
     kind = enemy->kind;
     if (kind != 0) {
         for (i = 0; i < 8; i++) {
@@ -832,10 +832,10 @@ void enemy_killed(Object *shooter, Object *enemy)
         if (found && --e[2 * i + 1] == 0) {
             e[2 * i] = 0;
             n = alloc_b(shooter);
-            bonus_anim = anim_bonus_small;
+            bonus_anim = xenon2.anim_bonus_small;
             n->type = 0x60;
             if (enemy->big) {
-                bonus_anim = anim_bonus_big;
+                bonus_anim = xenon2.anim_bonus_big;
                 n->type = 0x18;
             }
             n->pickup.mode = 7;
@@ -847,14 +847,14 @@ void enemy_killed(Object *shooter, Object *enemy)
             n->pickup.dir = (int16_t)random_next();
         }
     }
-    player_score += (uint16_t)enemy->score;
+    xenon2.player_score += (uint16_t)enemy->score;
     kill_object(enemy);
 }
 
 /* orig $EA8, $005B16: hit routine: the object explodes and dies at once */
 void hit_explode(Object *shooter, Object *enemy, uint16_t damage)
 {
-    explosion_at(enemy, enemy->big ? anim_explosion_big : anim_explosion);
+    explosion_at(enemy, enemy->big ? xenon2.anim_explosion_big : xenon2.anim_explosion);
     kill_object(enemy);
 }
 
@@ -862,7 +862,7 @@ void hit_explode(Object *shooter, Object *enemy, uint16_t damage)
 void tile_draw(Object *obj)
 {
     obj->fn_draw = obj_nop;
-    draw_tile_grid_flash((const uint8_t *)obj->gfx, (uint16_t)obj->tile.cols, (uint16_t)obj->tile.rows, (int16_t)(obj->y - scroll_pos), (uint16_t)obj->x >> 1);
+    draw_tile_grid_flash((const uint8_t *)obj->gfx, (uint16_t)obj->tile.cols, (uint16_t)obj->tile.rows, (int16_t)(obj->y - xenon2.scroll_pos), (uint16_t)obj->x >> 1);
 }
 
 /* orig $F20, $005B72: hit routine of a destructible tile block: when it breaks the background is restored */
@@ -878,10 +878,10 @@ void hit_tile(Object *shooter, Object *tile, uint16_t damage)
     tile->energy = (int16_t)(old - damage);
     if (old > damage)
         return;
-    player_score += (uint16_t)tile->score;
+    xenon2.player_score += (uint16_t)tile->score;
     x = (int16_t)(((tile->tile.cols + 1) << 3) + tile->x);
-    y = (int16_t)(((tile->tile.rows + 1) << 3) + tile->y - scroll_pos);
-    spawn_effect(x, y, anim_explosion_big, draw_bob_masked);
+    y = (int16_t)(((tile->tile.rows + 1) << 3) + tile->y - xenon2.scroll_pos);
+    spawn_effect(x, y, xenon2.anim_explosion_big, draw_bob_masked);
     dst = tile->script;
     src = tile->anim;
     for (rows = tile->tile.rows; rows >= 0; rows--) {
@@ -900,11 +900,11 @@ void hit_tile(Object *shooter, Object *tile, uint16_t damage)
 /* orig $004894 (+$14) and $0048B4 (+$28): the shield grows (at most $27) */
 static void shield_up(uint16_t d)
 {
-    player_energy += d;
-    sfx_cmd = 7;
-    if ((int16_t)player_energy > 0x27)
-        player_energy = 0x27;
-    energy_dirty = 0xff;
+    xenon2.player_energy += d;
+    xenon2.sfx_cmd = 7;
+    if ((int16_t)xenon2.player_energy > 0x27)
+        xenon2.player_energy = 0x27;
+    xenon2.energy_dirty = 0xff;
 }
 
 void pickup_shield_small(Object *obj) { shield_up(0x14); }
@@ -939,27 +939,27 @@ void pickup_grow_weakest(Object *obj)
 /* orig $0048F6 */
 void pickup_speed(Object *obj)
 {
-    if ((int16_t)autofire_level < 4)
-        autofire_level++;
+    if ((int16_t)xenon2.autofire_level < 4)
+        xenon2.autofire_level++;
 }
 
 /* orig $004906 */
 void pickup_move(Object *obj)
 {
-    if (speed_level != 2)
-        speed_level++;
+    if (xenon2.speed_level != 2)
+        xenon2.speed_level++;
 }
 
 /* orig $004914 */
 void pickup_flag_d83(Object *obj)
 {
-    protection = 0xff;
+    xenon2.protection = 0xff;
 }
 
 /* orig $00491A */
 void pickup_ca0(Object *obj)
 {
-    dive_charges += 3;
+    xenon2.dive_charges += 3;
 }
 
 /* orig $004920 */
@@ -983,8 +983,8 @@ void pickup_bomb(Object *obj)
     Object *enemy, *after, *item;
 
     for (i = 0; i < 8; i++)
-        saved[i] = ((uint32_t)palette_shadow[2 * i] << 16) | palette_shadow[2 * i + 1];
-    sfx_cmd = 2;
+        saved[i] = ((uint32_t)xenon2.palette_shadow[2 * i] << 16) | xenon2.palette_shadow[2 * i + 1];
+    xenon2.sfx_cmd = 2;
     for (n = 0x1e; n >= 0; n--) {
         bits = (uint16_t)random_next();
         for (k = 0; k < 16; k++) {
@@ -992,18 +992,18 @@ void pickup_bomb(Object *obj)
             if (bits & 1)
                 colour = 0x777;
             bits >>= 1;
-            palette_shadow[k] = colour;
+            xenon2.palette_shadow[k] = colour;
             custom->color[k] = (uint16_t)(colour + colour);
         }
-        frame = vbl_count;
-        while (vbl_count == frame)
+        frame = xenon2.vbl_count;
+        while (xenon2.vbl_count == frame)
             HOST_IDLE();
     }
     for (i = 0; i < 8; i++) {
         uint32_t v = saved[i];
 
-        palette_shadow[2 * i] = (uint16_t)(v >> 16);
-        palette_shadow[2 * i + 1] = (uint16_t)v;
+        xenon2.palette_shadow[2 * i] = (uint16_t)(v >> 16);
+        xenon2.palette_shadow[2 * i + 1] = (uint16_t)v;
         v += v;
         custom->color[2 * i] = (uint16_t)(v >> 16);
         custom->color[2 * i + 1] = (uint16_t)v;
@@ -1012,7 +1012,7 @@ void pickup_bomb(Object *obj)
         type = enemy->type;
         after = owner_chain_next(enemy);
         if (type != 0x50 && type != 0x54)
-            apply_damage((Object *)&obj_list[1], enemy, 0x7f);
+            apply_damage((Object *)&xenon2.obj_list[1], enemy, 0x7f);
     }
     for (item = LIST_B->prev; item->type != 0; ) {
         Object *next = item->prev;
@@ -1028,7 +1028,7 @@ void pickup_bomb(Object *obj)
         item = next;
     }
     for (i = 0; i < 16; i++)
-        pickup_groups[i] = 0;
+        xenon2.pickup_groups[i] = 0;
 }
 
 /* orig $004A94: a pickup that makes a spinning object */
@@ -1036,16 +1036,16 @@ void pickup_spinner(Object *obj)
 {
     Object *spinner;
 
-    if (shield_timer == 0) {
+    if (xenon2.shield_timer == 0) {
         spinner = alloc_b(obj);
         spinner->type = 0x5c;
         spinner->fn_update = spinner_update;
         spinner->fn_draw = draw_bob_masked;
         spinner->x = PLAYER->x;
         spinner->y = PLAYER->y;
-        set_anim(spinner, anim_spinner);
+        set_anim(spinner, xenon2.anim_spinner);
     }
-    shield_timer += 0xaa;
+    xenon2.shield_timer += 0xaa;
 }
 
 /* orig $004A0A: the weapons are set up for a new life/level */
@@ -1054,12 +1054,12 @@ void init_weapons(Object *caller)
     Object *last = 0;
     int i;
 
-    list_a_prev_saved = LIST_A->prev;
-    list_a_next_saved = LIST_A->next;
+    xenon2.list_a_prev_saved = LIST_A->prev;
+    xenon2.list_a_next_saved = LIST_A->next;
     for (i = 0; i < 7; i++) {
-        weapon_slots_saved[i] = weapon_slots[i];
-        weapon_slots[i].type = 0;
-        weapon_slots[i].obj = 0;
+        xenon2.weapon_slots_saved[i] = xenon2.weapon_slots[i];
+        xenon2.weapon_slots[i].type = 0;
+        xenon2.weapon_slots[i].obj = 0;
     }
     LIST_A->type = 0;
     LIST_A->prev = LIST_A;
@@ -1087,7 +1087,7 @@ static void pickup_call(int idx, Object *obj)
 {
     static const uint8_t loud[19] = { 1, 1, 1, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0 };
 
-    sfx_cmd = loud[idx] ? 4 : 0x81;
+    xenon2.sfx_cmd = loud[idx] ? 4 : 0x81;
     switch (idx) {
     case 0: pickup_move(obj); break;
     case 1: pickup_speed(obj); break;
@@ -1122,10 +1122,10 @@ void pickup_update(Object *obj)
     if (obj->pickup.mode == 0) {
         obj->y += 8;
         if (obj->y >= 0xc8) {
-            if (level_end_items != 0) {
-                level_end_items--;
-                if (level_end_items == 0)
-                    level_over = 0xff;
+            if (xenon2.level_end_items != 0) {
+                xenon2.level_end_items--;
+                if (xenon2.level_end_items == 0)
+                    xenon2.level_over = 0xff;
             }
             kill_object(obj);
             return;
@@ -1148,8 +1148,8 @@ void pickup_update(Object *obj)
             }
         }
         idx = (obj->pickup.dir << 2) & 0x1c;
-        obj->x += pickup_circle_steps[idx >> 1];
-        obj->y += pickup_circle_steps[(idx >> 1) + 1];
+        obj->x += xenon2.pickup_circle_steps[idx >> 1];
+        obj->y += xenon2.pickup_circle_steps[(idx >> 1) + 1];
     }
     bbox_from_frame(obj);
     if (!player_hits(obj))
@@ -1165,12 +1165,12 @@ void pickup_update(Object *obj)
             return;
         }
     }
-    player_money += value;
-    sfx_cmd = 5;
-    if (level_end_items != 0) {
-        level_end_items--;
-        if (level_end_items == 0)
-            level_over = 0xff;
+    xenon2.player_money += value;
+    xenon2.sfx_cmd = 5;
+    if (xenon2.level_end_items != 0) {
+        xenon2.level_end_items--;
+        if (xenon2.level_end_items == 0)
+            xenon2.level_over = 0xff;
     }
     kill_object(obj);
 }
@@ -1179,17 +1179,17 @@ void pickup_update(Object *obj)
 void player_dies(Object *ship)
 {
     Object *weapon;
-    const uint8_t *death_anim = anim_player_death;
+    const uint8_t *death_anim = xenon2.anim_player_death;
 
-    if (level_end_items != 0)
+    if (xenon2.level_end_items != 0)
         return;
-    player_dead = 0xff;
-    player_energy = 0;
-    energy_dirty = 0xff;
-    sfx_cmd = 10;
-    sfx_cmd2 = 10;
-    dive_phase = 1;
-    dive_timer = 0;
+    xenon2.player_dead = 0xff;
+    xenon2.player_energy = 0;
+    xenon2.energy_dirty = 0xff;
+    xenon2.sfx_cmd = 10;
+    xenon2.sfx_cmd2 = 10;
+    xenon2.dive_phase = 1;
+    xenon2.dive_timer = 0;
     set_anim(PLAYER, death_anim);
     PLAYER->fn_draw = draw_bob_masked;
     weapon = LIST_A->prev;
@@ -1209,13 +1209,13 @@ void player_damage(Object *ship, uint16_t damage)
 {
     uint16_t old;
 
-    if (level_end_items != 0)
+    if (xenon2.level_end_items != 0)
         return;
-    if (protection != 0)
+    if (xenon2.protection != 0)
         damage >>= 1;
-    energy_dirty = 0xff;
-    old = player_energy;
-    player_energy = (uint16_t)(old - damage);
+    xenon2.energy_dirty = 0xff;
+    old = xenon2.player_energy;
+    xenon2.player_energy = (uint16_t)(old - damage);
     if (old > damage)
         return;
     player_dies(ship);
@@ -1226,57 +1226,57 @@ void player_move(Object *ship)
 {
     int16_t dx;
 
-    player_x_prev = ship->x;
-    player_y_prev = ship->y;
-    player_vx_prev = player_vx;
-    if (joy_stick & 4) {
-        if (player_vx > 0)
-            player_vx = 0;
-        if (player_vx > -6)
-            player_vx--;
-    } else if (joy_stick & 8) {
-        if (player_vx < 0)
-            player_vx = 0;
-        if (player_vx < 6)
-            player_vx++;
-    } else if (player_vx != 0) {
-        if (player_vx < 0)
-            player_vx++;
+    xenon2.player_x_prev = ship->x;
+    xenon2.player_y_prev = ship->y;
+    xenon2.player_vx_prev = xenon2.player_vx;
+    if (xenon2.joy_stick & 4) {
+        if (xenon2.player_vx > 0)
+            xenon2.player_vx = 0;
+        if (xenon2.player_vx > -6)
+            xenon2.player_vx--;
+    } else if (xenon2.joy_stick & 8) {
+        if (xenon2.player_vx < 0)
+            xenon2.player_vx = 0;
+        if (xenon2.player_vx < 6)
+            xenon2.player_vx++;
+    } else if (xenon2.player_vx != 0) {
+        if (xenon2.player_vx < 0)
+            xenon2.player_vx++;
         else
-            player_vx--;
+            xenon2.player_vx--;
     }
-    scroll_step = scroll_step_target;
-    if (joy_stick & 1) {
+    xenon2.scroll_step = xenon2.scroll_step_target;
+    if (xenon2.joy_stick & 1) {
         if (ship->y <= 0x10) {
             ship->y = 0x10;
-            scroll_step = 1;
+            xenon2.scroll_step = 1;
             goto side;
         }
         ship->y -= 3;
-        ship->y -= speed_level;
+        ship->y -= xenon2.speed_level;
     }
-    if (joy_stick & 2) {
+    if (xenon2.joy_stick & 2) {
         if (ship->y < 0xb0) {
             ship->y += 3;
-            ship->y += speed_level;
-        } else if (scroll_pos != scroll_max) {
-            scroll_step = 0xffff;
+            ship->y += xenon2.speed_level;
+        } else if (xenon2.scroll_pos != xenon2.scroll_max) {
+            xenon2.scroll_step = 0xffff;
             ship->y = 0xb0;
         }
     }
 side:
-    dx = player_vx;
+    dx = xenon2.player_vx;
     if (dx != 0) {
         if (dx < 0) {
-            if (joy_stick & 4)
+            if (xenon2.joy_stick & 4)
                 dx = -6;
-        } else if (joy_stick & 8) {
+        } else if (xenon2.joy_stick & 8) {
             dx = 6;
         }
     }
-    if (speed_level == 0)
+    if (xenon2.speed_level == 0)
         dx >>= 1;
-    if ((int16_t)speed_level >= 2)
+    if ((int16_t)xenon2.speed_level >= 2)
         dx += dx >> 1;
     ship->x += dx;
     if (ship->x < 0xe)
@@ -1293,19 +1293,19 @@ void player_update(Object *ship)
     int i;
 
     ship->fn_draw = draw_bob_masked;
-    if (player_dead) {
-        scroll_step = 0;
+    if (xenon2.player_dead) {
+        xenon2.scroll_step = 0;
         anim_step(ship);
         if (ship->anim_delay == 0) {
             ship->fn_draw = obj_nop;
-            if ((int16_t)respawn_shield >= 0x10)
-                player_died = 0xff;
+            if ((int16_t)xenon2.respawn_shield >= 0x10)
+                xenon2.player_died = 0xff;
         }
         return;
     }
-    if (dive_phase == 0) {
+    if (xenon2.dive_phase == 0) {
         enemy = 0;
-        if (shades_timer == 0) {
+        if (xenon2.shades_timer == 0) {
             bbox_from_frame(ship);   /* $5F42: the box of the player's picture, then the test */
             enemy = collide_enemies(ship);
             if (enemy == 0)
@@ -1323,85 +1323,85 @@ void player_update(Object *ship)
             bbox_from_frame(ship);
             goto after_hit;
         }
-        if (shield_timer == 0) {
+        if (xenon2.shield_timer == 0) {
             if (enemy->type == 0)
                 goto after_hit;
             ship->fn_draw = draw_bob_or_first;
             player_damage(ship, enemy->big ? 0x10 : 8);
-            if (player_dead)
+            if (xenon2.player_dead)
                 return;
         }
         if (enemy->type != 0x50 && enemy->type != 0x54)
             apply_damage(ship, enemy, 0x7f);
     }
 after_hit:
-    if (crush_timer != 0) {
-        if ((int16_t)crush_timer < 0) {
+    if (xenon2.crush_timer != 0) {
+        if ((int16_t)xenon2.crush_timer < 0) {
             if (!player_tile_hit(ship)) {
-                crush_timer = 0;
+                xenon2.crush_timer = 0;
                 goto move;
             }
-            if (crush_timer == 0xffef) {
+            if (xenon2.crush_timer == 0xffef) {
                 player_dies(ship);
                 return;
             }
         }
-        crush_timer--;
-        scroll_step = scroll_step_target;
-        y = (int16_t)(player_history[3] - scroll_pos);
-        ship->x = player_history[4];
-        y += player_history[5];
+        xenon2.crush_timer--;
+        xenon2.scroll_step = xenon2.scroll_step_target;
+        y = (int16_t)(xenon2.player_history[3] - xenon2.scroll_pos);
+        ship->x = xenon2.player_history[4];
+        y += xenon2.player_history[5];
         if (y > 0xb0) {
             y -= 0xb0;
-            scroll_step -= y;
+            xenon2.scroll_step -= y;
             y = 0xb0;
         }
         if (y < 0x10) {
             y -= 0x10;
-            scroll_step -= y;
+            xenon2.scroll_step -= y;
             y = 0x10;
         }
         ship->y = y;
         for (i = 0; i < 48; i++)
-            player_history[i] = player_history[i + 3];
-        if (crush_timer == 0)
-            crush_timer = 0xffff;
+            xenon2.player_history[i] = xenon2.player_history[i + 3];
+        if (xenon2.crush_timer == 0)
+            xenon2.crush_timer = 0xffff;
     } else {
 move:
         player_move(ship);
         for (i = 50; i >= 3; i--)
-            player_history[i] = player_history[i - 3];
-        player_history[0] = scroll_pos;
-        player_history[1] = ship->x;
-        player_history[2] = ship->y;
-        if (dive_phase == 0 && (int16_t)crush_timer >= 0 && player_tile_hit(ship)) {
-            crush_timer = crush_reload;
-            player_vx = 0;
-            limit = (int16_t)(scroll_pos + scroll_margin);
-            if (limit > (int16_t)scroll_max)
-                scroll_max = limit;
+            xenon2.player_history[i] = xenon2.player_history[i - 3];
+        xenon2.player_history[0] = xenon2.scroll_pos;
+        xenon2.player_history[1] = ship->x;
+        xenon2.player_history[2] = ship->y;
+        if (xenon2.dive_phase == 0 && (int16_t)xenon2.crush_timer >= 0 && player_tile_hit(ship)) {
+            xenon2.crush_timer = xenon2.crush_reload;
+            xenon2.player_vx = 0;
+            limit = (int16_t)(xenon2.scroll_pos + xenon2.scroll_margin);
+            if (limit > (int16_t)xenon2.scroll_max)
+                xenon2.scroll_max = limit;
         }
     }
     for (i = 0; i < 6; i++)
-        player_trail[i] = player_trail[i + 2];
-    player_trail[6] = player_x_prev;
-    player_trail[7] = player_y_prev;
-    if (dive_phase == 0) {
-        ship->gfx = (const void *)player_pictures[player_vx + 6];
+        xenon2.player_trail[i] = xenon2.player_trail[i + 2];
+    xenon2.player_trail[6] = xenon2.player_x_prev;
+    xenon2.player_trail[7] = xenon2.player_y_prev;
+    if (xenon2.dive_phase == 0) {
+        ship->gfx = (const void *)xenon2.player_pictures[xenon2.player_vx + 6];
         return;
     }
-    ship->gfx = (const void *)dive_pictures[dive_phase - 1];
+    ship->gfx = (const void *)xenon2.dive_pictures[xenon2.dive_phase - 1];
     ship->fn_draw = draw_bob_masked;
-    dive_phase += dive_step;
-    if (dive_phase == 0) {
-        dive_step = 0;
-        crush_timer = 0xfff1;
+    xenon2.dive_phase += xenon2.dive_step;
+    if (xenon2.dive_phase == 0) {
+        xenon2.dive_step = 0;
+        xenon2.crush_timer = 0xfff1;
         return;
     }
-    if (dive_phase == 4) {
-        if (dive_step == 0)
+    if (xenon2.dive_phase == 4) {
+        if (xenon2.dive_step == 0)
             ship->fn_draw = draw_bob_behind_map;
-        dive_step = 0;
+        xenon2.dive_step = 0;
     }
 }
 
@@ -1430,7 +1430,7 @@ void weapon_shield_draw(Object *obj)
     const uint8_t *g;
     int16_t cx, cy, dx, dy;
 
-    if (respawn_shield == 0x10) {
+    if (xenon2.respawn_shield == 0x10) {
         obj->fn_draw = obj_nop;
         return;
     }
@@ -1455,8 +1455,8 @@ void weapon_shield_draw(Object *obj)
     cy = (int16_t)(cy >> 1);
     dx = (int16_t)(dx - cx);
     dy = (int16_t)(dy - cy);
-    cx = (int16_t)(cx + (int16_t)((int32_t)dx * (int16_t)respawn_shield));
-    cy = (int16_t)(cy + (int16_t)((int32_t)dy * (int16_t)respawn_shield));
+    cx = (int16_t)(cx + (int16_t)((int32_t)dx * (int16_t)xenon2.respawn_shield));
+    cy = (int16_t)(cy + (int16_t)((int32_t)dy * (int16_t)xenon2.respawn_shield));
     obj->x = cx;
     obj->y = cy;
 }
@@ -1465,7 +1465,7 @@ void weapon_shield_draw(Object *obj)
  * one that is on the screen, groups ($B8) skipped, at most five passes over the list */
 static Object *pick_target(void)
 {
-    uint16_t n = target_count, pass;
+    uint16_t n = xenon2.target_count, pass;
     Object *enemy;
 
     if (n == 0)
@@ -1490,11 +1490,11 @@ void area_damage(Object *shooter, int16_t x0, int16_t y0, int16_t x1, int16_t y1
 {
     Object *enemy = LIST_HEAD(LIST_ENEMY);
 
-    area_damage_kept = dmg;
-    hit_box[0] = (uint16_t)x0;
-    hit_box[1] = (uint16_t)y0;
-    hit_box[2] = (uint16_t)x1;
-    hit_box[3] = (uint16_t)y1;
+    xenon2.area_damage_kept = dmg;
+    xenon2.hit_box[0] = (uint16_t)x0;
+    xenon2.hit_box[1] = (uint16_t)y0;
+    xenon2.hit_box[2] = (uint16_t)x1;
+    xenon2.hit_box[3] = (uint16_t)y1;
     for (;;) {
         Object *next_enemy;
 
@@ -1507,9 +1507,9 @@ void area_damage(Object *shooter, int16_t x0, int16_t y0, int16_t x1, int16_t y1
             return;
         }
         next_enemy = owner_chain_next(enemy);
-        apply_damage(shooter, enemy, area_damage_kept);
+        apply_damage(shooter, enemy, xenon2.area_damage_kept);
         enemy = next_enemy;
-        if (shooter->type == 4 || level_end_items != 0)
+        if (shooter->type == 4 || xenon2.level_end_items != 0)
             return;
     }
 }
@@ -1527,8 +1527,8 @@ void debris_burst(Object *obj, int16_t count, uint16_t x, uint16_t y, uint16_t w
         n->y = (int16_t)(random_below(h) + y);
         set_anim(n, anim);
     } while (--count != -1);
-    sfx_cmd = 0x83;
-    sfx_cmd2 = 0x83;
+    xenon2.sfx_cmd = 0x83;
+    xenon2.sfx_cmd2 = 0x83;
     sfx_play(0x83);
 }
 
@@ -1541,20 +1541,20 @@ void spawn_bonuses(int16_t count)
         n->type = 0x60;
         n->fn_update = FN(pickup_update);
         n->fn_draw = draw_bob_masked;
-        set_anim(n, anim_bonus_small);
+        set_anim(n, xenon2.anim_bonus_small);
         n->x = (int16_t)(random_below(0x12c) + 0xa);
         n->y = (int16_t)(random_below(0xb4) + 6);
         n->pickup.mode = 7;
-        level_end_items++;
+        xenon2.level_end_items++;
         n = alloc_b_front(0);
         n->type = 0x18;
         n->fn_update = FN(pickup_update);
         n->fn_draw = draw_bob_masked;
-        set_anim(n, anim_bonus_big);
+        set_anim(n, xenon2.anim_bonus_big);
         n->x = (int16_t)(random_below(0x12c) + 0xa);
         n->y = (int16_t)(random_below(0xb4) + 6);
         n->pickup.mode = 7;
-        level_end_items++;
+        xenon2.level_end_items++;
     } while (--count != -1);
 }
 
@@ -1564,14 +1564,14 @@ void spinner_update(Object *obj)
     anim_step(obj);
     obj->x = PLAYER->x;
     obj->y = PLAYER->y;
-    if (respawn_shield) {
+    if (xenon2.respawn_shield) {
         weapon_shield_draw(obj);
         return;
     }
     obj->fn_draw = draw_bob_masked;
-    shield_timer--;
-    draw_gauge(4, 0xa0, shield_timer, 0xaa);
-    if (shield_timer == 0)
+    xenon2.shield_timer--;
+    draw_gauge(4, 0xa0, xenon2.shield_timer, 0xaa);
+    if (xenon2.shield_timer == 0)
         kill_object(obj);
 }
 
@@ -1580,11 +1580,11 @@ void spinner_update(Object *obj)
  * the first enemy it meets and explodes when there is none or it leaves the screen */
 void drill_update(Object *obj)
 {
-    static const uint8_t *const heads[8] = { anim_drill_head_0, anim_drill_head_1, anim_drill_head_2, anim_drill_head_3, anim_drill_head_4, anim_drill_head_5, anim_drill_head_6, anim_drill_head_7 };
+    static const uint8_t *const heads[8] = { xenon2.anim_drill_head_0, xenon2.anim_drill_head_1, xenon2.anim_drill_head_2, xenon2.anim_drill_head_3, xenon2.anim_drill_head_4, xenon2.anim_drill_head_5, xenon2.anim_drill_head_6, xenon2.anim_drill_head_7 };
     Object *target;
     int16_t x, y, dx, dy, turn;
 
-    if (player_dead) {
+    if (xenon2.player_dead) {
         kill_object(obj);
         return;
     }
@@ -1606,7 +1606,7 @@ void drill_update(Object *obj)
 find:
     target = pick_target();
     if (target->type == 0) {
-        spawn_effect(obj->x, obj->y, anim_explosion, draw_bob_masked);
+        spawn_effect(obj->x, obj->y, xenon2.anim_explosion, draw_bob_masked);
         kill_object(obj);
         return;
     }
@@ -1632,13 +1632,13 @@ have:
         set_anim(obj, heads[obj->drill.dir]);
     }
 fly:
-    y = (int16_t)(drill_dy[obj->drill.dir] + obj->y);
+    y = (int16_t)(xenon2.drill_dy[obj->drill.dir] + obj->y);
     if ((uint16_t)y >= 0xc0) {
         kill_object(obj);
         return;
     }
     obj->y = y;
-    x = (int16_t)(drill_dx[obj->drill.dir] + obj->x);
+    x = (int16_t)(xenon2.drill_dx[obj->drill.dir] + obj->x);
     if ((uint16_t)x >= 0x140) {
         kill_object(obj);
         return;
@@ -1648,7 +1648,7 @@ test:
     target = point_in_enemy(x, y);
     if (target) {
         kill_object(obj);
-        apply_damage(obj, target, weapon_damage[0]);
+        apply_damage(obj, target, xenon2.weapon_damage[0]);
     }
 }
 
@@ -1657,14 +1657,14 @@ void weaponc0_update(Object *obj)
 {
     obj->x = PLAYER->x;
     obj->y = PLAYER->y;
-    if (respawn_shield) {
+    if (xenon2.respawn_shield) {
         weapon_shield_draw(obj);
         return;
     }
     obj->fn_draw = draw_bob_masked;
-    if (fire_press) {
-        spawn_shot_object(obj, 0, (uint16_t)-9, (uint16_t)-5, (uint16_t)-12, (void *const *)&player_shot_pictures[3]);
-        spawn_shot_object(obj, 0, (uint16_t)-9, 6, (uint16_t)-12, (void *const *)&player_shot_pictures[3]);
+    if (xenon2.fire_press) {
+        spawn_shot_object(obj, 0, (uint16_t)-9, (uint16_t)-5, (uint16_t)-12, (void *const *)&xenon2.player_shot_pictures[3]);
+        spawn_shot_object(obj, 0, (uint16_t)-9, 6, (uint16_t)-12, (void *const *)&xenon2.player_shot_pictures[3]);
     }
 }
 
@@ -1676,20 +1676,20 @@ void weaponb0_update(Object *obj)
     anim_step(obj);
     obj->x = PLAYER->x;
     obj->y = PLAYER->y;
-    if (respawn_shield) {
+    if (xenon2.respawn_shield) {
         weapon_shield_draw(obj);
         return;
     }
     obj->fn_draw = draw_bob_masked;
-    if (!(joy_stick & 0x80)) {
+    if (!(xenon2.joy_stick & 0x80)) {
         if (obj->wb0.tick != 0) {
             sfx_stop_all();
             obj->wb0.tick = 0;
         }
         return;
     }
-    if (obj->wb0.tick == 0 || sfx_channels[2].active == 0) {
-        sfx_cmd = 1;
+    if (obj->wb0.tick == 0 || xenon2.sfx_channels[2].active == 0) {
+        xenon2.sfx_cmd = 1;
         obj->wb0.tick = 1;
     }
     for (i = 1; i >= 0; i--) {
@@ -1705,7 +1705,7 @@ void weaponb0_update(Object *obj)
         if (i == 0)
             y = (int16_t)(y - 6);
         shot->y = y;
-        set_anim(shot, anim_weaponb0_shot);
+        set_anim(shot, xenon2.anim_weaponb0_shot);
         shot->score = obj->score;
         shot->shot.hits = i;
         shot->shot.speed_hi = (int8_t)random_next();
@@ -1722,7 +1722,7 @@ void pod_decoration_update(Object *obj)
     if (pod->type == 0x34) {
         obj->x = (int16_t)(PLAYER->x + pod->weapon.dx);
         obj->y = (int16_t)(PLAYER->y + pod->weapon.dy);
-        if (respawn_shield) {
+        if (xenon2.respawn_shield) {
             weapon_shield_draw(obj);
             return;
         }
@@ -1736,27 +1736,27 @@ void pod_decoration_update(Object *obj)
  * the free places of the shots' table */
 void weapon2c_update(Object *obj)
 {
-    static const int16_t *const pat[3] = { &weapon2c_patterns[0], &weapon2c_patterns[17], &weapon2c_patterns[50] };
+    static const int16_t *const pat[3] = { &xenon2.weapon2c_patterns[0], &xenon2.weapon2c_patterns[17], &xenon2.weapon2c_patterns[50] };
     const int16_t *pattern;
     Shot *shot;
     int16_t remaining, i;
 
     anim_step(obj);
-    obj->x = (int16_t)player_trail[0];
-    obj->y = (int16_t)(player_trail[1] + 0x19);
-    if (respawn_shield) {
+    obj->x = (int16_t)xenon2.player_trail[0];
+    obj->y = (int16_t)(xenon2.player_trail[1] + 0x19);
+    if (xenon2.respawn_shield) {
         weapon_shield_draw(obj);
         return;
     }
     obj->fn_draw = draw_bob_masked;
     if (obj->w2c.tick)
         obj->w2c.tick--;
-    if (!(joy_stick & 0x80) || obj->w2c.tick != 0)
+    if (!(xenon2.joy_stick & 0x80) || obj->w2c.tick != 0)
         return;
     obj->w2c.tick = 6;
     pattern = pat[(uint16_t)obj->score];
     remaining = *pattern++;
-    shot = shots;
+    shot = xenon2.shots;
     for (i = 0x4f; i >= 0; i--, shot++) {
         if (shot->x >= 0)
             continue;
@@ -1779,57 +1779,57 @@ void weapon4c_update(Object *obj)
     Object *enemy;
 
     anim_step(obj);
-    if (respawn_shield) {
+    if (xenon2.respawn_shield) {
         weapon_shield_draw(obj);
         return;
     }
     obj->fn_draw = draw_bob_masked;
     if (obj->shot.phase == 0) {
-        if (!(joy_stick & 0x80)) {
-            obj->x = (int16_t)player_trail[0];
-            obj->y = (int16_t)(player_trail[1] + 0x19);
+        if (!(xenon2.joy_stick & 0x80)) {
+            obj->x = (int16_t)xenon2.player_trail[0];
+            obj->y = (int16_t)(xenon2.player_trail[1] + 0x19);
             return;
         }
         obj->shot.phase = 1;
     } else if (obj->shot.phase > 0) {
-        if (!(joy_stick & 0x80)) {
+        if (!(xenon2.joy_stick & 0x80)) {
             obj->shot.phase = -1;
             return;
         }
-        coord = (int16_t)(((PLAYER->x - player_x_prev) * 4) + obj->x);
+        coord = (int16_t)(((PLAYER->x - xenon2.player_x_prev) * 4) + obj->x);
         if (coord < 0)
             coord = 0;
         if (coord > 0x13f)
             coord = 0x13f;
         obj->x = coord;
-        coord = (int16_t)(((PLAYER->y - player_y_prev) * 4) + obj->y);
+        coord = (int16_t)(((PLAYER->y - xenon2.player_y_prev) * 4) + obj->y);
         if (coord < 0)
             coord = 0;
         if (coord > 0xbf)
             coord = 0xbf;
         obj->y = coord;
     } else {
-        step = (int16_t)(player_trail[0] - obj->x);
+        step = (int16_t)(xenon2.player_trail[0] - obj->x);
         if (step > 8)
             step = 8;
         if (step < -8)
             step = -8;
         obj->x = (int16_t)(obj->x + step);
-        step = (int16_t)(player_trail[1] + 0x19 - obj->y);
+        step = (int16_t)(xenon2.player_trail[1] + 0x19 - obj->y);
         if (step > 8)
             step = 8;
         if (step < -8)
             step = -8;
         obj->y = (int16_t)(obj->y + step);
-        if ((int16_t)player_trail[0] == obj->x && (int16_t)(player_trail[1] + 0x19) == obj->y)
+        if ((int16_t)xenon2.player_trail[0] == obj->x && (int16_t)(xenon2.player_trail[1] + 0x19) == obj->y)
             obj->shot.phase = 0;
         return;
     }
     bbox_from_frame(obj);
     enemy = collide_enemies(obj);
     if (enemy) {
-        sfx_cmd = 0x15;
-        apply_damage(obj, enemy, weapon_damage[1]);
+        xenon2.sfx_cmd = 0x15;
+        apply_damage(obj, enemy, xenon2.weapon_damage[1]);
     }
 }
 
@@ -1841,15 +1841,15 @@ void weapon20_update(Object *obj)
     anim_step(obj);
     obj->x = (int16_t)(PLAYER->x + obj->weapon.dx);
     obj->y = (int16_t)(PLAYER->y + obj->weapon.dy);
-    if (respawn_shield) {
+    if (xenon2.respawn_shield) {
         weapon_shield_draw(obj);
         return;
     }
     obj->fn_draw = draw_bob_masked;
     if (V5E(obj) >= 0)
         SET_V5E(obj, V5E(obj) - 1);
-    if (fire_press && V5E(obj) < 0) {
-        sfx_cmd = 6;
+    if (xenon2.fire_press && V5E(obj) < 0) {
+        xenon2.sfx_cmd = 6;
         beam = alloc_b(obj);
         beam->type = 0x24;
         beam->fn_draw = FN(beam_draw);
@@ -1868,7 +1868,7 @@ void beam_update(Object *obj)
     int16_t x0, y0, x1, y1;
     uint16_t damage;
 
-    if (player_dead) {
+    if (xenon2.player_dead) {
         kill_object(obj);
         return;
     }
@@ -1902,7 +1902,7 @@ hurt:
         return;
     if (y0 < 0)
         y0 = 0;
-    damage = (uint16_t)((uint16_t)(obj->score + 1) * blast_damage[0]);
+    damage = (uint16_t)((uint16_t)(obj->score + 1) * xenon2.blast_damage[0]);
     area_damage(obj, x0, y0, x1, y1, damage);
 }
 
@@ -1915,25 +1915,25 @@ void weapon34_update(Object *obj)
     anim_step(obj);
     obj->x = (int16_t)(PLAYER->x + obj->weapon.dx);
     obj->y = (int16_t)(PLAYER->y + obj->weapon.dy);
-    if (respawn_shield) {
+    if (xenon2.respawn_shield) {
         weapon_shield_draw(obj);
         return;
     }
     obj->fn_draw = draw_bob_masked;
-    if (obj->gfx == (const void *)pic_weapon34_idle) {
+    if (obj->gfx == (const void *)xenon2.pic_weapon34_idle) {
         trail = alloc_b(obj);
         trail->type = 0x30;
         trail->fn_draw = draw_bob_masked;
         trail->fn_update = FN(pod_trail_update);
-        set_anim(trail, anim_pod_trail);
+        set_anim(trail, xenon2.anim_pod_trail);
         trail->x = obj->x;
         trail->y = (int16_t)(obj->y - 0xb);
         trail->pod_trail.tick = 0;
         return;
     }
-    if (fire_press && obj->gfx == (const void *)pic_weapon34_fire) {
-        sfx_cmd = 0x80;
-        set_anim(obj, anim_weapon34_fire);
+    if (xenon2.fire_press && obj->gfx == (const void *)xenon2.pic_weapon34_fire) {
+        xenon2.sfx_cmd = 0x80;
+        set_anim(obj, xenon2.anim_weapon34_fire);
     }
 }
 
@@ -1942,7 +1942,7 @@ void pod_trail_update(Object *obj)
 {
     Object *enemy;
 
-    if (player_dead) {
+    if (xenon2.player_dead) {
         kill_object(obj);
         return;
     }
@@ -1955,7 +1955,7 @@ void pod_trail_update(Object *obj)
     bbox_from_frame(obj);
     enemy = collide_enemies(obj);
     if (enemy)
-        apply_damage(obj, enemy, weapon_damage[2]);
+        apply_damage(obj, enemy, xenon2.weapon_damage[2]);
 }
 
 /* orig $00415A: update of weapon $90 (side slot, twin gun): with the picture $1838C it fires two shots (type $10); with $182DC
@@ -1967,12 +1967,12 @@ void weapon90_update(Object *obj)
     anim_step(obj);
     obj->x = (int16_t)(PLAYER->x + obj->weapon.dx);
     obj->y = (int16_t)(PLAYER->y + obj->weapon.dy);
-    if (respawn_shield) {
+    if (xenon2.respawn_shield) {
         weapon_shield_draw(obj);
         return;
     }
     obj->fn_draw = draw_bob_masked;
-    if (obj->gfx == (const void *)pic_weapon90_twin) {
+    if (obj->gfx == (const void *)xenon2.pic_weapon90_twin) {
         dx = -3;
         for (i = 1; i >= 0; i--) {
             Object *shot = alloc_b(obj);
@@ -1985,13 +1985,13 @@ void weapon90_update(Object *obj)
             shot->type = 0x10;
             shot->fn_update = FN(shot_update);
             shot->fn_draw = draw_bob_masked;
-            set_anim(shot, anim_drill_head_0);
+            set_anim(shot, xenon2.anim_drill_head_0);
             shot->score = obj->score;
             dx = 5;
         }
         return;
     }
-    if (fire_press && obj->gfx == (const void *)pic_weapon90_idle)
+    if (xenon2.fire_press && obj->gfx == (const void *)xenon2.pic_weapon90_idle)
         obj->anim_delay = 1;
 }
 
@@ -2000,7 +2000,7 @@ void weapon90_update(Object *obj)
  * what is near */
 void shell_update(Object *obj)
 {
-    if (player_dead) {
+    if (xenon2.player_dead) {
         kill_object(obj);
         return;
     }
@@ -2017,10 +2017,10 @@ void shell_update(Object *obj)
     obj->shell.phase--;
     if (obj->shell.phase != 0)
         return;
-    sfx_cmd = 0x82;
-    debris_burst(obj, 3, (uint16_t)(obj->x - 0x14), (uint16_t)(obj->y - 0x14), 0x28, 0x28, anim_explosion_big);
+    xenon2.sfx_cmd = 0x82;
+    debris_burst(obj, 3, (uint16_t)(obj->x - 0x14), (uint16_t)(obj->y - 0x14), 0x28, 0x28, xenon2.anim_explosion_big);
     kill_object(obj);
-    area_damage(obj, (int16_t)(obj->x - 0x20), (int16_t)(obj->y - 0x20), (int16_t)(obj->x - 0x20 + 0x3f), (int16_t)(obj->y - 0x20 + 0x3f), blast_damage[1]);
+    area_damage(obj, (int16_t)(obj->x - 0x20), (int16_t)(obj->y - 0x20), (int16_t)(obj->x - 0x20 + 0x3f), (int16_t)(obj->y - 0x20 + 0x3f), xenon2.blast_damage[1]);
 }
 
 
@@ -2037,11 +2037,11 @@ void weapon38_update(Object *obj)
         uint16_t w, h;
         const uint8_t *explosion;
 
-        if (player_dead) {
+        if (xenon2.player_dead) {
             kill_object(obj);
             return;
         }
-        if (joy_stick & 0x80)
+        if (xenon2.joy_stick & 0x80)
             return;
         obj->shot.phase++;
         if (obj->shot.phase != 0)
@@ -2049,27 +2049,27 @@ void weapon38_update(Object *obj)
         left = (int16_t)(obj->x - 8);
         top = (int16_t)(obj->y - 8);
         w = h = 0x10;
-        explosion = anim_explosion;
+        explosion = xenon2.anim_explosion;
         if (obj->score != 0) {
             left = (int16_t)(left - 0xa);
             top = (int16_t)(top - 0xa);
             w = h = 0x14;
-            explosion = anim_explosion_big;
+            explosion = xenon2.anim_explosion_big;
         }
         debris_burst(obj, 2, (uint16_t)left, (uint16_t)top, w, h, explosion);
         if (obj->score == 0) {
             left = (int16_t)(obj->x - 0x10);
             top = (int16_t)(obj->y - 0x10);
-            area_damage(obj, left, top, (int16_t)(left + 0x20), (int16_t)(top + 0x20), (uint16_t)(blast_damage[2]));
+            area_damage(obj, left, top, (int16_t)(left + 0x20), (int16_t)(top + 0x20), (uint16_t)(xenon2.blast_damage[2]));
         } else {
             left = (int16_t)(obj->x - 0x18);
             top = (int16_t)(obj->y - 0x18);
-            area_damage(obj, left, top, (int16_t)(left + 0x2f), (int16_t)(top + 0x2f), (uint16_t)(obj->score * 2 + blast_damage[2]));
+            area_damage(obj, left, top, (int16_t)(left + 0x2f), (int16_t)(top + 0x2f), (uint16_t)(obj->score * 2 + xenon2.blast_damage[2]));
         }
         kill_object(obj);
         return;
     }
-    if (respawn_shield) {
+    if (xenon2.respawn_shield) {
         weapon_shield_draw(obj);
         return;
     }
@@ -2077,12 +2077,12 @@ void weapon38_update(Object *obj)
     if (obj->shot.phase == 0) {
         obj->x = PLAYER->x;
         obj->y = (int16_t)(PLAYER->y + 0x19);
-        if (joy_stick & 0x80)
+        if (xenon2.joy_stick & 0x80)
             obj->shot.phase = 1;
         return;
     }
     if (obj->shot.phase == 1) {
-        if (joy_stick & 0x80) {
+        if (xenon2.joy_stick & 0x80) {
             if (obj->y > 0x10)
                 obj->y = (int16_t)(obj->y - 0xc);
             else
@@ -2093,48 +2093,48 @@ void weapon38_update(Object *obj)
         return;
     }
     if (obj->shot.phase == 2) {
-        if (!(joy_stick & 0x80)) {
+        if (!(xenon2.joy_stick & 0x80)) {
             obj->shot.phase = 3;
             return;
         }
         x = obj->x;
-        if (joy_stick & 4) {
+        if (xenon2.joy_stick & 4) {
             x = (int16_t)(x - 8);
             if (x < 0)
                 x = 0;
         }
-        if (joy_stick & 8) {
+        if (xenon2.joy_stick & 8) {
             x = (int16_t)(x + 8);
             if (x > 0x13f)
                 x = 0x13f;
         }
         obj->x = x;
         y = obj->y;
-        if (joy_stick & 1) {
+        if (xenon2.joy_stick & 1) {
             y = (int16_t)(y - 8);
             if (y < 0)
                 y = 0;
         }
-        if (joy_stick & 2) {
+        if (xenon2.joy_stick & 2) {
             y = (int16_t)(y + 8);
             if (y > 0xbf)
                 y = 0xbf;
         }
         obj->y = y;
-        if (trail_count == 10)
+        if (xenon2.trail_count == 10)
             return;
-        dist = (int16_t)(trail_x - obj->x);
+        dist = (int16_t)(xenon2.trail_x - obj->x);
         if (dist < 0)
             dist = (int16_t)-dist;
         if (dist < 0x20) {
-            dist = (int16_t)(trail_y - obj->y);
+            dist = (int16_t)(xenon2.trail_y - obj->y);
             if (dist < 0)
                 dist = (int16_t)-dist;
             if (dist < 0x20)
                 return;
         }
-        trail_x = obj->x;
-        trail_y = obj->y;
+        xenon2.trail_x = obj->x;
+        xenon2.trail_y = obj->y;
         {
             Object *trail = alloc_b(obj);
 
@@ -2145,8 +2145,8 @@ void weapon38_update(Object *obj)
             trail->x = obj->x;
             trail->y = obj->y;
             trail->score = obj->score;
-            trail_count++;
-            trail->shot.phase = (int16_t)(-(int16_t)(trail_count * 4));
+            xenon2.trail_count++;
+            trail->shot.phase = (int16_t)(-(int16_t)(xenon2.trail_count * 4));
         }
         return;
     }
@@ -2179,35 +2179,35 @@ void beam_draw(Object *obj)
     uint16_t cnt;
     int lt, i;
 
-    beam_state[0] = (uint16_t)x;
-    beam_state[1] = (uint16_t)y;
-    beam_state[3] = level;
-    beam_state[2] = (uint16_t)obj->beam.growth;
+    xenon2.beam_state[0] = (uint16_t)x;
+    xenon2.beam_state[1] = (uint16_t)y;
+    xenon2.beam_state[3] = level;
+    xenon2.beam_state[2] = (uint16_t)obj->beam.growth;
     if (x <= -16 || x >= 0x140)
         return;
-    if ((int16_t)beam_state[2] >= 0x41) {
-        draw_bob_masked_at((uint16_t)x, (uint16_t)(y + 1), beam_heads[level]);
-        x = (int16_t)beam_state[0];
-        y = (int16_t)beam_state[1];
+    if ((int16_t)xenon2.beam_state[2] >= 0x41) {
+        draw_bob_masked_at((uint16_t)x, (uint16_t)(y + 1), xenon2.beam_heads[level]);
+        x = (int16_t)xenon2.beam_state[0];
+        y = (int16_t)xenon2.beam_state[1];
     }
-    y = (int16_t)(y - (int16_t)beam_state[2]);
-    draw_bob_masked_at((uint16_t)x, (uint16_t)y, beam_bodies[beam_state[3]]);
-    x = (int16_t)beam_state[0];
-    y = (int16_t)beam_state[1];
+    y = (int16_t)(y - (int16_t)xenon2.beam_state[2]);
+    draw_bob_masked_at((uint16_t)x, (uint16_t)y, xenon2.beam_bodies[xenon2.beam_state[3]]);
+    x = (int16_t)xenon2.beam_state[0];
+    y = (int16_t)xenon2.beam_state[1];
     if (y < 0)
         return;
-    dst = draw_screen + (int16_t)row_offset[(uint16_t)y];
+    dst = xenon2.draw_screen + (int16_t)xenon2.row_offset[(uint16_t)y];
     {
-        const uint32_t *pattern = &beam_pattern[beam_state[3] * 5];
+        const uint32_t *pattern = &xenon2.beam_pattern[xenon2.beam_state[3] * 5];
         uint16_t shift = (uint16_t)x & 0xf;
 
         for (i = 0; i < 5; i++)
             rot[i] = shift ? (pattern[i] >> shift) | (pattern[i] << (32 - shift)) : pattern[i];
     }
     dst += (int16_t)((uint16_t)((int16_t)x >> 3) & 0xfffe);
-    cnt = beam_state[2];
+    cnt = xenon2.beam_state[2];
     lt = 0;
-    if ((int16_t)beam_state[0] < 0) {
+    if ((int16_t)xenon2.beam_state[0] < 0) {
         dst += 2;
         while (!lt) {
             if (--cnt == 0xffff)
@@ -2217,9 +2217,9 @@ void beam_draw(Object *obj)
                 wr16(plane, (uint16_t)((rd16(plane) & (uint16_t)rot[0]) | (uint16_t)rot[1 + i]));
             }
             dst -= 0xa0;
-            lt = (int32_t)ADDR(dst) < (int32_t)ADDR(draw_screen);
+            lt = (int32_t)ADDR(dst) < (int32_t)ADDR(xenon2.draw_screen);
         }
-    } else if ((int16_t)beam_state[0] > 0x130) {
+    } else if ((int16_t)xenon2.beam_state[0] > 0x130) {
         while (!lt) {
             if (--cnt == 0xffff)
                 break;
@@ -2228,7 +2228,7 @@ void beam_draw(Object *obj)
                 wr16(plane, (uint16_t)((rd16(plane) & (uint16_t)(rot[0] >> 16)) | (uint16_t)(rot[1 + i] >> 16)));
             }
             dst -= 0xa0;
-            lt = (int32_t)ADDR(dst) < (int32_t)ADDR(draw_screen);
+            lt = (int32_t)ADDR(dst) < (int32_t)ADDR(xenon2.draw_screen);
         }
     } else {
         while (!lt) {
@@ -2240,7 +2240,7 @@ void beam_draw(Object *obj)
                 wr16(plane + 2, (uint16_t)((rd16(plane + 2) & (uint16_t)rot[0]) | (uint16_t)rot[1 + i]));
             }
             dst -= 0xa0;
-            lt = (int32_t)ADDR(dst) < (int32_t)ADDR(draw_screen);
+            lt = (int32_t)ADDR(dst) < (int32_t)ADDR(xenon2.draw_screen);
         }
     }
 }

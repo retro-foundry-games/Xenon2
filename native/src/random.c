@@ -4,7 +4,7 @@
  * the new random_state_a is the result. */
 uint32_t random_next(void)
 {
-    uint32_t a = random_state_a, b = random_state_b;
+    uint32_t a = xenon2.random_state_a, b = xenon2.random_state_b;
     uint32_t sum, carry, saved;
 
     sum = (a & 0xffff) + (a & 0xffff);                       /* add.w a,a */
@@ -23,8 +23,8 @@ uint32_t random_next(void)
     b = (b & 0xffff0000u) | saved;                              /* move.w saved,b */
     a = (a << 16) | (a >> 16);
     b = (b << 16) | (b >> 16);
-    random_state_a = a;
-    random_state_b = b;
+    xenon2.random_state_a = a;
+    xenon2.random_state_b = b;
     return a;
 }
 

@@ -26,8 +26,8 @@ static void set_palette(const uint16_t *src)
     for (i = 0; i < 16; i += 2) {
         uint32_t v = ((uint32_t)src[i] << 16) | src[i + 1];
 
-        palette_shadow[i] = src[i];
-        palette_shadow[i + 1] = src[i + 1];
+        xenon2.palette_shadow[i] = src[i];
+        xenon2.palette_shadow[i + 1] = src[i + 1];
         v += v;
         custom->color[i] = (uint16_t)(v >> 16);
         custom->color[i + 1] = (uint16_t)v;
@@ -37,7 +37,7 @@ static void set_palette(const uint16_t *src)
 /* orig $007EB6: clears the screen being drawn into (32000 bytes) */
 void clear_screen(void)
 {
-    uint32_t *p = (uint32_t *)(draw_screen + 0x7d00);
+    uint32_t *p = (uint32_t *)(xenon2.draw_screen + 0x7d00);
     int i;
 
     for (i = 0; i < 8000; i++)
@@ -64,10 +64,10 @@ void draw_text_row_at(uint8_t *dst, const uint8_t *s, uint16_t count)
     uint16_t n = count;
 
     do {
-        int32_t idx = find_glyph(*s++, title_font_chars);
+        int32_t idx = find_glyph(*s++, xenon2.title_font_chars);
 
         if (idx >= 0) {
-            const uint16_t *g = title_font + ((uint16_t)idx * 0xb0u) / 2;
+            const uint16_t *g = xenon2.title_font + ((uint16_t)idx * 0xb0u) / 2;
             int row;
 
             for (row = 0; row < 22; row++) {
@@ -86,9 +86,9 @@ void draw_text_row_at(uint8_t *dst, const uint8_t *s, uint16_t count)
 /* orig $007F12: a line of text (20 characters) in the row title_y - 8 */
 void draw_text_row(const uint8_t *s)
 {
-    uint16_t row_y = (uint16_t)(title_y - 8);
+    uint16_t row_y = (uint16_t)(xenon2.title_y - 8);
 
-    draw_text_row_at(draw_screen + (int16_t)(uint16_t)(row_y * 0xa0u), s, 0x13);
+    draw_text_row_at(xenon2.draw_screen + (int16_t)(uint16_t)(row_y * 0xa0u), s, 0x13);
 }
 
 /* orig $007F64: a line of text squeezed by the step title_scale: the columns of each character the mask keeps are compacted,
@@ -100,27 +100,27 @@ void draw_text_squeezed(const uint8_t *s)
     const uint16_t *mask;
     int n;
 
-    if ((int16_t)title_scale >= 0x10) {
+    if ((int16_t)xenon2.title_scale >= 0x10) {
         draw_text_row(s);
         return;
     }
-    out = draw_screen;
+    out = xenon2.draw_screen;
     end = out + 0x7d00;
-    col = title_scale;
-    offset = (uint16_t)(((uint16_t)(title_y + title_y) - col) >> 1);
+    col = xenon2.title_scale;
+    offset = (uint16_t)(((uint16_t)(xenon2.title_y + xenon2.title_y) - col) >> 1);
     out += (int16_t)(uint16_t)(offset * 0xa0u);
     offset = (uint16_t)(0xa0 - (uint16_t)((uint32_t)col * 10));
     col = offset & 0xf;
     offset = (uint16_t)((offset - col) >> 3);
     out += (int16_t)offset;
-    mask = &squeeze_masks[(int16_t)title_scale];
+    mask = &xenon2.squeeze_masks[(int16_t)xenon2.title_scale];
 
     for (n = 0; n < 20; n++) {
-        int32_t idx = find_glyph(*s++, title_font_chars);
+        int32_t idx = find_glyph(*s++, xenon2.title_font_chars);
 
         if (idx >= 0) {
             uint8_t *keep = out;
-            const uint16_t *g = title_font + ((uint16_t)idx * 0xb0u) / 2;
+            const uint16_t *g = xenon2.title_font + ((uint16_t)idx * 0xb0u) / 2;
             uint16_t row_mask = *mask;
             uint16_t rows = 0x15;
 
@@ -150,7 +150,7 @@ void draw_text_squeezed(const uint8_t *s)
                             plane4 = (plane4 & 0xffff0000u) | (uint16_t)(plane4 << 1);
                         }
                     }
-                    shift = (int16_t)(0x10 - col - title_scale);
+                    shift = (int16_t)(0x10 - col - xenon2.title_scale);
                     if (shift >= 0) {
                         SETW(out, 0x28, WORD(out, 0x28) | (uint16_t)((plane2 >> 16) << shift));
                         SETW(out, 0x50, WORD(out, 0x50) | (uint16_t)((plane3 >> 16) << shift));
@@ -182,7 +182,7 @@ void draw_text_squeezed(const uint8_t *s)
             }
             out = keep;
         }
-        col = (uint16_t)(col + title_scale);
+        col = (uint16_t)(col + xenon2.title_scale);
         if ((int16_t)col >= 0x10) {
             out += 2;
             col = (uint16_t)(col - 0x10);
@@ -197,7 +197,7 @@ void stars_update(void)
     int i;
 
     for (i = 0; i < 48; i++) {
-        struct Star *s = &stars[i];
+        struct Star *s = &xenon2.stars[i];
         int32_t x = s->x, y = s->y;
         int16_t z = (int16_t)(((uint16_t)s->z & 0x7fff) - 0x200);
         uint16_t px, py, mask, color;
@@ -228,7 +228,7 @@ void stars_update(void)
         }
         goto again;
     plot:
-        dst = draw_screen + (int16_t)(uint16_t)(py * 0xa0u);
+        dst = xenon2.draw_screen + (int16_t)(uint16_t)(py * 0xa0u);
         pixel = px & 0xf;
         dst += (int16_t)(uint16_t)((px - pixel) >> 3);
         mask = (uint16_t)(0x8000 >> pixel);
@@ -236,7 +236,7 @@ void stars_update(void)
             s->z |= (int16_t)0x8000;
             continue;
         }
-        color = star_colors[(((uint16_t)z << 6) | ((uint16_t)z >> 10)) & 7];
+        color = xenon2.star_colors[(((uint16_t)z << 6) | ((uint16_t)z >> 10)) & 7];
         if (color & 1) SETW(dst, 0, WORD(dst, 0) | mask);
         if (color & 2) SETW(dst, 0x28, WORD(dst, 0x28) | mask);
         if (color & 4) SETW(dst, 0x50, WORD(dst, 0x50) | mask);
@@ -250,7 +250,7 @@ void stars_erase(void)
     int i;
 
     for (i = 0; i < 48; i++) {
-        struct Star *s = &stars[i];
+        struct Star *s = &xenon2.stars[i];
         uint16_t px, py, byte_off;
         uint8_t *dst;
         int pixel;
@@ -260,7 +260,7 @@ void stars_erase(void)
             continue;
         px = (uint16_t)(divs_low((int32_t)((uint32_t)(int32_t)s->x << 4), s->z) + 0xa0);
         py = (uint16_t)(divs_low((int32_t)((uint32_t)(int32_t)s->y << 4), s->z) + 0x64);
-        dst = draw_screen + (int16_t)(uint16_t)(py * 0xa0u);
+        dst = xenon2.draw_screen + (int16_t)(uint16_t)(py * 0xa0u);
         pixel = px & 0xf;
         byte_off = (uint16_t)((px - pixel) >> 3);
         dst += (int16_t)byte_off;
@@ -279,12 +279,12 @@ void stars_erase(void)
 void draw_logo_scaled(const uint16_t *gfx, int16_t x, int16_t y, int16_t width, int16_t rows)
 {
     const uint16_t *src = gfx;
-    uint8_t *dst = draw_screen;
-    uint16_t px = (uint16_t)((int16_t)(uint16_t)(int32_t)((int32_t)x * (int16_t)title_scale) >> 4) + 0xa0;
-    uint16_t py = (uint16_t)((int16_t)(uint16_t)(int32_t)((int32_t)y * (int16_t)title_scale) >> 4) + 0x64;
+    uint8_t *dst = xenon2.draw_screen;
+    uint16_t px = (uint16_t)((int16_t)(uint16_t)(int32_t)((int32_t)x * (int16_t)xenon2.title_scale) >> 4) + 0xa0;
+    uint16_t py = (uint16_t)((int16_t)(uint16_t)(int32_t)((int32_t)y * (int16_t)xenon2.title_scale) >> 4) + 0x64;
     uint16_t shift = px & 0xf;
     uint16_t cnt = (uint16_t)rows;
-    uint16_t mask = squeeze_masks[(int16_t)title_scale];
+    uint16_t mask = xenon2.squeeze_masks[(int16_t)xenon2.title_scale];
     uint16_t rowpat = mask, colpat = mask;
     uint32_t marker;
 
@@ -361,14 +361,14 @@ void draw_logo_scaled(const uint16_t *gfx, int16_t x, int16_t y, int16_t width, 
 /* orig $0081EA: the text squeezes back out (scale 16 down to 1) over the logo and stars until a key ends it */
 void title_fade_out(void)
 {
-    title_scale = 0x10;
-    while (!key_pressed) {
+    xenon2.title_scale = 0x10;
+    while (!xenon2.key_pressed) {
         clear_screen();
-        draw_logo_scaled(title_gfx, -0x70, -0x50, 0xcf, 0x35);
+        draw_logo_scaled(xenon2.title_gfx, -0x70, -0x50, 0xcf, 0x35);
         stars_update();
         swap_screens_200();
-        title_scale--;
-        if (title_scale == 0)
+        xenon2.title_scale--;
+        if (xenon2.title_scale == 0)
             break;
     }
 }
@@ -378,23 +378,23 @@ void title_fade_in(void)
 {
     uint16_t n = 0x22;
 
-    title_scale = 1;
+    xenon2.title_scale = 1;
     do {
         clear_screen();
         stars_update();
         swap_screens_200();
-        if (key_pressed)
+        if (xenon2.key_pressed)
             break;
     } while (--n != 0);
     for (;;) {
-        if (key_pressed)
+        if (xenon2.key_pressed)
             return;
         clear_screen();
-        draw_logo_scaled(title_gfx, -0x70, -0x50, 0xcf, 0x35);
+        draw_logo_scaled(xenon2.title_gfx, -0x70, -0x50, 0xcf, 0x35);
         stars_update();
         swap_screens_200();
-        title_scale++;
-        if ((int16_t)title_scale >= 0x10)
+        xenon2.title_scale++;
+        if ((int16_t)xenon2.title_scale >= 0x10)
             return;
     }
 }
@@ -403,11 +403,11 @@ void title_fade_in(void)
 void title_draw_logo(void)
 {
     uint8_t *dst;
-    const uint16_t *g = title_gfx;
+    const uint16_t *g = xenon2.title_gfx;
     int row, k;
 
     clear_screen();
-    dst = draw_screen + 0xc86;
+    dst = xenon2.draw_screen + 0xc86;
     for (row = 0; row < 54; row++) {
         for (k = 0; k < 13; k++) {
             SETW(dst, 2 * k, *g++);
@@ -422,35 +422,35 @@ void title_draw_logo(void)
 /* orig $0084AE: plays a table of squeeze steps over the text with stars and the title palette until a negative step */
 void show_text_sequence(uint16_t row, const uint8_t *text, const uint16_t *steps)
 {
-    title_rows = row;
-    title_steps_ptr = (uint16_t *)steps;
-    title_text = text;
-    title_index = 0;
+    xenon2.title_rows = row;
+    xenon2.title_steps_ptr = (uint16_t *)steps;
+    xenon2.title_text = text;
+    xenon2.title_index = 0;
     for (;;) {
         uint16_t off;
 
         clear_screen();
-        off = title_index;
-        steps = title_steps_ptr;
-        if (text_wait_key && steps[off / 2] == 0x11) {
-            if (key_pressed == 0)
+        off = xenon2.title_index;
+        steps = xenon2.title_steps_ptr;
+        if (xenon2.text_wait_key && steps[off / 2] == 0x11) {
+            if (xenon2.key_pressed == 0)
                 goto no_advance;
-            key_pressed = 0;
+            xenon2.key_pressed = 0;
         }
-        title_index += 2;
+        xenon2.title_index += 2;
     no_advance:
-        title_scale = steps[off / 2];
-        if ((int16_t)title_scale < 0)
+        xenon2.title_scale = steps[off / 2];
+        if ((int16_t)xenon2.title_scale < 0)
             return;
-        if (title_scale != 0) {
-            int32_t prod = (int32_t)(int16_t)(uint16_t)(title_rows - 0x64) * (int16_t)title_scale;
+        if (xenon2.title_scale != 0) {
+            int32_t prod = (int32_t)(int16_t)(uint16_t)(xenon2.title_rows - 0x64) * (int16_t)xenon2.title_scale;
 
-            title_y = (int16_t)(((int16_t)(uint16_t)prod >> 4) + 0x64);
-            draw_text_squeezed(title_text);
+            xenon2.title_y = (int16_t)(((int16_t)(uint16_t)prod >> 4) + 0x64);
+            draw_text_squeezed(xenon2.title_text);
         }
         stars_update();
         swap_screens_200();
-        set_palette(title_palette);
+        set_palette(xenon2.title_palette);
     }
 }
 
@@ -460,20 +460,20 @@ void title_stars_start(void)
     int i;
 
     for (i = 0; i < 16; i++)
-        palette_saved[i] = palette_shadow[i];
+        xenon2.palette_saved[i] = xenon2.palette_shadow[i];
     clear_palette();
     work_area_save();
     for (i = 0; i < 48; i++) {
-        stars[i].x = (int16_t)random_next();
-        stars[i].y = (int16_t)random_next();
-        stars[i].z = (int16_t)(random_next() & 0x1fff);
+        xenon2.stars[i].x = (int16_t)random_next();
+        xenon2.stars[i].y = (int16_t)random_next();
+        xenon2.stars[i].z = (int16_t)(random_next() & 0x1fff);
     }
 }
 
 /* orig $00847E: the saved palette back, the work area, the dot stars */
 void title_restore(void)
 {
-    set_palette(palette_saved);
+    set_palette(xenon2.palette_saved);
     work_area_restore();
     stars_init_dots();
 }
@@ -482,7 +482,7 @@ void title_restore(void)
 void title_message(const uint8_t *text)
 {
     title_stars_start();
-    show_text_sequence(0x64, text, title_script);
+    show_text_sequence(0x64, text, xenon2.title_script);
     title_restore();
 }
 
@@ -496,9 +496,9 @@ void stars_init_dots(void)
         uint16_t off = (uint16_t)((uint16_t)(random_below(0xc0) * 0xa0u) + x);
         uint16_t bit = (uint16_t)(1u << (random_next() & 0xf));
 
-        stars[i].x = (int16_t)off;
-        stars[i].y = (int16_t)bit;
-        stars[i].z = 0;
+        xenon2.stars[i].x = (int16_t)off;
+        xenon2.stars[i].y = (int16_t)bit;
+        xenon2.stars[i].z = 0;
     }
 }
 
@@ -510,67 +510,67 @@ void title_credits(void)
     uint16_t step_off;
 
     for (i = 0; i < 16; i++)
-        palette_saved[i] = palette_shadow[i];
+        xenon2.palette_saved[i] = xenon2.palette_shadow[i];
     music_start(0);
-    music_volume_hi = 0x3f;
-    title_text = title_lines;
-    title_index = 0;
-    title_y = 0x78;
-    title_phase = 0;
+    xenon2.music_volume_hi = 0x3f;
+    xenon2.title_text = xenon2.title_lines;
+    xenon2.title_index = 0;
+    xenon2.title_y = 0x78;
+    xenon2.title_phase = 0;
     for (i = 0; i < 48; i++) {
-        stars[i].x = (int16_t)random_next();
-        stars[i].y = (int16_t)random_next();
-        stars[i].z = (int16_t)(random_next() & 0x1fff);
+        xenon2.stars[i].x = (int16_t)random_next();
+        xenon2.stars[i].y = (int16_t)random_next();
+        xenon2.stars[i].z = (int16_t)(random_next() & 0x1fff);
     }
-    set_palette(title_palette);
+    set_palette(xenon2.title_palette);
     title_fade_in();
-    if (key_pressed)
+    if (xenon2.key_pressed)
         goto abort;
 l82aa:
     title_draw_logo();
 l82ae:
-    title_y = 0x78;
-    if (title_phase == 1) {
-        draw_text_row(title_text);
-        title_y = 0x96;
+    xenon2.title_y = 0x78;
+    if (xenon2.title_phase == 1) {
+        draw_text_row(xenon2.title_text);
+        xenon2.title_y = 0x96;
     }
-    step_off = title_index;
-    title_index += 2;
-    title_scale = title_steps[step_off / 2];
-    if (title_scale == 0)
+    step_off = xenon2.title_index;
+    xenon2.title_index += 2;
+    xenon2.title_scale = xenon2.title_steps[step_off / 2];
+    if (xenon2.title_scale == 0)
         goto frame;
-    if ((int16_t)title_scale > 0) {
-        const uint8_t *line = title_text;
+    if ((int16_t)xenon2.title_scale > 0) {
+        const uint8_t *line = xenon2.title_text;
 
-        if (title_phase == 1)
+        if (xenon2.title_phase == 1)
             line += 0x14;
         draw_text_squeezed(line);
         goto frame;
     }
-    title_phase++;
-    if (title_phase != 3)
+    xenon2.title_phase++;
+    if (xenon2.title_phase != 3)
         goto l82ae;
-    title_phase = 0;
-    title_index = 0;
-    title_text += 0x28;
-    if (title_text != ready_text)
+    xenon2.title_phase = 0;
+    xenon2.title_index = 0;
+    xenon2.title_text += 0x28;
+    if (xenon2.title_text != xenon2.ready_text)
         goto l82ae;
     title_fade_out();
-    if (key_pressed)
+    if (xenon2.key_pressed)
         goto abort;
     hiscore_show();
-    if (key_pressed)
+    if (xenon2.key_pressed)
         goto abort;
     title_fade_in();
-    if (key_pressed)
+    if (xenon2.key_pressed)
         goto abort;
-    title_text = title_lines;
-    title_index = 0;
+    xenon2.title_text = xenon2.title_lines;
+    xenon2.title_index = 0;
     goto l82aa;
 frame:
     stars_update();
-    if (key_pressed) {
-        key_pressed = 0;
+    if (xenon2.key_pressed) {
+        xenon2.key_pressed = 0;
         music_silence();
         title_fade_out();
         goto restore;
@@ -580,6 +580,6 @@ frame:
 abort:
     music_silence();
 restore:
-    key_pressed = 0;
-    set_palette(palette_saved);
+    xenon2.key_pressed = 0;
+    set_palette(xenon2.palette_saved);
 }

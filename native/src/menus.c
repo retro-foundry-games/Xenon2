@@ -4,7 +4,7 @@
 #include "title.h"
 #include "draw.h"
 
-#define SCREEN_A_WORDS(off) ((uint16_t *)&screen_a[off])
+#define SCREEN_A_WORDS(off) ((uint16_t *)&xenon2.screen_a[off])
 
 /* ---- title lines, fade, high-score table ---- */
 
@@ -12,32 +12,32 @@
 static void title_in(const uint8_t *s)
 {
     title_stars_start();
-    show_text_sequence(0xc, s, wipe_in);
+    show_text_sequence(0xc, s, xenon2.wipe_in);
 }
 
 /* the line squeezes out, the palette and the dot stars come back */
 static void title_out(const uint8_t *s)
 {
-    show_text_sequence(0xc, s, wipe_out);
+    show_text_sequence(0xc, s, xenon2.wipe_out);
     title_restore();
 }
 
 /* orig $8C58: the HIGH SCORE line comes in */
-void title_in_hiscore(void) { title_in(title_hiscore); }
+void title_in_hiscore(void) { title_in(xenon2.title_hiscore); }
 /* orig $8C60: the ENTERING SHOP line comes in */
-void title_in_shop(void) { title_in(shop_text); }
+void title_in_shop(void) { title_in(xenon2.shop_text); }
 /* orig $8C68: the INSERT GAME DISK line comes in */
-void title_in_insert_disk(void) { title_in(insert_disk_text); }
+void title_in_insert_disk(void) { title_in(xenon2.insert_disk_text); }
 /* orig $8C70: the LOADING LEVEL line comes in */
-void title_in_loading(void) { title_in(loading_text); }
+void title_in_loading(void) { title_in(xenon2.loading_text); }
 /* orig $8C88: the HIGH SCORE line goes out */
-void title_out_hiscore(void) { title_out(title_hiscore); }
+void title_out_hiscore(void) { title_out(xenon2.title_hiscore); }
 /* orig $8C90: the ENTERING SHOP line goes out */
-void title_out_shop(void) { title_out(shop_text); }
+void title_out_shop(void) { title_out(xenon2.shop_text); }
 /* orig $8C98: the INSERT GAME DISK line goes out */
-void title_out_insert_disk(void) { title_out(insert_disk_text); }
+void title_out_insert_disk(void) { title_out(xenon2.insert_disk_text); }
 /* orig $8CA0: the LOADING LEVEL line goes out */
-void title_out_loading(void) { title_out(loading_text); }
+void title_out_loading(void) { title_out(xenon2.loading_text); }
 
 /* orig $885E: the 16 colours of the palette each lose 1 in every component, 8 times, waiting until vbl_count passes wait before
  * each step */
@@ -48,11 +48,11 @@ void palette_fade_out(int16_t wait)
     for (n = 7; n >= 0; n--) {
         int i;
 
-        vbl_count = 0;
-        while ((int16_t)wait >= (int16_t)vbl_count)
+        xenon2.vbl_count = 0;
+        while ((int16_t)wait >= (int16_t)xenon2.vbl_count)
             HOST_IDLE();
         for (i = 0; i < 16; i++) {
-            uint16_t c = (palette_shadow[i] & 0x777) - 0x111;
+            uint16_t c = (xenon2.palette_shadow[i] & 0x777) - 0x111;
 
             if (c & 0x8)
                 c += 1;
@@ -60,7 +60,7 @@ void palette_fade_out(int16_t wait)
                 c += 0x10;
             if (c & 0x800)
                 c += 0x100;
-            palette_shadow[i] = c;
+            xenon2.palette_shadow[i] = c;
             custom->color[i] = (uint16_t)(c << 1);
         }
     }
@@ -75,8 +75,8 @@ void palette_fade_in(const uint16_t *target)
     for (level = 0x666;; ) {
         int i;
 
-        vbl_count = 0;
-        while ((int16_t)vbl_count < 2)
+        xenon2.vbl_count = 0;
+        while ((int16_t)xenon2.vbl_count < 2)
             HOST_IDLE();
         for (i = 0; i < 16; i++) {
             uint16_t c = (target[i] & 0x777) - level;
@@ -88,7 +88,7 @@ void palette_fade_in(const uint16_t *target)
             while (c & 0x800)
                 c += 0x100;
             c &= 0x777;
-            palette_shadow[i] = c;
+            xenon2.palette_shadow[i] = c;
             custom->color[i] = (uint16_t)(c << 1);
         }
         level -= 0x111;
@@ -101,7 +101,7 @@ void palette_fade_in(const uint16_t *target)
  * dest steps one word to the right for each character */
 void draw_big_text(const uint8_t *text, uint16_t *dest)
 {
-    const uint16_t *font = (const uint16_t *)font_gfx;
+    const uint16_t *font = (const uint16_t *)xenon2.font_gfx;
     int n;
 
     for (n = 14; n >= 0; n--) {
@@ -114,7 +114,7 @@ void draw_big_text(const uint8_t *text, uint16_t *dest)
             dest += 1;
             continue;
         }
-        idx = (int16_t)find_glyph(ch, text_chars);   /* inlined: $7EF8 */
+        idx = (int16_t)find_glyph(ch, xenon2.text_chars);   /* inlined: $7EF8 */
         idx = (int16_t)((uint16_t)idx << 7);
         g = (const uint16_t *)((const uint8_t *)font + idx);
         for (row = 0; row < 16; row++) {
@@ -131,14 +131,14 @@ void draw_big_text(const uint8_t *text, uint16_t *dest)
 /* orig $8B20: one frame of the high-score table: the heading and the ten lines, drawn with the big font */
 void hiscore_draw(void)
 {
-    const uint8_t *line = hiscore_lines;
-    uint16_t *dest = (uint16_t *)(draw_screen + 0x17c4);
+    const uint8_t *line = xenon2.hiscore_lines;
+    uint16_t *dest = (uint16_t *)(xenon2.draw_screen + 0x17c4);
     int i;
 
     clear_screen();
-    title_scale = 0x10;
-    title_y = 0xc;
-    draw_text_squeezed(title_hiscore);
+    xenon2.title_scale = 0x10;
+    xenon2.title_y = 0xc;
+    draw_text_squeezed(xenon2.title_hiscore);
     for (i = 9; i >= 0; i--) {
         draw_big_text(line, dest);
         line += 15;
@@ -153,13 +153,13 @@ void hiscore_show(void)
 {
     int16_t n = 0x55;
 
-    show_text_sequence(0xc, title_hiscore, wipe_in);
+    show_text_sequence(0xc, xenon2.title_hiscore, xenon2.wipe_in);
     for (;;) {
         hiscore_draw();
-        if (key_pressed)
+        if (xenon2.key_pressed)
             break;
         if (--n == 0) {
-            show_text_sequence(0xc, title_hiscore, wipe_out);
+            show_text_sequence(0xc, xenon2.title_hiscore, xenon2.wipe_out);
             break;
         }
     }
@@ -168,20 +168,20 @@ void hiscore_show(void)
 /* orig $8AB0: the first read of the stick in the name entry (the lockstep hooks it to give the port the byte the original read) */
 uint8_t hiscore_stick_first(void)
 {
-    return joy_stick;
+    return xenon2.joy_stick;
 }
 
 /* orig $8AEE: the read of the stick while a letter repeats */
 uint8_t hiscore_stick_again(void)
 {
-    return joy_stick;
+    return xenon2.joy_stick;
 }
 
 /* orig $8A16: a score above the tenth is put into the table in its place; the player picks the three letters of the name with the
  * stick (up/down), fire takes a letter */
 void hiscore_enter(void)
 {
-    int32_t score = (int32_t)player_score;
+    int32_t score = (int32_t)xenon2.player_score;
     uint32_t *slot;
     uint8_t *line, *cursor;
     const uint8_t *chars;
@@ -191,12 +191,12 @@ void hiscore_enter(void)
     int16_t repeats;
     int8_t wait_frames;
 
-    if (score <= (int32_t)hiscore_values[9])
+    if (score <= (int32_t)xenon2.hiscore_values[9])
         return;
     title_in_hiscore();
-    score = (int32_t)player_score;
-    slot = &hiscore_values[9];
-    line = &hiscore_lines[9 * 15];
+    score = (int32_t)xenon2.player_score;
+    slot = &xenon2.hiscore_values[9];
+    line = &xenon2.hiscore_lines[9 * 15];
     for (;;) {
         int k;
 
@@ -209,7 +209,7 @@ void hiscore_enter(void)
             line[15] = line[0];
         }
         line -= 4;
-        if (!(slot > hiscore_values))
+        if (!(slot > xenon2.hiscore_values))
             break;
     }
     *slot = (uint32_t)score;
@@ -217,7 +217,7 @@ void hiscore_enter(void)
     line[13] = 0x3a;
     line[14] = 0x3a;
     cursor = line + 4;
-    for (p = decimal_powers; *p != 0; p++) {
+    for (p = xenon2.decimal_powers; *p != 0; p++) {
         int32_t unit = (int32_t)*p;
 
         *cursor = 0x30;
@@ -230,15 +230,15 @@ void hiscore_enter(void)
         score += unit;
         cursor++;
     }
-    key_pressed = 0;
+    xenon2.key_pressed = 0;
     cursor = line + 12;
-    chars = text_chars;
+    chars = xenon2.text_chars;
     idx = 0;
 next_letter:
     *cursor = chars[(int16_t)idx];
 wait_stick:
     hiscore_draw();
-    if (key_pressed)
+    if (xenon2.key_pressed)
         goto letter_done;
     stick = hiscore_stick_first() & 0xc;
     dir = 0xff;
@@ -258,7 +258,7 @@ step_again:
 repeat:
     *cursor = chars[(int16_t)idx];
     hiscore_draw();
-    if (key_pressed)
+    if (xenon2.key_pressed)
         goto letter_done;
     if ((uint8_t)(hiscore_stick_again() & 0xc) != stick)
         goto wait_stick;
@@ -266,7 +266,7 @@ repeat:
         goto repeat;
     goto step;
 letter_done:
-    key_pressed = 0;
+    xenon2.key_pressed = 0;
     cursor++;
     if (*cursor == 0x3a)
         goto next_letter;
@@ -280,8 +280,8 @@ letter_done:
 /* orig $8F56: CREDITS n at the bottom of the screen */
 void credits_draw(void)
 {
-    credits_text[8] = (uint8_t)(continues_left + 0x30);
-    draw_text(credits_text, draw_screen + 0x7316);
+    xenon2.credits_text[8] = (uint8_t)(xenon2.continues_left + 0x30);
+    draw_text(xenon2.credits_text, xenon2.draw_screen + 0x7316);
 }
 
 /* orig $8CB6: the menu: 1 player, 2 players, music on/off; up/down moves the marker, fire takes it; leaves players = 1 or 2 */
@@ -290,62 +290,62 @@ void menu(void)
     int16_t sel = 0;
     const uint8_t *row;
 
-    continues_left = 3;
+    xenon2.continues_left = 3;
     title_stars_start();
-    show_text_sequence(0xc, menu_text, wipe_in);
-    key_pressed = 0;
+    show_text_sequence(0xc, xenon2.menu_text, xenon2.wipe_in);
+    xenon2.key_pressed = 0;
     for (;;) {
         clear_screen();
-        title_y = 0xc;
-        draw_text_row(menu_text);
-        title_y = 0x3c;
-        row = &menu_text[20];
+        xenon2.title_y = 0xc;
+        draw_text_row(xenon2.menu_text);
+        xenon2.title_y = 0x3c;
+        row = &xenon2.menu_text[20];
         if (sel == 0)
-            row = &menu_text[40];
+            row = &xenon2.menu_text[40];
         draw_text_row(row);
-        title_y = 0x54;
-        row = &menu_text[60];
+        xenon2.title_y = 0x54;
+        row = &xenon2.menu_text[60];
         if (sel == 1)
-            row = &menu_text[80];
+            row = &xenon2.menu_text[80];
         draw_text_row(row);
-        title_y = 0x6c;
-        row = &menu_text[100];
-        if (!music_switch)
-            row = &menu_text[140];
+        xenon2.title_y = 0x6c;
+        row = &xenon2.menu_text[100];
+        if (!xenon2.music_switch)
+            row = &xenon2.menu_text[140];
         if (sel == 2)
             row += 0x14;
         draw_text_row(row);
         credits_draw();
         stars_update();
         swap_screens_200();
-        if (joy_stick & 1) {
-            joy_stick = 0;
-            sfx_cmd = 0xc;
+        if (xenon2.joy_stick & 1) {
+            xenon2.joy_stick = 0;
+            xenon2.sfx_cmd = 0xc;
             sel--;
             if (sel < 0)
                 sel = 2;
             continue;
         }
-        if (joy_stick & 2) {
-            joy_stick = 0;
-            sfx_cmd = 0xc;
+        if (xenon2.joy_stick & 2) {
+            xenon2.joy_stick = 0;
+            xenon2.sfx_cmd = 0xc;
             sel++;
             if (sel >= 3)
                 sel = 0;
             continue;
         }
-        if (!key_pressed)
+        if (!xenon2.key_pressed)
             continue;
-        key_pressed = 0;
-        sfx_cmd = 0xd;
+        xenon2.key_pressed = 0;
+        xenon2.sfx_cmd = 0xd;
         if (sel == 2) {
-            music_switch = (uint8_t)~music_switch;
+            xenon2.music_switch = (uint8_t)~xenon2.music_switch;
             continue;
         }
         break;
     }
-    players = (uint16_t)(sel + 1);
-    show_text_sequence(0xc, menu_text, wipe_out);
+    xenon2.players = (uint16_t)(sel + 1);
+    show_text_sequence(0xc, xenon2.menu_text, xenon2.wipe_out);
     title_restore();
 }
 
@@ -355,26 +355,26 @@ uint16_t continue_screen(void)
     int16_t n = 0x4f;
 
     title_stars_start();
-    show_text_sequence(0x50, continue_text, wipe_in);
-    key_pressed = 0;
+    show_text_sequence(0x50, xenon2.continue_text, xenon2.wipe_in);
+    xenon2.key_pressed = 0;
     for (;;) {
         clear_screen();
-        title_y = 0x50;
-        draw_text_row(continue_text);
-        continue_text[29] = (uint8_t)(((uint32_t)(int32_t)n / 8) + 0x30);
-        title_y = 0x78;
-        draw_text_row(&continue_text[20]);
+        xenon2.title_y = 0x50;
+        draw_text_row(xenon2.continue_text);
+        xenon2.continue_text[29] = (uint8_t)(((uint32_t)(int32_t)n / 8) + 0x30);
+        xenon2.title_y = 0x78;
+        draw_text_row(&xenon2.continue_text[20]);
         credits_draw();
         stars_update();
         swap_screens_200();
-        if (key_pressed) {
-            show_text_sequence(0x50, continue_text, wipe_out);
+        if (xenon2.key_pressed) {
+            show_text_sequence(0x50, xenon2.continue_text, xenon2.wipe_out);
             title_restore();
-            key_pressed = 0;
+            xenon2.key_pressed = 0;
             return 1;
         }
         if (--n == 0) {
-            show_text_sequence(0x50, continue_text, wipe_out);
+            show_text_sequence(0x50, xenon2.continue_text, xenon2.wipe_out);
             title_restore();
             return 0;
         }
@@ -388,31 +388,31 @@ int game_disk_present(void)
 {
     int ok;
 
-    if (draw_screen != screen_a) {
-        uint32_t *dst = (uint32_t *)screen_b;
-        const uint32_t *src = (const uint32_t *)screen_a;
+    if (xenon2.draw_screen != xenon2.screen_a) {
+        uint32_t *dst = (uint32_t *)xenon2.screen_b;
+        const uint32_t *src = (const uint32_t *)xenon2.screen_a;
         int i;
 
         for (i = 0; i < 0x1f40; i++)
             *dst++ = *src++;
         swap_screens_200();
     }
-    irq_vectors[2] = irq_vblank_hooked;
-    disk_read_sectors(0, 1, &screen_a[0x5600]);
-    irq_vectors[2] = irq_vblank;
-    ok = rd32(&screen_a[0x5602]) == 0x58324220;
+    xenon2.irq_vectors[2] = irq_vblank_hooked;
+    disk_read_sectors(0, 1, &xenon2.screen_a[0x5600]);
+    xenon2.irq_vectors[2] = irq_vblank;
+    ok = rd32(&xenon2.screen_a[0x5602]) == 0x58324220;
     return ok;
 }
 
 /* orig $917E: loads the code of the level in level_number unless it is loaded; asks for the game disk while it is not in */
 void level_load(void)
 {
-    uint16_t level = level_number;
+    uint16_t level = xenon2.level_number;
     uint16_t i;
 
-    if (level == loaded_level)
+    if (level == xenon2.loaded_level)
         return;
-    loaded_level = level;
+    xenon2.loaded_level = level;
     for (;;) {
         title_in_loading();
         if (game_disk_present())
@@ -423,11 +423,11 @@ void level_load(void)
             ;
         title_out_insert_disk();
     }
-    irq_vectors[2] = irq_vblank_hooked;
-    i = (uint16_t)((uint16_t)(level_number - 1) * 2);
+    xenon2.irq_vectors[2] = irq_vblank_hooked;
+    i = (uint16_t)((uint16_t)(xenon2.level_number - 1) * 2);
     guest_blob_raw(level > 1 ? level : 0);   /* (level 1's members at $54E40 on do not describe the blob of another level) */
-    disk_read_sectors(level_sectors[i], level_sectors[i + 1], &map_image);
-    irq_vectors[2] = irq_vblank;
+    disk_read_sectors(xenon2.level_sectors[i], xenon2.level_sectors[i + 1], &xenon2.map_image);
+    xenon2.irq_vectors[2] = irq_vblank;
     title_out_loading();
     clear_palette();
 }
@@ -442,7 +442,7 @@ void shop_run(void)
     palette_fade_out(2);
     sfx_stop_all();
     music_silence();
-    saved_level_init = level_init_src;
+    xenon2.saved_level_init = xenon2.level_init_src;
     for (;;) {
         title_in_shop();
         if (game_disk_present())
@@ -454,23 +454,23 @@ void shop_run(void)
         title_out_insert_disk();
     }
     guest_blob_raw(1);   /* (the shop's blob overlays the level's) */
-    irq_vectors[2] = irq_vblank_hooked;
-    disk_read_sectors(level_sectors[10], level_sectors[11], &map_image);
-    irq_vectors[2] = irq_vblank;
+    xenon2.irq_vectors[2] = irq_vblank_hooked;
+    disk_read_sectors(xenon2.level_sectors[10], xenon2.level_sectors[11], &xenon2.map_image);
+    xenon2.irq_vectors[2] = irq_vblank;
     title_out_shop();
     clear_palette();
     shop_main();
-    guest_blob_raw(level_number > 1 ? level_number : 0);
-    if (boss_dead != 0) {
-        uint16_t other = cur_player ^ 1;
+    guest_blob_raw(xenon2.level_number > 1 ? xenon2.level_number : 0);
+    if (xenon2.boss_dead != 0) {
+        uint16_t other = xenon2.cur_player ^ 1;
 
-        if (player_active[other] == 0)
+        if (xenon2.player_active[other] == 0)
             return;
-        if (player_active[2 + other] != 0)
+        if (xenon2.player_active[2 + other] != 0)
             return;
     } else {
-        loading_text[1] = 0x52;
-        loading_text[2] = 0x45;
+        xenon2.loading_text[1] = 0x52;
+        xenon2.loading_text[2] = 0x45;
     }
     for (;;) {
         title_in_loading();
@@ -481,38 +481,38 @@ void shop_run(void)
         while (!game_disk_present())
             ;
         title_out_insert_disk();
-        loading_text[1] = 0x52;
-        loading_text[2] = 0x45;
+        xenon2.loading_text[1] = 0x52;
+        xenon2.loading_text[2] = 0x45;
     }
-    irq_vectors[2] = irq_vblank_hooked;
-    i = (uint16_t)((uint16_t)(level_number - 1) * 2);
+    xenon2.irq_vectors[2] = irq_vblank_hooked;
+    i = (uint16_t)((uint16_t)(xenon2.level_number - 1) * 2);
     {
-        int16_t count = (int16_t)level_sectors[i + 1];
+        int16_t count = (int16_t)xenon2.level_sectors[i + 1];
 
         if (count >= 0x12c)
             count -= 0x18;
-        disk_read_sectors(level_sectors[i], (uint16_t)count, &map_image);
+        disk_read_sectors(xenon2.level_sectors[i], (uint16_t)count, &xenon2.map_image);
     }
-    level_init_src = saved_level_init;
-    irq_vectors[2] = irq_vblank;
+    xenon2.level_init_src = xenon2.saved_level_init;
+    xenon2.irq_vectors[2] = irq_vblank;
     title_out_loading();
-    loading_text[1] = 0x20;
-    loading_text[2] = 0x20;
+    xenon2.loading_text[1] = 0x20;
+    xenon2.loading_text[2] = 0x20;
     clear_palette();
-    if (boss_dead != 0)
+    if (xenon2.boss_dead != 0)
         return;
     for (i = 0; i < 8; i++) {
-        uint32_t v = rd32(&level_palette[i]);
+        uint32_t v = rd32(&xenon2.level_palette[i]);
 
-        if (shades_timer != 0)
+        if (xenon2.shades_timer != 0)
             v >>= 1;
-        level_palette_copy[2 * i] = (uint16_t)(v >> 16);
-        level_palette_copy[2 * i + 1] = (uint16_t)v;
+        xenon2.level_palette_copy[2 * i] = (uint16_t)(v >> 16);
+        xenon2.level_palette_copy[2 * i + 1] = (uint16_t)v;
     }
     draw_background();
     stars_draw();
     swap_screens_200();
-    palette_fade_in(level_palette_copy);
+    palette_fade_in(xenon2.level_palette_copy);
 }
 
 /* ---- the disk (HLE: disk) ---- */
@@ -589,8 +589,8 @@ HLE_WEAK void disk_recalibrate(void)
             break;
         disk_step_out(1);
     }
-    disk_track = 0;
-    disk_want = 0;
+    xenon2.disk_track = 0;
+    xenon2.disk_want = 0;
 }
 
 /* orig $932E: the head to track (bit 0 is the side); the percentage of the sectors read is drawn at the bottom of the shown screen
@@ -599,24 +599,24 @@ HLE_WEAK void disk_seek(uint16_t track)
 {
     int16_t delta;
 
-    if (disk_track < 0)
+    if (xenon2.disk_track < 0)
         disk_recalibrate();
-    disk_want = track;
+    xenon2.disk_want = track;
     CIAB_PRB &= ~4;
     if (!(track & 1))
         CIAB_PRB |= 4;
-    delta = (int16_t)((track & ~1) - (uint16_t)disk_track);
+    delta = (int16_t)((track & ~1) - (uint16_t)xenon2.disk_track);
     if (delta == 0)
         return;
     {
         uint16_t digit = 0;
 
-        if (disk_count != 0)
-            digit = (uint16_t)((uint32_t)((uint16_t)(disk_count - 1) * 10u) / disk_total);
-        progress_text[0] = (uint8_t)(digit + 0x30);
-        draw_text_row_at(show_screen + 0x3854, progress_text, 0);
+        if (xenon2.disk_count != 0)
+            digit = (uint16_t)((uint32_t)((uint16_t)(xenon2.disk_count - 1) * 10u) / xenon2.disk_total);
+        xenon2.progress_text[0] = (uint8_t)(digit + 0x30);
+        draw_text_row_at(xenon2.show_screen + 0x3854, xenon2.progress_text, 0);
     }
-    disk_track = (int16_t)(disk_track + delta);
+    xenon2.disk_track = (int16_t)(xenon2.disk_track + delta);
     delta >>= 1;
     if (delta >= 0)
         disk_step_in((uint16_t)delta);
@@ -661,12 +661,12 @@ int32_t mfm_align(const uint16_t *src)
         for (;;) {
             word = rd16(p++);
             if (word == 0x5555) {
-                pats = mfm_sync_a;
+                pats = xenon2.mfm_sync_a;
                 shift_right = 0xf;
                 break;
             }
             if (word == 0xaaaa) {
-                pats = mfm_sync_b;
+                pats = xenon2.mfm_sync_b;
                 shift_right = 0xe;
                 break;
             }
@@ -707,57 +707,57 @@ HLE_WEAK int disk_read_track(void)
     uint8_t *p;
     int n;
 
-    disk_retries = 3;
+    xenon2.disk_retries = 3;
 retry:
-    disk_done = 0;
-    disk_error = 0;
+    xenon2.disk_done = 0;
+    xenon2.disk_error = 0;
     for (n = 0; n < 11; n++)
-        disk_seen[n] = 0;
+        xenon2.disk_seen[n] = 0;
     custom->dsklen = 0x4000;
-    custom->dskpt = ADDR(&screen_a[0x1600]);
+    custom->dskpt = ADDR(&xenon2.screen_a[0x1600]);
     SETCLR_WRITE(intreq, 0x1002);
     SETCLR_WRITE(adkcon, 0x6600);
     SETCLR_WRITE(adkcon, 0x9100);
     custom->dsklen = 0xa000;
     custom->dsklen = 0xa000;
-    while (!disk_done)
+    while (!xenon2.disk_done)
         HOST_IDLE();
     custom->dsklen = 0x4000;
     mfm_align(SCREEN_A_WORDS(0x1604));
-    if (disk_error)
+    if (xenon2.disk_error)
         goto fail;
-    p = &screen_a[0x1602];
+    p = &xenon2.screen_a[0x1602];
     while (rd16(p) == 0x4489)
         p += 2;
     for (n = 10; n >= 0; n--) {
         uint16_t sector;
 
-        p = mfm_decode(disk_header, p, 4);
+        p = mfm_decode(xenon2.disk_header, p, 4);
         p += 0x30;
-        sector = disk_header[2];
+        sector = xenon2.disk_header[2];
         if (sector > 10)
             goto fail;
-        if (disk_seen[sector] & 0x80)
+        if (xenon2.disk_seen[sector] & 0x80)
             goto fail;
-        disk_seen[sector] |= 0x80;
-        p = mfm_decode(&screen_a[(uint16_t)(sector << 9)], p, 0x200);
-        if (disk_header[3] == 1) {
+        xenon2.disk_seen[sector] |= 0x80;
+        p = mfm_decode(&xenon2.screen_a[(uint16_t)(sector << 9)], p, 0x200);
+        if (xenon2.disk_header[3] == 1) {
             mfm_align((const uint16_t *)p);
-            p = &screen_a[0x1602];
+            p = &xenon2.screen_a[0x1602];
             while (rd16(p) == 0x4489)
                 p += 2;
         } else {
             p += 8;
         }
-        if (disk_error)
+        if (xenon2.disk_error)
             goto fail;
     }
     return 0;
 fail:
-    if ((int16_t)--disk_retries < 0)
+    if ((int16_t)--xenon2.disk_retries < 0)
         return -1;
     {
-        uint16_t want = disk_want;
+        uint16_t want = xenon2.disk_want;
 
         disk_recalibrate();
         disk_seek(want);
@@ -771,10 +771,10 @@ HLE_WEAK int disk_read_sectors(uint16_t first_sector, uint16_t count, void *dest
 {
     uint16_t track = (uint16_t)(first_sector / 11);
 
-    disk_dest = dest;
-    disk_sector = (uint16_t)(first_sector % 11);
-    disk_count = count;
-    disk_total = count;
+    xenon2.disk_dest = dest;
+    xenon2.disk_sector = (uint16_t)(first_sector % 11);
+    xenon2.disk_count = count;
+    xenon2.disk_total = count;
     disk_motor_on();
     disk_recalibrate();
     disk_seek(track);
@@ -788,20 +788,20 @@ HLE_WEAK int disk_read_sectors(uint16_t first_sector, uint16_t count, void *dest
             disk_motor_off();
             return -1;
         }
-        to = (uint32_t *)disk_dest;
-        from = (const uint32_t *)&screen_a[(uint16_t)(disk_sector * 0x200u)];
-        n = (int16_t)(11 - disk_sector);
-        if (!(n <= (int16_t)disk_count))
-            n = (int16_t)disk_count;
-        disk_count = (uint16_t)(disk_count - n);
+        to = (uint32_t *)xenon2.disk_dest;
+        from = (const uint32_t *)&xenon2.screen_a[(uint16_t)(xenon2.disk_sector * 0x200u)];
+        n = (int16_t)(11 - xenon2.disk_sector);
+        if (!(n <= (int16_t)xenon2.disk_count))
+            n = (int16_t)xenon2.disk_count;
+        xenon2.disk_count = (uint16_t)(xenon2.disk_count - n);
         m = (uint16_t)((uint16_t)n * 0x80u - 1);
         do {
             *to++ = *from++;
         } while (m-- != 0);
-        disk_dest = (uint8_t *)to;
-        disk_seek((uint16_t)(disk_want + 1));
-        disk_sector = 0;
-        if (disk_count == 0)
+        xenon2.disk_dest = (uint8_t *)to;
+        disk_seek((uint16_t)(xenon2.disk_want + 1));
+        xenon2.disk_sector = 0;
+        if (xenon2.disk_count == 0)
             break;
     }
     disk_motor_off();
@@ -812,7 +812,7 @@ HLE_WEAK int disk_read_sectors(uint16_t first_sector, uint16_t count, void *dest
 void irq_disk_block(void)
 {
     SETCLR_WRITE(intreq, 2);
-    disk_done = 0xff;
+    xenon2.disk_done = 0xff;
 }
 
 /* ---- the work area ---- */
@@ -820,27 +820,27 @@ void irq_disk_block(void)
 /* orig $95F4: the first user copies the copy at $53F00 (1280 bytes) into the low RAM */
 void work_area_save(void)
 {
-    if (work_area_users == 0) {
-        const uint8_t *saved = panel_b;
+    if (xenon2.work_area_users == 0) {
+        const uint8_t *saved = xenon2.panel_b;
         int i;
 
         for (i = 0; i < 1280; i++)
-            work_area[i] = saved[i];
+            xenon2.work_area[i] = saved[i];
     }
-    work_area_users++;
+    xenon2.work_area_users++;
 }
 
 /* orig $9618: the last user puts the low RAM's copy back into the level's work area and into screen_a at $7800 */
 void work_area_restore(void)
 {
-    if (--work_area_users == 0) {
-        uint8_t *c = panel_a;
-        uint8_t *saved = panel_b;
+    if (--xenon2.work_area_users == 0) {
+        uint8_t *c = xenon2.panel_a;
+        uint8_t *saved = xenon2.panel_b;
         int i;
 
         for (i = 0; i < 1280; i++) {
-            saved[i] = work_area[i];
-            *c++ = work_area[i];
+            saved[i] = xenon2.work_area[i];
+            *c++ = xenon2.work_area[i];
         }
     }
 }
@@ -854,7 +854,7 @@ void work_area_restore(void)
 void obj_script_step(Object *obj)
 {
     ObjMove *o = (ObjMove *)obj;
-    const int8_t *sine = sine_table;
+    const int8_t *sine = xenon2.sine_table;
     uint16_t steps;
     uint32_t x_fixed, y_fixed, angle_fixed, turn;
     int32_t turn_delta;
@@ -920,9 +920,9 @@ next_command:
 
             if (o->id != 0) {
                 for (i = 0; i < 8; i++) {
-                    if (pickup_groups[2 * i] == o->id) {
-                        pickup_groups[2 * i] = 0;
-                        pickup_groups[2 * i + 1] = 0;
+                    if (xenon2.pickup_groups[2 * i] == o->id) {
+                        xenon2.pickup_groups[2 * i] = 0;
+                        xenon2.pickup_groups[2 * i + 1] = 0;
                         break;
                     }
                 }
@@ -1029,27 +1029,27 @@ void enemy_update_no_anim(Object *obj)
     if (o->shot_rate < 0x64) {
         dir = (uint16_t)(random_next() & 7);
     } else {
-        dir = direction8((int16_t)(player.x - (int16_t)o->x_hi), (int16_t)(player.y - (int16_t)o->y_hi));
+        dir = direction8((int16_t)(xenon2.player.x - (int16_t)o->x_hi), (int16_t)(xenon2.player.y - (int16_t)o->y_hi));
     }
-    spawn_enemy_shot(o->x_hi, o->y_hi, dir, 6, enemy_shot_gfx);
+    spawn_enemy_shot(o->x_hi, o->y_hi, dir, 6, xenon2.enemy_shot_gfx);
 }
 
 /* orig $EEA, $9670: the random state is kept for enemy_update_seeded, then enemy_update */
 void enemy_update_keep_seed(Object *o)
 {
-    rand_saved[0] = random_state_a;
-    rand_saved[1] = random_state_b;
+    xenon2.rand_saved[0] = xenon2.random_state_a;
+    xenon2.rand_saved[1] = xenon2.random_state_b;
     enemy_update(o);
 }
 
 /* orig $EF0, $9682: enemy_update with the random state of enemy_update_keep_seed; the caller's state is put back */
 void enemy_update_seeded(Object *o)
 {
-    rand_saved[2] = random_state_a;
-    rand_saved[3] = random_state_b;
-    random_state_a = rand_saved[0];
-    random_state_b = rand_saved[1];
+    xenon2.rand_saved[2] = xenon2.random_state_a;
+    xenon2.rand_saved[3] = xenon2.random_state_b;
+    xenon2.random_state_a = xenon2.rand_saved[0];
+    xenon2.random_state_b = xenon2.rand_saved[1];
     enemy_update(o);
-    random_state_a = rand_saved[2];
-    random_state_b = rand_saved[3];
+    xenon2.random_state_a = xenon2.rand_saved[2];
+    xenon2.random_state_b = xenon2.rand_saved[3];
 }
