@@ -98,8 +98,9 @@ void l4_spawn_bar(const struct SpawnRec *record);
 /* level4 $054E10, $057272: level events by which (record = the record that fired): 0 the wave of $326C, 1 to 6 formations */
 void l4_event(uint16_t which, const struct SpawnRec *record)
 {
-    const uint8_t *tables[7] = { 0, xenon2.level4_data.formation_1, xenon2.level4_data.formation_2, xenon2.level4_data.formation_3, xenon2.level4_data.formation_4,
-                                 xenon2.level4_data.formation_5, xenon2.level4_data.formation_6 };
+    const struct SpawnDef *tables[7] = {
+        0, xenon2.level4_data.formation_1.defs, &xenon2.level4_data.formation_2.defs, &xenon2.level4_data.formation_3.defs,
+        &xenon2.level4_data.formation_4.defs, &xenon2.level4_data.formation_5.defs, &xenon2.level4_data.formation_6.defs };
 
     if (which == 0)
         spawn_wave_326c(0, record);   /* $E5A */

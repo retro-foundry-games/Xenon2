@@ -31,7 +31,7 @@ uint16_t direction8(int16_t dx, int16_t dy);
 void obj_nop(Object *o);
 void obj_nop_thunk(Object *o);
 Object *owner_chain_next(Object *obj);
-Object *spawn_formation(Object *obj, const struct SpawnRec *rec, const uint8_t *formation);
+Object *spawn_formation(Object *obj, const struct SpawnRec *rec, const struct SpawnDef *formation);
 void bbox_from_frame(Object *o);
 void spawn_effect(int16_t x, int16_t y, const uint8_t *anim, ObjFn draw);
 void note_spawn_record(const struct SpawnRec *rec, uint16_t score);

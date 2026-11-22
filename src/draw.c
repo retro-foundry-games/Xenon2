@@ -216,7 +216,7 @@ HLE_WEAK void draw_bob_masked_at(uint16_t x, uint16_t y, const uint8_t *gfx)
         custom->bltdpt = ADDR(dst);
         BLTSIZE_WRITE(c.size);
         src += c.stride;
-        dst += 0x28;
+        dst += SCREEN_PLANE_BYTES;
         BLIT_WAIT();
     }
 }
@@ -252,7 +252,7 @@ HLE_WEAK void draw_bob_or_at(uint16_t x, uint16_t y, const uint8_t *gfx)
         custom->bltcpt = ADDR(dst);
         custom->bltdpt = ADDR(dst);
         BLTSIZE_WRITE(c.size);
-        dst += 0x28;
+        dst += SCREEN_PLANE_BYTES;
         BLIT_WAIT();
     }
 }
@@ -328,8 +328,8 @@ void draw_number(uint32_t value, uint8_t *dest)
             for (int plane = 0; plane < 4; plane++) {
                 uint8_t b = *g++;
 
-                dest[row * 0xa0 + plane * 0x28] = b;
-                other[row * 0xa0 + plane * 0x28] = b;
+                dest[row * SCREEN_ROW_BYTES + plane * SCREEN_PLANE_BYTES] = b;
+                other[row * SCREEN_ROW_BYTES + plane * SCREEN_PLANE_BYTES] = b;
             }
         }
         dest += 1;
@@ -365,26 +365,26 @@ void redraw_energy_bar(void)
             fill--;
             do {
                 ANDW(dst_b + row_off, keep);
-                ORW(dst_b + 0x28 + row_off, bit);
-                ORW(dst_b + 0x50 + row_off, bit);
-                ORW(dst_b + 0x78 + row_off, bit);
+                ORW(dst_b + SCREEN_PLANE_BYTES + row_off, bit);
+                ORW(dst_b + (2 * SCREEN_PLANE_BYTES) + row_off, bit);
+                ORW(dst_b + (3 * SCREEN_PLANE_BYTES) + row_off, bit);
                 ANDW(dst_a + row_off, keep);
-                ORW(dst_a + 0x28 + row_off, bit);
-                ORW(dst_a + 0x50 + row_off, bit);
-                ORW(dst_a + 0x78 + row_off, bit);
-                row_off = (int16_t)(row_off + 0xa0);
+                ORW(dst_a + SCREEN_PLANE_BYTES + row_off, bit);
+                ORW(dst_a + (2 * SCREEN_PLANE_BYTES) + row_off, bit);
+                ORW(dst_a + (3 * SCREEN_PLANE_BYTES) + row_off, bit);
+                row_off = (int16_t)(row_off + SCREEN_ROW_BYTES);
             } while (row_off <= 0x140);
         } else {
             do {
                 ANDW(dst_b + row_off, keep);
-                ANDW(dst_b + 0x28 + row_off, keep);
-                ANDW(dst_b + 0x50 + row_off, keep);
-                ANDW(dst_b + 0x78 + row_off, keep);
+                ANDW(dst_b + SCREEN_PLANE_BYTES + row_off, keep);
+                ANDW(dst_b + (2 * SCREEN_PLANE_BYTES) + row_off, keep);
+                ANDW(dst_b + (3 * SCREEN_PLANE_BYTES) + row_off, keep);
                 ANDW(dst_a + row_off, keep);
-                ANDW(dst_a + 0x28 + row_off, keep);
-                ANDW(dst_a + 0x50 + row_off, keep);
-                ANDW(dst_a + 0x78 + row_off, keep);
-                row_off = (int16_t)(row_off + 0xa0);
+                ANDW(dst_a + SCREEN_PLANE_BYTES + row_off, keep);
+                ANDW(dst_a + (2 * SCREEN_PLANE_BYTES) + row_off, keep);
+                ANDW(dst_a + (3 * SCREEN_PLANE_BYTES) + row_off, keep);
+                row_off = (int16_t)(row_off + SCREEN_ROW_BYTES);
             } while (row_off <= 0x140);
         }
         {
@@ -418,11 +418,11 @@ void draw_status_digit(void)
         for (int plane = 0; plane < 4; plane++) {
             uint8_t b = *glyph++;
 
-            dst_b[plane * 0x28] = b;
-            dst_a[plane * 0x28] = b;
+            dst_b[plane * SCREEN_PLANE_BYTES] = b;
+            dst_a[plane * SCREEN_PLANE_BYTES] = b;
         }
-        dst_b += 0xa0;
-        dst_a += 0xa0;
+        dst_b += SCREEN_ROW_BYTES;
+        dst_a += SCREEN_ROW_BYTES;
     }
 }
 
@@ -461,7 +461,7 @@ static void put_tile(const uint8_t *tiles, uint16_t cell, uint8_t *dest, uint16_
             custom->bltcpt = ADDR(dest);
             custom->bltdpt = ADDR(dest);
             BLTSIZE_WRITE(partial ? rows_size : 0x0401);
-            dest += 0x28;
+            dest += SCREEN_PLANE_BYTES;
             tile_b += 2;
             BLIT_WAIT();
         }
@@ -536,7 +536,7 @@ static void put_tile_flash(const uint8_t *tiles, uint16_t cell, uint8_t *dest, u
         custom->bltcpt = ADDR(dest);
         custom->bltdpt = ADDR(dest);
         BLTSIZE_WRITE(partial ? rows_size : 0x0401);
-        dest += 0x28;
+        dest += SCREEN_PLANE_BYTES;
         BLIT_WAIT();
     }
 }
@@ -563,7 +563,7 @@ static void tile_grid(const uint8_t *cells, uint16_t cols, int16_t rows, int16_t
     }
     if (y >= 0xc0)
         return;
-    dst += (int16_t)(uint16_t)((int32_t)y * 0xa0);
+    dst += (int16_t)(uint16_t)((int32_t)y * SCREEN_ROW_BYTES);
     for (;;) {
         if ((int32_t)ADDR(dst) >= (int32_t)ADDR(split)) {
             uint32_t span = ADDR(screen_end) - ADDR(dst);
@@ -661,7 +661,7 @@ static void bob_behind_map(Object *obj)
         custom->bltdpt = ADDR(dst);
         BLTSIZE_WRITE((uint16_t)(size + 2));
         src += 2;
-        dst += 0x28;
+        dst += SCREEN_PLANE_BYTES;
         BLIT_WAIT();
     }
 }

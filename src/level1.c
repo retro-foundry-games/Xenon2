@@ -30,8 +30,10 @@ int level1_collision_hook(void)
 /* orig $054E10 (-> $055B94): level events by id (rec = the record that fired): a table of the level engine ($E60) for each */
 void level1_event(uint16_t id, const struct SpawnRec *rec)
 {
-    static const uint8_t *const tabs[10] = { xenon2.level1_data.formation_1, xenon2.level1_data.formation_2, xenon2.level1_data.formation_3, xenon2.level1_data.formation_4, xenon2.level1_data.formation_5,
-                                             xenon2.level1_data.formation_6, xenon2.level1_data.formation_7, xenon2.level1_data.formation_8, xenon2.level1_data.formation_9, xenon2.level1_data.formation_10 };
+    static const struct SpawnDef *const tabs[10] = {
+        &xenon2.level1_data.formation_1.defs, &xenon2.level1_data.formation_2.defs, &xenon2.level1_data.formation_3.defs, &xenon2.level1_data.formation_4.defs,
+        &xenon2.level1_data.formation_5.defs, &xenon2.level1_data.formation_6.defs, xenon2.level1_data.formation_7.defs, &xenon2.level1_data.formation_8.defs,
+        &xenon2.level1_data.formation_9.defs, &xenon2.level1_data.formation_10.defs };
 
     if (id == 0) {
         spawn_wave_326c(0, rec);   /* $E5A */

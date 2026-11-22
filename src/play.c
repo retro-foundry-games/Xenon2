@@ -143,7 +143,7 @@ void update_score_display(void)
 /* orig $006bea: sets up a level: flags, both screens' panel, the free list of objects, the shot list, the objects */
 void init_level_state(void)
 {
-    uint8_t *dst_b, *dst_a;
+    RawWord *dst_b, *dst_a;
     const uint16_t *words = xenon2.panel_words;
     uint16_t g, c, i;
     Object *o;
@@ -157,21 +157,21 @@ void init_level_state(void)
     xenon2.player_active[2] = 0;
     xenon2.player_active[3] = 0;
     clear_screens_small();
-    dst_b = xenon2.panel_b;   /* what $6bce leaves in dst_b and dst_a: the panels */
-    dst_a = xenon2.panel_a;
+    dst_b = (RawWord *)xenon2.panel_b;   /* what $6bce leaves in dst_b and dst_a: the panels */
+    dst_a = (RawWord *)xenon2.panel_a;
     for (g = 0; g < 8; g++) {
         for (c = 0; c < 20; c++) {
             uint16_t word;
 
-            word = *words++; wr16(dst_b, word); wr16(dst_a, word);
-            word = *words++; wr16(dst_b + 40, word); wr16(dst_a + 40, word);
-            word = *words++; wr16(dst_b + 80, word); wr16(dst_a + 80, word);
-            word = *words++; wr16(dst_b + 120, word); wr16(dst_a + 120, word);
-            dst_b += 2;
-            dst_a += 2;
+            word = *words++; wr16(dst_b[0].b, word); wr16(dst_a[0].b, word);
+            word = *words++; wr16(dst_b[SCREEN_PLANE_WORDS].b, word); wr16(dst_a[SCREEN_PLANE_WORDS].b, word);
+            word = *words++; wr16(dst_b[2 * SCREEN_PLANE_WORDS].b, word); wr16(dst_a[2 * SCREEN_PLANE_WORDS].b, word);
+            word = *words++; wr16(dst_b[3 * SCREEN_PLANE_WORDS].b, word); wr16(dst_a[3 * SCREEN_PLANE_WORDS].b, word);
+            dst_b++;
+            dst_a++;
         }
-        dst_b += 120;
-        dst_a += 120;
+        dst_b += 3 * SCREEN_PLANE_WORDS;
+        dst_a += 3 * SCREEN_PLANE_WORDS;
     }
     xenon2.boss_dead = 0;
     o = xenon2.obj_pool;

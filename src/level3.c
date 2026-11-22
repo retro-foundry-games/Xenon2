@@ -85,22 +85,22 @@ void l3_event(uint16_t event, const struct SpawnRec *rec)
         spawn_wave_326c(0, rec);   /* $E5A */
         break;
     case 1:
-        spawn_formation(0, rec, xenon2.level3_data.formation_1);
+        spawn_formation(0, rec, &xenon2.level3_data.formation_1.defs);
         break;
     case 2:
-        spawn_formation(0, rec, xenon2.level3_data.formation_2);
+        spawn_formation(0, rec, &xenon2.level3_data.formation_2.defs);
         break;
     case 3:
         saved = xenon2.difficulty_x2;
         xenon2.difficulty_x2 = xenon2.level3_data.event_param;
-        spawn_formation(0, rec, xenon2.level3_data.formation_3);
+        spawn_formation(0, rec, &xenon2.level3_data.formation_3.defs);
         xenon2.difficulty_x2 = saved;
         break;
     case 4:
-        spawn_formation(0, rec, xenon2.level3_data.formation_4);
+        spawn_formation(0, rec, &xenon2.level3_data.formation_4.defs);
         break;
     case 5:
-        spawn_formation(0, rec, xenon2.level3_data.formation_5);
+        spawn_formation(0, rec, &xenon2.level3_data.formation_5.defs);
         break;
     }
 }

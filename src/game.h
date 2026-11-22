@@ -213,7 +213,9 @@ struct Xenon2 {
     const int16_t weapon_slot_offsets[8];  /* $002404 tab */
     PAD(300)
     const uint8_t anim_weaponb0[6];  /* $002540 tab */
-    PAD(90)
+    PAD(30)
+    const uint8_t anim_wave_326c[6];  /* $002564 tab */
+    PAD(54)
     const uint8_t anim_spinner[6];  /* $0025A0 tab */
     PAD(24)
     const uint8_t anim_weapon2c[6];  /* $0025BE tab */
@@ -282,9 +284,7 @@ struct Xenon2 {
     const uint8_t mask_full[160];  /* $002EA6 tab */
     PAD(406)
     uint16_t area_damage_kept;  /* $0030DC var */
-    PAD(398)
-    const uint8_t spawn_def_326c[26];  /* $00326C tab */
-    PAD(1186)
+    PAD(1610)
     const struct SpawnKind spawn_kinds[18];  /* $003728 tab */
     PAD(318)
     const int16_t enemy_shot_dx[16];  /* $0038D2 tab */
@@ -664,6 +664,7 @@ LAYOUT_ASSERT(music_cmd_fn, 0x2094);
 LAYOUT_ASSERT(star_speed, 0x2298);
 LAYOUT_ASSERT(weapon_slot_offsets, 0x2404);
 LAYOUT_ASSERT(anim_weaponb0, 0x2540);
+LAYOUT_ASSERT(anim_wave_326c, 0x2564);
 LAYOUT_ASSERT(anim_spinner, 0x25a0);
 LAYOUT_ASSERT(anim_weapon2c, 0x25be);
 LAYOUT_ASSERT(anim_shell_9c, 0x25e2);
@@ -703,7 +704,6 @@ LAYOUT_ASSERT(anim_weapon90, 0x2c24);
 LAYOUT_ASSERT(mask_empty, 0x2de6);
 LAYOUT_ASSERT(mask_full, 0x2ea6);
 LAYOUT_ASSERT(area_damage_kept, 0x30dc);
-LAYOUT_ASSERT(spawn_def_326c, 0x326c);
 LAYOUT_ASSERT(spawn_kinds, 0x3728);
 LAYOUT_ASSERT(enemy_shot_dx, 0x38d2);
 LAYOUT_ASSERT(enemy_shot_dy, 0x38f2);
