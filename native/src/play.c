@@ -327,7 +327,7 @@ void spawn_shot_object(Object *a0, uint16_t d0, uint16_t d1, uint16_t d2, uint16
     a1->fn_draw = draw_bob_masked;
     a1->gfx = *a2;
     a1->anim_delay = 0;
-    a1->v28 = 0;
+    a1->shot.phase = 0;
     a1->score = a0->score;
 }
 

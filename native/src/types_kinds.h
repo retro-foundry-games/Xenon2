@@ -45,7 +45,8 @@ struct KindA_bolt {
 };
 struct KindA_boss {
     int16_t phase;
-    uint8_t pad_end[8];
+    int16_t step;
+    uint8_t pad_end[6];
 };
 struct KindA_bridge {
     int16_t cell;
@@ -72,7 +73,8 @@ struct KindA_diver {
 struct KindA_drill {
     int16_t state;
     int16_t dir;
-    uint8_t pad_end[6];
+    uint8_t pad2c[4];
+    int16_t target_hi;
 };
 struct KindA_enemy_shot {
     uint8_t pad2[2];
@@ -185,8 +187,15 @@ struct KindA_launcher {
     uint8_t pad8[4];
     int16_t pos;
 };
+struct KindA_link {
+    uint8_t pad28[2];
+    int16_t ptr_hi;
+    int16_t ptr_lo;
+    uint8_t pad_end[4];
+};
 struct KindA_marker {
-    uint8_t pad8[8];
+    int16_t step;
+    uint8_t pad2[6];
     int16_t launches;
 };
 struct KindA_marker_f8 {
