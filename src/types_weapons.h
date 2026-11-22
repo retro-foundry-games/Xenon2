@@ -1,6 +1,7 @@
 #ifndef TYPES_WEAPONS_H
 #define TYPES_WEAPONS_H
 #include <stdint.h>
+#include "types.h"
 #include "types_kinds.h"
 
 typedef struct Object Object;
@@ -105,7 +106,7 @@ struct Object {
     int16_t kind;               /* 44: the item or weapon kind (weapons, pickups, the shop's slots), 0 for most enemies */
     union {
         uint8_t *script;        /* 46: the path the object follows (ObjMove script) */
-        uint8_t (*map)[2];      /* 46: the cell of the tile map the object draws into (a cell is two raw big-endian bytes, MAP_COLS to a row) */
+        Cell *map;              /* 46: the cell of the tile map the object draws into (MAP_COLS to a row) */
     };
     const uint8_t *cursor;      /* 4a: the next command of a path script (ObjMove cursor) */
     uint32_t turn;              /* 4e: added to the angle with its words swapped: the high word steps the integer (low byte counts), the low word the fraction */

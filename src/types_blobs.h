@@ -3,6 +3,7 @@
 #define TYPES_BLOBS_H
 #include <stdint.h>
 #include <stddef.h>
+#include "types.h"
 
 #define BLOB_BASE 0x54E40
 
@@ -202,24 +203,24 @@ struct Level1Data {
     BLOB_PAD(54)
     uint8_t anim_shot[6];   /* 552B0 */
     BLOB_PAD(252)
-    uint8_t turret_a_cells_e0[32];   /* 553B2 */
-    uint8_t turret_a_cells_e4[32];   /* 553D2 */
+    Cell turret_a_cells_e0[16];   /* 553B2 */
+    Cell turret_a_cells_e4[16];   /* 553D2 */
     uint8_t turret_a_anim_e0[8];   /* 553F2 */
     uint8_t turret_a_anim_e4[8];   /* 553FA */
     BLOB_PAD(248)
-    uint8_t turret_c_steps_dc[80];   /* 554FA */
-    uint8_t turret_c_steps_d8[80];   /* 5554A */
+    Cell turret_c_steps_dc[40];   /* 554FA */
+    Cell turret_c_steps_d8[40];   /* 5554A */
     uint8_t turret_c_anim[8];   /* 5559A */
     BLOB_PAD(234)
-    uint8_t turret_b_cells_ec[32];   /* 5568C */
-    uint8_t turret_b_cells_e8[32];   /* 556AC */
+    Cell turret_b_cells_ec[16];   /* 5568C */
+    Cell turret_b_cells_e8[16];   /* 556AC */
     uint8_t turret_b_anim_e8[8];   /* 556CC */
     uint8_t turret_b_anim_ec[8];   /* 556D4 */
     BLOB_PAD(454)
     uint16_t level_patches[80];   /* 558A2 */
     BLOB_PAD(402)
-    uint8_t turret_c_cells_dc[8];   /* 55AD4 */
-    uint8_t turret_c_cells_d8[8];   /* 55ADC */
+    Cell turret_c_cells_dc[4];   /* 55AD4 */
+    Cell turret_c_cells_d8[4];   /* 55ADC */
     BLOB_PAD(514)
     uint16_t unit_pieces_less_one;   /* 55CE6 */
     struct LevelSeg segs[11];   /* 55CE8 */
@@ -339,15 +340,15 @@ struct Level2Data {
     uint8_t wreck_c[60];   /* 550DA */
     uint8_t boss_update_data_4[36];   /* 55116 */
     uint8_t roamer_anim[908];   /* 5513A */
-    uint8_t marker_f8_cells[436];   /* 554C6 */
-    uint8_t hook_words[302];   /* 5567A */
+    Cell marker_f8_cells[218];   /* 554C6 */
+    Cell hook_words[151];   /* 5567A */
     struct Level2FrontEntry front_entries[8];   /* 557A8 */
     const uint8_t *front_table_f0[21];   /* 557E8 */
     const uint8_t *front_table_other[21];   /* 5583C */
-    uint8_t hook_cells_a[4];   /* 55890 */
-    uint8_t hook_cells2_a[36];   /* 55894 */
-    uint8_t hook_cells_b[4];   /* 558B8 */
-    uint8_t hook_cells2_b[264];   /* 558BC */
+    Cell hook_cells_a[2];   /* 55890 */
+    Cell hook_cells2_a[18];   /* 55894 */
+    Cell hook_cells_b[2];   /* 558B8 */
+    Cell hook_cells2_b[132];   /* 558BC */
     uint8_t hook_anim_a[2];   /* 559C4 */
     uint8_t hook_anim_b[2];   /* 559C6 */
     uint8_t hook_picture_a[30];   /* 559C8 */
@@ -540,7 +541,7 @@ struct Level3Data {
     BLOB_PAD(712)
     uint8_t snake_anim_b[42];   /* 560B4 */
     uint8_t snake_anim_a[274];   /* 560DE */
-    uint8_t spawn_boss_data[160];   /* 561F0 */
+    Cell spawn_boss_data[80];   /* 561F0 */
     int16_t walker_update_words[8];   /* 56290 */
     int16_t walker_update_words_2[8];   /* 562A0 */
     BLOB_PAD(416)
@@ -553,13 +554,13 @@ struct Level3Data {
     uint8_t diver_update_data_3[42];   /* 567F2 */
     uint8_t diver_update_data_2[36];   /* 5681C */
     uint8_t diver_update_data_4[354];   /* 56840 */
-    uint8_t boss_update_data[210];   /* 569A2 */
+    Cell boss_update_data[105];   /* 569A2 */
     uint8_t boss_flash_grid[376];   /* 56A74 */
     const uint8_t *boss2_shot_anims[8];   /* 56BEC */
     BLOB_PAD(288)
-    uint8_t boss2_update_data[430];   /* 56D2C */
-    uint8_t gun_cells_f0[14];   /* 56EDA */
-    uint8_t gun_cells_other[14];   /* 56EE8 */
+    Cell boss2_update_data[215];   /* 56D2C */
+    Cell gun_cells_f0[7];   /* 56EDA */
+    Cell gun_cells_other[7];   /* 56EE8 */
     uint8_t gun_anim_b[2];   /* 56EF6 */
     uint8_t gun_anim_a[162];   /* 56EF8 */
     struct Level3EndPiece end_pieces[6];   /* 56F9A */
@@ -769,10 +770,10 @@ struct Level4Data {
     uint16_t walker_grid_y[11];   /* 56FE8 */
     uint8_t walker_grid_e0[6];   /* 56FFE */
     uint8_t walker_grid_e4[348];   /* 57004 */
-    uint8_t tower_cells_d0[48];   /* 57160 */
-    uint8_t tower_cells_d4[166];   /* 57190 */
-    uint8_t tower_hit_cells_d0[8];   /* 57236 */
-    uint8_t tower_hit_cells_d4[336];   /* 5723E */
+    Cell tower_cells_d0[24];   /* 57160 */
+    Cell tower_cells_d4[83];   /* 57190 */
+    Cell tower_hit_cells_d0[4];   /* 57236 */
+    Cell tower_hit_cells_d4[168];   /* 5723E */
     uint8_t shot_a_cells_4[166];   /* 5738E */
     uint8_t shot_a_cells_2[31126];   /* 57434 */
     uint8_t shot_a_picture[1760];   /* 5EDCA */
@@ -954,21 +955,21 @@ struct Level5Data {
     BLOB_PAD(512)
     struct Level5Gate gates[3];   /* 56B2C */
     BLOB_PAD(224)
-    uint8_t gate_update_data[100];   /* 56C30 */
-    uint8_t wall_cells_128[8];   /* 56C94 */
-    uint8_t wall_cells_other[8];   /* 56C9C */
+    Cell gate_update_data[50];   /* 56C30 */
+    Cell wall_cells_128[4];   /* 56C94 */
+    Cell wall_cells_other[4];   /* 56C9C */
     BLOB_PAD(408)
     uint8_t wall_flash_a_grid[2];   /* 56E3C */
     uint8_t wall_flash_b_grid[2];   /* 56E3E */
     BLOB_PAD(98)
-    uint8_t bridge_cells[278];   /* 56EA2 */
+    Cell bridge_cells[139];   /* 56EA2 */
     uint8_t bridge_update_data[358];   /* 56FB8 */
-    uint8_t group_cells[396];   /* 5711E */
+    Cell group_cells[198];   /* 5711E */
     struct Level5UnitDir unit_dirs[8];   /* 572AA */
     const uint8_t *unit_shot_pictures[8];   /* 572CA */
     BLOB_PAD(554)
-    uint8_t gun_cells_a[16];   /* 57514 */
-    uint8_t gun_cells_b[16];   /* 57524 */
+    Cell gun_cells_a[8];   /* 57514 */
+    Cell gun_cells_b[8];   /* 57524 */
     uint8_t gun_anim_b[2];   /* 57534 */
     uint8_t gun_anim_a[2];   /* 57536 */
     uint8_t gun_anim_108[24];   /* 57538 */

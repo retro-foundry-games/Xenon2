@@ -869,7 +869,7 @@ void hit_tile(Object *shooter, Object *tile, uint16_t damage)
 {
     uint16_t old;
     int16_t x, y, rows, cols;
-    uint8_t (*dst)[2];
+    Cell *dst;
     const uint8_t *src;
 
     tile->fn_draw = FN(tile_draw);
@@ -884,10 +884,10 @@ void hit_tile(Object *shooter, Object *tile, uint16_t damage)
     dst = tile->map;
     src = tile->anim;
     for (rows = tile->tile.rows; rows >= 0; rows--) {
-        uint8_t (*row)[2] = dst;
+        Cell *row = dst;
 
         for (cols = tile->tile.cols; cols >= 0; cols--) {
-            wr16(row[0], rd16(src));
+            wr16(row[0].b, rd16(src));
             row++;
             src += 2;
         }

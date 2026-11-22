@@ -81,11 +81,13 @@ static uint32_t shot_picture(uint16_t index)
     return sh_r32(sh_r32(0x77b70 + 4 * (uint32_t)index));
 }
 
-/* the two longs of a table entry go to the long at the cell and the one a row below it */
-static void put_cells(uint8_t (*cell)[2], const uint8_t *table)
+/* the four cells of a table entry go to two cells at the cell and two a row below it */
+static void put_cells(Cell *cell, const Cell *table)
 {
-    *(uint32_t *)(cell[0]) = *(const uint32_t *)(table);
-    *(uint32_t *)(cell[MAP_COLS]) = *(const uint32_t *)(table + 4);
+    cell[0] = table[0];
+    cell[1] = table[1];
+    cell[MAP_COLS] = table[2];
+    cell[MAP_COLS + 1] = table[3];
 }
 
 void l4_tower_update(Object *obj);
@@ -163,7 +165,7 @@ void l4_init(void)
 /* level4 $057064: the tower of tiles: it fires four ways by its phase v28 */
 void l4_tower_update(Object *obj)
 {
-    const uint8_t *cells;
+    const Cell *cells;
     uint16_t top;
 
     if ((int16_t)(xenon2.scroll_max + 0xd0) < obj->y) {
@@ -185,7 +187,7 @@ void l4_tower_update(Object *obj)
         }
         return;
     }
-    cells = (obj->type == 0xd0 ? xenon2.level4_data.tower_cells_d0 : xenon2.level4_data.tower_cells_d4) + ((uint16_t)obj->tower.phase << 3);
+    cells = (obj->type == 0xd0 ? xenon2.level4_data.tower_cells_d0 : xenon2.level4_data.tower_cells_d4) + ((uint16_t)obj->tower.phase << 2);
     put_cells(obj->map, cells);
     obj->tower.phase++;
     if (obj->tower.phase == 4) {
@@ -224,7 +226,7 @@ void l4_tower_hit(Object *shot, Object *enemy, uint16_t damage)
 void l4_tower_draw(Object *obj)
 {
     obj->fn_draw = (obj_fn)obj_nop_thunk;
-    draw_tile_grid_flash((obj->type == 0xd0 ? xenon2.level4_data.tower_cells_d0 : xenon2.level4_data.tower_cells_d4), 1, 1, (int16_t)(obj->y - xenon2.scroll_pos), (uint16_t)((uint16_t)obj->x >> 1));
+    draw_tile_grid_flash((const uint8_t *)(obj->type == 0xd0 ? xenon2.level4_data.tower_cells_d0 : xenon2.level4_data.tower_cells_d4), 1, 1, (int16_t)(obj->y - xenon2.scroll_pos), (uint16_t)((uint16_t)obj->x >> 1));
 }
 
 /* level4 $05700A: a marker makes a tower; the record's word at +$C says which of the two */

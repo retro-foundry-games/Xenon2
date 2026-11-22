@@ -101,10 +101,10 @@ end
 56fe8 walker_grid_y u16 11
 56ffe walker_grid_e0 u8 6
 57004 walker_grid_e4 u8 348
-57160 tower_cells_d0 u8 48
-57190 tower_cells_d4 u8 166
-57236 tower_hit_cells_d0 u8 8
-5723e tower_hit_cells_d4 u8 336
+57160 tower_cells_d0 cell 24
+57190 tower_cells_d4 cell 83
+57236 tower_hit_cells_d0 cell 4
+5723e tower_hit_cells_d4 cell 168
 5738e shot_a_cells_4 u8 166
 57434 shot_a_cells_2 u8 31126
 5edca shot_a_picture u8 1760
