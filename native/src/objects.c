@@ -466,9 +466,9 @@ Object *spawn_formation(Object *obj, const uint8_t *rec_raw, const uint8_t *form
             }
             set_cursor(obj, e);
             obj->steps = (int16_t)rec->steps;
-            SET_V5E(obj, (int16_t)rec->y);
+            obj->shot_rate = (uint8_t)rec->y;
             rnd = (uint16_t)random_next();
-            SET_V5E(obj, (int16_t)((V5E(obj) & 0x00ff) | ((rnd & 0xff) << 8)));
+            obj->shot_count = (uint8_t)rnd;
             obj->energy = (int16_t)xenon2.difficulty_x2;
             obj->kind = (int16_t)xenon2.pickup_kind_b;
             obj->big = (int8_t)def_ptr->to_big;
@@ -771,7 +771,7 @@ static Object *marker_tail(Object *marker, uint16_t type, const uint8_t *rec, vo
     marker->type = type;
     marker->fn_update = (obj_fn)update;
     marker->fn_draw = (obj_fn)obj_nop;
-    SET_V5E(marker, 0);
+    marker->shot_count = marker->shot_rate = 0;
     x = (uint16_t)(rd16(rec + 8) - 8);
     marker->x = (int16_t)x;
     y = (uint16_t)(rd16(rec + 10) - 8);

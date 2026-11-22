@@ -178,11 +178,11 @@ void l4_tower_update(Object *obj)
     obj->hit[1] = (int16_t)top;
     obj->hit[3] = (int16_t)(top + 0x1c);
     if (obj->tower.phase == 0) {
-        uint16_t sum = (uint16_t)(obj->v5e_b[0] + xenon2.level4_data.tower_fire_rate);
+        uint16_t sum = (uint16_t)(obj->shot_count + xenon2.level4_data.tower_fire_rate);
 
-        obj->v5e_b[0] = (uint8_t)sum;
+        obj->shot_count = (uint8_t)sum;
         if (sum > 0xff) {
-            obj->v5e_b[0] = (uint8_t)(random_next() & 0x3f);
+            obj->shot_count = (uint8_t)(random_next() & 0x3f);
             obj->tower.phase = 1;
         }
         return;
@@ -264,7 +264,7 @@ void l4_scroll(void)
         obj->fn_hit = (void *)hit_enemy;
         obj->fn_draw = draw_bob_masked;
         anim_header_set(obj, entry->anim);
-        obj->v5e_b[0] = (uint8_t)random_next();
+        obj->shot_count = (uint8_t)random_next();
         obj->y = -0x20;
         obj->l4.size = 0;
         obj->energy = (int16_t)xenon2.level4_data.scroll_energy;
@@ -293,11 +293,11 @@ void l4_enemy_a(Object *obj)
     }
     obj->l4_gun.tick++;
     if (obj->l4_gun.tick == 8) {
-        if (add_carry(&obj->v5e_b[0], xenon2.level4_data.enemy_a_fire_rate)) {
+        if (add_carry(&obj->shot_count, xenon2.level4_data.enemy_a_fire_rate)) {
             Object *part;
             const struct Level4EnemyGun *gun = &xenon2.level4_data.enemy_a_guns[obj->type == 0xc8 ? 0 : 1];
 
-            obj->v5e_b[0] = (uint8_t)(random_next() & 0x3f);
+            obj->shot_count = (uint8_t)(random_next() & 0x3f);
             part = alloc_in(LIST_B);
             part->type = gun->type;
             part->fn_update = FN(l4_shot_a);
@@ -310,10 +310,10 @@ void l4_enemy_a(Object *obj)
     } else if (obj->l4_gun.tick == 0xc) {
         obj->l4_gun.tick = 0;
     }
-    if (add_carry(&obj->v5e_b[1], (uint8_t)xenon2.level4_data.tower_energy)) {
+    if (add_carry(&obj->shot_rate, (uint8_t)xenon2.level4_data.tower_energy)) {
         int16_t x = (int16_t)(obj->x + 0x14);
 
-        obj->v5e_b[1] = (uint8_t)(random_next() & 0x3f);
+        obj->shot_rate = (uint8_t)(random_next() & 0x3f);
         if (obj->type != 0xc8)
             x = (int16_t)(x - 0x24);
         spawn_enemy_shot((uint16_t)x, (uint16_t)obj->y, 4, xenon2.level4_data.enemy_a_shot_steps, GPTR(shot_picture(xenon2.level4_data.enemy_a_shot_picture)));
@@ -390,7 +390,7 @@ void l4_shot_a(Object *obj)
     drop->script = (uint8_t *)cells;
     drop->cursor = cells;
     drop->steps = (int16_t)xenon2.level4_data.shot_a_steps;
-    SET_V5E(drop, 0);
+    drop->shot_count = drop->shot_rate = 0;
 }
 
 /* level4 $055724: the flying enemy: it follows its script and shows the picture of its direction */
@@ -431,12 +431,12 @@ void l4_enemy_b(Object *obj)
         l4_kill(obj);
         return;
     }
-    if (add_carry(&obj->v5e_b[0], xenon2.level4_data.enemy_b_fire_rate)) {
+    if (add_carry(&obj->shot_count, xenon2.level4_data.enemy_b_fire_rate)) {
         int16_t x = (int16_t)(obj->x + 0x1a), y = (int16_t)(obj->y + 0x1a);
         uint16_t angle = 0xa;
         const uint8_t *gfx = xenon2.level4_data.enemy_b_picture;
 
-        obj->v5e_b[0] = (uint8_t)(random_next() & 0x3f);
+        obj->shot_count = (uint8_t)(random_next() & 0x3f);
         if (obj->type != 0xd8) {
             angle = 0xd;
             x = (int16_t)(x - 0x34);
@@ -516,9 +516,9 @@ void l4_b1_core(Object *obj)
         obj->hit[3] = (int16_t)(obj->hit[1] + 8);
     }
     if (obj->core.tick == 0) {
-        if (!add_carry(&obj->v5e_b[0], xenon2.level4_data.b1_core_fire_rate))
+        if (!add_carry(&obj->shot_count, xenon2.level4_data.b1_core_fire_rate))
             return;
-        obj->v5e_b[0] = (uint8_t)(random_next() & 0x3f);
+        obj->shot_count = (uint8_t)(random_next() & 0x3f);
         xenon2.sfx_cmd2 = 0xf;
     }
     {
@@ -582,12 +582,12 @@ void l4_b1_gun(Object *obj)
     gun_box(obj);
     aim = aim_at_player(obj, 0x10, 0x10);
     obj->b1_gun.dir = (obj->b1_gun.dir & 0xffffu) | (uint32_t)(uint16_t)((int16_t)table[aim]) << 16;
-    if (add_carry(&obj->v5e_b[0], xenon2.level4_data.b1_gun_fire_rate)) {
+    if (add_carry(&obj->shot_count, xenon2.level4_data.b1_gun_fire_rate)) {
         Object *s;
         uint16_t angle = (uint16_t)(int16_t)(obj->b1_gun.dir >> 16);
         const uint8_t *anim = xenon2.level4_data.b1_gun_anims_by_angle[angle];
 
-        obj->v5e_b[0] = (uint8_t)(random_next() & 0x3f);
+        obj->shot_count = (uint8_t)(random_next() & 0x3f);
         s = spawn_enemy_shot((uint16_t)(obj->x + 0x10), (uint16_t)(obj->y + 0x10), angle, xenon2.level4_data.b1_gun_shot_steps, anim);
         set_anim(s, anim);
         s->x = (int16_t)(s->x + (int16_t)xenon2.level4_data.b1_gun_dx_by_dir[(uint16_t)(int16_t)(s->b1_gun.dir >> 16)]);
@@ -882,11 +882,11 @@ void l4_b2_barrel(Object *obj)
         obj->aim.dir = (obj->aim.dir & 0xffffu) | (uint32_t)(uint16_t)((int16_t)(gun->aim.dir >> 16)) << 16;
         set_anim(obj, xenon2.level4_data.b2_barrel_anims_by_dir[(uint16_t)(int16_t)(obj->aim.dir >> 16)]);
     }
-    if (add_carry(&obj->v5e_b[0], xenon2.level4_data.b2_barrel_fire_rate)) {
+    if (add_carry(&obj->shot_count, xenon2.level4_data.b2_barrel_fire_rate)) {
         uint16_t dir = (uint16_t)(int16_t)(obj->aim.dir >> 16);
         Object *s;
 
-        obj->v5e_b[0] = (uint8_t)(random_next() & 0x3f);
+        obj->shot_count = (uint8_t)(random_next() & 0x3f);
         s = spawn_enemy_shot((uint16_t)(obj->x + (int16_t)xenon2.level4_data.b2_muzzle_dx[dir]), (uint16_t)(obj->y + (int16_t)xenon2.level4_data.b2_muzzle_dy[dir]), dir, xenon2.level4_data.b2_barrel_shot_steps,
                              (void *)xenon2.level4_data.b2_shot_anim);
         set_anim(s, xenon2.level4_data.b2_shot_anim);
@@ -916,10 +916,10 @@ void l4_b2_ring(Object *obj)
     obj->y = (int16_t)(obj->y + xenon2.scroll_speed);
     anim_step(obj);
     follow_chain(obj);
-    if (add_carry(&obj->v5e_b[0], xenon2.level4_data.b2_ring_fire_rate)) {
+    if (add_carry(&obj->shot_count, xenon2.level4_data.b2_ring_fire_rate)) {
         int dir;
 
-        obj->v5e_b[0] = (uint8_t)(random_next() & 0x3f);
+        obj->shot_count = (uint8_t)(random_next() & 0x3f);
         for (dir = 7; dir >= 0; dir--) {
             Object *s = spawn_enemy_shot((uint16_t)obj->x, (uint16_t)obj->y, (uint16_t)dir, xenon2.level4_data.b2_ring_shot_steps, GPTR(shot_picture(xenon2.level4_data.b2_ring_shot_picture)));
 
@@ -941,8 +941,8 @@ void l4_b2_eye(Object *obj)
         obj->aim.dir = (obj->aim.dir & 0xffffu) | (uint32_t)(uint16_t)((int16_t)dir) << 16;
         set_anim(obj, xenon2.level4_data.b2_eye_anims[dir]);
     }
-    if (add_carry(&obj->v5e_b[0], xenon2.level4_data.b2_eye_fire_rate)) {
-        obj->v5e_b[0] = (uint8_t)(random_next() & 0x3f);
+    if (add_carry(&obj->shot_count, xenon2.level4_data.b2_eye_fire_rate)) {
+        obj->shot_count = (uint8_t)(random_next() & 0x3f);
         spawn_enemy_shot((uint16_t)obj->x, (uint16_t)obj->y, (uint16_t)(int16_t)(obj->aim.dir >> 16), xenon2.level4_data.b2_eye_shot_steps, (void *)xenon2.level4_data.b2_eye_shot_picture);
     }
     bbox_from_frame(obj);
@@ -1055,9 +1055,9 @@ void l4_bar_update(Object *obj)
     anim_step(obj);
     if (obj->bar.phase == 0) {
         obj->bar.step = (obj->bar.step & 0xffffu) | (uint32_t)(uint16_t)(1) << 16;
-        if (!add_carry(&obj->v5e_b[0], xenon2.level4_data.bar_fire_rate))
+        if (!add_carry(&obj->shot_count, xenon2.level4_data.bar_fire_rate))
             goto box;
-        obj->v5e_b[0] = (uint8_t)(random_next() & 0x3f);
+        obj->shot_count = (uint8_t)(random_next() & 0x3f);
     }
     obj->bar.phase = (int16_t)(obj->bar.phase + (int16_t)(obj->bar.step >> 16));
     if (obj->bar.phase == 6)
@@ -1125,7 +1125,8 @@ void l4_spawn_walker(const uint8_t *record)
     obj->walker.side = (int16_t)rd16(record + 6);
     set_anim(obj, obj->type == 0xe0 ? xenon2.level4_data.walker_anim_e0 : xenon2.level4_data.walker_anim_other);
     obj->kind = 0;
-    SET_V5E(obj, xenon2.level4_data.walker_v5e);
+    obj->shot_count = (uint8_t)(xenon2.level4_data.walker_v5e >> 8);
+    obj->shot_rate = (uint8_t)xenon2.level4_data.walker_v5e;
     obj->walker_b.home_x = obj->x;
     obj->walker_b.home_y = obj->y;
 }

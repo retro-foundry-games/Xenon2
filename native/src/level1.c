@@ -287,7 +287,7 @@ void level1_hook(uint16_t id, const uint8_t *rec, uint16_t scroll)
         obj->energy = (int16_t)xenon2.level1_data.turret_energy[2];
         obj->big = -1;
         obj->score = 0xfa;
-        SET_V5E(obj, 0);
+        obj->shot_count = obj->shot_rate = 0;
         obj->x = (int16_t)(rd16(rec + 8) - 8 + (flag ? 0x10 : 0));
         obj->y = (int16_t)(rd16(rec + 10) - 8 - xenon2.scroll_pos);
         obj->launcher.step = -1;
@@ -371,7 +371,7 @@ void level1_boss_update(Object *boss)
             part->fn_hit = (void *)hit_kill_shooter;
             part->gfx = xenon2.level1_data.boss_part_picture;
             part->anim_delay = 0;
-            SET_V5E(part, 0);
+            part->shot_count = part->shot_rate = 0;
             part->anim = (const uint8_t *)prev_part;
             prev_part = part;
             part->big = 0;
@@ -503,7 +503,7 @@ void level1_init(void)
     boss->fn_update = FN(level1_boss_update);
     boss->fn_draw = FN(level1_boss_draw);
     boss->fn_hit = (void *)level1_boss_hit;
-    SET_V5E(boss, 0);
+    boss->shot_count = boss->shot_rate = 0;
     boss->persists = -1;
     boss->screen_fixed = -1;
     boss->y = 0x10;
@@ -566,7 +566,7 @@ void level1_spawn_unit(uint16_t unit)
     obj->fn_draw = obj_nop_thunk;
     obj->fn_hit = (void *)level1_hit_free;
     obj->unit.counter = counter;
-    SET_V5E(obj, 0);
+    obj->shot_count = obj->shot_rate = 0;
     obj->script = (uint8_t *)s->path;
     ((ObjMove *)obj)->cursor = s->path;
     obj->x = x;
@@ -590,7 +590,7 @@ void level1_spawn_unit(uint16_t unit)
         obj->unit.counter = counter;
         obj->energy = 1;
         obj->big = 0;
-        SET_V5E(obj, 0);
+        obj->shot_count = obj->shot_rate = 0;
         obj->anim_delay = 0;
         obj->script = (uint8_t *)s->path;
         ((ObjMove *)obj)->cursor = s->path;

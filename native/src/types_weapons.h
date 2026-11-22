@@ -114,12 +114,11 @@ struct Object {
     int16_t steps;
     Object *target;             /* 56 */
     Object *chain;              /* 5a */
-    uint8_t v5e_b[2];           /* 5e: a word (high byte first), and two bytes in ObjMove (shot_count, shot_rate): kept as bytes, V5E/SET_V5E for the word */
+    uint8_t shot_count;         /* 5e: the fire accumulator; the weapons keep a countdown in the word shot_count:shot_rate */
+    uint8_t shot_rate;          /* 5f */
     int8_t persists;
     int8_t screen_fixed;
 };
-#define V5E(o) ((int16_t)(((o)->v5e_b[0] << 8) | (o)->v5e_b[1]))
-#define SET_V5E(o, v) ((o)->v5e_b[0] = (uint8_t)((uint16_t)(v) >> 8), (o)->v5e_b[1] = (uint8_t)(v))
 
 /* a weapon slot at $C66 (7 of them) */
 typedef struct Slot Slot;
