@@ -180,7 +180,7 @@ void music_start(uint16_t song)
     music_silence();
     sound_init_instruments();
     xenon2.music_transpose = 0;
-    header = (const SongHeader *)((uintptr_t)xenon2.song_headers + (uint16_t)((uint16_t)(int16_t)(int8_t)song * 10));
+    header = &xenon2.song_headers[(uint16_t)(int16_t)(int8_t)song];
     xenon2.music_tempo_mul = (uint16_t)(int16_t)(int8_t)header->tempo;
     xenon2.music_rate = header->rate;
     xenon2.music_rate_copy = xenon2.music_rate;
