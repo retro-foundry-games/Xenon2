@@ -4,7 +4,7 @@ var map_image 0x54e00 uint8_t *                   ; the background picture (the 
 var tile_gfx 0x54e08 uint8_t *                    ; the tile graphics
 tab pow10 0x169e uint32_t 8                       ; 1000000 .. 1, 0
 tab text_chars 0x86fc uint8_t 39                  ; the characters of the text font, in glyph order, zero-terminated
-tab font_gfx 0xb666 uint8_t 4864                  ; the font: 128 bytes a glyph
+tab font_gfx 0xb666 uint16_t 2432                  ; the font: 128 bytes a glyph
 arr copper_list_a 0x1014 uint16_t 18              ; copper list: the bitplane pointers
 arr copper_list_b 0x1038 uint16_t 18
 tab tile_mask_block 0x1ea2 uint8_t 32                       ; a block of tile masks ($1BD0 draws it for every plain cell)

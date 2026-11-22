@@ -7,7 +7,7 @@ typedef void (*hit_fn)(Object *shooter, Object *target, uint16_t damage);
 
 void weapon_shield_draw(Object *obj);
 void area_damage(Object *shooter, int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_t dmg);
-void debris_burst(Object *obj, int16_t count, uint16_t x, uint16_t y, uint16_t w, uint16_t h, const uint8_t *anim);
+void debris_burst(Object *obj, int16_t count, uint16_t x, uint16_t y, uint16_t w, uint16_t h, const uint16_t *anim);
 void spawn_bonuses(int16_t count);
 void spinner_update(Object *obj); void drill_update(Object *obj); void weaponc0_update(Object *obj); void weaponb0_update(Object *obj);
 void pod_decoration_update(Object *obj); void weapon2c_update(Object *obj); void weapon4c_update(Object *obj); void weapon20_update(Object *obj);

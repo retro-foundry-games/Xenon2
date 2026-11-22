@@ -120,17 +120,17 @@ void stars_draw(void)
     for (int g = 0; g < 4; g++) {
         for (int i = 0; i < 12; i++) {
             struct Star *s = &xenon2.stars[g * 12 + i];
-            RawWord *p = (RawWord *)(screen + (int16_t)STAR_OFF(s));
+            uint16_t *p = (uint16_t *)(screen + (int16_t)STAR_OFF(s));
             uint16_t mask = STAR_MASK(s);
-            uint16_t planes = rd16(p[0].b) | rd16(p[SCREEN_PLANE_WORDS].b) | rd16(p[2 * SCREEN_PLANE_WORDS].b) | rd16(p[3 * SCREEN_PLANE_WORDS].b);
+            uint16_t planes = p[0] | p[SCREEN_PLANE_WORDS] | p[2 * SCREEN_PLANE_WORDS] | p[3 * SCREEN_PLANE_WORDS];
 
             if (planes & mask)
                 continue;
             if (g == 1 || g == 3)
-                wr16(p[0].b, rd16(p[0].b) | mask);
+                p[0] = p[0] | mask;
             if (g == 2 || g == 3)
-                wr16(p[SCREEN_PLANE_WORDS].b, rd16(p[SCREEN_PLANE_WORDS].b) | mask);
-            wr16(p[2 * SCREEN_PLANE_WORDS].b, rd16(p[2 * SCREEN_PLANE_WORDS].b) | mask);
+                p[SCREEN_PLANE_WORDS] = p[SCREEN_PLANE_WORDS] | mask;
+            p[2 * SCREEN_PLANE_WORDS] = p[2 * SCREEN_PLANE_WORDS] | mask;
         }
     }
 }
@@ -296,22 +296,19 @@ void irq_vblank_hooked(void)
     irq_vblank();
 }
 
-/* The palette of the level (level_palette, 8 longwords of 12-bit colour pairs) goes to palette_shadow (halved per component when
- * shades_timer is set) and, doubled, to the colour registers 0-15. */
+/* The palette of the level (level_palette, 16 colours of 12 bits) goes to palette_shadow (halved per component when shades_timer is set) and,
+ * doubled, to the colour registers 0-15. */
 static void apply_palette(void)
 {
-    const uint32_t *pal = xenon2.level_palette;
+    const uint16_t *pal = xenon2.level_palette;
 
-    for (int i = 0; i < 8; i++) {
-        uint32_t v = rd32(&pal[i]);
+    for (int i = 0; i < 16; i++) {
+        uint16_t w = pal[i];
 
         if (xenon2.shades_timer)
-            v = (v >> 1) & 0x07770777u;
-        xenon2.palette_shadow[2 * i] = (uint16_t)(v >> 16);
-        xenon2.palette_shadow[2 * i + 1] = (uint16_t)v;
-        v += v;
-        custom->color[2 * i] = (uint16_t)(v >> 16);
-        custom->color[2 * i + 1] = (uint16_t)v;
+            w = (uint16_t)((w >> 1) & 0x0777);
+        xenon2.palette_shadow[i] = w;
+        custom->color[i] = (uint16_t)(w + w);
     }
 }
 
@@ -432,7 +429,7 @@ static void wait_vbl_and_show(void)
     stars_draw();
     swap_screens_192();
     for (i = 0; i < 16; i++)
-        colors[i] = rd16((const uint16_t *)xenon2.level_palette + i);
+        colors[i] = xenon2.level_palette[i];
     palette_fade_in(colors);
 }
 
@@ -700,8 +697,8 @@ void game_entry(void)
         xenon2.exc_vectors_hi[i] = game_entry;
     clear_palette();
     xenon2.last_flip_vbl = 0;
-    xenon2.draw_screen = xenon2.screen_b;
-    xenon2.show_screen = xenon2.screen_a;
+    xenon2.draw_screen = (uint8_t *)xenon2.screen_b;
+    xenon2.show_screen = (uint8_t *)xenon2.screen_a;
     xenon2.sfx_cmd = -1;
     xenon2.sfx_cmd_aux = -1;
     xenon2.sfx_cmd2 = -1;

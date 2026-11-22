@@ -4,7 +4,7 @@
 #include "title.h"
 #include "draw.h"
 
-#define SCREEN_A_WORDS(off) ((uint16_t *)&xenon2.screen_a[off])
+#define SCREEN_A_WORDS(off) (&xenon2.screen_a[(off) / 2])   /* the byte offset off of screen_a */
 
 /* ---- title lines, fade, high-score table ---- */
 
@@ -101,7 +101,7 @@ void palette_fade_in(const uint16_t *target)
  * dest steps one word to the right for each character */
 void draw_big_text(const uint8_t *text, uint16_t *dest)
 {
-    const uint16_t *font = (const uint16_t *)xenon2.font_gfx;
+    const uint16_t *font = xenon2.font_gfx;
     int n;
 
     for (n = 14; n >= 0; n--) {
@@ -115,13 +115,13 @@ void draw_big_text(const uint8_t *text, uint16_t *dest)
             continue;
         }
         idx = (int16_t)find_glyph(ch, xenon2.text_chars);   /* inlined: $7EF8 */
-        idx = (int16_t)((uint16_t)idx << 7);
-        g = (const uint16_t *)((const uint8_t *)font + idx);
+        idx = (int16_t)((uint16_t)idx << 6);
+        g = font + idx;
         for (row = 0; row < 16; row++) {
-            wr16(&dest[0], rd16(g)); g++;
-            wr16(&dest[20], rd16(g)); g++;
-            wr16(&dest[40], rd16(g)); g++;
-            wr16(&dest[60], rd16(g)); g++;
+            dest[0] = *g++;
+            dest[20] = *g++;
+            dest[40] = *g++;
+            dest[60] = *g++;
             dest += 80;
         }
         dest -= 0x4ff;
@@ -388,7 +388,7 @@ int game_disk_present(void)
 {
     int ok;
 
-    if (xenon2.draw_screen != xenon2.screen_a) {
+    if (xenon2.draw_screen != (uint8_t *)xenon2.screen_a) {
         uint32_t *dst = (uint32_t *)xenon2.screen_b;
         const uint32_t *src = (const uint32_t *)xenon2.screen_a;
         int i;
@@ -398,9 +398,9 @@ int game_disk_present(void)
         swap_screens_200();
     }
     xenon2.irq_vectors[2] = irq_vblank_hooked;
-    disk_read_sectors(0, 1, &xenon2.screen_a[0x5600]);
+    disk_read_sectors(0, 1, SCREEN_A_WORDS(0x5600));
     xenon2.irq_vectors[2] = irq_vblank;
-    ok = rd32(&xenon2.screen_a[0x5602]) == 0x58324220;
+    ok = xenon2.screen_a[0x5602 / 2] == 0x5832 && xenon2.screen_a[0x5604 / 2] == 0x4220;
     return ok;
 }
 
@@ -502,12 +502,14 @@ void shop_run(void)
     if (xenon2.boss_dead != 0)
         return;
     for (i = 0; i < 8; i++) {
-        uint32_t v = rd32(&xenon2.level_palette[i]);
+        uint16_t hi = xenon2.level_palette[2 * i], lo = xenon2.level_palette[2 * i + 1];
 
-        if (xenon2.shades_timer != 0)
-            v >>= 1;
-        xenon2.level_palette_copy[2 * i] = (uint16_t)(v >> 16);
-        xenon2.level_palette_copy[2 * i + 1] = (uint16_t)v;
+        if (xenon2.shades_timer != 0) {
+            lo = (uint16_t)((lo >> 1) | (hi << 15));   /* lsr.l #1 of the pair */
+            hi >>= 1;
+        }
+        xenon2.level_palette_copy[2 * i] = hi;
+        xenon2.level_palette_copy[2 * i + 1] = lo;
     }
     draw_background();
     stars_draw();
@@ -625,22 +627,15 @@ HLE_WEAK void disk_seek(uint16_t track)
 }
 
 /* orig $957E: bytes of MFM data (odd bits first, then the even bits) decoded to dest; returns the end of the source */
-uint8_t *mfm_decode(uint8_t *dest, uint8_t *src, uint16_t bytes)
+uint16_t *mfm_decode(uint16_t *dest, uint16_t *src, uint16_t bytes)
 {
-    uint8_t *odd = src;
-    uint8_t *even = src + bytes;
-    uint16_t n = (uint16_t)((bytes >> 2) - 1);
+    uint16_t words = (uint16_t)(bytes >> 1);
+    const uint16_t *odd = src;
+    const uint16_t *even = src + words;
 
-    do {
-        uint32_t o = rd32(odd) & 0x55555555u;
-        uint32_t e = rd32(even) & 0x55555555u;
-
-        odd += 4;
-        even += 4;
-        wr32(dest, (o + o) | e);
-        dest += 4;
-    } while (n-- != 0);
-    return even;
+    for (uint16_t i = 0; i < words; i++)
+        dest[i] = (uint16_t)(((odd[i] & 0x5555) << 1) | (even[i] & 0x5555));
+    return src + 2 * words;
 }
 
 /* orig $951E: looks in the raw track from src on for the sector sync (a run of $5555 or $AAAA words followed by one of the
@@ -659,7 +654,7 @@ int32_t mfm_align(const uint16_t *src)
 
     for (;;) {
         for (;;) {
-            word = rd16(p++);
+            word = *p++;
             if (word == 0x5555) {
                 pats = xenon2.mfm_sync_a;
                 shift_right = 0xf;
@@ -673,15 +668,14 @@ int32_t mfm_align(const uint16_t *src)
             if (!(p < limit))
                 return -1;
         }
-        while (word == rd16(p++))
+        while (word == *p++)
             ;
         p--;
         {
-            uint32_t pat = ((uint32_t)rd16(&p[0]) << 16) | rd16(&p[1]);
-
             for (;;) {
-                if (pat == *pats++)
+                if (p[0] == (*pats >> 16) && p[1] == (uint16_t)*pats)
                     goto found;
+                pats++;
                 shift_right -= 2;
                 if (shift_right < 0)
                     break;
@@ -692,10 +686,10 @@ found:
     out = SCREEN_A_WORDS(0x1600);
     shift_left = (uint16_t)(0x10 - shift_right);
     for (i = 0; i < 0x2000; i++) {
-        uint16_t hi = (uint16_t)((uint32_t)rd16(&p[-1]) << shift_left);
-        uint16_t lo = (uint16_t)(rd16(p++) >> shift_right);
+        uint16_t hi = (uint16_t)((uint32_t)p[-1] << shift_left);
+        uint16_t lo = (uint16_t)(*p++ >> shift_right);
 
-        wr16(out++, (uint16_t)(lo | hi));
+        *out++ = (uint16_t)(lo | hi);
     }
     return shift_right;
 }
@@ -704,7 +698,7 @@ found:
  * at 512 * n); up to 4 tries, the head recalibrated between them; returns 0, or -1 when it fails (HLE: disk) */
 HLE_WEAK int disk_read_track(void)
 {
-    uint8_t *p;
+    uint16_t *p;
     int n;
 
     xenon2.disk_retries = 3;
@@ -714,7 +708,7 @@ retry:
     for (n = 0; n < 11; n++)
         xenon2.disk_seen[n] = 0;
     custom->dsklen = 0x4000;
-    custom->dskpt = ADDR(&xenon2.screen_a[0x1600]);
+    custom->dskpt = ADDR(SCREEN_A_WORDS(0x1600));
     SETCLR_WRITE(intreq, 0x1002);
     SETCLR_WRITE(adkcon, 0x6600);
     SETCLR_WRITE(adkcon, 0x9100);
@@ -726,28 +720,28 @@ retry:
     mfm_align(SCREEN_A_WORDS(0x1604));
     if (xenon2.disk_error)
         goto fail;
-    p = &xenon2.screen_a[0x1602];
-    while (rd16(p) == 0x4489)
-        p += 2;
+    p = SCREEN_A_WORDS(0x1602);
+    while (*p == 0x4489)
+        p++;
     for (n = 10; n >= 0; n--) {
         uint16_t sector;
 
         p = mfm_decode(xenon2.disk_header, p, 4);
-        p += 0x30;
-        sector = xenon2.disk_header[2];
+        p += 0x18;
+        sector = (uint16_t)(xenon2.disk_header[1] >> 8);
         if (sector > 10)
             goto fail;
         if (xenon2.disk_seen[sector] & 0x80)
             goto fail;
         xenon2.disk_seen[sector] |= 0x80;
-        p = mfm_decode(&xenon2.screen_a[(uint16_t)(sector << 9)], p, 0x200);
-        if (xenon2.disk_header[3] == 1) {
-            mfm_align((const uint16_t *)p);
-            p = &xenon2.screen_a[0x1602];
-            while (rd16(p) == 0x4489)
-                p += 2;
+        p = mfm_decode(SCREEN_A_WORDS((uint16_t)(sector << 9)), p, 0x200);
+        if ((xenon2.disk_header[1] & 0xff) == 1) {
+            mfm_align(p);
+            p = SCREEN_A_WORDS(0x1602);
+            while (*p == 0x4489)
+                p++;
         } else {
-            p += 8;
+            p += 4;
         }
         if (xenon2.disk_error)
             goto fail;
@@ -789,7 +783,7 @@ HLE_WEAK int disk_read_sectors(uint16_t first_sector, uint16_t count, void *dest
             return -1;
         }
         to = (uint32_t *)xenon2.disk_dest;
-        from = (const uint32_t *)&xenon2.screen_a[(uint16_t)(xenon2.disk_sector * 0x200u)];
+        from = (const uint32_t *)SCREEN_A_WORDS((uint16_t)(xenon2.disk_sector * 0x200u));
         n = (int16_t)(11 - xenon2.disk_sector);
         if (!(n <= (int16_t)xenon2.disk_count))
             n = (int16_t)xenon2.disk_count;
@@ -821,10 +815,10 @@ void irq_disk_block(void)
 void work_area_save(void)
 {
     if (xenon2.work_area_users == 0) {
-        const uint8_t *saved = xenon2.panel_b;
+        const uint16_t *saved = xenon2.panel_b;
         int i;
 
-        for (i = 0; i < 1280; i++)
+        for (i = 0; i < 640; i++)
             xenon2.work_area[i] = saved[i];
     }
     xenon2.work_area_users++;
@@ -834,11 +828,11 @@ void work_area_save(void)
 void work_area_restore(void)
 {
     if (--xenon2.work_area_users == 0) {
-        uint8_t *c = xenon2.panel_a;
-        uint8_t *saved = xenon2.panel_b;
+        uint16_t *c = xenon2.panel_a;
+        uint16_t *saved = xenon2.panel_b;
         int i;
 
-        for (i = 0; i < 1280; i++) {
+        for (i = 0; i < 640; i++) {
             saved[i] = xenon2.work_area[i];
             *c++ = xenon2.work_area[i];
         }
@@ -911,7 +905,7 @@ next_command:
     for (;;) {
         const struct PathCmd *cmd = o->cursor;
 
-        switch (rd16(cmd->op.b)) {
+        switch (cmd->op) {
         case 0: {
             int i;
             ObjMove *e;
@@ -950,14 +944,14 @@ next_command:
             }
         }
         case 2:
-            o->angle = rd16(cmd->arg.move.angle.b);
-            o->turn = (uint32_t)((int32_t)((uint32_t)rd16(cmd->arg.move.turn.b) << 16) >> 8);
-            o->turn_step = (int16_t)rd16(cmd->arg.move.turn_step.b);
-            o->wait = (int16_t)rd16(cmd->arg.move.wait.b);
+            o->angle = cmd->arg.move.angle;
+            o->turn = (uint32_t)((int32_t)((uint32_t)cmd->arg.move.turn << 16) >> 8);
+            o->turn_step = (int16_t)cmd->arg.move.turn_step;
+            o->wait = (int16_t)cmd->arg.move.wait;
             o->cursor = (const struct PathCmd *)(&cmd->arg.move + 1);
             goto move;
         case 4: {
-            uint16_t t = rd16(cmd->arg.pause.steps.b);
+            uint16_t t = cmd->arg.pause.steps;
 
             o->cursor = (const struct PathCmd *)(&cmd->arg.pause + 1);
             steps = (uint16_t)(steps - t);
@@ -970,13 +964,13 @@ next_command:
             int16_t t;
 
             do {
-                t = (int16_t)rd16(cmd->arg.pick[(random_next() & 0xe) / 2].b);
+                t = (int16_t)cmd->arg.pick[(random_next() & 0xe) / 2];
             } while (t < 0);
             o->cursor = (const struct PathCmd *)(o->script + t);
             continue;
         }
         case 8:
-            o->cursor = (const struct PathCmd *)(o->script + (int16_t)rd16(cmd->arg.jump.offset.b));
+            o->cursor = (const struct PathCmd *)(o->script + (int16_t)cmd->arg.jump.offset);
             continue;
         case 10:
             o->cursor = (const struct PathCmd *)(&cmd->arg.pos + 1);

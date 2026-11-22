@@ -14,7 +14,7 @@ record SpawnDef 24
 4 update code
 8 draw code
 12 hit code
-16 anim ptr
+16 anim ptr:u16
 22 to_big u8
 23 to_is_part u8
 end
@@ -27,7 +27,7 @@ record Formation2 50
 48 end u16
 end
 record ShotPic 4
-0 pic ptr
+0 pic ptr:u16
 end
 record LevelSpawn 12
 0 x s16
@@ -39,7 +39,7 @@ end
 record LevelSeg 12
 0 type u16
 2 hit code
-6 gfx ptr
+6 gfx ptr:u16
 10 score u16
 end
 54e43 shot_1_rate u8 1
@@ -66,44 +66,49 @@ end
 54f34 formation_8 Formation1
 54f4e formation_9 Formation1
 54f68 formation_10 Formation1
-551d4 anim_launcher_d0 u8 6
-551f8 anim_launcher_d0_fire u8 6
-55212 anim_launcher_d4 u8 6
-55236 anim_launcher_d4_fire u8 6
-55250 anim_piece_a u8 6
-55274 anim_piece_b u8 6
-552b0 anim_shot u8 6
-553b2 turret_a_cells_e0 cell 16
-553d2 turret_a_cells_e4 cell 16
-553f2 turret_a_anim_e0 u8 8
-553fa turret_a_anim_e4 u8 8
-554fa turret_c_steps_dc cell 40
-5554a turret_c_steps_d8 cell 40
-5559a turret_c_anim u8 8
-5568c turret_b_cells_ec cell 16
-556ac turret_b_cells_e8 cell 16
-556cc turret_b_anim_e8 u8 8
-556d4 turret_b_anim_ec u8 8
+551d4 anim_launcher_d0 u16 3
+551f8 anim_launcher_d0_fire u16 3
+55212 anim_launcher_d4 u16 3
+55236 anim_launcher_d4_fire u16 3
+55250 anim_piece_a u16 3
+55274 anim_piece_b u16 3
+552b0 anim_shot u16 3
+553b2 turret_a_cells_e0 u16 16
+553d2 turret_a_cells_e4 u16 16
+553f2 turret_a_anim_e0 u16 4
+553fa turret_a_anim_e4 u16 4
+554fa turret_c_steps_dc u16 40
+5554a turret_c_steps_d8 u16 40
+5559a turret_c_anim u16 4
+5568c turret_b_cells_ec u16 16
+556ac turret_b_cells_e8 u16 16
+556cc turret_b_anim_e8 u16 4
+556d4 turret_b_anim_ec u16 4
 558a2 level_patches u16 80
-55ad4 turret_c_cells_dc cell 4
-55adc turret_c_cells_d8 cell 4
+55ad4 turret_c_cells_dc u16 4
+55adc turret_c_cells_d8 u16 4
 55ce6 unit_pieces_less_one u16 1
-567bc boss_grid u8 2
-56810 boss_draw_sources u8 48
-59e28 boss_part_picture u8 2
-5c0e4 eyes_a u8 2
-5c194 eyes_b u8 2
-5c244 eyes_c u8 2
+567bc boss_grid u16 1
+56810 boss_draw_sources u16 24
+59e28 boss_part_picture u16 1
+5c0e4 eyes_a u16 1
+5c194 eyes_b u16 1
+5c244 eyes_c u16 1
 55ce8 segs LevelSeg 11
 55d6c unit_starts LevelSpawn 16
-56174 piece_pictures ptr 16
-5638a boss_part_pictures ptr 8
+56174 piece_pictures ptr:u16 16
+5638a boss_part_pictures ptr:u16 8
 68f40 shot_gfx_table ptr:ShotPic 5
 68f54 shot_gfx_cells ShotPic 3
 68f60 formation_paths ptr:PathCmd 87
-6e80a data_src u8 12000
-567fa boss_draw_table u8 20
+6e80a data_src u16 6000
+567fa boss_draw_table u16 10
 6a5da events_a SpawnRec 113
 6ac08 events_a_end s16
 5c854 events_b SpawnRec 51
 5cb1e events_b_end s16
+550ea pad_550ea u16 57
+5adec pad_5adec u16 1307
+5cb20 pad_5cb20 u16 7824
+690bc pad_690bc u16 327
+6ac0a pad_6ac0a u16 7680

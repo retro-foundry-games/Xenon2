@@ -365,7 +365,7 @@ Object *weapon_b0(Object *caller, Object *last)
 }
 
 /* the weapons of slot 5 share their set-up: type, routine, animation, energy, kind, y offset 0x19 (or none) */
-static Object *weapon_slot5(Object *caller, uint16_t type, obj_fn update, const uint8_t *anim, int16_t energy, int16_t score, int16_t kind, int dy)
+static Object *weapon_slot5(Object *caller, uint16_t type, obj_fn update, const uint16_t *anim, int16_t energy, int16_t score, int16_t kind, int dy)
 {
     Slot *s5 = SLOT(5);
     Object *n;
@@ -448,7 +448,7 @@ Object *weapon_44(Object *caller, Object *last)
 }
 
 /* the weapons of the side slots: orig $0052E0 ($90), $00538C ($20), $00543A ($34); 0 when the four slots are taken */
-static Object *weapon_side(Object *caller, uint16_t type, obj_fn update, const uint8_t *anim, int16_t energy, int16_t kind, int clear28)
+static Object *weapon_side(Object *caller, uint16_t type, obj_fn update, const uint16_t *anim, int16_t energy, int16_t kind, int clear28)
 {
     int rev_index;
     Slot *slot = free_side_slot(&rev_index);
@@ -610,7 +610,7 @@ void weapon9c_update(Object *obj)
 }
 
 /* the eight pictures of the drill, by the loop counter */
-static const uint8_t *const drill_anim[8] = { xenon2.anim_drill_0, xenon2.anim_drill_1, xenon2.anim_drill_2, xenon2.anim_drill_3, xenon2.anim_drill_4, xenon2.anim_drill_5, xenon2.anim_drill_6, xenon2.anim_drill_7 };
+static const uint16_t *const drill_anim[8] = { xenon2.anim_drill_0, xenon2.anim_drill_1, xenon2.anim_drill_2, xenon2.anim_drill_3, xenon2.anim_drill_4, xenon2.anim_drill_5, xenon2.anim_drill_6, xenon2.anim_drill_7 };
 
 /* orig $0056D6: update of weapon $a0 (slot 5 or 6, type $48) */
 void weaponA0_update(Object *obj)
@@ -730,12 +730,12 @@ void shot_update(Object *obj)
 static void centre(const Object *o, int16_t *x, int16_t *y)
 {
     const struct Pic *gfx = o->gfx;
-    int16_t dx = (int16_t)(o->x - (int16_t)rd16(gfx->hot_x.b)), dy = (int16_t)(o->y - (int16_t)rd16(gfx->hot_y.b));
+    int16_t dx = (int16_t)(o->x - (int16_t)gfx->hot_x), dy = (int16_t)(o->y - (int16_t)gfx->hot_y);
 
     dx = (int16_t)(dx + dx);
     dy = (int16_t)(dy + dy);
-    *x = (int16_t)(dx + (int16_t)rd16(gfx->width.b)) >> 1;
-    *y = (int16_t)(dy + (int16_t)rd16(gfx->height.b)) >> 1;
+    *x = (int16_t)(dx + (int16_t)gfx->width) >> 1;
+    *y = (int16_t)(dy + (int16_t)gfx->height) >> 1;
 }
 
 /* orig $E1E, $00592A: hit routine of the parts of a big enemy (enemy is a part; its chain is $56/$5A) */
@@ -800,7 +800,7 @@ void hit_enemy(Object *shooter, Object *enemy, uint16_t damage)
     enemy_killed(shooter, enemy);
 }
 
-static void explosion_at(Object *obj, const uint8_t *anim)
+static void explosion_at(Object *obj, const uint16_t *anim)
 {
     int16_t x, y;
 
@@ -813,7 +813,7 @@ void enemy_killed(Object *shooter, Object *enemy)
 {
     uint16_t *e = xenon2.pickup_groups;
     Object *n;
-    const uint8_t *bonus_anim;
+    const uint16_t *bonus_anim;
     int i, found = 0;
     int16_t kind;
 
@@ -859,7 +859,7 @@ void hit_explode(Object *shooter, Object *enemy, uint16_t damage)
 void tile_draw(Object *obj)
 {
     obj->fn_draw = obj_nop;
-    draw_tile_grid_flash((const uint8_t *)obj->gfx, (uint16_t)obj->tile.cols, (uint16_t)obj->tile.rows, (int16_t)(obj->y - xenon2.scroll_pos), (uint16_t)obj->x >> 1);
+    draw_tile_grid_flash((const uint16_t *)obj->gfx, (uint16_t)obj->tile.cols, (uint16_t)obj->tile.rows, (int16_t)(obj->y - xenon2.scroll_pos), (uint16_t)obj->x >> 1);
 }
 
 /* orig $F20, $005B72: hit routine of a destructible tile block: when it breaks the background is restored */
@@ -868,7 +868,7 @@ void hit_tile(Object *shooter, Object *tile, uint16_t damage)
     uint16_t old;
     int16_t x, y, rows, cols;
     Cell *dst;
-    const uint8_t *src;
+    const uint16_t *src;
 
     tile->fn_draw = (obj_fn)tile_draw;
     old = (uint16_t)tile->energy;
@@ -885,9 +885,8 @@ void hit_tile(Object *shooter, Object *tile, uint16_t damage)
         Cell *row = dst;
 
         for (cols = tile->tile.cols; cols >= 0; cols--) {
-            wr16(row[0].b, rd16(src));
+            row[0] = *src++;
             row++;
-            src += 2;
         }
         dst += MAP_COLS;
     }
@@ -1176,7 +1175,7 @@ void pickup_update(Object *obj)
 void player_dies(Object *ship)
 {
     Object *weapon;
-    const uint8_t *death_anim = xenon2.anim_player_death;
+    const uint16_t *death_anim = xenon2.anim_player_death;
 
     if (xenon2.level_end_items != 0)
         return;
@@ -1417,21 +1416,21 @@ void weapon_shield_draw(Object *obj)
     }
     obj->fn_draw = draw_bob_masked;
     g = obj->gfx;
-    cx = (int16_t)(obj->x - (int16_t)rd16(g->hot_x.b));
-    cy = (int16_t)(obj->y - (int16_t)rd16(g->hot_y.b));
+    cx = (int16_t)(obj->x - (int16_t)g->hot_x);
+    cy = (int16_t)(obj->y - (int16_t)g->hot_y);
     cx = (int16_t)(cx + cx);
     cy = (int16_t)(cy + cy);
-    cx = (int16_t)(cx + (int16_t)rd16(g->width.b));
-    cy = (int16_t)(cy + (int16_t)rd16(g->height.b));
+    cx = (int16_t)(cx + (int16_t)g->width);
+    cy = (int16_t)(cy + (int16_t)g->height);
     dx = (int16_t)(cx >> 1);
     dy = (int16_t)(cy >> 1);
     g = PLAYER->gfx;
-    cx = (int16_t)(PLAYER->x - (int16_t)rd16(g->hot_x.b));
-    cy = (int16_t)(PLAYER->y - (int16_t)rd16(g->hot_y.b));
+    cx = (int16_t)(PLAYER->x - (int16_t)g->hot_x);
+    cy = (int16_t)(PLAYER->y - (int16_t)g->hot_y);
     cx = (int16_t)(cx + cx);
     cy = (int16_t)(cy + cy);
-    cx = (int16_t)(cx + (int16_t)rd16(g->width.b));
-    cy = (int16_t)(cy + (int16_t)rd16(g->height.b));
+    cx = (int16_t)(cx + (int16_t)g->width);
+    cy = (int16_t)(cy + (int16_t)g->height);
     cx = (int16_t)(cx >> 1);
     cy = (int16_t)(cy >> 1);
     dx = (int16_t)(dx - cx);
@@ -1496,7 +1495,7 @@ void area_damage(Object *shooter, int16_t x0, int16_t y0, int16_t x1, int16_t y1
 }
 
 /* orig $E72, $00422A: count + 1 pieces (type $C, only animating) at random places in the box (x, y, w, h), animation anim; the sound $83 */
-void debris_burst(Object *obj, int16_t count, uint16_t x, uint16_t y, uint16_t w, uint16_t h, const uint8_t *anim)
+void debris_burst(Object *obj, int16_t count, uint16_t x, uint16_t y, uint16_t w, uint16_t h, const uint16_t *anim)
 {
     do {
         Object *n = alloc_b(obj);
@@ -1561,7 +1560,7 @@ void spinner_update(Object *obj)
  * the first enemy it meets and explodes when there is none or it leaves the screen */
 void drill_update(Object *obj)
 {
-    static const uint8_t *const heads[8] = { xenon2.anim_drill_head_0, xenon2.anim_drill_head_1, xenon2.anim_drill_head_2, xenon2.anim_drill_head_3, xenon2.anim_drill_head_4, xenon2.anim_drill_head_5, xenon2.anim_drill_head_6, xenon2.anim_drill_head_7 };
+    static const uint16_t *const heads[8] = { xenon2.anim_drill_head_0, xenon2.anim_drill_head_1, xenon2.anim_drill_head_2, xenon2.anim_drill_head_3, xenon2.anim_drill_head_4, xenon2.anim_drill_head_5, xenon2.anim_drill_head_6, xenon2.anim_drill_head_7 };
     Object *target;
     uint32_t address;
     int16_t x, y, dx, dy, turn;
@@ -2026,7 +2025,7 @@ void weapon38_update(Object *obj)
     if (obj->shot.phase < 0) {
         int16_t left, top;
         uint16_t w, h;
-        const uint8_t *explosion;
+        const uint16_t *explosion;
 
         if (xenon2.player_dead) {
             kill_object(obj);
@@ -2132,7 +2131,7 @@ void weapon38_update(Object *obj)
             trail->type = obj->type;
             trail->fn_update = obj->fn_update;
             trail->fn_draw = draw_bob_masked;
-            set_anim(trail, obj->anim - 6);
+            set_anim(trail, obj->anim - 3);
             trail->x = obj->x;
             trail->y = obj->y;
             trail->score = obj->score;
@@ -2166,7 +2165,7 @@ void beam_draw(Object *obj)
     int16_t x = (int16_t)(obj->x + 4 - level - level);
     int16_t y = obj->y;
     uint32_t rot[5];
-    RawWord *dst;
+    uint16_t *dst;
     uint16_t cnt;
     int lt, i;
 
@@ -2187,7 +2186,7 @@ void beam_draw(Object *obj)
     y = (int16_t)xenon2.beam_state[1];
     if (y < 0)
         return;
-    dst = (RawWord *)(xenon2.draw_screen + (int16_t)xenon2.row_offset[(uint16_t)y]);
+    dst = (uint16_t *)(xenon2.draw_screen + (int16_t)xenon2.row_offset[(uint16_t)y]);
     {
         const uint32_t *pattern = &xenon2.beam_pattern[xenon2.beam_state[3] * 5];
         uint16_t shift = (uint16_t)x & 0xf;
@@ -2204,8 +2203,8 @@ void beam_draw(Object *obj)
             if (--cnt == 0xffff)
                 break;
             for (i = 0; i < 4; i++) {
-                RawWord *plane = dst + SCREEN_PLANE_WORDS * i;
-                wr16(plane[0].b, (uint16_t)((rd16(plane[0].b) & (uint16_t)rot[0]) | (uint16_t)rot[1 + i]));
+                uint16_t *plane = dst + SCREEN_PLANE_WORDS * i;
+                plane[0] = (uint16_t)((plane[0] & (uint16_t)rot[0]) | (uint16_t)rot[1 + i]);
             }
             dst -= SCREEN_ROW_WORDS;
             lt = (int32_t)ADDR(dst) < (int32_t)ADDR(xenon2.draw_screen);
@@ -2215,8 +2214,8 @@ void beam_draw(Object *obj)
             if (--cnt == 0xffff)
                 break;
             for (i = 0; i < 4; i++) {
-                RawWord *plane = dst + SCREEN_PLANE_WORDS * i;
-                wr16(plane[0].b, (uint16_t)((rd16(plane[0].b) & (uint16_t)(rot[0] >> 16)) | (uint16_t)(rot[1 + i] >> 16)));
+                uint16_t *plane = dst + SCREEN_PLANE_WORDS * i;
+                plane[0] = (uint16_t)((plane[0] & (uint16_t)(rot[0] >> 16)) | (uint16_t)(rot[1 + i] >> 16));
             }
             dst -= SCREEN_ROW_WORDS;
             lt = (int32_t)ADDR(dst) < (int32_t)ADDR(xenon2.draw_screen);
@@ -2226,9 +2225,9 @@ void beam_draw(Object *obj)
             if (--cnt == 0xffff)
                 break;
             for (i = 0; i < 4; i++) {
-                RawWord *plane = dst + SCREEN_PLANE_WORDS * i;
-                wr16(plane[0].b, (uint16_t)((rd16(plane[0].b) & (uint16_t)(rot[0] >> 16)) | (uint16_t)(rot[1 + i] >> 16)));
-                wr16(plane[1].b, (uint16_t)((rd16(plane[1].b) & (uint16_t)rot[0]) | (uint16_t)rot[1 + i]));
+                uint16_t *plane = dst + SCREEN_PLANE_WORDS * i;
+                plane[0] = (uint16_t)((plane[0] & (uint16_t)(rot[0] >> 16)) | (uint16_t)(rot[1 + i] >> 16));
+                plane[1] = (uint16_t)((plane[1] & (uint16_t)rot[0]) | (uint16_t)rot[1 + i]);
             }
             dst -= SCREEN_ROW_WORDS;
             lt = (int32_t)ADDR(dst) < (int32_t)ADDR(xenon2.draw_screen);

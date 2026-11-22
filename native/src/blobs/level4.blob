@@ -3,12 +3,12 @@ record Level4ScrollEnemy 12
 0 type u16
 2 x u16
 4 update code
-8 anim ptr
+8 anim ptr:u16
 end
 record Level4EnemyGun 8
 0 type u16
 2 x u16
-4 anim ptr
+4 anim ptr:u16
 end
 record Level4Boss1Piece 18
 0 update code
@@ -21,7 +21,7 @@ end
 record Level4Boss2Piece 20
 0 update code
 4 hit code
-8 anim ptr
+8 anim ptr:u16
 12 x u16
 14 y u16
 16 angle u16
@@ -71,49 +71,49 @@ end
 54f26 formation_6 Formation1
 5515a scroll_enemies Level4ScrollEnemy 4
 5537e enemy_a_guns Level4EnemyGun 2
-55574 anims_by_kind ptr 8
+55574 anims_by_kind ptr:u16 8
 55714 enemy_f8_paths ptr 4
 55880 boss1_pieces Level4Boss1Piece 19
-55aac core_cells u8 60
-55ae8 core_cells_tall u8 184
-55ba0 gun_cells_left ptr 8
-55bc4 gun_cells_right ptr 8
+55aac core_cells u16 30
+55ae8 core_cells_tall u16 92
+55ba0 gun_cells_left ptr:u16 8
+55bc4 gun_cells_right ptr:u16 8
 55c54 b1_core_sway u16 16
 55e10 b1_gun_dx_by_dir u16 8
 55e20 b1_gun_dy_by_dir u16 8
-55e30 b1_gun_anims_by_angle ptr 8
+55e30 b1_gun_anims_by_angle ptr:u16 8
 55ec8 b1_gun_dirs_left u8 8
 55ed0 b1_gun_dirs_right u8 8
 5613a boss2_pieces Level4Boss2Piece 20
-56552 b2_shot_anim u8 36
-56576 head_pictures ptr 4
-565da b2_gun_pictures ptr 8
-56680 b2_barrel_anims_by_dir ptr 8
+56552 b2_shot_anim u16 18
+56576 head_pictures ptr:u16 4
+565da b2_gun_pictures ptr:u16 8
+56680 b2_barrel_anims_by_dir ptr:u16 8
 566a0 b2_muzzle_dx u16 8
 566b0 b2_muzzle_dy u16 8
-568d2 b2_eye_anims ptr 8
-56a74 bar_anim_10c u8 36
-56a98 bar_anim_other u8 398
-56c26 bar_cells u8 12
-56cd4 walker_anim_other u8 36
-56cf8 walker_anim_e0 u8 730
+568d2 b2_eye_anims ptr:u16 8
+56a74 bar_anim_10c u16 18
+56a98 bar_anim_other u16 199
+56c26 bar_cells u16 6
+56cd4 walker_anim_other u16 18
+56cf8 walker_anim_e0 u16 365
 56fd2 walker_grid_x u16 11
 56fe8 walker_grid_y u16 11
-56ffe walker_grid_e0 u8 6
-57004 walker_grid_e4 u8 348
-57160 tower_cells_d0 cell 24
-57190 tower_cells_d4 cell 83
-57236 tower_hit_cells_d0 cell 4
-5723e tower_hit_cells_d4 cell 168
-5738e shot_a_cells_4 u8 166
-57434 shot_a_cells_2 u8 31126
-5edca shot_a_picture u8 1760
-5f4aa shot_a_picture_3 u8 880
-5f81a b1_tail_picture u8 176
-5f8ca b1_head_picture u8 1244
-5fda6 b2_eye_shot_picture u8 192
-5fe66 enemy_b_picture_2 u8 86
-5febc enemy_b_picture u8 32
+56ffe walker_grid_e0 u16 3
+57004 walker_grid_e4 u16 174
+57160 tower_cells_d0 u16 24
+57190 tower_cells_d4 u16 83
+57236 tower_hit_cells_d0 u16 4
+5723e tower_hit_cells_d4 u16 168
+5738e shot_a_cells_4 u16 83
+57434 shot_a_cells_2 u16 15563
+5edca shot_a_picture u16 880
+5f4aa shot_a_picture_3 u16 440
+5f81a b1_tail_picture u16 88
+5f8ca b1_head_picture u16 622
+5fda6 b2_eye_shot_picture u16 96
+5fe66 enemy_b_picture_2 u16 43
+5febc enemy_b_picture u16 16
 77b70 shot_gfx_table ptr:ShotPic 5
 77b84 shot_gfx_cells ShotPic 3
 77b90 formation_paths ptr:PathCmd 72
@@ -121,3 +121,9 @@ end
 7947e events_a_end s16
 67896 events_b SpawnRec 36
 67a8e events_b_end s16
+7d080 data_src u16 80
+54fb8 pad_54fb8 u16 42
+5ff0a pad_5ff0a u16 1641
+67a90 pad_67a90 u16 16272
+78c44 pad_78c44 u16 15
+79480 pad_79480 u16 7680

@@ -36,7 +36,7 @@ void disk_step_in(uint16_t steps);                          /* orig $93B6 */
 void disk_delay(void);                                      /* orig $93EE */
 int disk_read_track(void);                                  /* orig $93F8 */
 int32_t mfm_align(const uint16_t *src);                     /* orig $951E */
-uint8_t *mfm_decode(uint8_t *dest, uint8_t *src, uint16_t bytes);   /* orig $957E: returns the end of the source */
+uint16_t *mfm_decode(uint16_t *dest, uint16_t *src, uint16_t bytes);   /* orig $957E: returns the end of the source */
 void irq_disk_block(void);                                  /* orig $95E4 */
 void work_area_save(void);                                  /* orig $95F4 */
 void work_area_restore(void);                               /* orig $9618 */

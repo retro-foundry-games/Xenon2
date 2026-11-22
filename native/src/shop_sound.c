@@ -28,28 +28,20 @@ static uint32_t divu(uint32_t value, uint16_t divisor)
 void shop_sound_tables(void)
 {
     struct ShopSound *snd = &xenon2.shop_data.snd;
-    const uint8_t *src = xenon2.shop_data.bank;
-    const struct BankSample *bank;
+    const struct BankSample *bank = &xenon2.shop_data.bank_head_0;
+    const uint8_t *src;
     struct ShopWave *wave = &snd->wave;
-    int16_t n;
+    uint32_t size;
 
     if (snd->built1 != 0)
         return;
-    for (n = 0; n >= 0; n--) {
-        uint32_t size;
-        uint16_t rate;
-
-        bank = (const struct BankSample *)src;
-        size = rd32(bank->size_hi.b);
-        rate = rd16(bank->rate.b);
-        src = (const uint8_t *)(bank + 1);
-        wave->lc = src;
-        src += size;
-        size >>= 1;
-        wave->len = (uint16_t)size;
-        wave->period = (uint16_t)divu(SND_PERIOD_CLOCK, rate);
-        wave++;
-    }
+    size = FIXED_16_16(bank->size_hi, bank->size_lo);
+    src = (const uint8_t *)(bank + 1);
+    wave->lc = src;
+    src += size;
+    size >>= 1;
+    wave->len = (uint16_t)size;
+    wave->period = (uint16_t)divu(SND_PERIOD_CLOCK, bank->rate);
     snd->silence = src;
     src += 0x40;
     snd->waves = src;
@@ -60,8 +52,7 @@ void shop_sound_tables(void)
 void shop_sound_tables2(void)
 {
     struct ShopSound *snd = &xenon2.shop_data.snd;
-    const uint8_t *src = xenon2.shop_data.bank + 0xf42;
-    const struct BankSample *bank;
+    const struct BankSample *bank = &xenon2.shop_data.bank_head_1;
     struct ShopSample *sample = snd->samples;
     int16_t n;
 
@@ -69,19 +60,14 @@ void shop_sound_tables2(void)
         return;
     for (n = 3; n >= 0; n--) {
         uint32_t steps, size;
-        uint16_t rate;
 
-        bank = (const struct BankSample *)src;
-        steps = divu((uint32_t)rd16(bank->size_lo.b) * 0x32, rd16(bank->rate.b));
+        steps = divu((uint32_t)bank->size_lo * 0x32, bank->rate);
         sample->steps = (uint8_t)(steps + 1);
-        size = rd32(bank->size_hi.b);
-        rate = rd16(bank->rate.b);
-        src = (const uint8_t *)(bank + 1);
-        sample->lc = src;
-        src += size;
-        size >>= 1;
-        sample->len = (uint16_t)size;
-        sample->period = (uint16_t)divu(SND_PERIOD_CLOCK, rate);
+        size = FIXED_16_16(bank->size_hi, bank->size_lo);
+        sample->lc = (const uint8_t *)(bank + 1);
+        sample->len = (uint16_t)(size >> 1);
+        sample->period = (uint16_t)divu(SND_PERIOD_CLOCK, bank->rate);
+        bank = (const struct BankSample *)((const uint8_t *)(bank + 1) + size);
         sample++;
     }
     snd->built2 = 0xff;

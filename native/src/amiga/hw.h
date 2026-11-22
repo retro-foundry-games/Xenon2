@@ -72,21 +72,6 @@ void host_setclr_write(unsigned register_offset, uint16_t value);
 #define SETCLR_WRITE(reg, value) (custom->reg = (uint16_t)(value))
 #endif
 
-/* Words and longwords in raw byte buffers (the screens, graphics, sector buffers, level data: uint8_t arrays) are in the original's byte order (big endian).
- * Read and write them only with these; the 68000 does it with one instruction, the host composes the bytes.  Members typed uint16_t, uint32_t or as
- * a record (and pointers) are in the host's byte order and are used directly. */
-#ifdef GAME_SDL
-static inline uint16_t rd16(const void *p) { const uint8_t *b = (const uint8_t *)p; return (uint16_t)(b[0] << 8 | b[1]); }
-static inline uint32_t rd32(const void *p) { const uint8_t *b = (const uint8_t *)p; return (uint32_t)b[0] << 24 | (uint32_t)b[1] << 16 | (uint32_t)b[2] << 8 | b[3]; }
-static inline void wr16(void *p, uint16_t v) { uint8_t *b = (uint8_t *)p; b[0] = (uint8_t)(v >> 8); b[1] = (uint8_t)v; }
-static inline void wr32(void *p, uint32_t v) { uint8_t *b = (uint8_t *)p; b[0] = (uint8_t)(v >> 24); b[1] = (uint8_t)(v >> 16); b[2] = (uint8_t)(v >> 8); b[3] = (uint8_t)v; }
-#else
-static inline uint16_t rd16(const void *p) { return *(const uint16_t *)p; }
-static inline uint32_t rd32(const void *p) { return *(const uint32_t *)p; }
-static inline void wr16(void *p, uint16_t v) { *(uint16_t *)p = v; }
-static inline void wr32(void *p, uint32_t v) { *(uint32_t *)p = v; }
-#endif
-
 /* Starting the blitter: the write to BLTSIZE.  On the Amiga it is the plain write; in the SDL port the host performs the whole operation (the area blit with the
  * registers as they are: shifts, masks, minterm, modulos) at once, so the blitter is never busy.  Write BLTSIZE only with BLTSIZE_WRITE(value). */
 #ifdef GAME_SDL

@@ -1,8 +1,6 @@
 #include "draw.h"
 #include "game_all.h"
 
-#define ORW(p, v) wr16((p), (uint16_t)(rd16(p) | (v)))
-#define ANDW(p, v) wr16((p), (uint16_t)(rd16(p) & (v)))
 #define BLIT_WAIT() while (custom->dmaconr & DMAF_BLTBUSY) ;
 
 /* inlined: $400 (bra.w to the start-up code) */
@@ -49,12 +47,12 @@ static int clip_bob(Clip *c, int16_t x, int16_t y, int with_map)
     int16_t shift = x, row = y, col, width, xend, xstart, room, lines, top;
     int32_t sum;
 
-    shift = (int16_t)(shift - (int16_t)rd16(pic->hot_x.b));
+    shift = (int16_t)(shift - (int16_t)pic->hot_x);
     if (shift >= 0x140)
         return 0;
-    row = (int16_t)(row - (int16_t)rd16(pic->hot_y.b));
+    row = (int16_t)(row - (int16_t)pic->hot_y);
     if (with_map)   /* $105C: the masks of the map under the bob first (inlined: $2F66) */
-        map_tile_mask2((uint16_t)shift, (uint16_t)row, rd16(pic->height.b));
+        map_tile_mask2((uint16_t)shift, (uint16_t)row, pic->height);
     room = (int16_t)(xenon2.clip_bottom - row);
     if (room < 0)
         return 0;
@@ -62,19 +60,19 @@ static int clip_bob(Clip *c, int16_t x, int16_t y, int with_map)
     if (top < 0)
         row = 0;
     xend = shift;
-    c->dst = xenon2.draw_screen + (int16_t)xenon2.row_offset[(uint16_t)row];
+    c->dst = (uint8_t *)xenon2.draw_screen + (int16_t)xenon2.row_offset[(uint16_t)row];
     col = shift;
     shift &= 0xf;
     col = (int16_t)(col - shift);
     col >>= 3;
     c->dst += col;
-    width = (int16_t)rd16(pic->width.b);
+    width = (int16_t)pic->width;
     xstart = xend;
     sum = (int32_t)xend + width;
     xend = (int16_t)sum;
     if (sum <= 0)
         return 0;
-    lines = (int16_t)rd16(pic->height.b);
+    lines = (int16_t)pic->height;
     p = (const uint8_t *)(pic + 1);
     if (lines > room)
         lines = room;
@@ -192,14 +190,14 @@ first_mask:
 }
 
 /* orig $E90, $129A: draw a bob (masked, cookie-cut) at x, y; gfx = its header; HLE: blitter */
-HLE_WEAK void draw_bob_masked_at(uint16_t x, uint16_t y, const uint8_t *gfx)
+HLE_WEAK void draw_bob_masked_at(uint16_t x, uint16_t y, const uint16_t *gfx)
 {
     Clip c;
     uint16_t bltcon;
     const uint8_t *src;
     uint8_t *dst;
 
-    c.src = gfx;
+    c.src = (const uint8_t *)gfx;
     if (!clip_bob(&c, (int16_t)x, (int16_t)y, 0))
         return;
     blit_edges(&c);
@@ -224,18 +222,18 @@ HLE_WEAK void draw_bob_masked_at(uint16_t x, uint16_t y, const uint8_t *gfx)
 /* orig $E12, $128E, $133E, $1350, $135C and $1366: draw the bob of an object, masked; HLE: blitter */
 HLE_WEAK void draw_bob_masked(Object *obj)
 {
-    draw_bob_masked_at(obj->x, obj->y, (const uint8_t *)obj->gfx);
+    draw_bob_masked_at(obj->x, obj->y, (const uint16_t *)obj->gfx);
 }
 
 /* orig $F14, $137C, $1384, $139E, $13AA, $13B4, $13BE, $13D0, $13DA, $13EA, $1404, $1414, $142C and $1436: draw a bob by OR-ing its mask
  * into planes 0-2 and clearing it in plane 3 (a flash); HLE: blitter */
-HLE_WEAK void draw_bob_or_at(uint16_t x, uint16_t y, const uint8_t *gfx)
+HLE_WEAK void draw_bob_or_at(uint16_t x, uint16_t y, const uint16_t *gfx)
 {
     Clip c;
     uint16_t bltcon;
     uint8_t *dst;
 
-    c.src = gfx;
+    c.src = (const uint8_t *)gfx;
     if (!clip_bob(&c, (int16_t)x, (int16_t)y, 0))
         return;
     blit_edges(&c);
@@ -260,7 +258,7 @@ HLE_WEAK void draw_bob_or_at(uint16_t x, uint16_t y, const uint8_t *gfx)
 /* orig $F08, $1370 and $1378: draw the bob of an object as above */
 HLE_WEAK void draw_bob_or(Object *obj)
 {
-    draw_bob_or_at(obj->x, obj->y, (const uint8_t *)obj->gfx);
+    draw_bob_or_at(obj->x, obj->y, (const uint16_t *)obj->gfx);
 }
 
 /* orig $E66, $1368: the object is drawn masked from now on, this time as above */
@@ -281,7 +279,7 @@ HLE_WEAK void draw_text(const uint8_t *text, uint8_t *dest)
         if (c != 0x20) {
             const uint8_t *p = xenon2.text_chars;   /* the search of $7EF8 */
             uint16_t index = 0xffff;
-            const uint8_t *glyph;
+            const uint16_t *glyph;
 
             while (*p) {
                 if (*p++ == c) {
@@ -289,7 +287,7 @@ HLE_WEAK void draw_text(const uint8_t *text, uint8_t *dest)
                     break;
                 }
             }
-            glyph = xenon2.font_gfx + (int16_t)(uint16_t)(index << 7);
+            glyph = xenon2.font_gfx + (int16_t)(uint16_t)(index << 6);
             custom->bltcon0 = 0x09f0;
             custom->bltcon1 = 0;
             custom->bltamod = 0;
@@ -328,8 +326,8 @@ void draw_number(uint32_t value, uint8_t *dest)
             for (int plane = 0; plane < 4; plane++) {
                 uint8_t b = *g++;
 
-                dest[row * SCREEN_ROW_BYTES + plane * SCREEN_PLANE_BYTES] = b;
-                other[row * SCREEN_ROW_BYTES + plane * SCREEN_PLANE_BYTES] = b;
+                put_screen_byte(dest + row * SCREEN_ROW_BYTES + plane * SCREEN_PLANE_BYTES, b);
+                put_screen_byte(other + row * SCREEN_ROW_BYTES + plane * SCREEN_PLANE_BYTES, b);
             }
         }
         dest += 1;
@@ -340,7 +338,7 @@ void draw_number(uint32_t value, uint8_t *dest)
 /* orig $16BE: draw the energy bar (cc6 of 39 cells) into the two screens; flag a6b says it is to be redrawn */
 void redraw_energy_bar(void)
 {
-    uint8_t *dst_b, *dst_a;
+    uint16_t *dst_b, *dst_a;
     uint16_t fill, bit, keep;
 
     if (!xenon2.energy_dirty)
@@ -349,12 +347,12 @@ void redraw_energy_bar(void)
     fill = xenon2.player_energy;
     if ((int16_t)fill > 0x27)
         fill = 0x27;
-    dst_b = &xenon2.screen_b[0x79ea];
-    dst_a = &xenon2.screen_a[0x79ea];
+    dst_b = &xenon2.screen_b[0x79ea / 2];
+    dst_a = &xenon2.screen_a[0x79ea / 2];
     bit = 0x10;
     if (xenon2.cur_player) {
-        dst_b = &xenon2.screen_b[0x79f6];
-        dst_a = &xenon2.screen_a[0x79f6];
+        dst_b = &xenon2.screen_b[0x79f6 / 2];
+        dst_a = &xenon2.screen_a[0x79f6 / 2];
         bit = 2;
     }
     keep = (uint16_t)~bit;
@@ -364,36 +362,36 @@ void redraw_energy_bar(void)
         if (fill != 0) {
             fill--;
             do {
-                ANDW(dst_b + row_off, keep);
-                ORW(dst_b + SCREEN_PLANE_BYTES + row_off, bit);
-                ORW(dst_b + (2 * SCREEN_PLANE_BYTES) + row_off, bit);
-                ORW(dst_b + (3 * SCREEN_PLANE_BYTES) + row_off, bit);
-                ANDW(dst_a + row_off, keep);
-                ORW(dst_a + SCREEN_PLANE_BYTES + row_off, bit);
-                ORW(dst_a + (2 * SCREEN_PLANE_BYTES) + row_off, bit);
-                ORW(dst_a + (3 * SCREEN_PLANE_BYTES) + row_off, bit);
-                row_off = (int16_t)(row_off + SCREEN_ROW_BYTES);
-            } while (row_off <= 0x140);
+                *(dst_b + row_off) &= keep;
+                *(dst_b + SCREEN_PLANE_WORDS + row_off) |= bit;
+                *(dst_b + (2 * SCREEN_PLANE_WORDS) + row_off) |= bit;
+                *(dst_b + (3 * SCREEN_PLANE_WORDS) + row_off) |= bit;
+                *(dst_a + row_off) &= keep;
+                *(dst_a + SCREEN_PLANE_WORDS + row_off) |= bit;
+                *(dst_a + (2 * SCREEN_PLANE_WORDS) + row_off) |= bit;
+                *(dst_a + (3 * SCREEN_PLANE_WORDS) + row_off) |= bit;
+                row_off = (int16_t)(row_off + SCREEN_ROW_WORDS);
+            } while (row_off <= 0xa0);
         } else {
             do {
-                ANDW(dst_b + row_off, keep);
-                ANDW(dst_b + SCREEN_PLANE_BYTES + row_off, keep);
-                ANDW(dst_b + (2 * SCREEN_PLANE_BYTES) + row_off, keep);
-                ANDW(dst_b + (3 * SCREEN_PLANE_BYTES) + row_off, keep);
-                ANDW(dst_a + row_off, keep);
-                ANDW(dst_a + SCREEN_PLANE_BYTES + row_off, keep);
-                ANDW(dst_a + (2 * SCREEN_PLANE_BYTES) + row_off, keep);
-                ANDW(dst_a + (3 * SCREEN_PLANE_BYTES) + row_off, keep);
-                row_off = (int16_t)(row_off + SCREEN_ROW_BYTES);
-            } while (row_off <= 0x140);
+                *(dst_b + row_off) &= keep;
+                *(dst_b + SCREEN_PLANE_WORDS + row_off) &= keep;
+                *(dst_b + (2 * SCREEN_PLANE_WORDS) + row_off) &= keep;
+                *(dst_b + (3 * SCREEN_PLANE_WORDS) + row_off) &= keep;
+                *(dst_a + row_off) &= keep;
+                *(dst_a + SCREEN_PLANE_WORDS + row_off) &= keep;
+                *(dst_a + (2 * SCREEN_PLANE_WORDS) + row_off) &= keep;
+                *(dst_a + (3 * SCREEN_PLANE_WORDS) + row_off) &= keep;
+                row_off = (int16_t)(row_off + SCREEN_ROW_WORDS);
+            } while (row_off <= 0xa0);
         }
         {
             uint16_t carry = bit & 1;
 
             bit = (uint16_t)((bit >> 1) | (bit << 15));
             if (carry) {
-                dst_b += 2;
-                dst_a += 2;
+                dst_b++;
+                dst_a++;
             }
         }
         keep = (uint16_t)~bit;
@@ -405,21 +403,21 @@ void draw_status_digit(void)
 {
     int16_t lives = (int16_t)xenon2.player_lives;
     const uint8_t *glyph;
-    uint8_t *dst_b = &xenon2.screen_b[0x78b1], *dst_a = &xenon2.screen_a[0x78b1];
+    uint8_t *dst_b = (uint8_t *)xenon2.screen_b + 0x78b1, *dst_a = (uint8_t *)xenon2.screen_a + 0x78b1;
 
     if (lives > 9)
         lives = 9;
     glyph = &xenon2.digit_gfx[0x140] + (int16_t)(uint16_t)(lives << 5);
     if (xenon2.cur_player) {
-        dst_b = &xenon2.screen_b[0x78b6];
-        dst_a = &xenon2.screen_a[0x78b6];
+        dst_b = (uint8_t *)xenon2.screen_b + 0x78b6;
+        dst_a = (uint8_t *)xenon2.screen_a + 0x78b6;
     }
     for (int row = 0; row < 8; row++) {
         for (int plane = 0; plane < 4; plane++) {
             uint8_t b = *glyph++;
 
-            dst_b[plane * SCREEN_PLANE_BYTES] = b;
-            dst_a[plane * SCREEN_PLANE_BYTES] = b;
+            put_screen_byte(dst_b + plane * SCREEN_PLANE_BYTES, b);
+            put_screen_byte(dst_a + plane * SCREEN_PLANE_BYTES, b);
         }
         dst_b += SCREEN_ROW_BYTES;
         dst_a += SCREEN_ROW_BYTES;
@@ -501,7 +499,7 @@ HLE_WEAK void draw_background(void)
     if (xenon2.skip_map_draw)
         return;
 
-    draw_tile_grid(xenon2.level_init_src + (int16_t)xenon2.map_row_offset, 0x13, 0xc, (int16_t)-(int16_t)xenon2.scroll_fine, 0);
+    draw_tile_grid((const uint16_t *)(xenon2.level_init_src + (int16_t)xenon2.map_row_offset), 0x13, 0xc, (int16_t)-(int16_t)xenon2.scroll_fine, 0);
 }
 
 /* one tile as $1BD0 puts it: a plain cell is the fixed block at $1EA2, a cell with bit 15 is OR-ed into planes 0 to 2 by its mask and
@@ -545,7 +543,7 @@ typedef void (*tile_fn)(const uint8_t *tiles, uint16_t cell, uint8_t *dest, uint
 
 /* rows of cells (words: 0 nothing, bit 15 a tile with a mask, else a plain tile) put on the screen at line y and byte x / 4; cols + 1
  * cells a row, rows + 1 rows of 16 lines; from the row that reaches line $6EA0 / $A0 on, one blit a cell as far as the end of the screen */
-static void tile_grid(const uint8_t *cells, uint16_t cols, int16_t rows, int16_t y, uint16_t x, tile_fn put)
+static void tile_grid(const uint16_t *cells, uint16_t cols, int16_t rows, int16_t y, uint16_t x, tile_fn put)
 {
     uint8_t *dst = xenon2.draw_screen;
     uint8_t *screen_end = dst + 0x7800, *split = dst + 0x6ea0;
@@ -556,7 +554,7 @@ static void tile_grid(const uint8_t *cells, uint16_t cols, int16_t rows, int16_t
     custom->bltafwm = 0xffff;
     custom->bltalwm = 0xffff;
     while (y <= -16) {
-        cells += 2 * (int16_t)cols + 2;
+        cells += (int16_t)cols + 1;
         y = (int16_t)(y + 0x10);
         if (rows-- == 0)
             return;
@@ -575,9 +573,8 @@ static void tile_grid(const uint8_t *cells, uint16_t cols, int16_t rows, int16_t
                 span = ((span % 0xa0) << 16) | (span / 0xa0);
             size = (uint16_t)((uint16_t)((uint16_t)span << 6) + 1);
             for (int n = 0; n <= (int)cols; n++, col += 2) {
-                uint16_t cell = rd16(cells);
+                uint16_t cell = *cells++;
 
-                cells += 2;
                 if (cell == 0)
                     continue;
                 put(tiles, cell, col, size, 1);
@@ -590,9 +587,8 @@ static void tile_grid(const uint8_t *cells, uint16_t cols, int16_t rows, int16_t
             uint8_t *col = dst;
 
             for (int n = 0; n <= (int)cols; n++, col += 2) {
-                uint16_t cell = rd16(cells);
+                uint16_t cell = *cells++;
 
-                cells += 2;
                 if (cell != 0)
                     put(tiles, cell, col, 0, 0);
             }
@@ -606,13 +602,13 @@ static void tile_grid(const uint8_t *cells, uint16_t cols, int16_t rows, int16_t
 }
 
 /* orig $E8A, $18B6: draw a block of map cells (cols + 1 by rows + 1) at line y and byte x / 4 of the screen; HLE: blitter */
-HLE_WEAK void draw_tile_grid(const uint8_t *cells, uint16_t cols, uint16_t rows, int16_t y, uint16_t x)
+HLE_WEAK void draw_tile_grid(const uint16_t *cells, uint16_t cols, uint16_t rows, int16_t y, uint16_t x)
 {
     tile_grid(cells, cols, (int16_t)rows, y, x, put_tile);
 }
 
 /* orig $E96, $1BD0: the same with the cells drawn as flashes; HLE: blitter */
-HLE_WEAK void draw_tile_grid_flash(const uint8_t *cells, uint16_t cols, uint16_t rows, int16_t y, uint16_t x)
+HLE_WEAK void draw_tile_grid_flash(const uint16_t *cells, uint16_t cols, uint16_t rows, int16_t y, uint16_t x)
 {
     tile_grid(cells, cols, (int16_t)rows, y, x, put_tile_flash);
 }
@@ -666,12 +662,8 @@ static void bob_behind_map(Object *obj)
     }
 }
 
-/* orig $EBA, $1438: draw the bob of an object masked, and hidden where the map's tiles under it are solid; HLE: blitter (the blitter reads and writes the
- * mask rows as the original's memory, big-endian words; the member is host-order words: the rows written are put back) */
+/* orig $EBA, $1438: draw the bob of an object masked, and hidden where the map's tiles under it are solid; HLE: blitter */
 HLE_WEAK void draw_bob_behind_map(Object *obj)
 {
-    tile_mask2_words = 0;
     bob_behind_map(obj);
-    for (uint16_t i = 0; i < tile_mask2_words && i < 75; i++)
-        xenon2.tile_mask_buf[i] = rd16(&xenon2.tile_mask_buf[i]);
 }

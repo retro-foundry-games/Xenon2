@@ -72,23 +72,23 @@ var level_number 0xe04 uint16_t
 var respawn_shield 0xe06 uint16_t
 tab digit_gfx 0x1981e uint8_t 640
 tab panel_words 0x19a9e uint16_t 640
-arr other_player_level 0x3bcac uint8_t 12000
+arr other_player_level 0x3bcac uint16_t 6000
 arr other_player_block 0x3ecf4 uint32_t 202
 var player 0x3f01c Object
 arr obj_pool 0x3f07e Object 159
 arr shots 0x42d5c Shot 80
 arr row_offset 0x4321c uint16_t 200
-arr screen_a 0x44000 uint8_t 30720
-arr screen_b 0x4c700 uint8_t 30720
-arr panel_a 0x4b800 uint8_t 1280                   ; the status panel (score) of screen_a
-arr panel_b 0x53f00 uint8_t 1280                   ; and of screen_b
+arr screen_a 0x44000 uint16_t 15360
+arr screen_b 0x4c700 uint16_t 15360
+arr panel_a 0x4b800 uint16_t 640                   ; the status panel (score) of screen_a
+arr panel_b 0x53f00 uint16_t 640                   ; and of screen_b
 var level_init_src 0x54e04 uint8_t *
-var level_palette 0x54e1c uint32_t *
-tab option_anims 0x6cc2 uint8_t 96                 ; the four options' animation headers (24 bytes each: picture, delay, script)
+var level_palette 0x54e1c uint16_t *
+tab option_anims 0x6cc2 uint16_t 48                 ; the four options' animation headers (24 bytes each: picture, delay, script)
 tab option_offsets 0x6894 int16_t 14                       ; offsets of the options from the player
 arr palette_shadow 0x7012 uint16_t 16
 tab unused_796e 0x796e uint16_t 1             ; not used by the port
 var text_wait_key 0x8428 uint8_t
 arr ready_text 0x8836 uint8_t 19
-var player_gfx 0xebe2 uint8_t
-arr gauge_pics 0x6336 uint8_t * 10                ; the pictures of the gauge, empty to full
+var player_gfx 0xebe2 uint16_t
+arr gauge_pics 0x6336 uint16_t * 10                ; the pictures of the gauge, empty to full

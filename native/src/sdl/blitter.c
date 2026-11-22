@@ -7,8 +7,8 @@
 #include "amiga/hw.h"
 #include "host.h"
 
-static uint16_t get_word(const uint8_t *p) { return (uint16_t)(p[0] << 8 | p[1]); }
-static void put_word(uint8_t *p, uint16_t v) { p[0] = (uint8_t)(v >> 8); p[1] = (uint8_t)v; }
+static uint16_t get_word(const uint8_t *p) { return *(const uint16_t *)p; }
+static void put_word(uint8_t *p, uint16_t v) { *(uint16_t *)p = v; }
 
 static uint16_t minterm(uint8_t lf, uint16_t a, uint16_t b, uint16_t c)
 {

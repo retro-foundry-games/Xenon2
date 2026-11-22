@@ -1,8 +1,8 @@
 ; objects: $2800-$3FFF (animation scripts, collisions, spawning of formations, the object loop)
 arr hit_box 0x460 uint16_t 4                      ; the box (x0, y0, x1, y1) a collision test looks at
 arr tile_mask_buf 0x433ac uint16_t 75             ; 25 rows of three words: the solid pixels of the map under a sprite
-tab mask_empty 0x2de6 uint8_t 160                 ; a tile mask without solid pixels (16 rows of 10 bytes)
-tab mask_full 0x2ea6 uint8_t 160                  ; a tile mask that is all solid
+tab mask_empty 0x2de6 uint16_t 80                 ; a tile mask without solid pixels (16 rows of 10 bytes)
+tab mask_full 0x2ea6 uint16_t 80                  ; a tile mask that is all solid
 tab hit_mask_ptrs 0x3ae96 uint32_t 16             ; addresses of the 16 masks below (unused: they are 150 bytes apart)
 tab hit_mask_data 0x3aed6 uint16_t 1200           ; the player's 24 row mask shifted by 0..15 pixels (75 words each)
 type SpawnKind 6                                  ; the debris an object breaks into: the type and the animation (struct SpawnKind in types_objects.h)

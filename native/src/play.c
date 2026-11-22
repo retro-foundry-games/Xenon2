@@ -28,9 +28,9 @@ static void clear_screens(uint16_t last)
         } else {
             int k;
 
-            for (k = 0; k < 4; k++) {
-                xenon2.panel_b[(i - 0x1e00) * 4 + k] = 0;
-                xenon2.panel_a[(i - 0x1e00) * 4 + k] = 0;
+            for (k = 0; k < 2; k++) {
+                xenon2.panel_b[(i - 0x1e00) * 2 + k] = 0;
+                xenon2.panel_a[(i - 0x1e00) * 2 + k] = 0;
             }
         }
     }
@@ -65,8 +65,8 @@ void panel_clear_score(void)
             uint16_t k;
 
             for (k = first; k < first + 7; k++) {
-                pb[off + col_off + k] = byte;
-                pa[off + col_off + k] = byte;
+                put_screen_byte(pb + off + col_off + k, byte);
+                put_screen_byte(pa + off + col_off + k, byte);
             }
             col_off += 0x28;
         } while ((int16_t)col_off <= 0x78);
@@ -127,8 +127,8 @@ void update_score_display(void)
             for (k = 0; k < 4; k++) {
                 uint8_t b = *g++;
 
-                pb[off + row * 0xa0 + k * 0x28] = b;
-                pa[off + row * 0xa0 + k * 0x28] = b;
+                put_screen_byte(pb + off + row * 0xa0 + k * 0x28, b);
+                put_screen_byte(pa + off + row * 0xa0 + k * 0x28, b);
             }
         }
         if (*digit != 0)
@@ -143,7 +143,7 @@ void update_score_display(void)
 /* orig $006bea: sets up a level: flags, both screens' panel, the free list of objects, the shot list, the objects */
 void init_level_state(void)
 {
-    RawWord *dst_b, *dst_a;
+    uint16_t *dst_b, *dst_a;
     const uint16_t *words = xenon2.panel_words;
     uint16_t g, c, i;
     Object *o;
@@ -157,16 +157,16 @@ void init_level_state(void)
     xenon2.player_active[2] = 0;
     xenon2.player_active[3] = 0;
     clear_screens_small();
-    dst_b = (RawWord *)xenon2.panel_b;   /* what $6bce leaves in dst_b and dst_a: the panels */
-    dst_a = (RawWord *)xenon2.panel_a;
+    dst_b = xenon2.panel_b;   /* what $6bce leaves in dst_b and dst_a: the panels */
+    dst_a = xenon2.panel_a;
     for (g = 0; g < 8; g++) {
         for (c = 0; c < 20; c++) {
             uint16_t word;
 
-            word = *words++; wr16(dst_b[0].b, word); wr16(dst_a[0].b, word);
-            word = *words++; wr16(dst_b[SCREEN_PLANE_WORDS].b, word); wr16(dst_a[SCREEN_PLANE_WORDS].b, word);
-            word = *words++; wr16(dst_b[2 * SCREEN_PLANE_WORDS].b, word); wr16(dst_a[2 * SCREEN_PLANE_WORDS].b, word);
-            word = *words++; wr16(dst_b[3 * SCREEN_PLANE_WORDS].b, word); wr16(dst_a[3 * SCREEN_PLANE_WORDS].b, word);
+            word = *words++; dst_b[0] = word; dst_a[0] = word;
+            word = *words++; dst_b[SCREEN_PLANE_WORDS] = word; dst_a[SCREEN_PLANE_WORDS] = word;
+            word = *words++; dst_b[2 * SCREEN_PLANE_WORDS] = word; dst_a[2 * SCREEN_PLANE_WORDS] = word;
+            word = *words++; dst_b[3 * SCREEN_PLANE_WORDS] = word; dst_a[3 * SCREEN_PLANE_WORDS] = word;
             dst_b++;
             dst_a++;
         }
@@ -225,7 +225,7 @@ void init_objects(void)
     o->x = 0xa0;
     o->y = 0xb0;
     for (i = 0; i < 4; i++) {
-        const uint8_t *rec = &xenon2.option_anims[i * 24];   /* the record the table at $6CB2 points to */
+        const uint16_t *rec = &xenon2.option_anims[i * 12];   /* the record the table at $6CB2 points to */
         Object *h = &xenon2.obj_list[0];
         Object *first;
 
@@ -367,17 +367,12 @@ void frame_update(void)
     if (xenon2.shades_timer != 0) {
         xenon2.shades_timer--;
         if (xenon2.shades_timer == 0) {
-            const uint32_t *palette = xenon2.level_palette;
+            const uint16_t *palette = xenon2.level_palette;
             uint16_t i;
 
-            for (i = 0; i < 8; i++) {
-                uint32_t d = rd32(&palette[i]);
-
-                xenon2.palette_shadow[i * 2] = (uint16_t)(d >> 16);
-                xenon2.palette_shadow[i * 2 + 1] = (uint16_t)d;
-                d += d;
-                custom->color[i * 2] = (uint16_t)(d >> 16);
-                custom->color[i * 2 + 1] = (uint16_t)d;
+            for (i = 0; i < 16; i++) {
+                xenon2.palette_shadow[i] = palette[i];
+                custom->color[i] = (uint16_t)(palette[i] + palette[i]);
             }
         }
     }
@@ -439,8 +434,8 @@ void update_shots(void)
         dst += (int16_t)xenon2.row_offset[y];
         x16 = x & 0xf;
         dst += (uint16_t)((x ^ x16) >> 3);
-#define ORW(off, v) wr16(dst + (off), (uint16_t)(rd16(dst + (off)) | (v)))
-#define ANDW(off, v) wr16(dst + (off), (uint16_t)(rd16(dst + (off)) & (v)))
+#define ORW(off, v) (*(uint16_t *)(dst + (off)) |= (uint16_t)(v))
+#define ANDW(off, v) (*(uint16_t *)(dst + (off)) &= (uint16_t)(v))
         if ((int16_t)x16 <= 0xc) {
             lo2 = (uint16_t)(0xe000u >> x16 | 0xe000u << (16 - x16));
             lo3 = (uint16_t)(0x4000u >> x16 | 0x4000u << (16 - x16));
@@ -570,8 +565,8 @@ void swap_player_state(void)
     uint32_t *b = (uint32_t *)xenon2.obj_list;   /* the block runs on over the variables that follow the lists */
     uint8_t *pa = (uint8_t *)&xenon2.player;
     uint8_t *pb = xenon2.other_player_object;
-    uint8_t *la = xenon2.level_init_src;
-    uint8_t *lb = xenon2.other_player_level;
+    uint16_t *la = (uint16_t *)xenon2.level_init_src;
+    uint16_t *lb = xenon2.other_player_level;
     uint16_t i;
 
     for (i = 0; i < 202; i++) {
@@ -586,8 +581,8 @@ void swap_player_state(void)
         pa[i] = pb[i];
         pb[i] = t;
     }
-    for (i = 0; i < 12000; i++) {
-        uint8_t t = la[i];
+    for (i = 0; i < 6000; i++) {
+        uint16_t t = la[i];
 
         la[i] = lb[i];
         lb[i] = t;
@@ -725,10 +720,10 @@ void level_reset_scroll(void)
 /* orig $006f94: copies the level's initial data in and resets the start state of each player */
 void level_start(void)
 {
-    const uint8_t *src = xenon2.level_init_src;
+    const uint16_t *src = (const uint16_t *)xenon2.level_init_src;
     uint16_t i;
 
-    for (i = 0; i < 12000; i++)
+    for (i = 0; i < 6000; i++)
         xenon2.other_player_level[i] = src[i];
     xenon2.background_scroll = 0;
     xenon2.target_count = 0;
