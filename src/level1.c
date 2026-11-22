@@ -5,28 +5,17 @@
 #include "game_all.h"
 #include "weapon_util.h"
 #include "amiga/hw.h"
-#define TILE_COLS(o) ((o)->v3e)
-#define TILE_ROWS(o) ((o)->v40)
 
 /* the scratch fields of Object, by the kind that uses them */
-#define L1_ANGLE_HI(o) ((o)->v2a)
-#define L1_ANGLE_LO(o) ((o)->v2c)
-#define UNIT_COUNTER(o) ((o)->v2e)
-#define UNIT_ID(o) ((o)->v30)
-#define UNIT_WAIT(o) ((o)->v28)
+
+
+/* the scratch fields of Object, by the kind that uses them */
 
 
 /* the scratch fields of Object, by the kind that uses them */
 
 
 /* the scratch fields of Object, by the kind that uses them */
-#define L1_BOSS_MOVE(o) ((o)->v2e)
-#define L1_BOSS_PHASE(o) ((o)->v28)
-#define L1_BOSS_WAIT(o) ((o)->v30)
-
-
-/* the scratch fields of Object, by the kind that uses them */
-#define L1_TURRET_STEP(o) ((o)->v28)
 
 
 #define FN(f) ((obj_fn)(f))
@@ -94,12 +83,12 @@ void level1_turret_a_update(Object *a0)
     y = (int16_t)(a0->y - scroll_pos + 4);
     a0->hit[1] = y;
     a0->hit[3] = (int16_t)(y + 0x18);
-    d0 = (uint16_t)(L1_TURRET_STEP(a0) << 3);
+    d0 = (uint16_t)(a0->l1_turret.step << 3);
     a2 = a0->type == 0xe0 ? l1_turret_a_cells_e0 : l1_turret_a_cells_e4;
     a1 = a0->script;
     copy4(a1, a2 + d0);
     copy4(a1 + 0x28, a2 + d0 + 4);
-    L1_TURRET_STEP(a0) = (int16_t)((L1_TURRET_STEP(a0) + 1) & 3);
+    a0->l1_turret.step = (int16_t)((a0->l1_turret.step + 1) & 3);
     sum = (uint16_t)(((ObjMove *)a0)->shot_count + l1_shot_params[3]);
     ((ObjMove *)a0)->shot_count = (uint8_t)sum;
     if (!(sum & 0x100))
@@ -130,12 +119,12 @@ void level1_turret_b_update(Object *a0)
     y = (int16_t)(a0->y - scroll_pos + 4);
     a0->hit[1] = y;
     a0->hit[3] = (int16_t)(y + 0x18);
-    d0 = (uint16_t)(((uint16_t)L1_TURRET_STEP(a0) & 0xfffc) << 1);
+    d0 = (uint16_t)(((uint16_t)a0->l1_turret.step & 0xfffc) << 1);
     a2 = a0->type == 0xe8 ? l1_turret_b_cells_e8 : l1_turret_b_cells_ec;
     a1 = a0->script;
     copy4(a1, a2 + d0);
     copy4(a1 + 0x28, a2 + d0 + 4);
-    L1_TURRET_STEP(a0) = (int16_t)((L1_TURRET_STEP(a0) + 1) & 0xf);
+    a0->l1_turret.step = (int16_t)((a0->l1_turret.step + 1) & 0xf);
     sum = (uint16_t)(((ObjMove *)a0)->shot_count + l1_shot_params[0xf]);
     ((ObjMove *)a0)->shot_count = (uint8_t)sum;
     if (!(sum & 0x100))
@@ -165,22 +154,22 @@ void level1_turret_c_update(Object *a0)
     y = (int16_t)(a0->y - scroll_pos + 8);
     a0->hit[1] = y;
     a0->hit[3] = (int16_t)(y + 0x10);
-    d0 = (uint16_t)(((uint16_t)L1_TURRET_STEP(a0) & 0xfffe) << 1);
+    d0 = (uint16_t)(((uint16_t)a0->l1_turret.step & 0xfffe) << 1);
     a2 = a0->type == 0xd8 ? l1_turret_c_steps_d8 : l1_turret_c_steps_dc;
     copy4(a0->script, a2 + d0);
-    if (L1_TURRET_STEP(a0) == 0) {
+    if (a0->l1_turret.step == 0) {
         sum = (uint16_t)(((ObjMove *)a0)->shot_count + l1_shot_params[9]);
         ((ObjMove *)a0)->shot_count = (uint8_t)sum;
         if (!(sum & 0x100))
             return;
         ((ObjMove *)a0)->shot_count = (uint8_t)(random_next() & 0x3f);
     }
-    L1_TURRET_STEP(a0)++;
-    if (L1_TURRET_STEP(a0) == 0x28) {
-        L1_TURRET_STEP(a0) = 0;
+    a0->l1_turret.step++;
+    if (a0->l1_turret.step == 0x28) {
+        a0->l1_turret.step = 0;
         return;
     }
-    if (L1_TURRET_STEP(a0) != 0x18)
+    if (a0->l1_turret.step != 0x18)
         return;
     x = (int16_t)(a0->x + 0x1a);
     y = (int16_t)(a0->y - scroll_pos + 2);
@@ -193,9 +182,6 @@ void level1_turret_c_update(Object *a0)
 }
 
 /* the launcher's use of the scratch fields of Object */
-#define LAUNCHER_STEP(o)  ((o)->v28)
-#define LAUNCHER_POS(o)   ((o)->v30)
-#define LAUNCHER_RANGE(o) ((o)->v2a)
 
 /* orig $0556DC: update of the launcher $D0 / $D4: it moves up and down (v28 is its step, v30 its place between 0 and v2a); when the
  * player is level with it (now and then) it goes into list B and fires three shots */
@@ -210,14 +196,14 @@ void level1_launcher_update(Object *a0)
     }
     anim_step(a0);
     a0->y = (int16_t)(a0->y + scroll_speed);
-    if (LAUNCHER_STEP(a0) == 0)
+    if (a0->launcher.step == 0)
         return;
     d0 = (int16_t)(a0->y - PLAYER->y);
     if (d0 <= 0xa && d0 >= -0x1e && (uint8_t)random_next() < 0x32) {
         Object *tail;
         const uint8_t *a2;
 
-        LAUNCHER_STEP(a0) = 0;
+        a0->launcher.step = 0;
         a0->next->prev = a0->prev;
         a0->prev->next = a0->next;
         tail = LIST_B->prev;
@@ -235,11 +221,11 @@ void level1_launcher_update(Object *a0)
         }
         return;
     }
-    d0 = LAUNCHER_STEP(a0);
+    d0 = a0->launcher.step;
     a0->y = (int16_t)(a0->y + d0);
-    LAUNCHER_POS(a0) = (int16_t)(LAUNCHER_POS(a0) + d0);
-    if (LAUNCHER_POS(a0) == 0 || LAUNCHER_POS(a0) == LAUNCHER_RANGE(a0))
-        LAUNCHER_STEP(a0) = (int16_t)-LAUNCHER_STEP(a0);
+    a0->launcher.pos = (int16_t)(a0->launcher.pos + d0);
+    if (a0->launcher.pos == 0 || a0->launcher.pos == a0->launcher.range)
+        a0->launcher.step = (int16_t)-a0->launcher.step;
     bbox_from_frame(a0);
 }
 
@@ -265,8 +251,8 @@ static void level1_turret_cells(Object *a0, const uint8_t *a2, const uint8_t *a4
     copy4(a3, a2);
     copy4(a3 + 0x28, a2 + 4);
     a0->score = 0x64;
-    TILE_COLS(a0) = 1;
-    TILE_ROWS(a0) = 1;
+    a0->tile.cols = 1;
+    a0->tile.rows = 1;
 }
 
 /* orig $054E18 (-> $055942): level hooks by d0 (a1 = the record that fired, d2 its scroll value): 0 remembers the record, 1 to 3 put
@@ -311,9 +297,9 @@ void level1_hook(uint16_t d0, const uint8_t *a1, uint16_t d2)
         SET_V5E(a0, 0);
         a0->x = (int16_t)(rd16(a1 + 8) - 8 + (flag ? 0x10 : 0));
         a0->y = (int16_t)(rd16(a1 + 10) - 8 - scroll_pos);
-        LAUNCHER_STEP(a0) = -1;
-        LAUNCHER_RANGE(a0) = (int16_t)(rd16(a1 + 6) << 4);
-        LAUNCHER_POS(a0) = LAUNCHER_RANGE(a0);
+        a0->launcher.step = -1;
+        a0->launcher.range = (int16_t)(rd16(a1 + 6) << 4);
+        a0->launcher.pos = a0->launcher.range;
         a0->kind = 0;
         bbox_from_frame(a0);
         return;
@@ -401,8 +387,8 @@ void level1_boss_update(Object *a0)
             a1->hit[0] = 0x3e8;
             a1->hit[2] = 0x3e8;
         }
-        L1_ANGLE_HI(a0) = 0;
-        L1_ANGLE_LO(a0) = 0;
+        a0->l1.angle_hi = 0;
+        a0->l1.angle_lo = 0;
         a0->turn[0] = 0;
         a0->turn[1] = 0;
         a0->turn[2] = 0;
@@ -414,14 +400,14 @@ void level1_boss_update(Object *a0)
     d5 = (int16_t)(a0->y - scroll_pos + 4);
     a0->hit[1] = d5;
     a0->hit[3] = (int16_t)(d5 + 0x50);
-    if (L1_BOSS_PHASE(a0) == 0) {
+    if (a0->l1_boss.phase == 0) {
         if ((int16_t)scroll_pos > 0x30)
             goto draw_table;
-        L1_BOSS_PHASE(a0) = 1;
-        L1_BOSS_MOVE(a0) = 0;
-        L1_BOSS_WAIT(a0) = 0xaa;
+        a0->l1_boss.phase = 1;
+        a0->l1_boss.move = 0;
+        a0->l1_boss.wait = 0xaa;
     }
-    if (L1_BOSS_PHASE(a0) < 0) {
+    if (a0->l1_boss.phase < 0) {
         if (a0->steps != 0)
             a0->steps--;
     } else if (a0->steps < 0xb) {
@@ -429,16 +415,16 @@ void level1_boss_update(Object *a0)
             sfx_cmd2 = 0xf;
         a0->steps++;
     }
-    L1_BOSS_PHASE(a0)++;
-    if (L1_BOSS_PHASE(a0) == 0)
-        L1_BOSS_PHASE(a0)++;
-    if (L1_BOSS_PHASE(a0) >= 0x64)
-        L1_BOSS_PHASE(a0) = -40;
+    a0->l1_boss.phase++;
+    if (a0->l1_boss.phase == 0)
+        a0->l1_boss.phase++;
+    if (a0->l1_boss.phase >= 0x64)
+        a0->l1_boss.phase = -40;
     d0 = frame_tick & 0x7f;
     if (d0 & 0x40)
         d0 = (int16_t)-(d0 - 0x7f);
     d0 = (int8_t)d0;
-    L1_ANGLE_LO(a0) = (int16_t)(d0 + 0x20);
+    a0->l1.angle_lo = (int16_t)(d0 + 0x20);
     d0 = (int16_t)((frame_tick + 0x50) & 0xff);
     if (d0 & 0x80)
         d0 = (~d0) & 0xff;
@@ -450,29 +436,29 @@ void level1_boss_update(Object *a0)
         d0 ^= 0x1ff;
     d0 -= 0x80;
     a0->turn[2] = (uint16_t)(d0 << 5);
-    d0 = (int16_t)(L1_BOSS_MOVE(a0) + a0->y);
+    d0 = (int16_t)(a0->l1_boss.move + a0->y);
     if (d0 < 0x10) {
         d0 = 0x10;
-        L1_BOSS_WAIT(a0) = 0;
+        a0->l1_boss.wait = 0;
     }
     if (d0 > 0x1e0) {
         d0 = 0x1e0;
-        L1_BOSS_WAIT(a0) = 0;
+        a0->l1_boss.wait = 0;
     }
     a0->y = d0;
-    L1_BOSS_WAIT(a0)--;
-    if (L1_BOSS_WAIT(a0) < 0) {
-        if (L1_BOSS_MOVE(a0) == -1) {
-            L1_BOSS_MOVE(a0) = 0;
-            L1_BOSS_WAIT(a0) = 0xaa;
-        } else if (L1_BOSS_MOVE(a0) == 1) {
-            L1_BOSS_MOVE(a0) = 0;
-            L1_BOSS_WAIT(a0) = 0x3c;
+    a0->l1_boss.wait--;
+    if (a0->l1_boss.wait < 0) {
+        if (a0->l1_boss.move == -1) {
+            a0->l1_boss.move = 0;
+            a0->l1_boss.wait = 0xaa;
+        } else if (a0->l1_boss.move == 1) {
+            a0->l1_boss.move = 0;
+            a0->l1_boss.wait = 0x3c;
         } else {
-            L1_BOSS_WAIT(a0) = 0x32;
-            L1_BOSS_MOVE(a0) = 1;
+            a0->l1_boss.wait = 0x32;
+            a0->l1_boss.move = 1;
             if (a0->y != 0x10)
-                L1_BOSS_MOVE(a0) = -1;
+                a0->l1_boss.move = -1;
         }
     }
     d0 = (int16_t)(0x1e - a0->energy);
@@ -483,7 +469,7 @@ draw_table:
     copy_long(&l1_boss_draw_table[4], src + 4);
     copy_long(&l1_boss_draw_table[12], src + 8);
     copy_long(&l1_boss_draw_table[16], src + 12);
-    if (L1_BOSS_PHASE(a0) != 0)
+    if (a0->l1_boss.phase != 0)
         return;
 hide:
     a0->hit[0] = 0x3e8;
@@ -532,7 +518,7 @@ void level1_init(void)
     a0->screen_fixed = -1;
     a0->y = 0x10;
     a0->energy = l1_boss_energy[0];
-    L1_BOSS_PHASE(a0) = 0;
+    a0->l1_boss.phase = 0;
     a0->steps = 0;
     l1_boss_spawned = 0;
     for (i = 0; i < 5; i++)
@@ -591,15 +577,15 @@ void level1_spawn_unit(uint16_t d6)
     a0->fn_update = FN(level1_head_update);
     a0->fn_draw = obj_nop_thunk;
     a0->fn_hit = (void *)level1_hit_free;
-    UNIT_COUNTER(a0) = d3;
+    a0->unit.counter = d3;
     SET_V5E(a0, 0);
     a0->script = s->path;
     ((ObjMove *)a0)->cursor = s->path;
     a0->x = x;
     a0->y = y;
-    UNIT_WAIT(a0) = d2;
+    a0->unit.wait = d2;
     a0->steps = (int16_t)l1_boss_steps[0];
-    UNIT_ID(a0) = (int16_t)d6;
+    a0->unit.id = (int16_t)d6;
     a0->hit[0] = 0x3e8;
     a0->hit[2] = 0x3e8;
     a0->score = 0;
@@ -613,7 +599,7 @@ void level1_spawn_unit(uint16_t d6)
         a0->fn_hit = (void *)seg->hit;
         a0->gfx = seg->gfx;
         a0->score = (int16_t)seg->score;
-        UNIT_COUNTER(a0) = d3;
+        a0->unit.counter = d3;
         a0->energy = 1;
         a0->big = 0;
         SET_V5E(a0, 0);
@@ -623,9 +609,9 @@ void level1_spawn_unit(uint16_t d6)
         a0->x = x;
         a0->y = y;
         a0->kind = 0;
-        UNIT_WAIT(a0) = d2;
+        a0->unit.wait = d2;
         a0->steps = 4;
-        UNIT_ID(a0) = (int16_t)d6;
+        a0->unit.id = (int16_t)d6;
         d2 = (int16_t)(d2 - 7);
         bbox_from_frame(a0);
     }
@@ -650,7 +636,7 @@ void level1_spawn_unit(uint16_t d6)
 void level1_head_update(Object *a0)
 {
     a0->y = (int16_t)(a0->y + scroll_speed);
-    unit_live[(uint16_t)UNIT_ID(a0)] = 0xff;
+    unit_live[(uint16_t)a0->unit.id] = 0xff;
     obj_script_step(a0);
     if (a0->type == 4)
         a0->fn_update(a0);
@@ -670,23 +656,23 @@ void level1_segment_update(Object *a0)
     uint16_t d2;
     uint8_t **tab;
 
-    unit_live[(uint16_t)UNIT_ID(a0)] = 0xff;
+    unit_live[(uint16_t)a0->unit.id] = 0xff;
     a1 = OBJ_FWD(a0);
     if (a1->type == 0xbc) {
-        if (level_vars[(uint16_t)UNIT_COUNTER(a0)] == 0)
-            level_vars[(uint16_t)UNIT_COUNTER(a0)] = 0x14;
+        if (level_vars[(uint16_t)a0->unit.counter] == 0)
+            level_vars[(uint16_t)a0->unit.counter] = 0x14;
         kill_object_thunk(a0);
         a0->fn_update(a0);
         return;
     }
     a0->x = a1->x;
     a0->y = (int16_t)(a1->y + scroll_speed);
-    L1_ANGLE_HI(a0) = L1_ANGLE_HI(a1);
-    L1_ANGLE_LO(a0) = L1_ANGLE_LO(a1);
-    UNIT_WAIT(a0) = UNIT_WAIT(a1);
-    if (a0->fn_draw == obj_nop_thunk && UNIT_WAIT(a0) >= 0)
+    a0->l1.angle_hi = a1->l1.angle_hi;
+    a0->l1.angle_lo = a1->l1.angle_lo;
+    a0->unit.wait = a1->unit.wait;
+    if (a0->fn_draw == obj_nop_thunk && a0->unit.wait >= 0)
         a0->fn_draw = draw_bob_masked;
-    d2 = (uint16_t)(((uint16_t)(L1_ANGLE_LO(a0) + 0x10) >> 3) & 0x1c);
+    d2 = (uint16_t)(((uint16_t)(a0->l1.angle_lo + 0x10) >> 3) & 0x1c);
     tab = &l1_piece_pictures[a0->type == 0x110 ? 8 : 0];
     a0->gfx = tab[d2 / 4];
     bbox_from_frame(a0);
@@ -703,8 +689,8 @@ static void level1_piece_burst(Object *a1, const uint8_t *a2)
     n->x = a1->x;
     n->y = a1->y;
     set_anim(n, a2);
-    L1_ANGLE_HI(n) = 0;
-    L1_ANGLE_LO(n) = (int16_t)(random_next() & 0xff);
+    n->l1.angle_hi = 0;
+    n->l1.angle_lo = (int16_t)(random_next() & 0xff);
     player_score += (uint16_t)a1->score;
     kill_object_thunk(a1);
 }
@@ -741,7 +727,7 @@ void level1_debris_update(Object *a0)
     int16_t d0, d1;
 
     anim_step(a0);
-    d2 = (uint16_t)L1_ANGLE_LO(a0);
+    d2 = (uint16_t)a0->l1.angle_lo;
     d1 = (int16_t)(piece_directions[d2] >> 2);
     d0 = (int16_t)(piece_directions[(uint16_t)(d2 + 0x40)] >> 2);
     d0 = (int16_t)(d0 + a0->x);
@@ -805,8 +791,8 @@ void level1_boss_part_update(Object *a0)
     a0->x_frac = a1->x_frac;
     a0->y = a1->y;
     a0->y_frac = a1->y_frac;
-    L1_ANGLE_HI(a0) = L1_ANGLE_HI(a1);
-    L1_ANGLE_LO(a0) = L1_ANGLE_LO(a1);
+    a0->l1.angle_hi = a1->l1.angle_hi;
+    a0->l1.angle_lo = a1->l1.angle_lo;
     a0->turn[0] = a1->turn[0];
     a0->turn[1] = a1->turn[1];
     a0->turn[2] = a1->turn[2];
@@ -828,7 +814,7 @@ void level1_boss_part_update(Object *a0)
     if (a0->type == 0x100) {
         uint16_t dir = direction8((int16_t)(PLAYER->x - a0->x), (int16_t)(PLAYER->y - a0->y));
 
-        L1_ANGLE_HI(a0) = (int16_t)dir;
+        a0->l1.angle_hi = (int16_t)dir;
         a0->gfx = l1_boss_part_pictures[dir];
         if (a0->steps >= 0xb) {
             uint16_t sum = (uint16_t)(m->shot_count + 0xf);
@@ -838,7 +824,7 @@ void level1_boss_part_update(Object *a0)
                 Object *shot;
 
                 m->shot_count = (uint8_t)(random_next() & 0x3f);
-                shot = spawn_enemy_shot((uint16_t)a0->x, (uint16_t)a0->y, (uint16_t)L1_ANGLE_HI(a0), 4, 0);
+                shot = spawn_enemy_shot((uint16_t)a0->x, (uint16_t)a0->y, (uint16_t)a0->l1.angle_hi, 4, 0);
                 set_anim(shot, anim_l1_shot);
             }
         }

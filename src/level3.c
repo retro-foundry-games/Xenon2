@@ -6,41 +6,22 @@
 #include "blobs.h"
 
 
-#define PART_SLOT(o) ((o)->v30)
-#define TILE_COLS(o) ((o)->v3e)
-#define TILE_ROWS(o) ((o)->v40)
-#define PATH_WAIT(o) ((o)->v28)
-#define ARM_SWING(o) ((o)->v3e)
-#define WORM_DELAY(o) ((o)->v28)
-#define WALKER_DIR(o) ((o)->v2a)
 
 /* the scratch fields of Object, by the kind that uses them */
 
 
 /* the path script view of an object (ObjMove) */
-#define PATH_ANGLE_HI(o) ((o)->v2a)
-#define PATH_ANGLE_LO(o) ((o)->v2c)
-#define SNAKE_X(o) ((o)->v2e)
-#define ARM_SWING_STEP(o) ((o)->v2e)
-
-/* the scratch fields of Object, by the kind that uses them */
-#define SNAKE_STEP(o) ((o)->v2a)
-
-#define ARM_ANGLE_HI(o) ((o)->v2a)
-#define ARM_ANGLE_LO(o) ((o)->v2c)
 
 /* the scratch fields of Object, by the kind that uses them */
 
 
 /* the scratch fields of Object, by the kind that uses them */
-#define WALKER_STATE(o) ((o)->v28)
 
 
 /* the scratch fields of Object, by the kind that uses them */
-#define DIVER_SIDE(o) ((o)->v2a)
-#define L3_PICTURE_PHASE(o) ((o)->v2c)
-#define WORM_PHASE(o) ((o)->v2c)
-#define WORM_SIDE(o) ((o)->v30)
+
+
+/* the scratch fields of Object, by the kind that uses them */
 
 
 #define FN(f) ((obj_fn)(f))
@@ -289,7 +270,7 @@ void l3_worm_spawn(uint16_t d6)
             head = a0;
         a0->fn_hit = prev ? GFN(0xf2c) : (void *)l3_worm_hit;
         a0->type = 0x50;
-        WORM_DELAY(a0) = d2;
+        a0->worm.delay = d2;
         d2 = (int16_t)(d2 - (int16_t)t->delay);
         a0->fn_update = (obj_fn)t->update;
         a0->fn_draw = draw_bob_masked;
@@ -301,12 +282,12 @@ void l3_worm_spawn(uint16_t d6)
         a0->anim_delay = 0;
         a0->script = (uint8_t *)GPTR(path);
         a0->cursor = (const uint8_t *)GPTR(path);
-        WORM_PHASE(a0) = 0xc0;
+        a0->worm.phase = 0xc0;
         a0->x = x;
         a0->y = y;
         a0->kind = 0;
         a0->steps = (int16_t)level3_blob.worm_spawn_steps;
-        WORM_SIDE(a0) = (int16_t)d6;
+        a0->worm.side = (int16_t)d6;
         bbox_from_frame(a0);
         a0->target = head;
         a0->chain = 0;
@@ -318,7 +299,7 @@ void l3_worm_spawn(uint16_t d6)
 static void l3_enemy(Object *a0, const uint8_t *const *table)
 {
     enemy_update_no_anim(a0);
-    a0->gfx = (void *)table[(((uint16_t)L3_PICTURE_PHASE(a0) + 0x10) >> 5) & 7];
+    a0->gfx = (void *)table[(((uint16_t)a0->l3_picture.phase + 0x10) >> 5) & 7];
     bbox_from_frame(a0);
 }
 
@@ -351,8 +332,6 @@ static int l3_snake_off(Object *a0)
     return 0;
 }
 
-#define SNAKE_LIMIT(o) ((o)->v30)
-#define SNAKE_SWING(o) ((o)->v28)
 
 /* level3 $056490: the first piece of a snake: it waits (v30), looks for the player's height, then swings (v28 between 0 and v30) */
 void l3_snake_head(Object *a0)
@@ -360,11 +339,11 @@ void l3_snake_head(Object *a0)
     if (l3_snake_off(a0))
         return;
     a0->fn_draw = (obj_fn)obj_nop_thunk;
-    if (SNAKE_STEP(a0) == 0) {
+    if (a0->snake.step == 0) {
         int16_t d0;
 
-        if (SNAKE_LIMIT(a0) < 0) {
-            SNAKE_LIMIT(a0)++;
+        if (a0->snake.limit < 0) {
+            a0->snake.limit++;
             bbox_from_frame(a0);
             return;
         }
@@ -375,16 +354,16 @@ void l3_snake_head(Object *a0)
             bbox_from_frame(a0);
             return;
         }
-        SNAKE_STEP(a0) = 2;
-        SNAKE_LIMIT(a0) = (int16_t)((random_next() & 6) + 0xa);
+        a0->snake.step = 2;
+        a0->snake.limit = (int16_t)((random_next() & 6) + 0xa);
     }
     a0->fn_draw = draw_bob_masked;
-    SNAKE_SWING(a0) = (int16_t)(SNAKE_STEP(a0) + SNAKE_SWING(a0));
-    if (SNAKE_SWING(a0) == 0) {
-        SNAKE_STEP(a0) = 0;
-        SNAKE_LIMIT(a0) = -5;
-    } else if (SNAKE_SWING(a0) == SNAKE_LIMIT(a0)) {
-        SNAKE_STEP(a0) = (int16_t)-SNAKE_STEP(a0);
+    a0->snake.swing = (int16_t)(a0->snake.step + a0->snake.swing);
+    if (a0->snake.swing == 0) {
+        a0->snake.step = 0;
+        a0->snake.limit = -5;
+    } else if (a0->snake.swing == a0->snake.limit) {
+        a0->snake.step = (int16_t)-a0->snake.step;
     }
     bbox_from_frame(a0);
 }
@@ -398,10 +377,10 @@ void l3_snake_tail(Object *a0)
         return;
     anim_step(a0);
     a1 = a0->target;
-    a0->x = (int16_t)((uint16_t)((uint16_t)SNAKE_LIMIT(a0) * (uint16_t)SNAKE_SWING(a1)) + (uint16_t)SNAKE_X(a0));
-    if (SNAKE_STEP(a1) == 2 && SNAKE_SWING(a1) == 2) {
+    a0->x = (int16_t)((uint16_t)((uint16_t)a0->snake.limit * (uint16_t)a1->snake.swing) + (uint16_t)a0->snake.x);
+    if (a1->snake.step == 2 && a1->snake.swing == 2) {
         a0->anim_delay = 1;
-    } else if (SNAKE_LIMIT(a1) > 0 && SNAKE_LIMIT(a1) == SNAKE_SWING(a1)) {
+    } else if (a1->snake.limit > 0 && a1->snake.limit == a1->snake.swing) {
         a0->anim_delay = 1;
     }
     bbox_from_frame(a0);
@@ -416,8 +395,8 @@ void l3_snake_body(Object *a0)
         return;
     a0->fn_draw = (obj_fn)obj_nop_thunk;
     a1 = a0->target;
-    a0->x = (int16_t)((uint16_t)((uint16_t)SNAKE_LIMIT(a0) * (uint16_t)SNAKE_SWING(a1)) + (uint16_t)SNAKE_X(a0));
-    if (SNAKE_STEP(a1) != 0)
+    a0->x = (int16_t)((uint16_t)((uint16_t)a0->snake.limit * (uint16_t)a1->snake.swing) + (uint16_t)a0->snake.x);
+    if (a1->snake.step != 0)
         a0->fn_draw = draw_bob_masked;
     bbox_from_frame(a0);
 }
@@ -452,20 +431,20 @@ void l3_spawn_snake(const uint8_t *a1)
             a0->fn_update = FN(l3_snake_head);
         a0->fn_draw = draw_bob_masked;
         a0->x = d0;
-        SNAKE_X(a0) = d0;
+        a0->snake.x = d0;
         a0->y = d1;
         a0->fn_hit = (void *)hit_part;
         a0->is_part = 1;
         a0->energy = (int16_t)level3_blob.snake_energy;
         a0->big = 0;
         a0->score = 0x190;
-        SNAKE_SWING(a0) = 0;
+        a0->snake.swing = 0;
         a0->kind = 0;
-        SNAKE_STEP(a0) = 0;
+        a0->snake.step = 0;
         d6 = (int16_t)(7 - d7);
         if (flag)
             d6 = (int16_t)-d6;
-        SNAKE_LIMIT(a0) = d6;
+        a0->snake.limit = d6;
         bbox_from_frame(a0);
         a0->target = a4;
         a0->chain = 0;
@@ -504,16 +483,15 @@ void l3_diver_shot(Object *a0)
     if (a0->type != 0x14)
         return;
     if (a0->x < 0x80) {
-        DIVER_SIDE(a0) = 3;
+        a0->diver.side = 3;
         a0->gfx = (void *)level3_blob.diver_shot_picture_a;
     }
     if (a0->x >= 0xc0) {
-        DIVER_SIDE(a0) = 5;
+        a0->diver.side = 5;
         a0->gfx = (void *)level3_blob.diver_shot_picture_b;
     }
 }
 
-#define DIVER_STATE(o) ((o)->v28)
 
 /* level3 $056618: the diver ($D0): it crosses the screen sideways, turns at the edges, stops at x $88 and $B8 (v28 1) to shoot, with the shot
  * eleven steps into the animation */
@@ -530,8 +508,8 @@ void l3_diver_update(Object *a0)
         return;
     }
     anim_step(a0);
-    if (DIVER_STATE(a0) == 0) {
-        d0 = (int16_t)(DIVER_SIDE(a0) + a0->x);
+    if (a0->diver.state == 0) {
+        d0 = (int16_t)(a0->diver.side + a0->x);
         a0->x = d0;
         if (d0 <= -0x20) {
             a0->x = 0;
@@ -542,11 +520,11 @@ void l3_diver_update(Object *a0)
             a2 = level3_blob.diver_update_data_2;
             flip = 1;
         } else if (d0 == 0x88) {
-            DIVER_STATE(a0) = 1;
+            a0->diver.state = 1;
             a2 = level3_blob.diver_update_data_3;
             flip = 0;
         } else if (d0 == 0xb8) {
-            DIVER_STATE(a0) = 1;
+            a0->diver.state = 1;
             a2 = level3_blob.diver_update_data_4;
             flip = 0;
         } else {
@@ -554,7 +532,7 @@ void l3_diver_update(Object *a0)
             return;
         }
     } else if (a0->anim_delay == 0) {
-        DIVER_STATE(a0) = 0;
+        a0->diver.state = 0;
         if (a0->x > 0xa0) {
             a0->x = 0xd8;
             a2 = level3_blob.diver_update_data;
@@ -564,8 +542,8 @@ void l3_diver_update(Object *a0)
         }
         flip = 1;
     } else {
-        DIVER_STATE(a0)++;
-        if (DIVER_STATE(a0) == 0xb) {
+        a0->diver.state++;
+        if (a0->diver.state == 0xb) {
             int16_t sx = (int16_t)(a0->x - 5), sy = (int16_t)(a0->y + 4);
             const uint8_t *gfx = level3_blob.diver_shot_picture_a;
             Object *s;
@@ -582,17 +560,17 @@ void l3_diver_update(Object *a0)
             s->anim_delay = 0;
             s->x = sx;
             s->y = sy;
-            DIVER_STATE(s) = 0;
+            s->diver.state = 0;
             s->steps = (int16_t)level3_blob.diver_steps;
-            DIVER_SIDE(s) = 3;
+            s->diver.side = 3;
             if (a0->x >= 0xa0)
-                DIVER_SIDE(s) = 5;
+                s->diver.side = 5;
         }
         bbox_from_frame(a0);
         return;
     }
     if (flip)
-        DIVER_SIDE(a0) = (int16_t)-DIVER_SIDE(a0);
+        a0->diver.side = (int16_t)-a0->diver.side;
     set_anim(a0, a2);
     bbox_from_frame(a0);
 }
@@ -609,17 +587,17 @@ void l3_spawn_diver(const uint8_t *a1)
     SET_V5E(a0, 0);
     a0->x = (int16_t)(rd16(a1 + 8) - 8);
     a0->y = (int16_t)(rd16(a1 + 0xa) + 8 - scroll_pos);
-    DIVER_SIDE(a0) = 2;
+    a0->diver.side = 2;
     if (a0->x > 0xa0) {
         a2 = level3_blob.diver_update_data_2;
-        DIVER_SIDE(a0) = -2;
+        a0->diver.side = -2;
     }
     set_anim(a0, a2);
     a0->fn_hit = (void *)hit_enemy;
     a0->energy = (int16_t)level3_blob.diver_energy;
     a0->big = -1;
     a0->score = 0x12c;
-    DIVER_STATE(a0) = 0;
+    a0->diver.state = 0;
     a0->kind = 0;
     bbox_from_frame(a0);
 }
@@ -655,7 +633,7 @@ void l3_spawn_parts(void)
         a0->fn_update = (obj_fn)t->update;
         a0->fn_draw = draw_bob_masked;
         a0->fn_hit = (void *)t->hit;
-        PATH_WAIT(a0) = 0;
+        a0->path.wait = 0;
         set_anim(a0, t->anim);
         a0->turn[0] = t->x;
         a0->turn[1] = t->y;
@@ -668,8 +646,8 @@ void l3_spawn_parts(void)
         a0->x_frac = 0;
         a0->y_frac = 0;
         a0->cursor = level3_blob.spawn_parts_data_3;
-        PATH_ANGLE_HI(a0) = 0;
-        PATH_ANGLE_LO(a0) = 0;
+        a0->path.angle_hi = 0;
+        a0->path.angle_lo = 0;
         a0->turn[2] = 0;
         a0->kind = 0;
         a0->steps = (int16_t)level3_blob.parts_steps;
@@ -677,8 +655,8 @@ void l3_spawn_parts(void)
         a0->target = first;
         a0->chain = 0;
         t++;
-        PART_SLOT(a0) = (int16_t)((t - level3_blob.parts) * 16);
-        ARM_SWING(a0) = 0;
+        a0->part.slot = (int16_t)((t - level3_blob.parts) * 16);
+        a0->arm_b.swing = 0;
         prev = a0;
     } while (t->update != 0);
     sh_w8(0xd96, 0xff);
@@ -717,7 +695,6 @@ void l3_part_follow(Object *a0)
     bbox_from_frame(a0);
 }
 
-#define GUN_SIDE(o) ((o)->v30)
 
 /* level3 $055B38: a gun part (v30 $40 the left one, the other the right): while the energy of its side (d60 / d62) is above zero it is shown
  * as it is and can be hit, then it is the picture of the wreck */
@@ -726,9 +703,9 @@ void l3_part_gun(Object *a0)
     int16_t side;
 
     l3_part_follow(a0);
-    side = (int16_t)W(GUN_SIDE(a0) == 0x40 ? 0xd60 : 0xd62);
+    side = (int16_t)W(a0->gun.side == 0x40 ? 0xd60 : 0xd62);
     if (side <= 0) {
-        a0->gfx = (void *)(GUN_SIDE(a0) == 0x40 ? level3_blob.part_gun_picture_side_40 : level3_blob.part_gun_picture_other);
+        a0->gfx = (void *)(a0->gun.side == 0x40 ? level3_blob.part_gun_picture_side_40 : level3_blob.part_gun_picture_other);
         a0->anim_delay = 0;
         a0->hit[0] = 0x3e8;
         a0->fn_hit = (void *)obj_nop_thunk;
@@ -755,7 +732,7 @@ void l3_part_gun(Object *a0)
 void l3_part_hit(Object *a0, Object *a1, uint16_t d0)
 {
     Object *a2;
-    uint32_t w = GUN_SIDE(a1) == 0x40 ? 0xd60 : 0xd62;
+    uint32_t w = a1->gun.side == 0x40 ? 0xd60 : 0xd62;
     uint16_t old = W(w);
     int16_t x, y;
 
@@ -777,7 +754,6 @@ void l3_part_hit(Object *a0, Object *a1, uint16_t d0)
     sh_w8(0xd85, 0);
 }
 
-#define ARM_SWING(o) ((o)->v3e)
 
 /* level3 $055C52: an arm's root: now and then it aims at the player and swings (v3e from 1 to $E and back), the next part's angle and speed follow */
 void l3_part_arm(Object *a0)
@@ -786,37 +762,37 @@ void l3_part_arm(Object *a0)
 
     l3_part_follow(a0);
     a1 = a0->prev;
-    if (ARM_SWING(a0) != 0) {
-        ARM_SWING(a0) = (int16_t)(ARM_SWING(a0) + ARM_SWING_STEP(a0));
-        if (ARM_SWING(a0) == 0xe)
-            ARM_SWING_STEP(a0) = (int16_t)-ARM_SWING_STEP(a0);
-        a1->steps = ARM_SWING(a0);
+    if (a0->arm_b.swing != 0) {
+        a0->arm_b.swing = (int16_t)(a0->arm_b.swing + a0->arm.swing_step);
+        if (a0->arm_b.swing == 0xe)
+            a0->arm.swing_step = (int16_t)-a0->arm.swing_step;
+        a1->steps = a0->arm_b.swing;
         bbox_from_frame(a0);
         return;
     }
     if ((random_next() & 0xff) >= 3) {
         a1->steps = 0;
-        ARM_ANGLE_LO(a1) = 0x40;
+        a1->arm.angle_lo = 0x40;
         bbox_from_frame(a0);
         return;
     }
     sfx_cmd2 = 0xf;
-    ARM_SWING(a0) = 1;
-    ARM_SWING_STEP(a0) = 1;
+    a0->arm_b.swing = 1;
+    a0->arm.swing_step = 1;
     {
         uint16_t d0 = (uint16_t)(direction8((int16_t)(PLAYER_X - a0->x), (int16_t)(PLAYER_Y - a0->y)) << 5);
         uint32_t r;
 
         d0 = (uint16_t)((d0 & 0xff00) | (uint8_t)((d0 & 0xff) - 0x60));
-        ARM_ANGLE_HI(a1) = 0;
-        ARM_ANGLE_LO(a1) = (int16_t)d0;
+        a1->arm.angle_hi = 0;
+        a1->arm.angle_lo = (int16_t)d0;
         r = (((random_next() & 0x1f) + 0x20) << 8) << 2;
         a1->turn[0] = (uint16_t)(r >> 16);
         a1->turn[1] = (uint16_t)r;
         a1->turn[2] = 0;
         a1->steps = 1;
-        if (PART_SLOT(a0) == 0x60) {
-            ARM_ANGLE_LO(a1) = (int16_t)((ARM_ANGLE_LO(a1) & 0xff00) | (uint8_t)(ARM_ANGLE_LO(a1) + 0x40));
+        if (a0->part.slot == 0x60) {
+            a1->arm.angle_lo = (int16_t)((a1->arm.angle_lo & 0xff00) | (uint8_t)(a1->arm.angle_lo + 0x40));
             r = -r;
             a1->turn[0] = (uint16_t)(r >> 16);
             a1->turn[1] = (uint16_t)r;
@@ -834,11 +810,9 @@ static void l3_arm_follow(Object *a0)
     a0->x_frac = a1->x_frac;
     a0->y = a1->y;
     a0->y_frac = a1->y_frac;
-    PATH_WAIT(a0) = 0x3e8;
+    a0->path.wait = 0x3e8;
 }
 
-#define ARM_ANGLE_HI(o) ((o)->v2a)
-#define ARM_ANGLE_LO(o) ((o)->v2c)
 
 /* level3 $055D12: a piece of an arm: it moves after the next piece by its own path (angle v2a:v2c, speed pad4e), and hands that state to the piece before it */
 void l3_part_arm_piece(Object *a0)
@@ -847,15 +821,15 @@ void l3_part_arm_piece(Object *a0)
     Object *a1;
 
     l3_arm_follow(a0);
-    s2a = ARM_ANGLE_HI(a0);
-    s2c = ARM_ANGLE_LO(a0);
+    s2a = a0->arm.angle_hi;
+    s2c = a0->arm.angle_lo;
     s4e0 = (int16_t)a0->turn[0];
     s4e1 = (int16_t)a0->turn[1];
     s52 = (int16_t)a0->turn[2];
     obj_script_run(a0);
     a1 = a0->prev;
-    ARM_ANGLE_HI(a1) = ARM_ANGLE_HI(a0);
-    ARM_ANGLE_LO(a1) = ARM_ANGLE_LO(a0);
+    a1->arm.angle_hi = a0->arm.angle_hi;
+    a1->arm.angle_lo = a0->arm.angle_lo;
     a1->turn[0] = a0->turn[0];
     a1->turn[1] = a0->turn[1];
     a1->turn[2] = a0->turn[2];
@@ -863,8 +837,8 @@ void l3_part_arm_piece(Object *a0)
     a0->turn[2] = (uint16_t)s52;
     a0->turn[1] = (uint16_t)s4e1;
     a0->turn[0] = (uint16_t)s4e0;
-    ARM_ANGLE_LO(a0) = s2c;
-    ARM_ANGLE_HI(a0) = s2a;
+    a0->arm.angle_lo = s2c;
+    a0->arm.angle_hi = s2a;
 }
 
 /* level3 $055D62: the tip of an arm: it takes its place and path like the pieces, and its picture follows the angle */
@@ -874,7 +848,7 @@ void l3_part_arm_tip(Object *a0)
 
     l3_arm_follow(a0);
     obj_script_run(a0);
-    d0 = (uint16_t)(((uint16_t)ARM_ANGLE_LO(a0) >> 2) & 0x38);
+    d0 = (uint16_t)(((uint16_t)a0->arm.angle_lo >> 2) & 0x38);
     if (a0->steps == 0xe)
         sfx_cmd = 0xc;
     d1 = (uint16_t)(frame_tick & 4);
@@ -921,7 +895,6 @@ static void copy4(uint8_t *dst, const uint8_t *src)
     copy2(dst + 2, src + 2);
 }
 
-#define L3_GUN_OPEN(o) ((o)->v28)
 
 /* level3 $056DF6: a gun of tiles ($F0 or $F4): its tiles open in turn (v28), at the eighth it fires */
 void l3_gun_update(Object *a0)
@@ -938,20 +911,20 @@ void l3_gun_update(Object *a0)
     d0 = (int16_t)(a0->y - scroll_pos + 2);
     a0->hit[1] = d0;
     a0->hit[3] = (int16_t)(d0 + 0xc);
-    if (L3_GUN_OPEN(a0) == 0) {
+    if (a0->l3_gun.open == 0) {
         uint16_t sum = (uint16_t)(a0->v5e_b[0] + level3_blob.gun_fire_rate);
 
         a0->v5e_b[0] = (uint8_t)sum;
         if (sum > 0xff) {
             a0->v5e_b[0] = (uint8_t)(random_next() & 0x3f);
-            L3_GUN_OPEN(a0) = 1;
+            a0->l3_gun.open = 1;
         }
         return;
     }
     a2 = a0->type == 0xf0 ? level3_blob.gun_cells_f0 : level3_blob.gun_cells_other;
-    copy2(a0->script, a2 + (uint16_t)(L3_GUN_OPEN(a0) & ~1));
-    L3_GUN_OPEN(a0)++;
-    if (L3_GUN_OPEN(a0) == 8) {
+    copy2(a0->script, a2 + (uint16_t)(a0->l3_gun.open & ~1));
+    a0->l3_gun.open++;
+    if (a0->l3_gun.open == 8) {
         int16_t x = (int16_t)(a0->x + 8), y = (int16_t)(a0->y - scroll_pos), angle = 0;
 
         if (a0->type != 0xf0) {
@@ -961,8 +934,8 @@ void l3_gun_update(Object *a0)
         spawn_enemy_shot((uint16_t)x, (uint16_t)y, (uint16_t)angle, level3_blob.gun_shot_steps, (void *)level3_blob.gun_shot_picture);
         return;
     }
-    if (L3_GUN_OPEN(a0) == 0xe)
-        L3_GUN_OPEN(a0) = 0;
+    if (a0->l3_gun.open == 0xe)
+        a0->l3_gun.open = 0;
 }
 
 /* level3 $056220: a gun of tiles from a record ($F0, $F4 when w0c is set) */
@@ -980,8 +953,8 @@ void l3_spawn_gun(const uint8_t *a1)
     a0->anim = flag ? level3_blob.gun_anim_a : level3_blob.gun_anim_b;
     copy2(a0->script, a2);
     a0->score = 0x64;
-    TILE_COLS(a0) = 0;
-    TILE_ROWS(a0) = 0;
+    a0->tile.cols = 0;
+    a0->tile.rows = 0;
 }
 
 /* level3 $0561A6: the boss of tiles ($F8) from a record: six rows of its tiles are put into the map */
@@ -1003,7 +976,6 @@ void l3_spawn_boss(const uint8_t *a1)
     }
 }
 
-#define L3_BOSS_CELL(o) ((o)->v28)
 
 /* level3 $05686A: the boss of tiles, first form: it opens and closes its mouth (v28, the cells of the table at $569A2) and fires from the sixth step on */
 void l3_boss_update(Object *a0)
@@ -1020,7 +992,7 @@ void l3_boss_update(Object *a0)
     d0 = (uint16_t)(a0->y - scroll_pos + 0x40);
     a0->hit[1] = (int16_t)d0;
     a0->hit[3] = (int16_t)(d0 + 0x1a);
-    d0 = (uint16_t)L3_BOSS_CELL(a0);
+    d0 = (uint16_t)a0->l3_boss.cell;
     if (d0 == 0) {
         if ((uint8_t)random_next() >= level3_blob.boss_chance)
             return;
@@ -1028,16 +1000,16 @@ void l3_boss_update(Object *a0)
     m = a0->script;
     copy4(m + 0xa2, level3_blob.boss_update_data + 4 * (d0 & ~1u));
     copy4(m + 0xca, level3_blob.boss_update_data + 4 * (d0 & ~1u) + 4);
-    L3_BOSS_CELL(a0)++;
-    if (L3_BOSS_CELL(a0) == 0x12) {
-        L3_BOSS_CELL(a0) = 0;
+    a0->l3_boss.cell++;
+    if (a0->l3_boss.cell == 0x12) {
+        a0->l3_boss.cell = 0;
         return;
     }
-    if (L3_BOSS_CELL(a0) < 4)
+    if (a0->l3_boss.cell < 4)
         return;
-    if (L3_BOSS_CELL(a0) > 0xb) {
-        if (L3_BOSS_CELL(a0) == 0xc && (uint8_t)random_next() < level3_blob.boss_chance_2)
-            L3_BOSS_CELL(a0) = 4;
+    if (a0->l3_boss.cell > 0xb) {
+        if (a0->l3_boss.cell == 0xc && (uint8_t)random_next() < level3_blob.boss_chance_2)
+            a0->l3_boss.cell = 4;
         return;
     }
     {
@@ -1053,7 +1025,7 @@ void l3_boss_update(Object *a0)
         x = (int16_t)(a0->x + 0x20);
         y = (int16_t)(a0->y - scroll_pos + 0x58);
         gfx = sh_r32(sh_r32(0x6ee26 + 4 * (uint32_t)level3_blob.boss_param));
-        step = (uint16_t)(L3_BOSS_CELL(a0) & ~1);
+        step = (uint16_t)(a0->l3_boss.cell & ~1);
         if (step == 6)
             angle = 3;
         if (step == 8)
@@ -1089,7 +1061,7 @@ void l3_boss_hit(Object *a0, Object *a1, uint16_t d0)
     a1->energy = (int16_t)level3_blob.boss_energy_2;
     a1->hit[0] = 0x3e8;
     a1->hit[2] = 0x3e8;
-    L3_BOSS_CELL(a1) = 0;
+    a1->l3_boss.cell = 0;
     player_score += 0x1f4;
 }
 
@@ -1097,14 +1069,13 @@ void l3_boss_hit(Object *a0, Object *a1, uint16_t d0)
 void l3_boss_flash(Object *a0)
 {
     int16_t y = (int16_t)(a0->y - scroll_pos);
-    const uint8_t *cells = level3_blob.boss_update_data + 4 * (uint32_t)(L3_BOSS_CELL(a0) & ~1);
+    const uint8_t *cells = level3_blob.boss_update_data + 4 * (uint32_t)(a0->l3_boss.cell & ~1);
 
     a0->fn_draw = (obj_fn)obj_nop_thunk;
     draw_tile_grid_flash(level3_blob.boss_flash_grid, 3, 2, (int16_t)(y + 0x20), (uint16_t)(((uint16_t)a0->x >> 1) & 0xfffc));
     draw_tile_grid_flash(cells, 1, 1, (int16_t)(y + 0x40), (uint16_t)(((uint16_t)(a0->x + 0x10) >> 1) & 0xfffc));
 }
 
-#define L3_BOSS2_CELL(o) ((o)->v28)
 
 /* level3 $056AF8: the boss of tiles, second form: the cells of the table at $56D2C in turn (v28), and at the fourth step eight shots */
 void l3_boss2_update(Object *a0)
@@ -1121,7 +1092,7 @@ void l3_boss2_update(Object *a0)
     d0 = (uint16_t)(a0->y + 4 - scroll_pos);
     a0->hit[1] = (int16_t)d0;
     a0->hit[3] = (int16_t)(d0 + 0x17);
-    d0 = (uint16_t)L3_BOSS2_CELL(a0);
+    d0 = (uint16_t)a0->l3_boss2.cell;
     if (d0 == 0) {
         uint16_t sum = (uint16_t)(a0->v5e_b[0] + level3_blob.boss2_fire_rate);
 
@@ -1133,12 +1104,12 @@ void l3_boss2_update(Object *a0)
     m = a0->script;
     copy4(m + 2, level3_blob.boss2_update_data + 4 * (d0 & ~1u));
     copy4(m + 0x2a, level3_blob.boss2_update_data + 4 * (d0 & ~1u) + 4);
-    L3_BOSS2_CELL(a0)++;
-    if (L3_BOSS2_CELL(a0) == 0xa) {
-        L3_BOSS2_CELL(a0) = 0;
+    a0->l3_boss2.cell++;
+    if (a0->l3_boss2.cell == 0xa) {
+        a0->l3_boss2.cell = 0;
         return;
     }
-    if (L3_BOSS2_CELL(a0) == 4) {
+    if (a0->l3_boss2.cell == 4) {
         int16_t x = (int16_t)(a0->x + 0x20), y = (int16_t)(a0->y - scroll_pos + 0x18);
         int d7;
 
@@ -1188,7 +1159,7 @@ void l3_spawn_walker(const uint8_t *a1)
     a0->type = 0xdc;
     a0->fn_update = FN(l3_walker_update);
     a0->fn_draw = draw_bob_masked;
-    WALKER_DIR(a0) = (int16_t)i;
+    a0->walker.dir = (int16_t)i;
     SET_V5E(a0, 0);
     a0->x = (int16_t)(rd16(a1 + 8) - 8 + level3_blob.walker_spawn_dx[i]);
     a0->y = (int16_t)(rd16(a1 + 10) - 8 - scroll_pos + level3_blob.walker_spawn_dy[i]);
@@ -1197,18 +1168,17 @@ void l3_spawn_walker(const uint8_t *a1)
     a0->energy = (int16_t)level3_blob.walker_energy;
     a0->big = 0;
     a0->score = 0x64;
-    WALKER_STATE(a0) = 0;
+    a0->walker.state = 0;
     a0->kind = 0;
     bbox_from_frame(a0);
 }
 
-#define WALKER_DIR(o) ((o)->v2a)
 
 /* level3 $0562B0: the walker: it goes on in its direction (v2a, 8 of them) by the steps of the tables at $56290 / $562A0 and at each tile of the map looks at
  * the cell ahead: a wall turns it by the tables at $56460, a free cell ahead lets it go on; now and then it fires at the player */
 void l3_walker_update(Object *a0)
 {
-    uint32_t d2 = 2 * (uint32_t)(uint16_t)WALKER_DIR(a0);
+    uint32_t d2 = 2 * (uint32_t)(uint16_t)a0->walker.dir;
     int16_t d0, d1;
     int at_tile = 0, turn = 0;
 
@@ -1253,7 +1223,7 @@ void l3_walker_update(Object *a0)
             a0->x = (int16_t)(a0->x + level3_blob.walker_update_words_4[d2 / 2]);
             a0->y = (int16_t)(a0->y + level3_blob.walker_update_words_5[d2 / 2]);
             ni = level3_blob.walker_update_words_6[d2 / 2];
-            WALKER_DIR(a0) = (int16_t)ni;
+            a0->walker.dir = (int16_t)ni;
             set_anim(a0, level3_blob.walker_spawn_anims[ni]);
         }
     }
@@ -1278,21 +1248,21 @@ static void l3_worm_follow(Object *a0, const uint8_t *const *table)
 {
     a0->y = (int16_t)(a0->y + scroll_speed);
     if (table == level3_blob.worm_follow_pictures)
-        sh_w8(0xd94 + (uint16_t)WORM_SIDE(a0), 0xff);
+        sh_w8(0xd94 + (uint16_t)a0->worm.side, 0xff);
     enemy_update_no_anim(a0);
-    a0->gfx = (void *)table[(((uint16_t)WORM_PHASE(a0) + 0x10) >> 5) & 7];
+    a0->gfx = (void *)table[(((uint16_t)a0->worm.phase + 0x10) >> 5) & 7];
     bbox_from_frame(a0);
 }
 
 /* level3 $055420: the worm's head: its picture follows its phase and now and then it fires eight shots round it */
 void l3_worm_head(Object *a0)
 {
-    uint16_t old = (uint16_t)WORM_PHASE(a0);
+    uint16_t old = (uint16_t)a0->worm.phase;
     uint16_t d0, d1, sum;
 
     a0->y = (int16_t)(a0->y + scroll_speed);
     enemy_update(a0);
-    d0 = (uint16_t)((((uint16_t)WORM_PHASE(a0) + 0x10) >> 3) & 0x1c);
+    d0 = (uint16_t)((((uint16_t)a0->worm.phase + 0x10) >> 3) & 0x1c);
     d1 = (uint16_t)(((old + 0x10) >> 3) & 0x1c);
     if (d1 != d0)
         set_anim(a0, level3_blob.worm_head_anims[d0 / 4]);
@@ -1332,7 +1302,7 @@ void l3_worm_c(Object *a0)
 void l3_worm_hit(Object *a0, Object *a1, uint16_t d0)
 {
     Object *o;
-    uint32_t w = 0xd66 + 2 * (uint32_t)(uint16_t)WORM_SIDE(a1);
+    uint32_t w = 0xd66 + 2 * (uint32_t)(uint16_t)a1->worm.side;
     uint16_t old = W(w);
 
     for (o = a1; o; o = o->chain)
@@ -1340,8 +1310,8 @@ void l3_worm_hit(Object *a0, Object *a1, uint16_t d0)
     sh_w16(w, (uint16_t)(old - d0));
     if (old > d0)
         return;
-    sh_w8(0xd92 + (uint16_t)WORM_SIDE(a1), 0xff);
-    sh_w8(0xd94 + (uint16_t)WORM_SIDE(a1), 0);
+    sh_w8(0xd92 + (uint16_t)a1->worm.side, 0xff);
+    sh_w8(0xd94 + (uint16_t)a1->worm.side, 0);
     for (o = a1->chain; o;) {
         Object *next = o->chain;
 

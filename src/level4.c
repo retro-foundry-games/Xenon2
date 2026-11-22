@@ -7,37 +7,17 @@
 
 
 /* level 4: its parameter block at E42 (energies, fire rates, shot steps), by the object that reads them */
-#define PICKUP_MODE(o) ((o)->v28)
-#define PICKUP_DIR(o)  ((o)->v2a)
-#define PATH_WAIT(o) ((o)->v28)
 
 /* the scratch fields of Object, by the kind that uses them */
-#define L4_SIZE(o) ((o)->v28)
-#define WALKER_DY(o) ((o)->v2e)
-
-#define BAR_STEP(o) ((o)->v2a)
-
-/* the scratch fields of Object, by the kind that uses them */
-#define L4_ANGLE_HI(o) ((o)->v2a)
-#define L4_ANGLE_LO(o) ((o)->v2c)
 
 
 /* the scratch fields of Object, by the kind that uses them */
-#define TOWER_PHASE(o) ((o)->v28)
 
 
 /* the scratch fields of Object, by the kind that uses them */
-#define AIM_DIR(o) ((o)->v2a)
-#define B1_GUN_DIR(o) ((o)->v2a)
-#define BAR_PHASE(o) ((o)->v28)
-#define CORE_TICK(o) ((o)->v28)
-#define HEAD_ANGLE(o) ((o)->v2c)
-#define HEAD_DART(o) ((o)->v2e)
-#define L4_GUN_TICK(o) ((o)->v28)
-#define WALKER_HOME_X(o) ((o)->v3e)
-#define WALKER_HOME_Y(o) ((o)->v40)
-#define WALKER_SIDE(o) ((o)->v30)
-#define WALKER_STATE(o) ((o)->v28)
+
+
+/* the scratch fields of Object, by the kind that uses them */
 
 
 #define FN(f) ((obj_fn)(f))
@@ -215,20 +195,20 @@ void l4_tower_update(Object *a0)
     d0 = (uint16_t)(a0->y - scroll_pos + 2);
     a0->hit[1] = (int16_t)d0;
     a0->hit[3] = (int16_t)(d0 + 0x1c);
-    if (TOWER_PHASE(a0) == 0) {
+    if (a0->tower.phase == 0) {
         uint16_t sum = (uint16_t)(a0->v5e_b[0] + level4_blob.tower_fire_rate);
 
         a0->v5e_b[0] = (uint8_t)sum;
         if (sum > 0xff) {
             a0->v5e_b[0] = (uint8_t)(random_next() & 0x3f);
-            TOWER_PHASE(a0) = 1;
+            a0->tower.phase = 1;
         }
         return;
     }
-    cells = (a0->type == 0xd0 ? level4_blob.tower_cells_d0 : level4_blob.tower_cells_d4) + ((uint16_t)TOWER_PHASE(a0) << 3);
+    cells = (a0->type == 0xd0 ? level4_blob.tower_cells_d0 : level4_blob.tower_cells_d4) + ((uint16_t)a0->tower.phase << 3);
     put_cells(a0->script, cells);
-    TOWER_PHASE(a0)++;
-    if (TOWER_PHASE(a0) == 4) {
+    a0->tower.phase++;
+    if (a0->tower.phase == 4) {
         int16_t x = (int16_t)(a0->x + 0x12), y = (int16_t)(a0->y - scroll_pos + 0xe);
         uint16_t angle = 2;
         uint32_t table = sh_r32(0x77b70 + 4 * (uint32_t)level4_blob.tower_param);
@@ -240,8 +220,8 @@ void l4_tower_update(Object *a0)
         spawn_enemy_shot((uint16_t)x, (uint16_t)y, angle, level4_blob.tower_shot_steps, GPTR(sh_r32(table)));
         return;
     }
-    if (TOWER_PHASE(a0) == 6)
-        TOWER_PHASE(a0) = 0;
+    if (a0->tower.phase == 6)
+        a0->tower.phase = 0;
 }
 
 /* level4 $0571C0: the hit of a tower: it flashes; when it is shot to pieces it bursts and the cells are the broken ones */
@@ -329,8 +309,8 @@ void l4_enemy_a(Object *a0)
         l4_kill(a0);
         return;
     }
-    L4_GUN_TICK(a0)++;
-    if (L4_GUN_TICK(a0) == 8) {
+    a0->l4_gun.tick++;
+    if (a0->l4_gun.tick == 8) {
         if (add_carry(&a0->v5e_b[0], level4_blob.enemy_a_fire_rate)) {
             Object *a1;
             const struct Level4EnemyGun *a2 = &level4_blob.enemy_a_guns[a0->type == 0xc8 ? 0 : 1];
@@ -342,11 +322,11 @@ void l4_enemy_a(Object *a0)
             a1->fn_draw = draw_bob_masked;
             a1->x = (int16_t)a2->x;
             a1->y = (int16_t)(a0->y - 0x1e);
-            L4_GUN_TICK(a1) = 0;
+            a1->l4_gun.tick = 0;
             set_anim(a1, a2->anim);
         }
-    } else if (L4_GUN_TICK(a0) == 0xc) {
-        L4_GUN_TICK(a0) = 0;
+    } else if (a0->l4_gun.tick == 0xc) {
+        a0->l4_gun.tick = 0;
     }
     if (add_carry(&a0->v5e_b[1], (uint8_t)level4_blob.tower_energy)) {
         int16_t x = (int16_t)(a0->x + 0x14);
@@ -401,12 +381,12 @@ void l4_shot_a(Object *a0)
     a1->fn_update = FN(l4_enemy_f8);
     a1->fn_draw = draw_bob_masked;
     a1->fn_hit = (void *)hit_enemy;
-    L4_ANGLE_HI(a1) = 0;
-    L4_ANGLE_LO(a1) = d0;
+    a1->l4.angle_hi = 0;
+    a1->l4.angle_lo = d0;
     a1->turn[0] = a1->turn[1] = a1->turn[2] = 0;
     a1->x = (int16_t)(a0->x + d1);
     a1->y = a0->y;
-    PATH_WAIT(a1) = 0;
+    a1->path.wait = 0;
     a1->score = 0x64;
     a1->energy = (int16_t)level4_blob.shot_a_energy;
     a1->big = 0;
@@ -433,7 +413,7 @@ void l4_shot_a(Object *a0)
 /* level4 $055724: the flying enemy: it follows its script and shows the picture of its direction */
 void l4_enemy_f8(Object *a0)
 {
-    uint16_t old = (uint16_t)L4_ANGLE_LO(a0), d0, d1;
+    uint16_t old = (uint16_t)a0->l4.angle_lo, d0, d1;
 
     enemy_update(a0);
     if (a0->type != 0xf8) {
@@ -449,9 +429,9 @@ void l4_enemy_f8(Object *a0)
         table = level4_blob.enemy_f8_paths[d0 / 4];
         a0->script = (uint8_t *)table;
         a0->cursor = table;
-        PATH_WAIT(a0) = 0;
+        a0->path.wait = 0;
     }
-    d0 = (uint16_t)((((uint16_t)L4_ANGLE_LO(a0) + 0x10) >> 3) & 0x1c);
+    d0 = (uint16_t)((((uint16_t)a0->l4.angle_lo + 0x10) >> 3) & 0x1c);
     d1 = (uint16_t)(((old + 0x10) >> 3) & 0x1c);
     if (d0 == d1)
         return;
@@ -508,9 +488,9 @@ void l4_spawn_boss1(void)
         a0->x = (int16_t)a1->x;
         a0->persists = -1;
         a0->y = (int16_t)(a1->y - scroll_pos);
-        L4_SIZE(a0) = 0;
-        L4_ANGLE_HI(a0) = 0;
-        L4_ANGLE_LO(a0) = 0;
+        a0->l4.size = 0;
+        a0->l4.angle_hi = 0;
+        a0->l4.angle_lo = 0;
         a0->turn[0] = a0->turn[1] = a0->turn[2] = 0;
         a0->steps = 3;
         a0->energy = (int16_t)a1->energy;
@@ -552,18 +532,18 @@ void l4_b1_core(Object *a0)
         a0->hit[1] = (int16_t)(a0->y + 0x20);
         a0->hit[3] = (int16_t)(a0->hit[1] + 8);
     }
-    if (CORE_TICK(a0) == 0) {
+    if (a0->core.tick == 0) {
         if (!add_carry(&a0->v5e_b[0], level4_blob.b1_core_fire_rate))
             return;
         a0->v5e_b[0] = (uint8_t)(random_next() & 0x3f);
         sfx_cmd2 = 0xf;
     }
     {
-        uint8_t low = (uint8_t)((CORE_TICK(a0) & 0xff) + 1);
+        uint8_t low = (uint8_t)((a0->core.tick & 0xff) + 1);
 
-        CORE_TICK(a0) = (int16_t)((CORE_TICK(a0) & 0xff00) | low);
+        a0->core.tick = (int16_t)((a0->core.tick & 0xff00) | low);
         if (low >= 0x80) {
-            CORE_TICK(a0) = 0;
+            a0->core.tick = 0;
             return;
         }
         if (low == 0x78)
@@ -597,7 +577,7 @@ void l4_b1_gun_hit(Object *a0, Object *a1, uint16_t d0)
         return;
     sh_w16(0xd6e, (uint16_t)(W(0xd6e) - 1));
     spawn_effect((int16_t)(a1->x + 0x10), (int16_t)(a1->y - scroll_pos + 0x20), big_explosion_anim, draw_bob_masked);
-    B1_GUN_DIR(a1) = -1;
+    a1->b1_gun.dir = -1;
     a1->fn_update = FN(l4_gun_dead);
     a1->fn_hit = (void *)obj_nop_thunk;
 }
@@ -618,17 +598,17 @@ void l4_b1_gun(Object *a0)
     a0->y = (int16_t)(a0->y + W(0xd70));
     gun_box(a0);
     d0 = aim_at_player(a0, 0x10, 0x10);
-    B1_GUN_DIR(a0) = (int16_t)table[d0];
+    a0->b1_gun.dir = (int16_t)table[d0];
     if (add_carry(&a0->v5e_b[0], level4_blob.b1_gun_fire_rate)) {
         Object *s;
-        uint16_t angle = (uint16_t)B1_GUN_DIR(a0);
+        uint16_t angle = (uint16_t)a0->b1_gun.dir;
         const uint8_t *anim = level4_blob.b1_gun_anims_by_angle[angle];
 
         a0->v5e_b[0] = (uint8_t)(random_next() & 0x3f);
         s = spawn_enemy_shot((uint16_t)(a0->x + 0x10), (uint16_t)(a0->y + 0x10), angle, level4_blob.b1_gun_shot_steps, anim);
         set_anim(s, anim);
-        s->x = (int16_t)(s->x + (int16_t)level4_blob.b1_gun_dx_by_dir[(uint16_t)B1_GUN_DIR(s)]);
-        s->y = (int16_t)(s->y + (int16_t)level4_blob.b1_gun_dy_by_dir[(uint16_t)B1_GUN_DIR(s)]);
+        s->x = (int16_t)(s->x + (int16_t)level4_blob.b1_gun_dx_by_dir[(uint16_t)s->b1_gun.dir]);
+        s->y = (int16_t)(s->y + (int16_t)level4_blob.b1_gun_dy_by_dir[(uint16_t)s->b1_gun.dir]);
     }
 }
 
@@ -636,7 +616,7 @@ void l4_b1_gun(Object *a0)
 static void gun_cells(Object *a0, int flash)
 {
     const uint8_t *const *t = a0->x < 0xa0 ? level4_blob.gun_cells_left : level4_blob.gun_cells_right;
-    const uint8_t *cells = t[(int16_t)B1_GUN_DIR(a0)];
+    const uint8_t *cells = t[(int16_t)a0->b1_gun.dir];
 
     if (flash)
         draw_tile_grid_flash(cells, 1, 1, a0->y, (uint16_t)((uint16_t)a0->x >> 1));
@@ -662,7 +642,7 @@ static void core_cells(Object *a0, int flash)
     uint16_t rows = 4;
     const uint8_t *cells = level4_blob.core_cells;
 
-    if (CORE_TICK(a0) != 0) {
+    if (a0->core.tick != 0) {
         rows = 5;
         cells = level4_blob.core_cells_tall;
     }
@@ -700,7 +680,7 @@ static void l4_pose(Object *a0)
 
     if (d0 & 0x40)
         d0 = (uint16_t)(0x7f - d0);
-    L4_ANGLE_LO(a0) = (int16_t)(d0 + 0xa0);
+    a0->l4.angle_lo = (int16_t)(d0 + 0xa0);
     d0 = (uint16_t)((frame_tick * 2 + 0x50) & 0xff);
     if (d0 & 0x80)
         d0 = (uint16_t)((d0 & 0xff00) | (~d0 & 0xff));
@@ -722,8 +702,8 @@ void l4_b1_head(Object *a0)
     a0->anim_delay = 0;
     a0->y = (int16_t)(a0->y + W(0xd70));
     l4_pose(a0);
-    L4_ANGLE_LO(a0) = (int16_t)(L4_ANGLE_LO(a0) ^ 0x80);
-    d0 = L4_SIZE(a0->target);
+    a0->l4.angle_lo = (int16_t)(a0->l4.angle_lo ^ 0x80);
+    d0 = a0->target->l4.size;
     if (d0 > 8) {
         d0 = (int16_t)(0x80 - d0);
         if (d0 > 8)
@@ -789,9 +769,9 @@ void l4_spawn_boss2(const uint8_t *a1_record, uint16_t d2)
         a0->persists = -1;
         a0->x = (int16_t)a1->x;
         a0->y = (int16_t)(a1->y - scroll_pos);
-        L4_SIZE(a0) = 0;
-        L4_ANGLE_HI(a0) = 0;
-        L4_ANGLE_LO(a0) = (int16_t)a1->angle;
+        a0->l4.size = 0;
+        a0->l4.angle_hi = 0;
+        a0->l4.angle_lo = (int16_t)a1->angle;
         a0->turn[0] = a0->turn[1] = a0->turn[2] = 0;
         a0->steps = 3;
         a0->energy = a1->energy;
@@ -812,25 +792,24 @@ static void follow_chain(Object *a0)
     a0->x_frac = a1->x_frac;
     a0->y = a1->y;
     a0->y_frac = a1->y_frac;
-    L4_ANGLE_HI(a0) = L4_ANGLE_HI(a1);
-    L4_ANGLE_LO(a0) = L4_ANGLE_LO(a1);
+    a0->l4.angle_hi = a1->l4.angle_hi;
+    a0->l4.angle_lo = a1->l4.angle_lo;
     a0->turn[0] = a1->turn[0];
     a0->turn[1] = a1->turn[1];
     a0->turn[2] = a1->turn[2];
     a0->steps = a1->steps;
-    L4_SIZE(a0) = 0x64;
+    a0->l4.size = 0x64;
     obj_script_run(a0);
 }
 
 /* the head's picture by its angle (four), and its box */
 static void head_picture(Object *a0)
 {
-    a0->gfx = (void *)level4_blob.head_pictures[(((uint16_t)HEAD_ANGLE(a0) + 0x10) >> 5) & 3];
+    a0->gfx = (void *)level4_blob.head_pictures[(((uint16_t)a0->head.angle + 0x10) >> 5) & 3];
     bbox_from_frame(a0);
 }
 
 /* the head's use of the scratch fields of Object */
-#define HEAD_BEND(o) ((o)->v28)
 
 /* level4 $056410: the head: it turns to the player, now and then it darts at him; v28 is the length of its bend */
 void l4_b2_head(Object *a0)
@@ -838,7 +817,7 @@ void l4_b2_head(Object *a0)
     uint16_t d0;
 
     a0->y = (int16_t)(a0->y + scroll_speed);
-    if (HEAD_BEND(a0) == 0) {
+    if (a0->head.bend == 0) {
         d0 = aim_at_player(a0, 0, 0);
         if (d0 < 2)
             d0 = 2;
@@ -846,14 +825,14 @@ void l4_b2_head(Object *a0)
             d0 = 6;
         d0 = (uint16_t)(d0 << 5);
         d0 = (uint16_t)((d0 & 0xff00) | ((d0 - 0x40) & 0xff));
-        L4_ANGLE_HI(a0) = 0;
-        HEAD_ANGLE(a0) = (int16_t)d0;
+        a0->l4.angle_hi = 0;
+        a0->head.angle = (int16_t)d0;
         a0->turn[0] = a0->turn[1] = a0->turn[2] = 0;
         if ((uint8_t)random_next() >= level4_blob.b2_head_chance) {
             head_picture(a0);
             return;
         }
-        HEAD_DART(a0) = 2;
+        a0->head.dart = 2;
         d0 = aim_at_player(a0, 0, 0);
         if (d0 < 2)
             d0 = 2;
@@ -861,23 +840,23 @@ void l4_b2_head(Object *a0)
             d0 = 6;
         d0 = (uint16_t)(d0 << 5);
         d0 = (uint16_t)((d0 & 0xff00) | ((d0 - 0x60) & 0xff));
-        L4_ANGLE_HI(a0) = 0;
-        HEAD_ANGLE(a0) = (int16_t)d0;
+        a0->l4.angle_hi = 0;
+        a0->head.angle = (int16_t)d0;
         {
             uint32_t r = ((random_next() & 0x1f) + 0x20) << 10;
 
             put4e(a0, r);
             a0->turn[2] = 0;
         }
-        if (HEAD_ANGLE(a0) < 0x20 || !(HEAD_ANGLE(a0) < 0xa0)) {
-            HEAD_ANGLE(a0) = (int16_t)((HEAD_ANGLE(a0) & 0xff00) | ((HEAD_ANGLE(a0) + 0x40) & 0xff));
+        if (a0->head.angle < 0x20 || !(a0->head.angle < 0xa0)) {
+            a0->head.angle = (int16_t)((a0->head.angle & 0xff00) | ((a0->head.angle + 0x40) & 0xff));
             put4e(a0, (uint32_t)(0 - get4e(a0)));
         }
     }
-    HEAD_BEND(a0) = (int16_t)(HEAD_BEND(a0) + HEAD_DART(a0));
-    if (HEAD_BEND(a0) >= 0x18)
-        HEAD_DART(a0) = (int16_t)-HEAD_DART(a0);
-    a0->steps = (int16_t)(HEAD_BEND(a0) + 4);
+    a0->head.bend = (int16_t)(a0->head.bend + a0->head.dart);
+    if (a0->head.bend >= 0x18)
+        a0->head.dart = (int16_t)-a0->head.dart;
+    a0->steps = (int16_t)(a0->head.bend + 4);
     head_picture(a0);
 }
 
@@ -903,7 +882,7 @@ void l4_b2_gun(Object *a0)
         d0 = 2;
     if (d0 > 6)
         d0 = 6;
-    AIM_DIR(a0) = (int16_t)d0;
+    a0->aim.dir = (int16_t)d0;
     a0->gfx = (void *)level4_blob.b2_gun_pictures[d0];
     bbox_from_frame(a0);
 }
@@ -917,12 +896,12 @@ void l4_b2_barrel(Object *a0)
     a1 = a0->next;
     a0->x = a1->x;
     a0->y = a1->y;
-    if (AIM_DIR(a1) != AIM_DIR(a0)) {
-        AIM_DIR(a0) = AIM_DIR(a1);
-        set_anim(a0, level4_blob.b2_barrel_anims_by_dir[(uint16_t)AIM_DIR(a0)]);
+    if (a1->aim.dir != a0->aim.dir) {
+        a0->aim.dir = a1->aim.dir;
+        set_anim(a0, level4_blob.b2_barrel_anims_by_dir[(uint16_t)a0->aim.dir]);
     }
     if (add_carry(&a0->v5e_b[0], level4_blob.b2_barrel_fire_rate)) {
-        uint16_t d2 = (uint16_t)AIM_DIR(a0);
+        uint16_t d2 = (uint16_t)a0->aim.dir;
         Object *s;
 
         a0->v5e_b[0] = (uint8_t)(random_next() & 0x3f);
@@ -976,13 +955,13 @@ void l4_b2_eye(Object *a0)
     a0->y = (int16_t)(a0->y + scroll_speed);
     anim_step(a0);
     d0 = aim_at_player(a0, 0, 0);
-    if (d0 != (uint16_t)AIM_DIR(a0)) {
-        AIM_DIR(a0) = (int16_t)d0;
+    if (d0 != (uint16_t)a0->aim.dir) {
+        a0->aim.dir = (int16_t)d0;
         set_anim(a0, level4_blob.b2_eye_anims[d0]);
     }
     if (add_carry(&a0->v5e_b[0], level4_blob.b2_eye_fire_rate)) {
         a0->v5e_b[0] = (uint8_t)(random_next() & 0x3f);
-        spawn_enemy_shot((uint16_t)a0->x, (uint16_t)a0->y, (uint16_t)AIM_DIR(a0), level4_blob.b2_eye_shot_steps, (void *)level4_blob.b2_eye_shot_picture);
+        spawn_enemy_shot((uint16_t)a0->x, (uint16_t)a0->y, (uint16_t)a0->aim.dir, level4_blob.b2_eye_shot_steps, (void *)level4_blob.b2_eye_shot_picture);
     }
     bbox_from_frame(a0);
     a0->hit[1] = (int16_t)(a0->hit[1] - 8);
@@ -1092,22 +1071,22 @@ void l4_bar_update(Object *a0)
         return;
     }
     anim_step(a0);
-    if (BAR_PHASE(a0) == 0) {
-        BAR_STEP(a0) = 1;
+    if (a0->bar.phase == 0) {
+        a0->bar.step = 1;
         if (!add_carry(&a0->v5e_b[0], level4_blob.bar_fire_rate))
             goto box;
         a0->v5e_b[0] = (uint8_t)(random_next() & 0x3f);
     }
-    BAR_PHASE(a0) = (int16_t)(BAR_PHASE(a0) + BAR_STEP(a0));
-    if (BAR_PHASE(a0) == 6)
-        BAR_STEP(a0) = (int16_t)-BAR_STEP(a0);
+    a0->bar.phase = (int16_t)(a0->bar.phase + a0->bar.step);
+    if (a0->bar.phase == 6)
+        a0->bar.step = (int16_t)-a0->bar.step;
 box:
     if (a0->type == 0x10c) {
         d0 = a0->x;
-        d2 = (int16_t)(((uint16_t)BAR_PHASE(a0) << 4) + d0 + 0x10);
+        d2 = (int16_t)(((uint16_t)a0->bar.phase << 4) + d0 + 0x10);
     } else {
         d2 = (int16_t)(a0->x + 0x10);
-        d0 = (int16_t)(d2 - ((uint16_t)BAR_PHASE(a0) << 4) - 0x10);
+        d0 = (int16_t)(d2 - ((uint16_t)a0->bar.phase << 4) - 0x10);
     }
     d1 = (int16_t)(a0->y + 8);
     a0->hit[0] = d0;
@@ -1126,7 +1105,7 @@ box:
 void l4_bar_draw(Object *a0)
 {
     int16_t x, y;
-    uint16_t d0 = (uint16_t)BAR_PHASE(a0);
+    uint16_t d0 = (uint16_t)a0->bar.phase;
 
     if (a0->type == 0x10c) {
         if (d0 != 0)
@@ -1161,20 +1140,20 @@ void l4_spawn_walker(const uint8_t *a1)
     a0->hit[0] = 0x3e8;
     a0->hit[2] = 0x3e8;
     a0->score = 0xc8;
-    WALKER_SIDE(a0) = (int16_t)rd16(a1 + 6);
+    a0->walker.side = (int16_t)rd16(a1 + 6);
     set_anim(a0, a0->type == 0xe0 ? level4_blob.walker_anim_e0 : level4_blob.walker_anim_other);
     a0->kind = 0;
     SET_V5E(a0, level4_blob.walker_v5e);
-    WALKER_HOME_X(a0) = a0->x;
-    WALKER_HOME_Y(a0) = a0->y;
+    a0->walker_b.home_x = a0->x;
+    a0->walker_b.home_y = a0->y;
 }
 
 /* the walker goes back to where it came from */
 static void walker_reset(Object *a0)
 {
-    a0->x = WALKER_HOME_X(a0);
-    a0->y = WALKER_HOME_Y(a0);
-    WALKER_STATE(a0) = 0;
+    a0->x = a0->walker_b.home_x;
+    a0->y = a0->walker_b.home_y;
+    a0->walker.state = 0;
     a0->hit[0] = 0x3e8;
     a0->hit[2] = 0x3e8;
     set_anim(a0, a0->type == 0xe0 ? level4_blob.walker_anim_e0 : level4_blob.walker_anim_other);
@@ -1189,9 +1168,9 @@ void l4_walker_update(Object *a0)
         return;
     }
     anim_step(a0);
-    if (WALKER_STATE(a0) == 0) {
+    if (a0->walker.state == 0) {
         if ((uint8_t)random_next() < level4_blob.walker_chance) {
-            WALKER_STATE(a0) = 1;
+            a0->walker.state = 1;
             a0->anim_delay = 1;
         }
         return;
@@ -1200,15 +1179,15 @@ void l4_walker_update(Object *a0)
         a0->x = (int16_t)(a0->x + level4_blob.walker_step_x);
     else
         a0->x = (int16_t)(a0->x - level4_blob.walker_step_x);
-    if (WALKER_STATE(a0) == 1) {
+    if (a0->walker.state == 1) {
         if (a0->anim_delay == 0) {
-            WALKER_STATE(a0) = 2;
-            WALKER_DY(a0) = (int16_t)(PLAYER->y - a0->y + scroll_pos);
+            a0->walker.state = 2;
+            a0->walker.dy = (int16_t)(PLAYER->y - a0->y + scroll_pos);
         }
         goto box;
     }
     if (a0->x >= 0x28 && a0->x <= 0x118) {
-        if (WALKER_DY(a0) >= 0)
+        if (a0->walker.dy >= 0)
             a0->y = (int16_t)(a0->y + level4_blob.walker_step_x);
         else
             a0->y = (int16_t)(a0->y - level4_blob.walker_step_x);
@@ -1244,22 +1223,22 @@ void l4_walker_hit(Object *a0, Object *a1, uint16_t d0)
     player_score += (uint16_t)a1->score;
     p = alloc_in(LIST_B);
     p->type = 0x18;
-    PICKUP_MODE(p) = 7;
+    p->pickup.mode = 7;
     p->fn_update = (obj_fn)pickup_update;
     p->fn_draw = draw_bob_masked;
     anim_header_set(p, anim_bonus_big);
     p->x = a1->x;
     p->y = (int16_t)(a1->y - scroll_pos);
-    PICKUP_DIR(p) = (int16_t)random_next();
+    p->pickup.dir = (int16_t)random_next();
     walker_reset(a1);
 }
 
 /* the tiles of a walker's legs, by its side v30 */
 static void walker_tiles(Object *a0)
 {
-    uint16_t d2 = (uint16_t)(WALKER_SIDE(a0) * 2);
+    uint16_t d2 = (uint16_t)(a0->walker.side * 2);
 
-    if (WALKER_STATE(a0) >= 2)
+    if (a0->walker.state >= 2)
         return;
     draw_tile_grid(a0->type == 0xe0 ? level4_blob.walker_grid_e0 : level4_blob.walker_grid_e4, 0, 2, (int16_t)(level4_blob.walker_grid_y[d2 / 2] - scroll_pos), level4_blob.walker_grid_x[d2 / 2]);
 }

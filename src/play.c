@@ -2,9 +2,6 @@
 #include "game_all.h"
 #include "amiga/hw.h"
 
-#define OPTION_INDEX(o) ((o)->v30)
-#define SHOT_DX(o) ((o)->v2a)
-#define SHOT_DY(o) ((o)->v2e)
 
 /* inlined at its callers: the pair of list links of an append at the end of a list (before the head) */
 static void list_append(Object *head, Object *o)
@@ -244,7 +241,7 @@ void init_objects(void)
         anim_header_set(o, rec);
         o->x = 0xa0;
         o->y = 0xb0;
-        OPTION_INDEX(o) = 3 - i;
+        o->option.index = 3 - i;
     }
     for (i = 0; i < 7; i++)
         weapon_slots[i].type = 0;
@@ -293,7 +290,7 @@ void option_update(Object *a0)
     if ((int16_t)d1 < 0)
         d1 = (uint16_t)-(int16_t)d1;
     d1 += d1;
-    if (OPTION_INDEX(a0) & 1)
+    if (a0->option.index & 1)
         d1 += 0xe;
     d0 += (uint16_t)option_offsets[d1 / 2];
     a0->x = d0;
@@ -301,7 +298,7 @@ void option_update(Object *a0)
     a0->fn_draw = obj_nop;
     if (dive_phase)
         return;
-    bit = (OPTION_INDEX(a0) < 2) ? 1 : 2;
+    bit = (a0->option.index < 2) ? 1 : 2;
     if (joy_stick & bit)
         a0->fn_draw = draw_bob_masked;
 }
@@ -321,8 +318,8 @@ void spawn_shot_object(Object *a0, uint16_t d0, uint16_t d1, uint16_t d2, uint16
     }
     a1 = obj_free_pop();
     list_append(&obj_list[3], a1);
-    SHOT_DX(a1) = d0;
-    SHOT_DY(a1) = d1;
+    a1->shot.dx = d0;
+    a1->shot.dy = d1;
     a1->x = (uint16_t)(d2 + player.x);
     a1->y = (uint16_t)(d3 + player.y);
     a1->type = 0x10;
