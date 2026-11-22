@@ -408,7 +408,7 @@ void l5_pellet_update(Object *obj)
 /* level5 $055BFA: the boss: its picture is cells in the level's data, and the 22 pieces hang on the first */
 void l5_spawn_boss1(uint16_t slot_value)
 {
-    uint8_t *p;
+    Cell *map;
     const struct Level5Boss1Piece *rec = xenon2.level5_data.boss1_pieces;
     Object *root = 0;
     int count, i;
@@ -424,19 +424,17 @@ void l5_spawn_boss1(uint16_t slot_value)
     xenon2.level5_data.events_a[0].scroll = (int16_t)0xffff;
     xenon2.l5_limit_a = 0xffff;
     xenon2.l5_limit_b = 0xffff;
-    p = xenon2.level_init_src;
-    memset(p, 0, 240);
-    p += 240;
+    map = (Cell *)xenon2.level_init_src;
+    memset(map, 0, MAP_ROW(6));
+    map += 6 * MAP_COLS;
     for (count = 0; count < 18; count++) {
-        memset(p, 0, 6);
-        p += 6;
+        memset(map, 0, 3 * sizeof(Cell));
         for (i = 0; i < 15; i++)
-            ((Cell *)p)[i] = xenon2.level5_data.boss1_cells[15 * count + i];
-        p += 30;
-        memset(p, 0, 4);
-        p += 4;
+            map[3 + i] = xenon2.level5_data.boss1_cells[15 * count + i];
+        memset(&map[18], 0, 2 * sizeof(Cell));
+        map += MAP_COLS;
     }
-    memset(p, 0, 600);
+    memset(map, 0, MAP_ROW(15));
     xenon2.map_row_offset = MAP_ROW(26);
     xenon2.scroll_pos = 0x1a0;
     xenon2.scroll_max = 0x1a0;

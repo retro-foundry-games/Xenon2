@@ -2,6 +2,7 @@
  * and the pictures and tables; its own variables, tables and records are the members of shop_data (blobs/shop.blob).  The records, shop_data.recs (20 of 16 bytes, a 5 x 4 grid of
  * the items on offer or on the ship): word 0 = frames until the sparkle (or the opening animation's state), 2 = x, 4 = y, 6 = item (0 empty, 1-$19;
  * $1A sold out, $1B next page), 8 = the animation list, $C = the object of the ship the item is (selling). */
+#include <string.h>
 #include "shop.h"
 #include "game_all.h"
 
@@ -1221,13 +1222,7 @@ void shop_close(void)
 /* shop $55198: the screen is cleared and two rows of the picture of the end of the broadcast are drawn */
 void shop_blank_screen(void)
 {
-    uint8_t *dst = xenon2.draw_screen;
-    int16_t n = 0x1f3f;
-
-    do {
-        *(uint32_t *)dst = 0;
-        dst += 4;
-    } while (n-- != 0);
+    memset(xenon2.draw_screen, 0, (SCREEN_ROWS + PANEL_ROWS) * SCREEN_ROW_BYTES);
     {
         uint16_t *bar = (uint16_t *)SCREEN_POS(xenon2.draw_screen, 100, 20);
 

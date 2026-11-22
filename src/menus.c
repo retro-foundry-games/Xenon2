@@ -4,6 +4,7 @@
 #include "title.h"
 #include "draw.h"
 
+#define MENU_LINE 20   /* the characters of a line of menu_text */
 #define DISK_SCRATCH ((struct DiskScratch *)xenon2.screen_a)
 
 /* ---- title lines, fade, high-score table ---- */
@@ -119,12 +120,12 @@ void draw_big_text(const uint8_t *text, uint16_t *dest)
         g = font + idx;
         for (row = 0; row < 16; row++) {
             dest[0] = *g++;
-            dest[20] = *g++;
-            dest[40] = *g++;
-            dest[60] = *g++;
-            dest += 80;
+            dest[SCREEN_PLANE_WORDS] = *g++;
+            dest[2 * SCREEN_PLANE_WORDS] = *g++;
+            dest[3 * SCREEN_PLANE_WORDS] = *g++;
+            dest += SCREEN_ROW_WORDS;
         }
-        dest -= 0x4ff;
+        dest -= 16 * SCREEN_ROW_WORDS - 1;
     }
 }
 
@@ -299,21 +300,21 @@ void menu(void)
         xenon2.title_y = 0xc;
         draw_text_row(xenon2.menu_text);
         xenon2.title_y = 0x3c;
-        row = &xenon2.menu_text[20];
+        row = &xenon2.menu_text[1 * MENU_LINE];
         if (sel == 0)
-            row = &xenon2.menu_text[40];
+            row = &xenon2.menu_text[2 * MENU_LINE];
         draw_text_row(row);
         xenon2.title_y = 0x54;
-        row = &xenon2.menu_text[60];
+        row = &xenon2.menu_text[3 * MENU_LINE];
         if (sel == 1)
-            row = &xenon2.menu_text[80];
+            row = &xenon2.menu_text[4 * MENU_LINE];
         draw_text_row(row);
         xenon2.title_y = 0x6c;
-        row = &xenon2.menu_text[100];
+        row = &xenon2.menu_text[5 * MENU_LINE];
         if (!xenon2.music_switch)
-            row = &xenon2.menu_text[140];
+            row = &xenon2.menu_text[7 * MENU_LINE];
         if (sel == 2)
-            row += 0x14;
+            row += MENU_LINE;
         draw_text_row(row);
         credits_draw();
         stars_update();
