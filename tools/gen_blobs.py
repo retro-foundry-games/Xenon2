@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 """native/src/blobs/levelN.blob -> native/src/types_blobs.h and native/src/guest_blob.h.
-types_blobs.h: struct LevelNBlob, the layout of the blob of level N at $54E40, struct LevelBlobs (the union of them, the member level_blobs of struct Xenon2)
-and `levelN_blob`, the blob as that struct.
+types_blobs.h: struct LevelNData, the layout of the blob of level N at $54E40, (the `blob` lines of symbols/weapons.symbols put them in a union in struct Xenon2: level1_data ... level5_data).
 guest_blob.h: the members the host build converts (big endian -> its byte order, addresses -> pointers) when the blob is loaded.
 
 A line is `ADDR name TYPE [COUNT]` (hex address): u8 u16 s16 u32 (integers), ptr (a pointer to the blob, const uint8_t *), code (a pointer to
@@ -12,7 +11,7 @@ COUNT defaults to 1; a u8 member without it runs to the next one.  What no membe
 import re, sys, pathlib
 
 BASE = 0x54E40
-END = 0x74000
+END = 0x74000   # (the shop's blob and the levels' end here)
 SIZE = {'u8': 1, 'u16': 2, 's16': 2, 'u32': 4, 'ptr': 4, 'code': 4}
 KIND = {'u8': 0, 'u16': 0, 's16': 0, 'u32': 0, 'ptr': 1, 'code': 2}
 CT = {'u8': 'uint8_t', 'u16': 'uint16_t', 's16': 'int16_t', 'u32': 'uint32_t', 'ptr': 'const uint8_t *', 'code': 'void (*'}
@@ -74,7 +73,6 @@ def conv_entries(base, t, cnt):
         return res
     return [(base, cnt, SIZE[t], KIND[t])] if t != 'u8' else []
 
-levels = []
 for f in files:
     m = re.search(r'level(\d)', f.name)
     if not m:
@@ -96,7 +94,7 @@ for f in files:
         elif cur is None:
             rows.append((int(t[0], 16), t[1], t[2], int(t[3]) if len(t) > 3 else None))
     rows.sort()
-    name = f'Level{lv}Blob'
+    name = f'Level{lv}Data'
     out.append(f'struct {name} {{')
     pos = BASE
     checks, members = [], []
@@ -122,14 +120,15 @@ for f in files:
         pos = a + size
         checks.append((n, a))
     out.append('};')
+    if pos > END:
+        sys.exit(f'{f.name}: runs past ${END:X}')
+    out.append(f'_Static_assert(sizeof(struct {name}) == {pos - BASE}, "{name}");')
     for n, a in checks:
         out.append(f'_Static_assert(offsetof(struct {name}, {n}) == 0x{a:05X} - BLOB_BASE, "{name}.{n}");')
-    out.append(f'#define level{lv}_blob (level_blobs.level{lv})')
     out.append('')
-    levels.append(lv)
     conv.append(f'static const struct blob_member blob_members_{lv}[] = {{')
     conv += [f'    {{ 0x{o:X}, {c}, {s_}, {k} }},' for o, c, s_, k in members]
     conv.append('};')
-out += ['struct LevelBlobs {', '    union {'] + [f'        struct Level{lv}Blob level{lv};' for lv in levels] + [f'        uint8_t raw[0x{END:X} - BLOB_BASE];', '    };', '};', '', '#endif']
+out.append('#endif')
 (root / 'types_blobs.h').write_text('\n'.join(out) + '\n')
 (root / 'guest_blob.h').write_text('\n'.join(conv) + '\n')
