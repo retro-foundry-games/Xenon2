@@ -12,6 +12,43 @@
 #define BLOB_PAD_CAT(a, b) BLOB_PAD_CAT2(a, b)
 #define BLOB_PAD(n) uint8_t BLOB_PAD_CAT(pad_, __LINE__)[n];
 
+struct Level2FrontEntry {
+    const uint8_t *anim;
+    int16_t dx;
+    int16_t dy;
+};
+_Static_assert(sizeof(struct Level2FrontEntry) == 8, "Level2FrontEntry");
+
+struct Level2RoamerNode {
+    int16_t x;
+    int16_t y;
+    uint16_t targets[3];
+};
+_Static_assert(sizeof(struct Level2RoamerNode) == 10, "Level2RoamerNode");
+
+struct Level2DebrisWall {
+    uint16_t x;
+    uint16_t y;
+    uint16_t index;
+    uint16_t var;
+    const uint8_t *path;
+};
+_Static_assert(sizeof(struct Level2DebrisWall) == 12, "Level2DebrisWall");
+
+struct Level2WallPiece {
+    uint16_t type;
+    void (*hit)(void);
+    const uint8_t *gfx;
+    uint16_t score;
+};
+_Static_assert(sizeof(struct Level2WallPiece) == 12, "Level2WallPiece");
+
+struct Level2WallPieces {
+    uint16_t last;
+    struct Level2WallPiece pieces[12];
+};
+_Static_assert(sizeof(struct Level2WallPieces) == 146, "Level2WallPieces");
+
 struct Level4ScrollEnemy {
     uint16_t type;
     uint16_t x;
@@ -73,7 +110,14 @@ struct Level2Blob {
     BLOB_PAD(1)
     uint8_t boss_fire_rate;   /* 54E65 */
     uint16_t boss_shot_steps;   /* 54E66 */
-    BLOB_PAD(434)
+    BLOB_PAD(26)
+    uint8_t formation_1[26];   /* 54E82 */
+    uint8_t formation_2[26];   /* 54E9C */
+    uint8_t formation_3[26];   /* 54EB6 */
+    uint8_t formation_4[26];   /* 54ED0 */
+    uint8_t formation_5[26];   /* 54EEA */
+    uint8_t formation_6[26];   /* 54F04 */
+    BLOB_PAD(252)
     uint8_t flyer_anim2_e0[24];   /* 5501A */
     uint8_t flyer_anim_e0[24];   /* 55032 */
     uint8_t flyer_anim2_other[6];   /* 5504A */
@@ -84,10 +128,10 @@ struct Level2Blob {
     uint8_t boss_update_data_4[36];   /* 55116 */
     uint8_t roamer_anim[908];   /* 5513A */
     uint8_t marker_f8_cells[436];   /* 554C6 */
-    uint8_t hook_data_11[302];   /* 5567A */
-    uint8_t front_entries[64];   /* 557A8 */
-    uint8_t front_table_f0[84];   /* 557E8 */
-    uint8_t front_table_other[84];   /* 5583C */
+    uint8_t hook_words[302];   /* 5567A */
+    struct Level2FrontEntry front_entries[8];   /* 557A8 */
+    const uint8_t *front_table_f0[21];   /* 557E8 */
+    const uint8_t *front_table_other[21];   /* 5583C */
     uint8_t hook_cells_a[4];   /* 55890 */
     uint8_t hook_cells2_a[36];   /* 55894 */
     uint8_t hook_cells_b[4];   /* 558B8 */
@@ -100,40 +144,37 @@ struct Level2Blob {
     uint8_t launcher_anim_other[18];   /* 55D00 */
     uint8_t hook_fire_anim_a[48];   /* 55D12 */
     uint8_t launcher_anim_100[386];   /* 55D42 */
-    uint8_t debris_wall_data_2[146];   /* 55EC4 */
-    uint8_t debris_wall_records[1130];   /* 55F56 */
-    uint32_t bolt_anims_by_dir;   /* 563C0 */
-    BLOB_PAD(354)
-    uint8_t roamer_shot_entries[80];   /* 56526 */
-    uint32_t front_anims_by_dir;   /* 56576 */
-    BLOB_PAD(640)
-    uint32_t piece_pictures_other;   /* 567FA */
-    BLOB_PAD(28)
-    uint32_t piece_pictures_118;   /* 5681A */
-    BLOB_PAD(28)
-    uint32_t piece_pictures_11c;   /* 5683A */
-    BLOB_PAD(220)
+    struct Level2WallPieces wall_pieces;   /* 55EC4 */
+    struct Level2DebrisWall debris_wall_records[16];   /* 55F56 */
+    BLOB_PAD(938)
+    const uint8_t *bolt_anims_by_dir[8];   /* 563C0 */
+    BLOB_PAD(326)
+    struct Level2RoamerNode roamer_shot_entries[8];   /* 56526 */
+    const uint8_t *front_anims_by_dir[8];   /* 56576 */
+    BLOB_PAD(612)
+    const uint8_t *piece_pictures_other[8];   /* 567FA */
+    const uint8_t *piece_pictures_118[8];   /* 5681A */
+    const uint8_t *piece_pictures_11c[8];   /* 5683A */
+    BLOB_PAD(192)
     uint8_t gate_flash_cells_b[12];   /* 5691A */
     uint8_t gate_flash_cells_a[12];   /* 56926 */
     uint8_t gate_flash_cells_c[540];   /* 56932 */
     uint8_t gate_number_cells[10];   /* 56B4E */
     uint8_t gate_cells[236];   /* 56B58 */
-    uint32_t boss_cells_by_cell;   /* 56C44 */
-    BLOB_PAD(510)
-    uint32_t boss_move_paths_a;   /* 56E46 */
-    BLOB_PAD(4)
-    uint32_t boss_move_paths_b;   /* 56E4E */
-    BLOB_PAD(60)
+    const uint8_t *boss_cells_by_cell[4];   /* 56C44 */
+    BLOB_PAD(498)
+    const uint8_t *boss_move_paths_a[2];   /* 56E46 */
+    const uint8_t *boss_move_paths_b[2];   /* 56E4E */
+    BLOB_PAD(56)
     uint8_t boss_update_data[30];   /* 56E8E */
     uint8_t boss_update_data_2[120];   /* 56EAC */
-    uint32_t block_group_offsets;   /* 56F24 */
-    BLOB_PAD(822)
+    uint32_t block_group_offsets[4];   /* 56F24 */
+    BLOB_PAD(810)
     uint8_t boss_grid[76];   /* 5725E */
-    uint8_t boss_update_data_3[8];   /* 572AA */
-    uint8_t boss_move_slot_a[8];   /* 572B2 */
-    uint8_t boss_move_slot_b[17180];   /* 572BA */
+    uint8_t boss_cells[32];   /* 572AA */
+    BLOB_PAD(17164)
     uint8_t roamer_picture[5920];   /* 5B5D6 */
-    uint8_t launcher_shot_picture;   /* 5CCF6 */
+    uint8_t launcher_shot_picture[32];   /* 5CCF6 */
 };
 _Static_assert(offsetof(struct Level2Blob, marker_f8_energy) == 0x54E42 - BLOB_BASE, "Level2Blob.marker_f8_energy");
 _Static_assert(offsetof(struct Level2Blob, marker_fc_energy) == 0x54E44 - BLOB_BASE, "Level2Blob.marker_fc_energy");
@@ -154,6 +195,12 @@ _Static_assert(offsetof(struct Level2Blob, init_energy_2) == 0x54E60 - BLOB_BASE
 _Static_assert(offsetof(struct Level2Blob, front_param) == 0x54E62 - BLOB_BASE, "Level2Blob.front_param");
 _Static_assert(offsetof(struct Level2Blob, boss_fire_rate) == 0x54E65 - BLOB_BASE, "Level2Blob.boss_fire_rate");
 _Static_assert(offsetof(struct Level2Blob, boss_shot_steps) == 0x54E66 - BLOB_BASE, "Level2Blob.boss_shot_steps");
+_Static_assert(offsetof(struct Level2Blob, formation_1) == 0x54E82 - BLOB_BASE, "Level2Blob.formation_1");
+_Static_assert(offsetof(struct Level2Blob, formation_2) == 0x54E9C - BLOB_BASE, "Level2Blob.formation_2");
+_Static_assert(offsetof(struct Level2Blob, formation_3) == 0x54EB6 - BLOB_BASE, "Level2Blob.formation_3");
+_Static_assert(offsetof(struct Level2Blob, formation_4) == 0x54ED0 - BLOB_BASE, "Level2Blob.formation_4");
+_Static_assert(offsetof(struct Level2Blob, formation_5) == 0x54EEA - BLOB_BASE, "Level2Blob.formation_5");
+_Static_assert(offsetof(struct Level2Blob, formation_6) == 0x54F04 - BLOB_BASE, "Level2Blob.formation_6");
 _Static_assert(offsetof(struct Level2Blob, flyer_anim2_e0) == 0x5501A - BLOB_BASE, "Level2Blob.flyer_anim2_e0");
 _Static_assert(offsetof(struct Level2Blob, flyer_anim_e0) == 0x55032 - BLOB_BASE, "Level2Blob.flyer_anim_e0");
 _Static_assert(offsetof(struct Level2Blob, flyer_anim2_other) == 0x5504A - BLOB_BASE, "Level2Blob.flyer_anim2_other");
@@ -164,7 +211,7 @@ _Static_assert(offsetof(struct Level2Blob, wreck_c) == 0x550DA - BLOB_BASE, "Lev
 _Static_assert(offsetof(struct Level2Blob, boss_update_data_4) == 0x55116 - BLOB_BASE, "Level2Blob.boss_update_data_4");
 _Static_assert(offsetof(struct Level2Blob, roamer_anim) == 0x5513A - BLOB_BASE, "Level2Blob.roamer_anim");
 _Static_assert(offsetof(struct Level2Blob, marker_f8_cells) == 0x554C6 - BLOB_BASE, "Level2Blob.marker_f8_cells");
-_Static_assert(offsetof(struct Level2Blob, hook_data_11) == 0x5567A - BLOB_BASE, "Level2Blob.hook_data_11");
+_Static_assert(offsetof(struct Level2Blob, hook_words) == 0x5567A - BLOB_BASE, "Level2Blob.hook_words");
 _Static_assert(offsetof(struct Level2Blob, front_entries) == 0x557A8 - BLOB_BASE, "Level2Blob.front_entries");
 _Static_assert(offsetof(struct Level2Blob, front_table_f0) == 0x557E8 - BLOB_BASE, "Level2Blob.front_table_f0");
 _Static_assert(offsetof(struct Level2Blob, front_table_other) == 0x5583C - BLOB_BASE, "Level2Blob.front_table_other");
@@ -180,7 +227,7 @@ _Static_assert(offsetof(struct Level2Blob, hook_fire_anim_b) == 0x55CD0 - BLOB_B
 _Static_assert(offsetof(struct Level2Blob, launcher_anim_other) == 0x55D00 - BLOB_BASE, "Level2Blob.launcher_anim_other");
 _Static_assert(offsetof(struct Level2Blob, hook_fire_anim_a) == 0x55D12 - BLOB_BASE, "Level2Blob.hook_fire_anim_a");
 _Static_assert(offsetof(struct Level2Blob, launcher_anim_100) == 0x55D42 - BLOB_BASE, "Level2Blob.launcher_anim_100");
-_Static_assert(offsetof(struct Level2Blob, debris_wall_data_2) == 0x55EC4 - BLOB_BASE, "Level2Blob.debris_wall_data_2");
+_Static_assert(offsetof(struct Level2Blob, wall_pieces) == 0x55EC4 - BLOB_BASE, "Level2Blob.wall_pieces");
 _Static_assert(offsetof(struct Level2Blob, debris_wall_records) == 0x55F56 - BLOB_BASE, "Level2Blob.debris_wall_records");
 _Static_assert(offsetof(struct Level2Blob, bolt_anims_by_dir) == 0x563C0 - BLOB_BASE, "Level2Blob.bolt_anims_by_dir");
 _Static_assert(offsetof(struct Level2Blob, roamer_shot_entries) == 0x56526 - BLOB_BASE, "Level2Blob.roamer_shot_entries");
@@ -200,9 +247,7 @@ _Static_assert(offsetof(struct Level2Blob, boss_update_data) == 0x56E8E - BLOB_B
 _Static_assert(offsetof(struct Level2Blob, boss_update_data_2) == 0x56EAC - BLOB_BASE, "Level2Blob.boss_update_data_2");
 _Static_assert(offsetof(struct Level2Blob, block_group_offsets) == 0x56F24 - BLOB_BASE, "Level2Blob.block_group_offsets");
 _Static_assert(offsetof(struct Level2Blob, boss_grid) == 0x5725E - BLOB_BASE, "Level2Blob.boss_grid");
-_Static_assert(offsetof(struct Level2Blob, boss_update_data_3) == 0x572AA - BLOB_BASE, "Level2Blob.boss_update_data_3");
-_Static_assert(offsetof(struct Level2Blob, boss_move_slot_a) == 0x572B2 - BLOB_BASE, "Level2Blob.boss_move_slot_a");
-_Static_assert(offsetof(struct Level2Blob, boss_move_slot_b) == 0x572BA - BLOB_BASE, "Level2Blob.boss_move_slot_b");
+_Static_assert(offsetof(struct Level2Blob, boss_cells) == 0x572AA - BLOB_BASE, "Level2Blob.boss_cells");
 _Static_assert(offsetof(struct Level2Blob, roamer_picture) == 0x5B5D6 - BLOB_BASE, "Level2Blob.roamer_picture");
 _Static_assert(offsetof(struct Level2Blob, launcher_shot_picture) == 0x5CCF6 - BLOB_BASE, "Level2Blob.launcher_shot_picture");
 #define level2_blob (*(struct Level2Blob *)GPTR(BLOB_BASE))

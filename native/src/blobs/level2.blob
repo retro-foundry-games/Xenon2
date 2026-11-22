@@ -1,73 +1,102 @@
-; level 2: the members of its blob at $54E00 (raw big-endian memory, read with rd16/rd32/GPTR); a member runs to the next one,
-raw
-; the code between the tables is not separated
-54e42 marker_f8_energy u16
-54e44 marker_fc_energy u16
-54e47 turret_chance u8
-54e48 turret_param u16
-54e4a turret_shot_steps u16
-54e4c launcher_shot_steps u16
-54e4e hook_energy u16
-54e50 hook_energy_2 u16
-54e52 debris_wall_energy u16
-54e54 debris_wall_steps u16
-54e56 roamer_energy u16
-54e59 roamer_shot_fire_rate u8
-54e5a roamer_shot_param u16
-54e5c roamer_shot_shot_steps u16
-54e5e init_energy u16
-54e60 init_energy_2 u16
-54e62 front_param u16
-54e65 boss_fire_rate u8
-54e66 boss_shot_steps u16
-5501a flyer_anim2_e0 u8
-55032 flyer_anim_e0 u8
-5504a flyer_anim2_other u8
-55050 flyer_anim_other u8
-55062 wreck_a u8
-5509e wreck_b u8
-550da wreck_c u8
-55116 boss_update_data_4 u8
-5513a roamer_anim u8
-554c6 marker_f8_cells u8
-5567a hook_data_11 u8
-557a8 front_entries u8
-557e8 front_table_f0 u8
-5583c front_table_other u8
-55890 hook_cells_a u8
-55894 hook_cells2_a u8
-558b8 hook_cells_b u8
-558bc hook_cells2_b u8
-559c4 hook_anim_a u8
-559c6 hook_anim_b u8
-559c8 hook_picture_a u8
-559e6 hook_picture_b u8
-55cd0 hook_fire_anim_b u8
-55d00 launcher_anim_other u8
-55d12 hook_fire_anim_a u8
-55d42 launcher_anim_100 u8
-55ec4 debris_wall_data_2 u8
-55f56 debris_wall_records u8
-563c0 bolt_anims_by_dir u32
-56526 roamer_shot_entries u8
-56576 front_anims_by_dir u32
-567fa piece_pictures_other u32
-5681a piece_pictures_118 u32
-5683a piece_pictures_11c u32
-5691a gate_flash_cells_b u8
-56926 gate_flash_cells_a u8
-56932 gate_flash_cells_c u8
-56b4e gate_number_cells u8
-56b58 gate_cells u8
-56c44 boss_cells_by_cell u32
-56e46 boss_move_paths_a u32
-56e4e boss_move_paths_b u32
-56e8e boss_update_data u8
-56eac boss_update_data_2 u8
-56f24 block_group_offsets u32
-5725e boss_grid u8
-572aa boss_update_data_3 u8
-572b2 boss_move_slot_a u8
-572ba boss_move_slot_b u8
-5b5d6 roamer_picture u8
-5ccf6 launcher_shot_picture u8
+; level 2: its blob at $54E00 (see tools/gen_blobs.py)
+record Level2FrontEntry 8
+0 anim ptr
+4 dx s16
+6 dy s16
+end
+record Level2RoamerNode 10
+0 x s16
+2 y s16
+4 targets u16 3
+end
+record Level2DebrisWall 12
+0 x u16
+2 y u16
+4 index u16
+6 var u16
+8 path ptr
+end
+record Level2WallPiece 12
+0 type u16
+2 hit code
+6 gfx ptr
+10 score u16
+end
+record Level2WallPieces 146
+0 last u16
+2 pieces Level2WallPiece 12
+end
+54e42 marker_f8_energy u16 1
+54e44 marker_fc_energy u16 1
+54e47 turret_chance u8 1
+54e48 turret_param u16 1
+54e4a turret_shot_steps u16 1
+54e4c launcher_shot_steps u16 1
+54e4e hook_energy u16 1
+54e50 hook_energy_2 u16 1
+54e52 debris_wall_energy u16 1
+54e54 debris_wall_steps u16 1
+54e56 roamer_energy u16 1
+54e59 roamer_shot_fire_rate u8 1
+54e5a roamer_shot_param u16 1
+54e5c roamer_shot_shot_steps u16 1
+54e5e init_energy u16 1
+54e60 init_energy_2 u16 1
+54e62 front_param u16 1
+54e65 boss_fire_rate u8 1
+54e66 boss_shot_steps u16 1
+54e82 formation_1 u8 26
+54e9c formation_2 u8 26
+54eb6 formation_3 u8 26
+54ed0 formation_4 u8 26
+54eea formation_5 u8 26
+54f04 formation_6 u8 26
+5501a flyer_anim2_e0 u8 24
+55032 flyer_anim_e0 u8 24
+5504a flyer_anim2_other u8 6
+55050 flyer_anim_other u8 18
+55062 wreck_a u8 60
+5509e wreck_b u8 60
+550da wreck_c u8 60
+55116 boss_update_data_4 u8 36
+5513a roamer_anim u8 908
+554c6 marker_f8_cells u8 436
+5567a hook_words u8 302
+557a8 front_entries Level2FrontEntry 8
+557e8 front_table_f0 ptr 21
+5583c front_table_other ptr 21
+55890 hook_cells_a u8 4
+55894 hook_cells2_a u8 36
+558b8 hook_cells_b u8 4
+558bc hook_cells2_b u8 264
+559c4 hook_anim_a u8 2
+559c6 hook_anim_b u8 2
+559c8 hook_picture_a u8 30
+559e6 hook_picture_b u8 746
+55cd0 hook_fire_anim_b u8 48
+55d00 launcher_anim_other u8 18
+55d12 hook_fire_anim_a u8 48
+55d42 launcher_anim_100 u8 386
+55ec4 wall_pieces Level2WallPieces 1
+55f56 debris_wall_records Level2DebrisWall 16
+563c0 bolt_anims_by_dir ptr 8
+56526 roamer_shot_entries Level2RoamerNode 8
+56576 front_anims_by_dir ptr 8
+567fa piece_pictures_other ptr 8
+5681a piece_pictures_118 ptr 8
+5683a piece_pictures_11c ptr 8
+5691a gate_flash_cells_b u8 12
+56926 gate_flash_cells_a u8 12
+56932 gate_flash_cells_c u8 540
+56b4e gate_number_cells u8 10
+56b58 gate_cells u8 236
+56c44 boss_cells_by_cell ptr 4
+56e46 boss_move_paths_a ptr 2
+56e4e boss_move_paths_b ptr 2
+56e8e boss_update_data u8 30
+56eac boss_update_data_2 u8 120
+56f24 block_group_offsets u32 4
+5725e boss_grid u8 76
+572aa boss_cells u8 32
+5b5d6 roamer_picture u8 5920
+5ccf6 launcher_shot_picture u8 32
