@@ -31,18 +31,6 @@ static void set_cursor(Object *o, const struct PathCmd *p)
     o->cursor = p;
 }
 
-static void spawndef_load(struct SpawnDef *d, const uint8_t *p)
-{
-    d->kind = rd16(p);
-    d->score = rd16(p + 2);
-    d->update = (void (*)(void))GFN(rd32(p + 4));
-    d->draw = (void (*)(void))GFN(rd32(p + 8));
-    d->hit = (void (*)(void))GFN(rd32(p + 12));
-    d->anim = (const uint8_t *)GPTR(rd32(p + 0x10));
-    d->to_big = p[0x16];
-    d->to_is_part = p[0x17];
-}
-
 /* an object that does nothing any more */
 static void kill_object(Object *o)
 {
@@ -394,7 +382,7 @@ Object *owner_chain_next(Object *obj)
 
 /* orig $E60, $0032AA: spawn rec->count copies of the formation (a chain of objects, one for each definition), the copies
  * rec->x apart; at the end the kind is recorded in the table at $43C.  Returns the last object made (obj itself when none). */
-Object *spawn_formation(Object *obj, const struct SpawnRec *rec, const uint8_t *formation)
+Object *spawn_formation(Object *obj, const struct SpawnRec *rec, const struct SpawnDef *formation)
 {
     uint16_t remaining;
     uint16_t offset = 0;
@@ -407,9 +395,7 @@ Object *spawn_formation(Object *obj, const struct SpawnRec *rec, const uint8_t *
         return obj;
 
     while (remaining-- != 0) {
-        const uint8_t *def_raw = formation;
-        struct SpawnDef def;
-        const struct SpawnDef *def_ptr = &def;
+        const struct SpawnDef *def_ptr = formation;
         Object *leader;
         const struct PathCmd *e;
         uint16_t rnd, spacing;
@@ -417,7 +403,6 @@ Object *spawn_formation(Object *obj, const struct SpawnRec *rec, const uint8_t *
         obj = list_insert(LIST_ENEMY);
         leader = obj;
         for (;;) {
-            spawndef_load(&def, def_raw);
             obj->type = def_ptr->kind;
             obj->fn_update = (obj_fn)def_ptr->update;
             obj->fn_draw = (obj_fn)def_ptr->draw;
@@ -464,8 +449,7 @@ Object *spawn_formation(Object *obj, const struct SpawnRec *rec, const uint8_t *
             obj->is_part = (int8_t)def_ptr->to_is_part;
             bbox_from_frame(obj);
             obj->target = leader;
-            def_raw += 0x18;
-            spawndef_load(&def, def_raw);
+            def_ptr++;
             if (def_ptr->kind != 0) {
                 Object *prev = obj;
                 Object *nxt;
@@ -742,7 +726,11 @@ void spawn_debris(Object *shooter_unused, Object *target, uint16_t damage_unused
 /* orig $E5A, $003252: spawn the formation at $326C for record rec, then remember its word $54 in $30 */
 Object *spawn_wave_326c(Object *obj, const struct SpawnRec *rec)
 {
-    obj = spawn_formation(obj, rec, xenon2.spawn_def_326c);
+    static const struct SpawnDef wave[2] = {
+        { .kind = 100, .update = (void (*)(void))enemy_update, .draw = (void (*)(void))draw_bob_masked, .hit = (void (*)(void))spawn_debris, .anim = xenon2.anim_wave_326c },
+        { 0 } };
+
+    obj = spawn_formation(obj, rec, wave);
     obj->marker.launches = obj->steps;
     obj->steps = 3;
     obj->kind = 0;

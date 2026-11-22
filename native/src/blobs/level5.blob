@@ -61,7 +61,7 @@ end
 54e7a gunner_shot_steps u16 1
 54e7c gunner_shot_steps_2 u16 1
 54e7f boss2_mover_fire_rate_2 u8 1
-54e92 formations u8 208
+54e92 formations Formation1 8
 551dc gunner_paths ptr 3
 552ba gunner_anims ptr 8
 55516 cannon_anim_a u8 36

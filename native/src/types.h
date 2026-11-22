@@ -32,6 +32,13 @@ struct PicBox { RawWord dx, dy, w, h; };
 /* the cells of a row of the tile map */
 #define MAP_COLS 20
 
+/* the screens: a row is the four planes one after the other, each of SCREEN_PLANE_WORDS words (a RawWord pointer to a word of the first plane;
+ * the same word of plane p is SCREEN_PLANE_WORDS * p on, the next row SCREEN_ROW_WORDS on) */
+#define SCREEN_PLANE_WORDS 20
+#define SCREEN_ROW_WORDS (4 * SCREEN_PLANE_WORDS)
+#define SCREEN_PLANE_BYTES (2 * SCREEN_PLANE_WORDS)
+#define SCREEN_ROW_BYTES (2 * SCREEN_ROW_WORDS)
+
 /* a 16.16 value from its whole and fraction words, the high word first */
 #define FIXED_16_16(whole, fraction) (((uint32_t)(uint16_t)(whole) << 16) | (uint16_t)(fraction))
 

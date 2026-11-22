@@ -120,17 +120,17 @@ void stars_draw(void)
     for (int g = 0; g < 4; g++) {
         for (int i = 0; i < 12; i++) {
             struct Star *s = &xenon2.stars[g * 12 + i];
-            uint8_t *p = screen + (int16_t)STAR_OFF(s);
+            RawWord *p = (RawWord *)(screen + (int16_t)STAR_OFF(s));
             uint16_t mask = STAR_MASK(s);
-            uint16_t planes = rd16(p) | rd16(p + 0x28) | rd16(p + 0x50) | rd16(p + 0x78);
+            uint16_t planes = rd16(p[0].b) | rd16(p[SCREEN_PLANE_WORDS].b) | rd16(p[2 * SCREEN_PLANE_WORDS].b) | rd16(p[3 * SCREEN_PLANE_WORDS].b);
 
             if (planes & mask)
                 continue;
             if (g == 1 || g == 3)
-                wr16(p, rd16(p) | mask);
+                wr16(p[0].b, rd16(p[0].b) | mask);
             if (g == 2 || g == 3)
-                wr16(p + 0x28, rd16(p + 0x28) | mask);
-            wr16(p + 0x50, rd16(p + 0x50) | mask);
+                wr16(p[SCREEN_PLANE_WORDS].b, rd16(p[SCREEN_PLANE_WORDS].b) | mask);
+            wr16(p[2 * SCREEN_PLANE_WORDS].b, rd16(p[2 * SCREEN_PLANE_WORDS].b) | mask);
         }
     }
 }

@@ -137,7 +137,7 @@ void l5_event(uint16_t event, const struct SpawnRec *record)
     if (event == 0)
         spawn_wave_326c(0, record);   /* $E5A */
     else if (event < 9)
-        spawn_formation(0, record, xenon2.level5_data.formations + 0x1a * (event - 1));
+        spawn_formation(0, record, &xenon2.level5_data.formations[event - 1].defs);
 }
 
 /* level5 $054E18, $0551AA: the hooks by hook */
@@ -944,7 +944,8 @@ gone:
 /* level5 $056A10: the beam's heads and the bits of its body in the screen's planes */
 void l5_beam_draw(Object *obj)
 {
-    uint8_t *screen = xenon2.draw_screen, *dst, *limit = screen + 0x7800;
+    uint8_t *screen = xenon2.draw_screen;
+    RawWord *dst, *limit = (RawWord *)(screen + 0x7800);
     uint32_t pat0 = 0xfff00000u, pat1 = 0xbfd00000u, pat2 = 0xfff00000u, pat3 = 0xc0300000u;
     uint16_t shift;
     uint32_t base0, base1, base2, base3, base4, base5;
@@ -954,7 +955,7 @@ void l5_beam_draw(Object *obj)
         draw_bob_masked_at((uint16_t)obj->x, (uint16_t)obj->y, xenon2.level5_data.beam_top_picture);
     if ((int16_t)(obj->beam.dy >> 16) >= 0 || obj->beam.length == 0x30)
         draw_bob_masked_at((uint16_t)obj->x, (uint16_t)(obj->y + obj->beam.length - 1), xenon2.level5_data.beam_end_picture);
-    dst = screen + (((uint16_t)obj->x >> 3) & 0xfffe);
+    dst = (RawWord *)(screen + (((uint16_t)obj->x >> 3) & 0xfffe));
     shift = (uint16_t)obj->x & 0xf;
     pat0 >>= shift;
     pat1 >>= shift;
@@ -975,7 +976,7 @@ void l5_beam_draw(Object *obj)
             return;
         y = 0;
     }
-    dst += (uint32_t)((uint16_t)y * 0xa0u);
+    dst += (uint32_t)((uint16_t)y * SCREEN_ROW_WORDS);
     pat0 = base0;
     pat1 = base1;
     pat2 = base2;
@@ -988,18 +989,18 @@ void l5_beam_draw(Object *obj)
             int p;
 
             for (p = 0; p < 4; p++)
-                wr16(dst + 0x28 * p, (uint16_t)(rd16(dst + 0x28 * p) & m2));
-            wr16(dst, (uint16_t)(rd16(dst) | h1));
-            wr16(dst + 0x28, (uint16_t)(rd16(dst + 0x28) | l1));
-            wr16(dst + 0x50, (uint16_t)(rd16(dst + 0x50) | h0));
-            wr16(dst + 0x78, (uint16_t)(rd16(dst + 0x78) | l0));
+                wr16(dst[SCREEN_PLANE_WORDS * p].b, (uint16_t)(rd16(dst[SCREEN_PLANE_WORDS * p].b) & m2));
+            wr16(dst[0].b, (uint16_t)(rd16(dst[0].b) | h1));
+            wr16(dst[SCREEN_PLANE_WORDS].b, (uint16_t)(rd16(dst[SCREEN_PLANE_WORDS].b) | l1));
+            wr16(dst[2 * SCREEN_PLANE_WORDS].b, (uint16_t)(rd16(dst[2 * SCREEN_PLANE_WORDS].b) | h0));
+            wr16(dst[3 * SCREEN_PLANE_WORDS].b, (uint16_t)(rd16(dst[3 * SCREEN_PLANE_WORDS].b) | l0));
             for (p = 0; p < 4; p++)
-                wr16(dst + 2 + 0x28 * p, (uint16_t)(rd16(dst + 2 + 0x28 * p) & (uint16_t)pat5));
-            wr16(dst + 2, (uint16_t)(rd16(dst + 2) | (uint16_t)(pat4 >> 16)));
-            wr16(dst + 0x2a, (uint16_t)(rd16(dst + 0x2a) | (uint16_t)pat4));
-            wr16(dst + 0x52, (uint16_t)(rd16(dst + 0x52) | (uint16_t)(pat3 >> 16)));
-            wr16(dst + 0x7a, (uint16_t)(rd16(dst + 0x7a) | (uint16_t)pat3));
-            dst += 0xa0;
+                wr16(dst[1 + SCREEN_PLANE_WORDS * p].b, (uint16_t)(rd16(dst[1 + SCREEN_PLANE_WORDS * p].b) & (uint16_t)pat5));
+            wr16(dst[1].b, (uint16_t)(rd16(dst[1].b) | (uint16_t)(pat4 >> 16)));
+            wr16(dst[1 + SCREEN_PLANE_WORDS].b, (uint16_t)(rd16(dst[1 + SCREEN_PLANE_WORDS].b) | (uint16_t)pat4));
+            wr16(dst[1 + 2 * SCREEN_PLANE_WORDS].b, (uint16_t)(rd16(dst[1 + 2 * SCREEN_PLANE_WORDS].b) | (uint16_t)(pat3 >> 16)));
+            wr16(dst[1 + 3 * SCREEN_PLANE_WORDS].b, (uint16_t)(rd16(dst[1 + 3 * SCREEN_PLANE_WORDS].b) | (uint16_t)pat3));
+            dst += SCREEN_ROW_WORDS;
             length--;
         }
     }

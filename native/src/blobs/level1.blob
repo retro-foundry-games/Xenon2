@@ -8,6 +8,24 @@ record SpawnRec 14
 10 y s16
 12 steps u16
 end
+record SpawnDef 24
+0 kind u16
+2 score u16
+4 update code
+8 draw code
+12 hit code
+16 anim ptr
+22 to_big u8
+23 to_is_part u8
+end
+record Formation1 26
+0 defs SpawnDef
+24 end u16
+end
+record Formation2 50
+0 defs SpawnDef 2
+48 end u16
+end
 record LevelSpawn 12
 0 x s16
 2 y s16
@@ -35,16 +53,16 @@ end
 54e58 boss_energy u16 2
 54e5c turret_energy u16 3
 54e62 boss_steps u16 1
-54e66 formation_1 u8 26
-54e80 formation_2 u8 26
-54e9a formation_3 u8 26
-54eb4 formation_4 u8 26
-54ece formation_5 u8 26
-54ee8 formation_6 u8 26
-54f02 formation_7 u8 50
-54f34 formation_8 u8 26
-54f4e formation_9 u8 26
-54f68 formation_10 u8 26
+54e66 formation_1 Formation1
+54e80 formation_2 Formation1
+54e9a formation_3 Formation1
+54eb4 formation_4 Formation1
+54ece formation_5 Formation1
+54ee8 formation_6 Formation1
+54f02 formation_7 Formation2
+54f34 formation_8 Formation1
+54f4e formation_9 Formation1
+54f68 formation_10 Formation1
 551d4 anim_launcher_d0 u8 6
 551f8 anim_launcher_d0_fire u8 6
 55212 anim_launcher_d4 u8 6

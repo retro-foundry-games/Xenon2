@@ -2192,7 +2192,7 @@ void beam_draw(Object *obj)
     int16_t x = (int16_t)(obj->x + 4 - level - level);
     int16_t y = obj->y;
     uint32_t rot[5];
-    uint8_t *dst;
+    RawWord *dst;
     uint16_t cnt;
     int lt, i;
 
@@ -2213,7 +2213,7 @@ void beam_draw(Object *obj)
     y = (int16_t)xenon2.beam_state[1];
     if (y < 0)
         return;
-    dst = xenon2.draw_screen + (int16_t)xenon2.row_offset[(uint16_t)y];
+    dst = (RawWord *)(xenon2.draw_screen + (int16_t)xenon2.row_offset[(uint16_t)y]);
     {
         const uint32_t *pattern = &xenon2.beam_pattern[xenon2.beam_state[3] * 5];
         uint16_t shift = (uint16_t)x & 0xf;
@@ -2221,19 +2221,19 @@ void beam_draw(Object *obj)
         for (i = 0; i < 5; i++)
             rot[i] = shift ? (pattern[i] >> shift) | (pattern[i] << (32 - shift)) : pattern[i];
     }
-    dst += (int16_t)((uint16_t)((int16_t)x >> 3) & 0xfffe);
+    dst += ((uint16_t)((int16_t)x >> 3) & 0xfffe) / 2;
     cnt = xenon2.beam_state[2];
     lt = 0;
     if ((int16_t)xenon2.beam_state[0] < 0) {
-        dst += 2;
+        dst++;
         while (!lt) {
             if (--cnt == 0xffff)
                 break;
             for (i = 0; i < 4; i++) {
-                uint8_t *plane = dst + 0x28 * (i);
-                wr16(plane, (uint16_t)((rd16(plane) & (uint16_t)rot[0]) | (uint16_t)rot[1 + i]));
+                RawWord *plane = dst + SCREEN_PLANE_WORDS * i;
+                wr16(plane[0].b, (uint16_t)((rd16(plane[0].b) & (uint16_t)rot[0]) | (uint16_t)rot[1 + i]));
             }
-            dst -= 0xa0;
+            dst -= SCREEN_ROW_WORDS;
             lt = (int32_t)ADDR(dst) < (int32_t)ADDR(xenon2.draw_screen);
         }
     } else if ((int16_t)xenon2.beam_state[0] > 0x130) {
@@ -2241,10 +2241,10 @@ void beam_draw(Object *obj)
             if (--cnt == 0xffff)
                 break;
             for (i = 0; i < 4; i++) {
-                uint8_t *plane = dst + 0x28 * (i);
-                wr16(plane, (uint16_t)((rd16(plane) & (uint16_t)(rot[0] >> 16)) | (uint16_t)(rot[1 + i] >> 16)));
+                RawWord *plane = dst + SCREEN_PLANE_WORDS * i;
+                wr16(plane[0].b, (uint16_t)((rd16(plane[0].b) & (uint16_t)(rot[0] >> 16)) | (uint16_t)(rot[1 + i] >> 16)));
             }
-            dst -= 0xa0;
+            dst -= SCREEN_ROW_WORDS;
             lt = (int32_t)ADDR(dst) < (int32_t)ADDR(xenon2.draw_screen);
         }
     } else {
@@ -2252,11 +2252,11 @@ void beam_draw(Object *obj)
             if (--cnt == 0xffff)
                 break;
             for (i = 0; i < 4; i++) {
-                uint8_t *plane = dst + 0x28 * (i);
-                wr16(plane, (uint16_t)((rd16(plane) & (uint16_t)(rot[0] >> 16)) | (uint16_t)(rot[1 + i] >> 16)));
-                wr16(plane + 2, (uint16_t)((rd16(plane + 2) & (uint16_t)rot[0]) | (uint16_t)rot[1 + i]));
+                RawWord *plane = dst + SCREEN_PLANE_WORDS * i;
+                wr16(plane[0].b, (uint16_t)((rd16(plane[0].b) & (uint16_t)(rot[0] >> 16)) | (uint16_t)(rot[1 + i] >> 16)));
+                wr16(plane[1].b, (uint16_t)((rd16(plane[1].b) & (uint16_t)rot[0]) | (uint16_t)rot[1 + i]));
             }
-            dst -= 0xa0;
+            dst -= SCREEN_ROW_WORDS;
             lt = (int32_t)ADDR(dst) < (int32_t)ADDR(xenon2.draw_screen);
         }
     }

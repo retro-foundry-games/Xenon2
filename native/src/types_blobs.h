@@ -22,6 +22,31 @@ struct SpawnRec {
 };
 _Static_assert(sizeof(struct SpawnRec) == 14, "SpawnRec");
 
+struct SpawnDef {
+    uint16_t kind;
+    uint16_t score;
+    void (*update)(void);
+    void (*draw)(void);
+    void (*hit)(void);
+    const uint8_t *anim;
+    BLOB_PAD(2)
+    uint8_t to_big;
+    uint8_t to_is_part;
+};
+_Static_assert(sizeof(struct SpawnDef) == 24, "SpawnDef");
+
+struct Formation1 {
+    struct SpawnDef defs;
+    uint16_t end;
+};
+_Static_assert(sizeof(struct Formation1) == 26, "Formation1");
+
+struct Formation2 {
+    struct SpawnDef defs[2];
+    uint16_t end;
+};
+_Static_assert(sizeof(struct Formation2) == 50, "Formation2");
+
 struct LevelSpawn {
     int16_t x;
     int16_t y;
@@ -309,16 +334,16 @@ struct Level1Data {
     uint16_t turret_energy[3];   /* 54E5C */
     uint16_t boss_steps;   /* 54E62 */
     BLOB_PAD(2)
-    uint8_t formation_1[26];   /* 54E66 */
-    uint8_t formation_2[26];   /* 54E80 */
-    uint8_t formation_3[26];   /* 54E9A */
-    uint8_t formation_4[26];   /* 54EB4 */
-    uint8_t formation_5[26];   /* 54ECE */
-    uint8_t formation_6[26];   /* 54EE8 */
-    uint8_t formation_7[50];   /* 54F02 */
-    uint8_t formation_8[26];   /* 54F34 */
-    uint8_t formation_9[26];   /* 54F4E */
-    uint8_t formation_10[26];   /* 54F68 */
+    struct Formation1 formation_1;   /* 54E66 */
+    struct Formation1 formation_2;   /* 54E80 */
+    struct Formation1 formation_3;   /* 54E9A */
+    struct Formation1 formation_4;   /* 54EB4 */
+    struct Formation1 formation_5;   /* 54ECE */
+    struct Formation1 formation_6;   /* 54EE8 */
+    struct Formation2 formation_7;   /* 54F02 */
+    struct Formation1 formation_8;   /* 54F34 */
+    struct Formation1 formation_9;   /* 54F4E */
+    struct Formation1 formation_10;   /* 54F68 */
     BLOB_PAD(594)
     uint8_t anim_launcher_d0[6];   /* 551D4 */
     BLOB_PAD(30)
@@ -475,12 +500,12 @@ struct Level2Data {
     uint8_t boss_fire_rate;   /* 54E65 */
     uint16_t boss_shot_steps;   /* 54E66 */
     BLOB_PAD(26)
-    uint8_t formation_1[26];   /* 54E82 */
-    uint8_t formation_2[26];   /* 54E9C */
-    uint8_t formation_3[26];   /* 54EB6 */
-    uint8_t formation_4[26];   /* 54ED0 */
-    uint8_t formation_5[26];   /* 54EEA */
-    uint8_t formation_6[26];   /* 54F04 */
+    struct Formation1 formation_1;   /* 54E82 */
+    struct Formation1 formation_2;   /* 54E9C */
+    struct Formation1 formation_3;   /* 54EB6 */
+    struct Formation1 formation_4;   /* 54ED0 */
+    struct Formation1 formation_5;   /* 54EEA */
+    struct Formation1 formation_6;   /* 54F04 */
     BLOB_PAD(252)
     uint8_t flyer_anim2_e0[24];   /* 5501A */
     uint8_t flyer_anim_e0[24];   /* 55032 */
@@ -671,12 +696,12 @@ struct Level3Data {
     uint8_t part_gun_fire_rate;   /* 54E79 */
     uint16_t event_param;   /* 54E7A */
     BLOB_PAD(2)
-    uint8_t formation_1[26];   /* 54E7E */
-    uint8_t formation_2[26];   /* 54E98 */
-    uint8_t formation_3[26];   /* 54EB2 */
+    struct Formation1 formation_1;   /* 54E7E */
+    struct Formation1 formation_2;   /* 54E98 */
+    struct Formation1 formation_3;   /* 54EB2 */
     BLOB_PAD(144)
-    uint8_t formation_4[26];   /* 54F5C */
-    uint8_t formation_5[26];   /* 54F76 */
+    struct Formation1 formation_4;   /* 54F5C */
+    struct Formation1 formation_5;   /* 54F76 */
     BLOB_PAD(232)
     const uint8_t *enemy_a_pictures[8];   /* 55078 */
     const uint8_t *enemy_b_pictures[8];   /* 55098 */
@@ -899,12 +924,12 @@ struct Level4Data {
     uint16_t enemy_a_shot_steps;   /* 54E86 */
     uint16_t enemy_a_shot_picture;   /* 54E88 */
     BLOB_PAD(2)
-    uint8_t formation_1[50];   /* 54E8C */
-    uint8_t formation_4[26];   /* 54EBE */
-    uint8_t formation_2[26];   /* 54ED8 */
-    uint8_t formation_3[26];   /* 54EF2 */
-    uint8_t formation_5[26];   /* 54F0C */
-    uint8_t formation_6[26];   /* 54F26 */
+    struct Formation2 formation_1;   /* 54E8C */
+    struct Formation1 formation_4;   /* 54EBE */
+    struct Formation1 formation_2;   /* 54ED8 */
+    struct Formation1 formation_3;   /* 54EF2 */
+    struct Formation1 formation_5;   /* 54F0C */
+    struct Formation1 formation_6;   /* 54F26 */
     BLOB_PAD(538)
     struct Level4ScrollEnemy scroll_enemies[4];   /* 5515A */
     BLOB_PAD(500)
@@ -1116,7 +1141,7 @@ struct Level5Data {
     BLOB_PAD(1)
     uint8_t boss2_mover_fire_rate_2;   /* 54E7F */
     BLOB_PAD(18)
-    uint8_t formations[208];   /* 54E92 */
+    struct Formation1 formations[8];   /* 54E92 */
     BLOB_PAD(634)
     const uint8_t *gunner_paths[3];   /* 551DC */
     BLOB_PAD(210)

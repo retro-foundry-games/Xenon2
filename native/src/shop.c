@@ -23,66 +23,72 @@ void shop_draw_both(uint16_t x, uint16_t y, const uint8_t *gfx)
  * returns the address after the rows */
 uint8_t *shop_clear_columns(uint8_t *dst, uint16_t rows)
 {
+    RawWord *d = (RawWord *)dst;
+
     while (rows-- != 0) {
         int p;
 
         for (p = 0; p < 4; p++) {
-            uint8_t *b = dst + p * 0x28;
+            RawWord *b = d + p * SCREEN_PLANE_WORDS;
             int c;
 
-            wr16(b, (uint16_t)(rd16(b) & 0xfe00));
+            wr16(b[0].b, (uint16_t)(rd16(b[0].b) & 0xfe00));
             for (c = 1; c <= 5; c++)
-                wr16(b + c * 2, 0);
-            wr16(b + 12, (uint16_t)(rd16(b + 12) & 0x01ff));
+                wr16(b[c].b, 0);
+            wr16(b[6].b, (uint16_t)(rd16(b[6].b) & 0x01ff));
         }
-        dst += 0xa0;
+        d += SCREEN_ROW_WORDS;
     }
-    return dst;
+    return (uint8_t *)d;
 }
 
 /* shop $55200: a block of w+1 words by h+1 rows of 4 planes from src to dst (a row is $A0 bytes) */
 void shop_copy_block(const uint8_t *src, uint8_t *dst, uint16_t w, uint16_t h)
 {
+    RawWord *d = (RawWord *)dst;
+
     do {
-        uint8_t *next = dst + 0xa0;
+        RawWord *next = d + SCREEN_ROW_WORDS;
         uint16_t n = w;
 
         do {
-            wr16(dst, rd16(src));
-            wr16(dst + 0x28, rd16(src + 2));
-            wr16(dst + 0x50, rd16(src + 4));
-            wr16(dst + 0x78, rd16(src + 6));
+            wr16(d[0].b, rd16(src));
+            wr16(d[SCREEN_PLANE_WORDS].b, rd16(src + 2));
+            wr16(d[2 * SCREEN_PLANE_WORDS].b, rd16(src + 4));
+            wr16(d[3 * SCREEN_PLANE_WORDS].b, rd16(src + 6));
             src += 8;
-            dst += 2;
+            d++;
         } while (n-- != 0);
-        dst = next;
+        d = next;
     } while (h-- != 0);
 }
 
 /* shop $56912: rows+1 rows of 28 words of a picture over the screen: 7 columns of 4 planes, the first and the last mixed in under masks */
 void shop_put_rows(const uint8_t *src, uint8_t *dst, uint16_t rows)
 {
+    RawWord *d = (RawWord *)dst;
+
     do {
         int p, c;
 
         for (p = 0; p < 4; p++)
-            wr16(dst + p * 0x28, (uint16_t)(rd16(dst + p * 0x28) & 0xfe00));
+            wr16(d[p * SCREEN_PLANE_WORDS].b, (uint16_t)(rd16(d[p * SCREEN_PLANE_WORDS].b) & 0xfe00));
         for (p = 0; p < 4; p++) {
-            wr16(dst + p * 0x28, (uint16_t)(rd16(dst + p * 0x28) | rd16(src)));
+            wr16(d[p * SCREEN_PLANE_WORDS].b, (uint16_t)(rd16(d[p * SCREEN_PLANE_WORDS].b) | rd16(src)));
             src += 2;
         }
         for (c = 1; c <= 5; c++)
             for (p = 0; p < 4; p++) {
-                wr16(dst + c * 2 + p * 0x28, rd16(src));
+                wr16(d[c + p * SCREEN_PLANE_WORDS].b, rd16(src));
                 src += 2;
             }
         for (p = 0; p < 4; p++)
-            wr16(dst + 12 + p * 0x28, (uint16_t)(rd16(dst + 12 + p * 0x28) & 0x01ff));
+            wr16(d[6 + p * SCREEN_PLANE_WORDS].b, (uint16_t)(rd16(d[6 + p * SCREEN_PLANE_WORDS].b) & 0x01ff));
         for (p = 0; p < 4; p++) {
-            wr16(dst + 12 + p * 0x28, (uint16_t)(rd16(dst + 12 + p * 0x28) | rd16(src)));
+            wr16(d[6 + p * SCREEN_PLANE_WORDS].b, (uint16_t)(rd16(d[6 + p * SCREEN_PLANE_WORDS].b) | rd16(src)));
             src += 2;
         }
-        dst += 0xa0;
+        d += SCREEN_ROW_WORDS;
     } while (rows-- != 0);
 }
 
@@ -141,11 +147,11 @@ void shop_text_char(uint8_t ch)
             for (p = 0; p < 4; p++) {
                 uint8_t bits = *glyph++;
 
-                dst_b[p * 0x28] = bits;
-                dst_a[p * 0x28] = bits;
+                dst_b[p * SCREEN_PLANE_BYTES] = bits;
+                dst_a[p * SCREEN_PLANE_BYTES] = bits;
             }
-            dst_b += 0xa0;
-            dst_a += 0xa0;
+            dst_b += SCREEN_ROW_BYTES;
+            dst_a += SCREEN_ROW_BYTES;
         }
     } else {
         for (row = 7; row >= 0; row--) {
@@ -154,11 +160,11 @@ void shop_text_char(uint8_t ch)
             for (p = 0; p < 4; p++) {
                 uint8_t bits = (uint8_t)(*glyph++ >> 4);
 
-                dst_b[p * 0x28] |= bits;
-                dst_a[p * 0x28] |= bits;
+                dst_b[p * SCREEN_PLANE_BYTES] |= bits;
+                dst_a[p * SCREEN_PLANE_BYTES] |= bits;
             }
-            dst_b += 0xa0;
-            dst_a += 0xa0;
+            dst_b += SCREEN_ROW_BYTES;
+            dst_a += SCREEN_ROW_BYTES;
         }
     }
     xenon2.text_x++;
@@ -187,11 +193,11 @@ void shop_records_tick(void)
 void shop_sparkle(const struct ShopRec *rec)
 {
     uint16_t x = rec->x, y = rec->y;
-    uint8_t *dst = xenon2.draw_screen + (int16_t)xenon2.row_offset[y];
+    RawWord *dst = (RawWord *)(xenon2.draw_screen + (int16_t)xenon2.row_offset[y] + (int16_t)((uint16_t)(x ^ (x & 0xf)) >> 3));
     uint16_t shift = x & 0xf, noise, head, mask, inv, rnd;
     int16_t n = 0x1b;
+    int p;
 
-    dst += (int16_t)((uint16_t)(x ^ shift) >> 3);
     mask = (uint16_t)(0xffff >> shift);
     inv = (uint16_t)~mask;
     rnd = (uint16_t)random_next();
@@ -205,26 +211,19 @@ void shop_sparkle(const struct ShopRec *rec)
         rnd = (uint16_t)(rnd + 1);
         noise = (uint16_t)((rnd >> 8) ^ rnd);
         head = (uint16_t)(noise & mask);
-        wr16(dst, (uint16_t)(rd16(dst) & inv));
-        wr16(dst + 0x28, (uint16_t)(rd16(dst + 0x28) & inv));
-        wr16(dst + 0x50, (uint16_t)(rd16(dst + 0x50) & inv));
-        wr16(dst + 0x78, (uint16_t)(rd16(dst + 0x78) & inv));
-        wr16(dst, (uint16_t)(rd16(dst) | head));
-        wr16(dst + 0x28, (uint16_t)(rd16(dst + 0x28) | head));
-        wr16(dst + 0x50, (uint16_t)(rd16(dst + 0x50) | head));
-        wr16(dst + 2, noise);
-        wr16(dst + 0x2a, noise);
-        wr16(dst + 0x52, noise);
-        wr16(dst + 0x7a, 0);
+        for (p = 0; p < 4; p++)
+            wr16(dst[p * SCREEN_PLANE_WORDS].b, (uint16_t)(rd16(dst[p * SCREEN_PLANE_WORDS].b) & inv));
+        for (p = 0; p < 3; p++)
+            wr16(dst[p * SCREEN_PLANE_WORDS].b, (uint16_t)(rd16(dst[p * SCREEN_PLANE_WORDS].b) | head));
+        for (p = 0; p < 3; p++)
+            wr16(dst[1 + p * SCREEN_PLANE_WORDS].b, noise);
+        wr16(dst[1 + 3 * SCREEN_PLANE_WORDS].b, 0);
         noise = (uint16_t)(noise & inv);
-        wr16(dst + 4, (uint16_t)(rd16(dst + 4) & mask));
-        wr16(dst + 0x2c, (uint16_t)(rd16(dst + 0x2c) & mask));
-        wr16(dst + 0x54, (uint16_t)(rd16(dst + 0x54) & mask));
-        wr16(dst + 0x7c, (uint16_t)(rd16(dst + 0x7c) & mask));
-        wr16(dst + 4, (uint16_t)(rd16(dst + 4) | noise));
-        wr16(dst + 0x2c, (uint16_t)(rd16(dst + 0x2c) | noise));
-        wr16(dst + 0x54, (uint16_t)(rd16(dst + 0x54) | noise));
-        dst += 0xa0;
+        for (p = 0; p < 4; p++)
+            wr16(dst[2 + p * SCREEN_PLANE_WORDS].b, (uint16_t)(rd16(dst[2 + p * SCREEN_PLANE_WORDS].b) & mask));
+        for (p = 0; p < 3; p++)
+            wr16(dst[2 + p * SCREEN_PLANE_WORDS].b, (uint16_t)(rd16(dst[2 + p * SCREEN_PLANE_WORDS].b) | noise));
+        dst += SCREEN_ROW_WORDS;
     } while (n-- != 0);
 }
 
@@ -349,7 +348,7 @@ void shop_room_draw(void)
         pic = xenon2.shop_data.pic_door + (int16_t)((uint16_t)(0x30 - xenon2.shop_door_left) * 0x38);
         rows = (uint16_t)(xenon2.shop_door_left - 9);
         shop_put_rows(pic, dst, rows);
-        dst = xenon2.draw_screen + 0x46ba - (int16_t)((uint16_t)(xenon2.shop_door_left * 0xa0));
+        dst = xenon2.draw_screen + 0x46ba - (int16_t)((uint16_t)(xenon2.shop_door_left * SCREEN_ROW_BYTES));
         shop_put_rows(xenon2.shop_data.pic_door2, dst, rows);
     }
     draw_bob_masked_at(0xd7, (uint16_t)(xenon2.shop_door_left + 1), xenon2.shop_data.gfx_bar_1);
@@ -361,7 +360,7 @@ void shop_room_draw(void)
     if ((int16_t)xenon2.shop_door_left >= 8)
         return;
     {
-        uint8_t *dst = xenon2.draw_screen + 0x1a, *dst2 = xenon2.draw_screen + 0x41ba;
+        RawWord *dst = (RawWord *)(xenon2.draw_screen + 0x1a), *dst2 = (RawWord *)(xenon2.draw_screen + 0x41ba);
         const uint8_t *lamp_a = xenon2.shop_data.pic_lamp_a, *lamp_b = xenon2.shop_data.pic_lamp_b;
         int16_t n = 8;
 
@@ -370,18 +369,18 @@ void shop_room_draw(void)
 
             for (g = 0; g < 7; g++) {
                 for (p = 0; p < 4; p++) {
-                    wr16(dst + p * 0x28, rd16(lamp_a));
+                    wr16(dst[p * SCREEN_PLANE_WORDS].b, rd16(lamp_a));
                     lamp_a += 2;
                 }
                 for (p = 0; p < 4; p++) {
-                    wr16(dst2 + p * 0x28, rd16(lamp_b));
+                    wr16(dst2[p * SCREEN_PLANE_WORDS].b, rd16(lamp_b));
                     lamp_b += 2;
                 }
-                dst += 2;
-                dst2 += 2;
+                dst++;
+                dst2++;
             }
-            dst += 0x92;
-            dst2 += 0x92;
+            dst += SCREEN_ROW_WORDS - 7;
+            dst2 += SCREEN_ROW_WORDS - 7;
             lamp_a += 8;
             lamp_b += 8;
         } while (n-- != 0);
@@ -1233,16 +1232,19 @@ void shop_blank_screen(void)
         wr32(dst, 0);
         dst += 4;
     } while (n-- != 0);
-    dst = xenon2.draw_screen + 0x3e94;
-    wr16(dst, 0xf);
-    wr16(dst + 0x28, 6);
-    wr16(dst + 0x50, 0xf);
-    wr16(dst + 0xa0, 0xf);
-    wr16(dst + 0xc8, 0xf);
-    wr16(dst + 0xf0, 0xf);
-    wr16(dst + 0x140, 0xf);
-    wr16(dst + 0x168, 6);
-    wr16(dst + 0x190, 0xf);
+    {
+        RawWord *bar = (RawWord *)(xenon2.draw_screen + 0x3e94);
+
+        wr16(bar[0].b, 0xf);
+        wr16(bar[SCREEN_PLANE_WORDS].b, 6);
+        wr16(bar[2 * SCREEN_PLANE_WORDS].b, 0xf);
+        wr16(bar[SCREEN_ROW_WORDS].b, 0xf);
+        wr16(bar[SCREEN_ROW_WORDS + SCREEN_PLANE_WORDS].b, 0xf);
+        wr16(bar[SCREEN_ROW_WORDS + 2 * SCREEN_PLANE_WORDS].b, 0xf);
+        wr16(bar[2 * SCREEN_ROW_WORDS].b, 0xf);
+        wr16(bar[2 * SCREEN_ROW_WORDS + SCREEN_PLANE_WORDS].b, 6);
+        wr16(bar[2 * SCREEN_ROW_WORDS + 2 * SCREEN_PLANE_WORDS].b, 0xf);
+    }
 }
 
 /* the weapon slots' latch of the level ($352E) without its test of nashwan_timer: type and score of each of the 7 slots to slot_snapshot; an empty slot repeats last_score */

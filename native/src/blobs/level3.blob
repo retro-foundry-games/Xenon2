@@ -50,11 +50,11 @@ end
 54e76 part_core_shot_steps u16 1
 54e79 part_gun_fire_rate u8 1
 54e7a event_param u16 1
-54e7e formation_1 u8 26
-54e98 formation_2 u8 26
-54eb2 formation_3 u8 26
-54f5c formation_4 u8 26
-54f76 formation_5 u8 26
+54e7e formation_1 Formation1
+54e98 formation_2 Formation1
+54eb2 formation_3 Formation1
+54f5c formation_4 Formation1
+54f76 formation_5 Formation1
 55078 enemy_a_pictures ptr 8
 55098 enemy_b_pictures ptr 8
 550b8 enemy_c_pictures ptr 8

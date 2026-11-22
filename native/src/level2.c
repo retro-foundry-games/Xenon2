@@ -113,8 +113,9 @@ void l2_block_hit(Object *attacker, Object *target, uint16_t damage)
 /* level2 $054E10, $055D8A: level events by event (rec = the record that fired): event 0 is the wave of $326C, 1 to 6 formations */
 void l2_event(uint16_t event, const struct SpawnRec *rec)
 {
-    const uint8_t *forms[6] = { xenon2.level2_data.formation_1, xenon2.level2_data.formation_2, xenon2.level2_data.formation_3, xenon2.level2_data.formation_4,
-                                xenon2.level2_data.formation_5, xenon2.level2_data.formation_6 };
+    const struct SpawnDef *forms[6] = {
+        &xenon2.level2_data.formation_1.defs, &xenon2.level2_data.formation_2.defs, &xenon2.level2_data.formation_3.defs,
+        &xenon2.level2_data.formation_4.defs, &xenon2.level2_data.formation_5.defs, &xenon2.level2_data.formation_6.defs };
 
     if (event == 0) {
         spawn_wave_326c(0, rec);   /* $E5A */
