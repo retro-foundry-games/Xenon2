@@ -544,6 +544,7 @@ struct Xenon2 {
         struct ShopData shop_data;
     };
     uint16_t level_data_dst[6000];  /* $07D120 arr */
+    uint16_t beyond_512k[262144];  /* $080000 arr */
 };
 extern struct Xenon2 xenon2;
 LAYOUT_ASSERT(disk_retries, 0x2);
@@ -938,6 +939,7 @@ LAYOUT_ASSERT(level4_data, 0x54e40);
 LAYOUT_ASSERT(level5_data, 0x54e40);
 LAYOUT_ASSERT(shop_data, 0x54e40);
 LAYOUT_ASSERT(level_data_dst, 0x7d120);
+LAYOUT_ASSERT(beyond_512k, 0x80000);
 
 #include "amiga/hw.h"
 

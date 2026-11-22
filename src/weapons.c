@@ -646,8 +646,7 @@ void weaponA0_update(Object *obj)
         cur->x = PLAYER->x;
         cur->y = PLAYER->y;
         cur->drill.dir = (cur->drill.dir & 0xffffu) | (uint32_t)(uint16_t)(cnt) << 16;
-        cur->drill.target_hi = 0;
-        cur->energy = 0;
+        cur->drill_target.target = 0;
         cur->drill.state = 0xd;
     }
 }
@@ -1562,7 +1561,6 @@ void drill_update(Object *obj)
 {
     static const uint16_t *const heads[8] = { xenon2.anim_drill_head_0, xenon2.anim_drill_head_1, xenon2.anim_drill_head_2, xenon2.anim_drill_head_3, xenon2.anim_drill_head_4, xenon2.anim_drill_head_5, xenon2.anim_drill_head_6, xenon2.anim_drill_head_7 };
     Object *target;
-    uint32_t address;
     int16_t x, y, dx, dy, turn;
 
     if (xenon2.player_dead) {
@@ -1578,8 +1576,7 @@ void drill_update(Object *obj)
         y = obj->y;
         goto test;
     }
-    address = ((uint32_t)(uint16_t)obj->drill.target_hi << 16) | (uint16_t)obj->energy;   /* the target: an address kept in the words $30 and $32 */
-    target = address ? (Object *)GPTR(address) : 0;
+    target = obj->drill_target.target;
     if (target == 0)
         goto find;
     if ((int16_t)target->type < 0xc8 || target->hit[2] < 0 || target->hit[0] >= 0x140 || target->hit[3] < 0 || target->hit[1] >= 0xc0)
@@ -1592,9 +1589,7 @@ find:
         kill_object(obj);
         return;
     }
-    address = GADDR(target);
-    obj->drill.target_hi = (uint16_t)(address >> 16);
-    obj->energy = (uint16_t)address;
+    obj->drill_target.target = target;
 have:
     if (obj->drill.state != 0) {
         obj->drill.state++;

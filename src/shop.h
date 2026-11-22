@@ -8,11 +8,8 @@
 
 #ifdef GAME_SDL
 void guest_blob_raw(int on);
-uint32_t guest_address(const void *p);
-#define GADDR(p) guest_address(p)
 #else
 #define guest_blob_raw(on) ((void)0)
-#define GADDR(p) ((uint32_t)(uintptr_t)(p))
 #endif
 
 /* raw words, longs and bytes of the original's memory at an address of the blob */

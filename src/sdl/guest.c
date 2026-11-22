@@ -29,12 +29,23 @@ static void object_pointers_to_host(Object *o)
 {
     if (o->type == 0x40 && o->link.ptr)
         o->link.ptr = guest_ptr((uint32_t)(uintptr_t)o->link.ptr);
+    if (o->type == 0x48) {   /* the target: the long in the words 30 and 32 (high first), each word loaded as it is */
+        uint32_t a = (uint32_t)(uint16_t)o->drill.target_hi << 16 | (uint16_t)o->energy;
+
+        o->drill_target.target = a ? (Object *)guest_ptr(a) : 0;
+    }
 }
 
 static void object_pointers_to_guest(Object *o)
 {
     if (o->type == 0x40 && o->link.ptr)
         o->link.ptr = (Object *)(uintptr_t)guest_address(o->link.ptr);
+    if (o->type == 0x48) {
+        uint32_t a = o->drill_target.target ? guest_address(o->drill_target.target) : 0;
+
+        o->drill.target_hi = (int16_t)(a >> 16);
+        o->energy = (int16_t)a;
+    }
 }
 
 void *guest_ptr(uint32_t address)
@@ -378,7 +389,7 @@ void guest_load_range(uint32_t address, const uint8_t *image, uint32_t length)
     for (unsigned i = 0; i < sizeof guest_members / sizeof guest_members[0]; i++) {
         uint32_t m = guest_members[i].address, size = guest_members[i].size, elem = guest_members[i].elem;
 
-        if (blob_skips(m))
+        if (blob_skips(m) || m >= 0x80000)
             continue;
         uint32_t lo = m > address ? m : address, hi = m + size < address + length ? m + size : address + length;
 
@@ -469,32 +480,10 @@ extern uint32_t guest_code_address(const void *function);
 
 unsigned host_vbl_count(void) { return xenon2.vbl_count; }
 
-static uint16_t guest_high[0x40000];   /* the original's memory from $80000 to $FFFFF as words (the lockstep gives it); zeros otherwise */
-
 void guest_load_high(const uint8_t *bytes)
 {
-    for (unsigned i = 0; i < sizeof guest_high / sizeof guest_high[0]; i++)
-        guest_high[i] = be16(bytes + 2 * i);
-}
-
-/* a pointer past the end of the port's memory stands for the original's memory there: LENGTH bytes at P lie beyond it */
-int guest_beyond(const void *p, size_t length)
-{
-    return (const uint8_t *)p + length > (const uint8_t *)&xenon2 + sizeof xenon2;
-}
-
-const uint16_t *guest_high_ptr(const void *p)   /* 0 outside $80000..$FFFFF */
-{
-    uint32_t address = guest_address(p) - 0x80000;
-
-    return address < 2 * sizeof guest_high / sizeof guest_high[0] ? guest_high + address / 2 : 0;
-}
-
-uint16_t guest_high_word(const void *p)
-{
-    uint32_t address = guest_address(p) - 0x80000;
-
-    return address + 2 <= 2 * sizeof guest_high / sizeof guest_high[0] ? guest_high[address / 2] : 0;
+    for (unsigned i = 0; i < sizeof xenon2.beyond_512k / sizeof xenon2.beyond_512k[0]; i++)
+        xenon2.beyond_512k[i] = be16(bytes + 2 * i);
 }
 
 extern uint32_t l2_stale_d0;   /* level2.c */
@@ -553,12 +542,12 @@ void guest_stick_restore(void)
 
 void host_export_ram_buf(uint8_t *ram)   /* ram: 0x80000 bytes */
 {
-    memcpy(ram, &xenon2, sizeof xenon2);
+    memcpy(ram, &xenon2, 0x80000);
     for (unsigned i = 0; i < sizeof guest_members / sizeof guest_members[0]; i++) {
         uint8_t *m = ram + guest_members[i].address;
         uint32_t size = guest_members[i].size, elem = guest_members[i].elem;
 
-        if (blob_skips(guest_members[i].address))
+        if (blob_skips(guest_members[i].address) || guest_members[i].address >= 0x80000)
             continue;
         if (guest_members[i].rec) {
             unsigned rsize = guest_record_size(guest_members[i].rec);
@@ -605,7 +594,7 @@ void host_export_ram_buf(uint8_t *ram)   /* ram: 0x80000 bytes */
  * original's state this way) */
 void host_import_ram_buf(const uint8_t *ram)
 {
-    memcpy(&xenon2, ram, sizeof xenon2);
+    memcpy(&xenon2, ram, 0x80000);
     if (blob_raw != 1)   /* (the shop's blob stays while the shop runs) */
         blob_raw = be16(ram + 0xe04) > 1 ? be16(ram + 0xe04) : 0;   /* (level_number: the level) */
     guest_load_range(0, ram, 0x80000);

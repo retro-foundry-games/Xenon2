@@ -23,3 +23,4 @@ arr gfx_1838e 0x1838e uint16_t 419
 arr gfx_192bc 0x192bc uint16_t 54
 arr gfx_436a0 0x436a0 uint16_t 1200
 arr gfx_4bda0 0x4bda0 uint16_t 1200
+arr beyond_512k 0x80000 uint16_t 262144   ; the original's memory from $80000 to $FFFFF (bobs above the screen read it; the lockstep gives it, zeros otherwise)
