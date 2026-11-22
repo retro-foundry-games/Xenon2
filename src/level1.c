@@ -18,7 +18,6 @@
 /* the scratch fields of Object, by the kind that uses them */
 
 
-#define FN(f) ((obj_fn)(f))
 
 /* ---- level 1's blob ($54E00): the jump table at $54E0C and the routines the engine calls ---- */
 
@@ -281,7 +280,7 @@ void level1_hook(uint16_t id, const uint8_t *rec, uint16_t scroll)
         obj = alloc_c();
         obj->type = flag ? 0xd4 : 0xd0;
         set_anim(obj, flag ? xenon2.level1_data.anim_launcher_d4 : xenon2.level1_data.anim_launcher_d0);
-        obj->fn_update = FN(level1_launcher_update);
+        obj->fn_update = (obj_fn)level1_launcher_update;
         obj->fn_draw = draw_bob_masked;
         obj->fn_hit = (void *)hit_enemy;
         obj->energy = (int16_t)xenon2.level1_data.turret_energy[2];
@@ -500,8 +499,8 @@ void level1_init(void)
     boss->next = LIST_C;
     link->next = boss;
     boss->type = 0x50;
-    boss->fn_update = FN(level1_boss_update);
-    boss->fn_draw = FN(level1_boss_draw);
+    boss->fn_update = (obj_fn)level1_boss_update;
+    boss->fn_draw = (obj_fn)level1_boss_draw;
     boss->fn_hit = (void *)level1_boss_hit;
     boss->shot_count = boss->shot_rate = 0;
     boss->persists = -1;
@@ -562,7 +561,7 @@ void level1_spawn_unit(uint16_t unit)
     first = alloc_c();
     obj = alloc_c();
     obj->type = 0x10c;
-    obj->fn_update = FN(level1_head_update);
+    obj->fn_update = (obj_fn)level1_head_update;
     obj->fn_draw = obj_nop_thunk;
     obj->fn_hit = (void *)level1_hit_free;
     obj->unit.counter = counter;
@@ -582,7 +581,7 @@ void level1_spawn_unit(uint16_t unit)
 
         obj = alloc_c();
         obj->type = seg->type;
-        obj->fn_update = FN(level1_segment_update);
+        obj->fn_update = (obj_fn)level1_segment_update;
         obj->fn_draw = obj_nop_thunk;
         obj->fn_hit = (void *)seg->hit;
         obj->gfx = seg->gfx;
@@ -612,7 +611,7 @@ void level1_spawn_unit(uint16_t unit)
     obj->hit[2] = 0x3e8;
     obj->chain = first;
     first->type = 0xbc;
-    first->fn_update = FN(group_box_update);
+    first->fn_update = (obj_fn)group_box_update;
     first->fn_draw = obj_nop_thunk;
     first->fn_hit = (void *)obj_nop_thunk;
     first->hit[0] = 0x3e8;
@@ -671,7 +670,7 @@ static void level1_piece_burst(Object *piece, const uint8_t *anim)
     Object *n = alloc_b(0);
 
     n->type = piece->type;
-    n->fn_update = FN(level1_debris_update);
+    n->fn_update = (obj_fn)level1_debris_update;
     n->fn_draw = draw_bob_masked;
     n->x = piece->x;
     n->y = piece->y;
@@ -730,7 +729,7 @@ void level1_debris_update(Object *debris)
 /* orig $056676: the draw of the boss after a hit: back to the normal draw ($5661A) and the picture drawn as a flash */
 void level1_boss_flash(Object *boss)
 {
-    boss->fn_draw = FN(level1_boss_draw);
+    boss->fn_draw = (obj_fn)level1_boss_draw;
     if ((int16_t)xenon2.scroll_pos >= 0x280)
         return;
     draw_tile_grid_flash(xenon2.level1_data.boss_grid, 5, 6, (int16_t)(boss->y - xenon2.scroll_pos), 0x38);
@@ -748,7 +747,7 @@ void level1_boss_hit(Object *shooter, Object *boss, uint16_t damage)
     y = (int16_t)(boss->y - xenon2.scroll_pos + 0x44);
     if (!box_overlap((int16_t)xenon2.hit_box[0], (int16_t)xenon2.hit_box[1], (int16_t)xenon2.hit_box[2], (int16_t)xenon2.hit_box[3], 0x98, y, 0xa7, (int16_t)(y + 0xe)))
         return;
-    boss->fn_draw = FN(level1_boss_flash);
+    boss->fn_draw = (obj_fn)level1_boss_flash;
     old = (uint16_t)boss->energy;
     boss->energy = (int16_t)(old - damage);
     if (old > damage)

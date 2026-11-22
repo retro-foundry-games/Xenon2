@@ -14,7 +14,6 @@
 /* the scratch fields of Object, by the kind that uses them */
 
 
-#define FN(f) ((obj_fn)(f))
 
 /* the pattern `move.w #4,(a); move.l #$fee,2(a); move.l #$3130,6(a); move.l #$3130,$a(a); sf.b $34(a); sf.b $60(a)` */
 static void kill_object(Object *o)
@@ -226,7 +225,7 @@ Object *weapon_94(Object *caller, Object *last)
     n = alloc_a(caller);
     s->obj = n;
     n->type = 0x94;
-    n->fn_update = FN(weapon94_update);
+    n->fn_update = (obj_fn)weapon94_update;
     n->fn_hit = s;
     n->fn_draw = obj_nop;
     n->score = 0;
@@ -284,7 +283,7 @@ Object *weapon_98(Object *caller, Object *last)
     s6->type = 0x98;
     s6->obj = n;
     n->type = 0x98;
-    n->fn_update = FN(weapon98_update);
+    n->fn_update = (obj_fn)weapon98_update;
     n->fn_draw = obj_nop;
     n->fn_hit = s6;
     n->score = 0;
@@ -309,7 +308,7 @@ Object *weapon_28(Object *caller, Object *last)
     n = alloc_a(caller);
     s6->obj = n;
     n->type = 0x9c;
-    n->fn_update = FN(weapon9c_update);
+    n->fn_update = (obj_fn)weapon9c_update;
     n->fn_draw = obj_nop;
     n->fn_hit = s6;
     n->score = 0;
@@ -340,7 +339,7 @@ Object *weapon_48(Object *caller, Object *last)
     n = alloc_a(caller);
     slot->obj = n;
     n->type = 0xa0;
-    n->fn_update = FN(weaponA0_update);
+    n->fn_update = (obj_fn)weaponA0_update;
     n->fn_draw = obj_nop;
     n->fn_hit = slot;
     n->score = 0;
@@ -459,7 +458,7 @@ Object *weapon_44(Object *caller, Object *last)
         s6->type = 0;
     }
     dismiss_slot5();
-    return weapon_slot5(caller, 0x44, FN(weapon44_update), xenon2.anim_weapon44, 2, 0, 8, 0);
+    return weapon_slot5(caller, 0x44, (obj_fn)weapon44_update, xenon2.anim_weapon44, 2, 0, 8, 0);
 }
 
 /* the weapons of the side slots: orig $0052E0 ($90), $00538C ($20), $00543A ($34); 0 when the four slots are taken */
@@ -851,7 +850,7 @@ void enemy_killed(Object *shooter, Object *enemy)
                 n->type = 0x18;
             }
             n->pickup.mode = 7;
-            n->fn_update = FN(pickup_update);
+            n->fn_update = (obj_fn)pickup_update;
             n->fn_draw = draw_bob_masked;
             set_anim(n, bonus_anim);
             n->x = enemy->x;
@@ -885,7 +884,7 @@ void hit_tile(Object *shooter, Object *tile, uint16_t damage)
     Cell *dst;
     const uint8_t *src;
 
-    tile->fn_draw = FN(tile_draw);
+    tile->fn_draw = (obj_fn)tile_draw;
     old = (uint16_t)tile->energy;
     tile->energy = (int16_t)(old - damage);
     if (old > damage)
@@ -1533,7 +1532,7 @@ void debris_burst(Object *obj, int16_t count, uint16_t x, uint16_t y, uint16_t w
         Object *n = alloc_b(obj);
 
         n->type = 0xc;
-        n->fn_update = FN(animate_only);
+        n->fn_update = (obj_fn)animate_only;
         n->fn_draw = draw_bob_masked;
         n->x = (int16_t)(random_below(w) + x);
         n->y = (int16_t)(random_below(h) + y);
@@ -1551,7 +1550,7 @@ void spawn_bonuses(int16_t count)
         Object *n = alloc_b_front(0);
 
         n->type = 0x60;
-        n->fn_update = FN(pickup_update);
+        n->fn_update = (obj_fn)pickup_update;
         n->fn_draw = draw_bob_masked;
         set_anim(n, xenon2.anim_bonus_small);
         n->x = (int16_t)(random_below(0x12c) + 0xa);
@@ -1560,7 +1559,7 @@ void spawn_bonuses(int16_t count)
         xenon2.level_end_items++;
         n = alloc_b_front(0);
         n->type = 0x18;
-        n->fn_update = FN(pickup_update);
+        n->fn_update = (obj_fn)pickup_update;
         n->fn_draw = draw_bob_masked;
         set_anim(n, xenon2.anim_bonus_big);
         n->x = (int16_t)(random_below(0x12c) + 0xa);
@@ -1709,7 +1708,7 @@ void weaponb0_update(Object *obj)
         int16_t y;
 
         shot->type = 0xb4;
-        shot->fn_update = FN(shot_fixed_update);
+        shot->fn_update = (obj_fn)shot_fixed_update;
         shot->fn_draw = draw_bob_masked;
         shot->x = obj->x;
         shot->x_frac = 0x8000;
@@ -1869,8 +1868,8 @@ void weapon20_update(Object *obj)
         xenon2.sfx_cmd = 6;
         beam = alloc_b(obj);
         beam->type = 0x24;
-        beam->fn_draw = FN(beam_draw);
-        beam->fn_update = FN(beam_update);
+        beam->fn_draw = (obj_fn)beam_draw;
+        beam->fn_update = (obj_fn)beam_update;
         beam->w20.tick = -0x20;
         beam->target = obj;
         beam->score = obj->score;
@@ -1942,7 +1941,7 @@ void weapon34_update(Object *obj)
         trail = alloc_b(obj);
         trail->type = 0x30;
         trail->fn_draw = draw_bob_masked;
-        trail->fn_update = FN(pod_trail_update);
+        trail->fn_update = (obj_fn)pod_trail_update;
         set_anim(trail, xenon2.anim_pod_trail);
         trail->x = obj->x;
         trail->y = (int16_t)(obj->y - 0xb);
@@ -2001,7 +2000,7 @@ void weapon90_update(Object *obj)
             shot->x = dx;
             shot->y = (int16_t)(obj->y - 0x10);
             shot->type = 0x10;
-            shot->fn_update = FN(shot_update);
+            shot->fn_update = (obj_fn)shot_update;
             shot->fn_draw = draw_bob_masked;
             set_anim(shot, xenon2.anim_drill_head_0);
             shot->score = obj->score;
