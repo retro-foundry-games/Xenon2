@@ -133,19 +133,19 @@ extern const uint8_t *guest_high_ptr(uint32_t address);   /* sdl/guest.c */
 static const uint8_t *tile_mask_ptr(uint16_t w)
 {
     if (w == 0)
-        return mask_empty;
+        return xenon2.mask_empty;
     if ((int16_t)w < 0) {
-        const uint8_t *m = tile_gfx + ((uint32_t)(w & 0x7fff) << 4);
+        const uint8_t *m = xenon2.tile_gfx + ((uint32_t)(w & 0x7fff) << 4);
 
 #ifdef GAME_SDL
         if (GADDR(m) + 0xa0 > 0x80000) {   /* the original's memory beyond 512 KB (the lockstep gives it) */
             m = guest_high_ptr(GADDR(m));
-            return m ? m : mask_empty;
+            return m ? m : xenon2.mask_empty;
         }
 #endif
         return m;
     }
-    return mask_full;
+    return xenon2.mask_full;
 }
 
 /* A row of cells can lie past the end of the memory the port has (bobs above the screen read the original's memory beyond 512 KB: the lockstep supplies
@@ -166,12 +166,12 @@ static const uint8_t *tile_mask_ptr_at(const uint8_t *cell)
  * Inlined: $2D7A (the three pointers of a row of cells, results in mask0, mask1, mask2). */
 void map_tile_mask(uint16_t x, uint16_t y, uint16_t rows)
 {
-    const uint8_t *cell = level_init_src + (int16_t)map_row_offset;
+    const uint8_t *cell = xenon2.level_init_src + (int16_t)xenon2.map_row_offset;
     const uint8_t *mask0, *mask1, *mask2;
     uint16_t offset, line;
-    uint16_t *out = tile_mask_buf;
+    uint16_t *out = xenon2.tile_mask_buf;
 
-    y = (uint16_t)(y + scroll_fine);
+    y = (uint16_t)(y + xenon2.scroll_fine);
     offset = y & 0xf;
     line = offset;
     offset = (uint16_t)(offset + offset);
@@ -205,13 +205,13 @@ uint16_t tile_mask2_words;   /* the words of tile_mask_buf the last map_tile_mas
 
 void map_tile_mask2(uint16_t x, uint16_t y, uint16_t rows)
 {
-    const uint8_t *cell = level_init_src + (int16_t)map_row_offset;
+    const uint8_t *cell = xenon2.level_init_src + (int16_t)xenon2.map_row_offset;
     const uint8_t *mask0, *mask1;
     uint16_t offset, line;
-    uint8_t *out = (uint8_t *)tile_mask_buf;
+    uint8_t *out = (uint8_t *)xenon2.tile_mask_buf;
 
     tile_mask2_words = (uint16_t)((rows + 1) * 2);
-    y = (uint16_t)(y + scroll_fine);
+    y = (uint16_t)(y + xenon2.scroll_fine);
     offset = y & 0xf;
     line = offset;
     offset = (uint16_t)(offset + offset);
@@ -243,8 +243,8 @@ uint16_t player_tile_hit(Object *o)
 {
     uint16_t x = (uint16_t)(o->x - 14);
     uint16_t y = (uint16_t)(o->y - 14);
-    const uint16_t *m = hit_mask_data + 75 * (x & 0xf);
-    const uint16_t *b = tile_mask_buf;
+    const uint16_t *m = xenon2.hit_mask_data + 75 * (x & 0xf);
+    const uint16_t *b = xenon2.tile_mask_buf;
     const uint32_t *ml, *bl;
     uint32_t r;
     uint16_t n = 0x24;
@@ -293,10 +293,10 @@ Object *collide_enemies(Object *o)
     int16_t x0 = o->hit[0], y0 = o->hit[1], x1 = o->hit[2], y1 = o->hit[3];
     Object *enemy;
 
-    hit_box[0] = (uint16_t)x0;
-    hit_box[1] = (uint16_t)y0;
-    hit_box[2] = (uint16_t)x1;
-    hit_box[3] = (uint16_t)y1;
+    xenon2.hit_box[0] = (uint16_t)x0;
+    xenon2.hit_box[1] = (uint16_t)y0;
+    xenon2.hit_box[2] = (uint16_t)x1;
+    xenon2.hit_box[3] = (uint16_t)y1;
     enemy = scan_boxes(LIST_HEAD(LIST_ENEMY), x0, y0, x1, y1);
     if (enemy->type != 0)
         return enemy;
@@ -309,10 +309,10 @@ Object *point_in_enemy(int16_t x, int16_t y)
 {
     Object *enemy = LIST_HEAD(LIST_ENEMY);
 
-    hit_box[0] = (uint16_t)x;
-    hit_box[2] = (uint16_t)x;
-    hit_box[1] = (uint16_t)y;
-    hit_box[3] = (uint16_t)y;
+    xenon2.hit_box[0] = (uint16_t)x;
+    xenon2.hit_box[2] = (uint16_t)x;
+    xenon2.hit_box[1] = (uint16_t)y;
+    xenon2.hit_box[3] = (uint16_t)y;
     while (enemy->type != 0) {
         if (x < enemy->hit[0] || x > enemy->hit[2] || y < enemy->hit[1] || y > enemy->hit[3]) {
             if (enemy->type == 0xb8)
@@ -454,8 +454,8 @@ Object *spawn_formation(Object *obj, const uint8_t *rec_raw, const uint8_t *form
             }
             if (leader != obj)
                 obj->path.wait = (int16_t)(obj->path.wait - (int16_t)def_ptr->score);
-            e = (const uint8_t *)GPTR(rd32(level_formations + (int16_t)(uint16_t)((rec->index - 1) * 4)));
-            if ((const void *)e < (const void *)level_data_start || (const void *)e >= (const void *)level_events_a)
+            e = (const uint8_t *)GPTR(rd32(xenon2.level_formations + (int16_t)(uint16_t)((rec->index - 1) * 4)));
+            if ((const void *)e < (const void *)xenon2.level_data_start || (const void *)e >= (const void *)xenon2.level_events_a)
                 return obj;
             obj->script = (uint8_t *)e;
             if (rd16(e) == 0xa) {
@@ -470,12 +470,12 @@ Object *spawn_formation(Object *obj, const uint8_t *rec_raw, const uint8_t *form
             SET_V5E(obj, (int16_t)rec->y);
             rnd = (uint16_t)random_next();
             SET_V5E(obj, (int16_t)((V5E(obj) & 0x00ff) | ((rnd & 0xff) << 8)));
-            obj->energy = (int16_t)difficulty_x2;
-            obj->kind = (int16_t)pickup_kind_b;
+            obj->energy = (int16_t)xenon2.difficulty_x2;
+            obj->kind = (int16_t)xenon2.pickup_kind_b;
             obj->big = (int8_t)def_ptr->to_big;
             if (def_ptr->to_big == 0) {
-                obj->energy = (int16_t)difficulty_x1;
-                obj->kind = (int16_t)pickup_kind_a;
+                obj->energy = (int16_t)xenon2.difficulty_x1;
+                obj->kind = (int16_t)xenon2.pickup_kind_a;
             }
             obj->is_part = (int8_t)def_ptr->to_is_part;
             bbox_from_frame(obj);
@@ -503,22 +503,22 @@ Object *spawn_formation(Object *obj, const uint8_t *rec_raw, const uint8_t *form
         offset = (uint16_t)(offset + spacing);
         obj->chain = 0;
     }
-    kind = pickup_kind_b;
+    kind = xenon2.pickup_kind_b;
     if (obj->big == 0)
-        kind = pickup_kind_a;
-    slot = pickup_groups;
+        kind = xenon2.pickup_kind_a;
+    slot = xenon2.pickup_groups;
     for (i = 0; i < 8; i++, slot += 2) {
         if (slot[0] == kind) {
             slot[1] = (uint16_t)(slot[1] + rec->count);
             return obj;
         }
     }
-    slot = pickup_groups;
+    slot = xenon2.pickup_groups;
     for (i = 0; i < 8; i++, slot += 2) {
         if (slot[0] == 0) {
             slot[0] = kind;
             slot[1] = rec->count;
-            pickup_cycle = (uint16_t)(pickup_cycle + 1);
+            xenon2.pickup_cycle = (uint16_t)(xenon2.pickup_cycle + 1);
             return obj;
         }
     }
@@ -592,7 +592,7 @@ void spawn_effect(int16_t x, int16_t y, const uint8_t *anim, ObjFn draw)
 {
     Object *fx;
 
-    sfx_cmd2 = (anim == anim_explosion) ? 0x85 : 0x83;
+    xenon2.sfx_cmd2 = (anim == xenon2.anim_explosion) ? 0x85 : 0x83;
     fx = list_insert(LIST_EFFECT);
     fx->type = 0xc;
     fx->fn_update = (obj_fn)animate_only;
@@ -605,10 +605,10 @@ void spawn_effect(int16_t x, int16_t y, const uint8_t *anim, ObjFn draw)
 /* orig $EA2, $003518 (reached by a jump; goes on in $352E): remember the record of a spawn */
 void note_spawn_record(const uint8_t *rec, uint16_t score)
 {
-    player_x_saved = rd16(rec + 8);
-    player_y_saved = rd16(rec + 10);
-    scroll_y = rd16(rec);
-    player_money_saved = player_money;
+    xenon2.player_x_saved = rd16(rec + 8);
+    xenon2.player_y_saved = rd16(rec + 10);
+    xenon2.scroll_y = rd16(rec);
+    xenon2.player_money_saved = xenon2.player_money;
     latch_slots(score);
 }
 
@@ -616,11 +616,11 @@ void note_spawn_record(const uint8_t *rec, uint16_t score)
  * (score is what an empty slot gets after the first one that was not) */
 void latch_slots(uint16_t score)
 {
-    const Slot *s = weapon_slots;
-    uint16_t *out = slot_snapshot;
+    const Slot *s = xenon2.weapon_slots;
+    uint16_t *out = xenon2.slot_snapshot;
     int i;
 
-    if (nashwan_timer != 0)
+    if (xenon2.nashwan_timer != 0)
         return;
     for (i = 0; i < 7; i++, s++) {
         *out++ = s->type;
@@ -634,9 +634,9 @@ void latch_slots(uint16_t score)
  * position (scroll_pos) and the old one calls the level's routine ($54E10 for the first list, $54E18 for the second) */
 void scroll_events(void)
 {
-    const uint8_t *rec = level_events_a;
-    int16_t old_pos = (int16_t)next_event_a;
-    int16_t new_pos = (int16_t)scroll_pos;
+    const uint8_t *rec = xenon2.level_events_a;
+    int16_t old_pos = (int16_t)xenon2.next_event_a;
+    int16_t new_pos = (int16_t)xenon2.scroll_pos;
 
     for (;; rec += 14) {
         int16_t rec_scroll = (int16_t)rd16(rec);
@@ -645,16 +645,16 @@ void scroll_events(void)
             break;
         if (old_pos > rec_scroll && new_pos <= rec_scroll) {
             level_event(rd16(rec + 2), rec);
-            old_pos = (int16_t)next_event_a;
-            new_pos = (int16_t)scroll_pos;
+            old_pos = (int16_t)xenon2.next_event_a;
+            new_pos = (int16_t)xenon2.scroll_pos;
         }
     }
     if (new_pos >= old_pos)
         return;
-    next_event_a = (uint16_t)new_pos;
-    rec = level_events_b;
-    old_pos = (int16_t)next_event_b;
-    new_pos = (int16_t)scroll_pos;
+    xenon2.next_event_a = (uint16_t)new_pos;
+    rec = xenon2.level_events_b;
+    old_pos = (int16_t)xenon2.next_event_b;
+    new_pos = (int16_t)xenon2.scroll_pos;
     for (;; rec += 14) {
         int16_t rec_scroll = (int16_t)rd16(rec);
 
@@ -662,13 +662,13 @@ void scroll_events(void)
             break;
         if (old_pos > rec_scroll && new_pos <= rec_scroll) {
             level_hook(rd16(rec + 2), rec, (uint16_t)rec_scroll);
-            old_pos = (int16_t)next_event_b;
-            new_pos = (int16_t)scroll_pos;
+            old_pos = (int16_t)xenon2.next_event_b;
+            new_pos = (int16_t)xenon2.scroll_pos;
         }
     }
     if (new_pos >= old_pos)
         return;
-    next_event_b = (uint16_t)new_pos;
+    xenon2.next_event_b = (uint16_t)new_pos;
 }
 
 /* orig $003656: call the update routine of each object of the list from obj */
@@ -703,11 +703,11 @@ void update_all(void)
     run_updates(LIST_HEAD(LIST_PLAYER));
     run_updates(LIST_HEAD(LIST_ENEMY));
 #ifdef GAME_SDL
-    fire_press = guest_a6a(key_pressed);
+    xenon2.fire_press = guest_a6a(xenon2.key_pressed);
 #else
-    fire_press = key_pressed;
+    xenon2.fire_press = xenon2.key_pressed;
 #endif
-    key_pressed = 0;
+    xenon2.key_pressed = 0;
     run_updates(LIST_HEAD(LIST_MISC));
     run_updates(LIST_HEAD(LIST_EFFECT));
     run_updates(LIST_HEAD(LIST_FRONT));
@@ -716,7 +716,7 @@ void update_all(void)
     run_draws(LIST_HEAD(LIST_ENEMY));
     run_draws(LIST_HEAD(LIST_EFFECT));
     run_draws(LIST_HEAD(LIST_FRONT));
-    slot = pickup_groups;
+    slot = xenon2.pickup_groups;
     for (i = 0; i < 8; i++, slot += 2) {
         Object *enemy;
 
@@ -738,11 +738,11 @@ void update_all(void)
 void spawn_debris(Object *shooter_unused, Object *target, uint16_t damage_unused)
 {
     Object *debris = list_insert(LIST_EFFECT);
-    const struct SpawnKind *k = &spawn_kinds[(uint16_t)target->debris.kind];
+    const struct SpawnKind *k = &xenon2.spawn_kinds[(uint16_t)target->debris.kind];
 
     debris->debris.kind = target->debris.kind;
     debris->type = k->kind;
-    sfx_cmd = 0x11;
+    xenon2.sfx_cmd = 0x11;
     debris->fn_update = (obj_fn)pickup_update;
     debris->fn_draw = (obj_fn)draw_bob_masked;
     debris->x = target->x;
@@ -757,7 +757,7 @@ void spawn_debris(Object *shooter_unused, Object *target, uint16_t damage_unused
 /* orig $E5A, $003252: spawn the formation at $326C for record rec, then remember its word $54 in $30 */
 Object *spawn_wave_326c(Object *obj, const uint8_t *rec)
 {
-    obj = spawn_formation(obj, rec, spawn_def_326c);
+    obj = spawn_formation(obj, rec, xenon2.spawn_def_326c);
     obj->marker.launches = obj->steps;
     obj->steps = 3;
     obj->kind = 0;
@@ -777,7 +777,7 @@ static Object *marker_tail(Object *marker, uint16_t type, const uint8_t *rec, vo
     marker->x = (int16_t)x;
     y = (uint16_t)(rd16(rec + 10) - 8);
     marker->y = (int16_t)y;
-    marker->script = level_init_src + (uint16_t)((x >> 3) & 0xfe) + (int16_t)(uint16_t)((uint32_t)(y >> 4) * 0x28);
+    marker->script = xenon2.level_init_src + (uint16_t)((x >> 3) & 0xfe) + (int16_t)(uint16_t)((uint32_t)(y >> 4) * 0x28);
     marker->marker.step = 0;
     marker->marker.launches = 0;
     return marker;
@@ -808,21 +808,21 @@ void enemy_shot_update(Object *shot)
     dir = (uint16_t)shot->enemy_shot.dir;
     x_fixed = ((uint32_t)(uint16_t)shot->x << 16) | shot->x_frac;
     y_fixed = ((uint32_t)(uint16_t)shot->y << 16) | shot->y_frac;
-    step = (int32_t)enemy_shot_dx[dir] * (int16_t)shot->steps;
+    step = (int32_t)xenon2.enemy_shot_dx[dir] * (int16_t)shot->steps;
     x_fixed += (uint32_t)step << 2;
-    step = (int32_t)enemy_shot_dy[dir] * (int16_t)shot->steps;
+    step = (int32_t)xenon2.enemy_shot_dy[dir] * (int16_t)shot->steps;
     y_fixed += (uint32_t)step << 2;
     shot->x = (uint16_t)(x_fixed >> 16);
     shot->x_frac = (uint16_t)x_fixed;
     shot->y_frac = (uint16_t)y_fixed;
     x = x_fixed >> 16;
-    y = (uint16_t)((y_fixed >> 16) + scroll_speed);
+    y = (uint16_t)((y_fixed >> 16) + xenon2.scroll_speed);
     shot->y = (int16_t)y;
     if (x < 0x140 && y < 0xc0) {
         bbox_from_frame(shot);
         if (!player_hits(shot))
             return;
-        if (shield_timer == 0) {
+        if (xenon2.shield_timer == 0) {
             player_damage(shot, 4);
             PLAYER->fn_draw = (obj_fn)draw_bob_or_first;
         }

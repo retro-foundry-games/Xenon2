@@ -7,7 +7,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define GAME_NO_MEMBER_MACROS   /* this file names the members itself (guest_members.h) */
 #include "game.h"
 #include "host.h"
 

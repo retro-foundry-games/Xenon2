@@ -20,7 +20,7 @@ extern void guest_stick_restore(void);   /* sdl/guest.c: undoes what the lockste
 void scroll_pos_update(uint16_t speed)
 {
     uint16_t full_speed = speed;
-    uint16_t odd = frame_tick & 1;
+    uint16_t odd = xenon2.frame_tick & 1;
     uint16_t step;
 
     step = (uint16_t)((int16_t)speed >> 1);
@@ -29,12 +29,12 @@ void scroll_pos_update(uint16_t speed)
     if (step != 0) {
         uint16_t pos;
 
-        pos = (uint16_t)(background_scroll >> 16) - step;
+        pos = (uint16_t)(xenon2.background_scroll >> 16) - step;
         if ((int16_t)pos < 0)
             pos += 0xc0;
         if ((int16_t)pos >= 0xc0)
             pos -= 0xc0;
-        background_scroll = (background_scroll & 0xffffu) | ((uint32_t)pos << 16);
+        xenon2.background_scroll = (xenon2.background_scroll & 0xffffu) | ((uint32_t)pos << 16);
     }
 }
 
@@ -54,20 +54,20 @@ void swap_screens(void)
     uint8_t *old_draw;
     uint32_t list;
 
-    if ((uint16_t)(vbl_count - last_flip_vbl) >= min_vbl_per_frame)
+    if ((uint16_t)(xenon2.vbl_count - xenon2.last_flip_vbl) >= xenon2.min_vbl_per_frame)
         HOST_IDLE();   /* (the original's frame then takes real time, vertical blanks the interrupt uses to read the stick; the port's takes none) */
-    while ((uint16_t)(vbl_count - last_flip_vbl) < min_vbl_per_frame)
+    while ((uint16_t)(xenon2.vbl_count - xenon2.last_flip_vbl) < xenon2.min_vbl_per_frame)
         HOST_IDLE();
-    last_flip_vbl = vbl_count;
+    xenon2.last_flip_vbl = xenon2.vbl_count;
     while (!(custom->vposr & 1))
         HOST_IDLE();
     while ((custom->vhposr >> 8) < 2)
         HOST_IDLE();
-    old_draw = draw_screen;
-    draw_screen = show_screen;
-    show_screen = old_draw;
-    list = ADDR(copper_list_a) + ADDR(copper_list_b) - ADDR(copper_cur);   /* the lists alternate */
-    copper_cur = (uint16_t *)list;
+    old_draw = xenon2.draw_screen;
+    xenon2.draw_screen = xenon2.show_screen;
+    xenon2.show_screen = old_draw;
+    list = ADDR(xenon2.copper_list_a) + ADDR(xenon2.copper_list_b) - ADDR(xenon2.copper_cur);   /* the lists alternate */
+    xenon2.copper_cur = (uint16_t *)list;
     custom->cop1lc = list;
     custom->copjmp1 = (uint16_t)list;   /* HLE: copper */
 }
@@ -90,11 +90,11 @@ uint32_t swap_screens_192(void)
  * the fractional line (z) wraps at 0x180 and moves the offset by one line (0xA0 bytes), the offset wraps at 0x7800. */
 void stars_scroll(uint16_t speed)
 {
-    uint16_t vel = *(const uint16_t *)((const uint8_t *)(star_speed + 16) + (int16_t)(uint16_t)(speed * 2));
+    uint16_t vel = *(const uint16_t *)((const uint8_t *)(xenon2.star_speed + 16) + (int16_t)(uint16_t)(speed * 2));
     uint16_t step = (uint16_t)(speed << 3);
 
     for (int i = 0; i < 48; i++) {
-        struct Star *s = &stars[i];
+        struct Star *s = &xenon2.stars[i];
         uint16_t frac = STAR_POS(s) + vel;
 
         while ((int16_t)frac < 0) {
@@ -118,12 +118,12 @@ void stars_scroll(uint16_t speed)
  * four groups of 12 stars in four colours (planes 2; 0+2; 1+2; 0+1+2). */
 void stars_draw(void)
 {
-    uint8_t *screen = draw_screen;
+    uint8_t *screen = xenon2.draw_screen;
 
-    stars_scroll(scroll_speed);
+    stars_scroll(xenon2.scroll_speed);
     for (int g = 0; g < 4; g++) {
         for (int i = 0; i < 12; i++) {
-            struct Star *s = &stars[g * 12 + i];
+            struct Star *s = &xenon2.stars[g * 12 + i];
             uint8_t *p = screen + (int16_t)STAR_OFF(s);
             uint16_t mask = STAR_MASK(s);
             uint16_t planes = rd16(p) | rd16(p + 0x28) | rd16(p + 0x50) | rd16(p + 0x78);
@@ -143,15 +143,15 @@ void stars_draw(void)
  * empty: the original then searches the lists from $2436, goes on at $2436). */
 Object *obj_free_pop(void)
 {
-    Object *obj = free_obj;
+    Object *obj = xenon2.free_obj;
     Object *next, *prev;
 
     if (obj != 0) {
-        free_obj = obj->next;
+        xenon2.free_obj = obj->next;
         goto clear;
     }
     /* $2436: the pool is empty: take an object away from the lists, the effects first (obj_list[3], obj_list[4] is the front list, obj_list[2] the enemies) */
-    obj = &obj_list[3];
+    obj = &xenon2.obj_list[3];
     for (;;) {
         obj = obj->prev;
         if (obj->type == 4 || obj->type == 0xc || obj->type == 0x10)
@@ -159,13 +159,13 @@ Object *obj_free_pop(void)
         if (obj->type == 0)
             break;
     }
-    obj = obj_list[3].prev;
+    obj = xenon2.obj_list[3].prev;
     if (obj->type != 0)
         goto steal;
-    obj = obj_list[4].prev;
+    obj = xenon2.obj_list[4].prev;
     if (obj->type != 0)
         goto steal;
-    obj = obj_list[2].prev;   /* $247E: from the enemies' list head on, the first dead one or one far enough down */
+    obj = xenon2.obj_list[2].prev;   /* $247E: from the enemies' list head on, the first dead one or one far enough down */
     for (;;) {
         if ((int16_t)obj->type >= 0xc8 || obj->type == 4)
             goto steal;
@@ -173,7 +173,7 @@ Object *obj_free_pop(void)
         if (obj->type == 0)
             break;
     }
-    obj = obj_list[2].prev;
+    obj = xenon2.obj_list[2].prev;
 steal:
     next = obj->next;   /* $2464: take it out of its list */
     prev = obj->prev;
@@ -195,8 +195,8 @@ void guest_edge_apply(uint8_t value)
 {
     if (edge_pending && (value & 0x80)) {
         edge_pending = 0;
-        if (key_pressed == 0)
-            key_pressed = (edge_old & 0x80) ? 0 : 0xff;
+        if (xenon2.key_pressed == 0)
+            xenon2.key_pressed = (edge_old & 0x80) ? 0 : 0xff;
     }
 }
 
@@ -205,8 +205,8 @@ void guest_edge_defer(int on)
 {
     if (edge_pending) {
         edge_pending = 0;
-        if (key_pressed == 0)
-            key_pressed = (edge_old & 0x80) ? 0 : 0xff;
+        if (xenon2.key_pressed == 0)
+            xenon2.key_pressed = (edge_old & 0x80) ? 0 : 0xff;
     }
     edge_defer = on;
 }
@@ -220,8 +220,8 @@ void irq_vblank(void)
         uint16_t dat, raw;
         uint8_t joy = 0;
 
-        vbl_count++;
-        vbl_count++;
+        xenon2.vbl_count++;
+        xenon2.vbl_count++;
         dat = custom->joy1dat;
         raw = dat;
         if (dat & 0x0002) joy |= 0x08;
@@ -231,35 +231,35 @@ void irq_vblank(void)
         if (dat & 0x0200) joy |= 0x01;
         if (!(CIAA_PRA & 0x80))
             joy |= 0x80;
-        irq_joy = joy;
+        xenon2.irq_joy = joy;
 #ifdef GAME_SDL
         guest_stick_restore();
 #endif
-        if (joy != irq_joy_prev) {
+        if (joy != xenon2.irq_joy_prev) {
 #ifdef GAME_SDL
-            if (edge_defer && key_pressed == 0 && (joy & 0x80)) {
+            if (edge_defer && xenon2.key_pressed == 0 && (joy & 0x80)) {
                 edge_pending = 1;
-                edge_old = joy_stick;
+                edge_old = xenon2.joy_stick;
             } else
 #endif
-            if (key_pressed == 0 && (joy & 0x80))
-                key_pressed = (joy_stick & 0x80) ? 0 : 0xff;
-            joy_stick = joy;
-            irq_joy_prev = joy;
+            if (xenon2.key_pressed == 0 && (joy & 0x80))
+                xenon2.key_pressed = (xenon2.joy_stick & 0x80) ? 0 : 0xff;
+            xenon2.joy_stick = joy;
+            xenon2.irq_joy_prev = joy;
         }
-        if (sfx_cmd >= 0 || sfx_cmd2 >= 0) {
-            void (*cmd)(uint16_t) = (void (*)(uint16_t))music_cmd_fn;   /* the command is the argument */
+        if (xenon2.sfx_cmd >= 0 || xenon2.sfx_cmd2 >= 0) {
+            void (*cmd)(uint16_t) = (void (*)(uint16_t))xenon2.music_cmd_fn;   /* the command is the argument */
 
-            if (sfx_cmd >= 0) {
-                cmd((uint16_t)sfx_cmd | 0x200);
-                sfx_cmd = -1;
+            if (xenon2.sfx_cmd >= 0) {
+                cmd((uint16_t)xenon2.sfx_cmd | 0x200);
+                xenon2.sfx_cmd = -1;
             }
-            if (sfx_cmd2 >= 0) {
-                cmd((uint16_t)sfx_cmd2 | 0x100);
-                sfx_cmd2 = -1;
+            if (xenon2.sfx_cmd2 >= 0) {
+                cmd((uint16_t)xenon2.sfx_cmd2 | 0x100);
+                xenon2.sfx_cmd2 = -1;
             }
         }
-        music_tick_fn();
+        xenon2.music_tick_fn();
     }
     SETCLR_WRITE(intreq, 0x70);
 }
@@ -275,7 +275,7 @@ void irq_keyboard(void)
 
         key = (uint8_t)((key >> 1) | (key << 7));
         if (!(key & 0x80))
-            key_code = key;
+            xenon2.key_code = key;
         CIAA_CRA |= 0x40;
         do {
         } while (n--);
@@ -288,14 +288,14 @@ void irq_keyboard(void)
  * shown screen as the draw screen, then the normal interrupt. */
 void irq_vblank_hooked(void)
 {
-    if ((int16_t)--irq_div < 0) {
-        uint8_t *saved = draw_screen;
+    if ((int16_t)--xenon2.irq_div < 0) {
+        uint8_t *saved = xenon2.draw_screen;
 
-        irq_div = 2;
-        draw_screen = show_screen;
+        xenon2.irq_div = 2;
+        xenon2.draw_screen = xenon2.show_screen;
         stars_erase();
         stars_update();
-        draw_screen = saved;
+        xenon2.draw_screen = saved;
     }
     irq_vblank();
 }
@@ -304,15 +304,15 @@ void irq_vblank_hooked(void)
  * shades_timer is set) and, doubled, to the colour registers 0-15. */
 static void apply_palette(void)
 {
-    const uint32_t *pal = level_palette;
+    const uint32_t *pal = xenon2.level_palette;
 
     for (int i = 0; i < 8; i++) {
         uint32_t v = rd32(&pal[i]);
 
-        if (shades_timer)
+        if (xenon2.shades_timer)
             v = (v >> 1) & 0x07770777u;
-        palette_shadow[2 * i] = (uint16_t)(v >> 16);
-        palette_shadow[2 * i + 1] = (uint16_t)v;
+        xenon2.palette_shadow[2 * i] = (uint16_t)(v >> 16);
+        xenon2.palette_shadow[2 * i + 1] = (uint16_t)v;
         v += v;
         custom->color[2 * i] = (uint16_t)(v >> 16);
         custom->color[2 * i + 1] = (uint16_t)v;
@@ -321,9 +321,9 @@ static void apply_palette(void)
 
 static void music_restart_if_enabled(void)
 {
-    if (music_switch) {
+    if (xenon2.music_switch) {
         music_start(0);
-        music_volume_hi = 0x30;
+        xenon2.music_volume_hi = 0x30;
     }
 }
 
@@ -333,40 +333,40 @@ void camera_limit(uint16_t pos, uint16_t limit) __attribute__((noinline));
  * stick byte the original read) */
 void camera_limit(uint16_t pos, uint16_t limit)
 {
-    if (pos != scroll_max || (joy_stick & 2) == 0)
-        limit += scroll_margin;
-    if (!((int16_t)limit > (int16_t)scroll_max))
-        scroll_max = limit;
+    if (pos != xenon2.scroll_max || (xenon2.joy_stick & 2) == 0)
+        limit += xenon2.scroll_margin;
+    if (!((int16_t)limit > (int16_t)xenon2.scroll_max))
+        xenon2.scroll_max = limit;
 }
 
 /* the camera / scroll speed step of the main loop ($79D6-$7A72) */
 static void camera_step(void)
 {
-    uint16_t old_pos = scroll_pos;
-    uint16_t step = scroll_step;
+    uint16_t old_pos = xenon2.scroll_pos;
+    uint16_t step = xenon2.scroll_step;
     uint16_t fine, row_off, new_pos;
 
-    if (step != scroll_step_target) {
-        scroll_accel_frames++;
-        if ((int16_t)scroll_accel_frames >= 0x23) {
+    if (step != xenon2.scroll_step_target) {
+        xenon2.scroll_accel_frames++;
+        if ((int16_t)xenon2.scroll_accel_frames >= 0x23) {
             step += step;
-            scroll_step = step;
+            xenon2.scroll_step = step;
         }
     } else {
-        scroll_accel_frames = 0;
+        xenon2.scroll_accel_frames = 0;
     }
-    fine = scroll_fine;
-    row_off = map_row_offset;
-    new_pos = scroll_pos - step;
-    if ((int16_t)new_pos < (int16_t)scroll_min) {
-        new_pos -= scroll_min;
+    fine = xenon2.scroll_fine;
+    row_off = xenon2.map_row_offset;
+    new_pos = xenon2.scroll_pos - step;
+    if ((int16_t)new_pos < (int16_t)xenon2.scroll_min) {
+        new_pos -= xenon2.scroll_min;
         step += new_pos;
-        new_pos = scroll_min;
+        new_pos = xenon2.scroll_min;
     }
-    if ((int16_t)new_pos > (int16_t)scroll_max) {
+    if ((int16_t)new_pos > (int16_t)xenon2.scroll_max) {
         step += new_pos;
-        step -= scroll_max;
-        new_pos = scroll_max;
+        step -= xenon2.scroll_max;
+        new_pos = xenon2.scroll_max;
     }
     fine -= step;
     if ((int16_t)fine < 0) {
@@ -376,10 +376,10 @@ static void camera_step(void)
         fine -= 0x10;
         row_off += 0x28;
     }
-    scroll_speed = step;
-    scroll_fine = fine;
-    map_row_offset = row_off;
-    scroll_pos = new_pos;
+    xenon2.scroll_speed = step;
+    xenon2.scroll_fine = fine;
+    xenon2.map_row_offset = row_off;
+    xenon2.scroll_pos = new_pos;
     camera_limit(old_pos, new_pos);
 }
 
@@ -392,31 +392,31 @@ static int key_command(uint8_t key)
     uint32_t target = 0;
 
     for (int i = 0; i < 4; i++) {
-        if ((key_table[i] >> 24) == key || i == 3) {   /* the original patches the last entry's code to the key */
-            target = key_table[i] & 0xffffff;
+        if ((xenon2.key_table[i] >> 24) == key || i == 3) {   /* the original patches the last entry's code to the key */
+            target = xenon2.key_table[i] & 0xffffff;
             break;
         }
     }
     if (target == KEY_RESTART)
         return 1;
     if (target == KEY_PAUSE) {
-        key_pressed = 0;
-        while (*(volatile uint8_t *)&key_pressed == 0 && key_code == 0)
+        xenon2.key_pressed = 0;
+        while (*(volatile uint8_t *)&xenon2.key_pressed == 0 && xenon2.key_code == 0)
             HOST_IDLE();
-        key_code = 0;
-        key_pressed = 0;
+        xenon2.key_code = 0;
+        xenon2.key_pressed = 0;
     } else if (target == KEY_FIRE) {
-        if (player_dead == 0) {
-            if (dive_phase == 0) {
-                if (dive_charges != 0) {
-                    dive_step = 1;
-                    sfx_cmd = 0x10;
-                    dive_phase = 1;
-                    dive_charges--;
-                    dive_timer = 0x88;
+        if (xenon2.player_dead == 0) {
+            if (xenon2.dive_phase == 0) {
+                if (xenon2.dive_charges != 0) {
+                    xenon2.dive_step = 1;
+                    xenon2.sfx_cmd = 0x10;
+                    xenon2.dive_phase = 1;
+                    xenon2.dive_charges--;
+                    xenon2.dive_timer = 0x88;
                 }
             } else {
-                dive_timer = 1;
+                xenon2.dive_timer = 1;
             }
         }
     }
@@ -426,17 +426,17 @@ static int key_command(uint8_t key)
 /* wait for the next vertical blank, flip, draw the starfield, show the level palette ($7D60 and $78A4 do the same) */
 static void wait_vbl_and_show(void)
 {
-    uint16_t vbl_start = vbl_count;
+    uint16_t vbl_start = xenon2.vbl_count;
     uint16_t colors[16];
     int i;
 
-    while (vbl_start == vbl_count)
+    while (vbl_start == xenon2.vbl_count)
         HOST_IDLE();
     draw_background();
     stars_draw();
     swap_screens_192();
     for (i = 0; i < 16; i++)
-        colors[i] = rd16((const uint16_t *)level_palette + i);
+        colors[i] = rd16((const uint16_t *)xenon2.level_palette + i);
     palette_fade_in(colors);
 }
 
@@ -445,16 +445,16 @@ static void wait_vbl_and_show(void)
 static void main_loop(void)
 {
     for (;;) {
-        frame_tick++;
-        if ((frame_tick & 3) == 0) {
-            pickup_kind_a = pickup_cycle;
-            pickup_kind_b = pickup_cycle;
-            pickup_kind_b++;
-            pickup_cycle += 2;
+        xenon2.frame_tick++;
+        if ((xenon2.frame_tick & 3) == 0) {
+            xenon2.pickup_kind_a = xenon2.pickup_cycle;
+            xenon2.pickup_kind_b = xenon2.pickup_cycle;
+            xenon2.pickup_kind_b++;
+            xenon2.pickup_cycle += 2;
         }
-        scroll_pos_update(scroll_speed);
+        scroll_pos_update(xenon2.scroll_speed);
         draw_background();
-        scroll_step = 1;
+        xenon2.scroll_step = 1;
         stars_draw();
         update_score_display();
         redraw_energy_bar();
@@ -464,97 +464,97 @@ static void main_loop(void)
         frame_update();
         update_shots();
         scroll_events();
-        if (key_code != 0) {
-            uint8_t key = key_code;
+        if (xenon2.key_code != 0) {
+            uint8_t key = xenon2.key_code;
 
-            key_code = 0;
+            xenon2.key_code = 0;
             if (key_command(key))
                 return;
         }
         camera_step();
         swap_screens_192();
         apply_palette();
-        if (player_died) {
-            player_died = 0;
-            autofire_level = 1;
-            player_energy = 0x27;
-            energy_dirty = 0xff;
-            player_lives--;
+        if (xenon2.player_died) {
+            xenon2.player_died = 0;
+            xenon2.autofire_level = 1;
+            xenon2.player_energy = 0x27;
+            xenon2.energy_dirty = 0xff;
+            xenon2.player_lives--;
             draw_status_digit();
-            if (player_lives == 0) {
+            if (xenon2.player_lives == 0) {
                 clear_palette();
                 hiscore_enter();
                 clear_palette();
-                continues_left--;
-                if (continues_left == 0 || continue_screen() == 0) {
-                    title_message(game_over_text);
-                    player_active[cur_player] = 0;
-                    if (player_active[cur_player ^ 1] == 0)
+                xenon2.continues_left--;
+                if (xenon2.continues_left == 0 || continue_screen() == 0) {
+                    title_message(xenon2.game_over_text);
+                    xenon2.player_active[xenon2.cur_player] = 0;
+                    if (xenon2.player_active[xenon2.cur_player ^ 1] == 0)
                         return;
                 } else {
-                    player_lives = 3;
+                    xenon2.player_lives = 3;
                     draw_status_digit();
-                    player_score = 0;
+                    xenon2.player_score = 0;
                     for (int i = 0; i < 7; i++)
-                        score_digits[i] = 0;
-                    score_shown = 0;
+                        xenon2.score_digits[i] = 0;
+                    xenon2.score_shown = 0;
                     panel_clear_score();
                 }
             }
             switch_player();
         }
-        if (level_end_items != 0)
+        if (xenon2.level_end_items != 0)
             continue;
-        if (level_over == 0) {
-            if (boss_dead == 0)
+        if (xenon2.level_over == 0) {
+            if (xenon2.boss_dead == 0)
                 continue;
         } else {
             uint16_t other;
             uint32_t money = 0;
 
             music_silence();
-            if ((int16_t)scroll_pos <= 0x1e0) {
-                money = shop_money_early;
-                shop_price_cap = (uint16_t)money;
+            if ((int16_t)xenon2.scroll_pos <= 0x1e0) {
+                money = xenon2.shop_money_early;
+                xenon2.shop_price_cap = (uint16_t)money;
                 money = (uint16_t)(money + 0x190);
-                if ((int32_t)money > (int32_t)player_money) {
+                if ((int32_t)money > (int32_t)xenon2.player_money) {
                     uint16_t bonus = (uint16_t)((random_next() & 3) * 0x32);
 
                     money = (uint16_t)(money + bonus);
-                    player_money = money;
+                    xenon2.player_money = money;
                 }
             } else {
-                money = shop_money_late;
-                shop_price_cap = (uint16_t)money;
-                if ((int32_t)money > (int32_t)player_money) {
+                money = xenon2.shop_money_late;
+                xenon2.shop_price_cap = (uint16_t)money;
+                if ((int32_t)money > (int32_t)xenon2.player_money) {
                     uint16_t bonus = (uint16_t)((random_next() & 3) * 0x32);
 
                     money = (uint16_t)(money + bonus);
-                    player_money = money;
+                    xenon2.player_money = money;
                 }
             }
-            protection = 0;
-            shop_closing = 0;
-            other = cur_player ^ 1;
-            if ((int16_t)scroll_pos > 0x3c0 || level_number != 5 ||
-                (shop_closing = 0xff, players != 2) || player_active[other] == 0 || player_active[other + 2] != 0) {
+            xenon2.protection = 0;
+            xenon2.shop_closing = 0;
+            other = xenon2.cur_player ^ 1;
+            if ((int16_t)xenon2.scroll_pos > 0x3c0 || xenon2.level_number != 5 ||
+                (xenon2.shop_closing = 0xff, xenon2.players != 2) || xenon2.player_active[other] == 0 || xenon2.player_active[other + 2] != 0) {
                 shop_run();
                 draw_status_digit();
             }
-            level_over = 0;
-            if (nashwan_timer)
+            xenon2.level_over = 0;
+            if (xenon2.nashwan_timer)
                 init_weapons(0);
-            if (boss_dead == 0) {
-                if (music_switch)
+            if (xenon2.boss_dead == 0) {
+                if (xenon2.music_switch)
                     music_restart_if_enabled();
                 continue;
             }
         }
         /* $7C62: the player's ship was lost or the level ended */
-        boss_dead = 0;
-        if (level_number == 5) {
+        xenon2.boss_dead = 0;
+        if (xenon2.level_number == 5) {
             for (;;) {
-                Object *obj = obj_list[1].prev;
+                Object *obj = xenon2.obj_list[1].prev;
 
                 if (obj->type == 0)
                     break;
@@ -562,17 +562,17 @@ static void main_loop(void)
             }
             refill_slot0(0, 0);
             latch_slots(0);
-            continues_left++;
+            xenon2.continues_left++;
         }
         {
-            uint16_t other = cur_player ^ 1;
+            uint16_t other = xenon2.cur_player ^ 1;
 
-            if (player_active[other] != 0 && player_active[other + 2] == 0) {
-                player_active[cur_player + 2] = 0xff;
+            if (xenon2.player_active[other] != 0 && xenon2.player_active[other + 2] == 0) {
+                xenon2.player_active[xenon2.cur_player + 2] = 0xff;
                 clear_level_objects();
-                free_object_chain(obj_list[2].prev);
-                free_object_chain(obj_list[4].prev);
-                free_object_chain(obj_list[3].prev);
+                free_object_chain(xenon2.obj_list[2].prev);
+                free_object_chain(xenon2.obj_list[4].prev);
+                free_object_chain(xenon2.obj_list[3].prev);
                 switch_player_after_clear();
                 music_restart_if_enabled();
                 continue;
@@ -580,24 +580,24 @@ static void main_loop(void)
         }
         clear_palette();
         clear_level_objects();
-        free_object_chain(obj_list[2].prev);
-        free_object_chain(obj_list[4].prev);
-        free_object_chain(obj_list[3].prev);
-        level_number++;
-        if ((int16_t)level_number >= 6) {
-            level_number = 1;
-            difficulty++;
-            cycle_flag_a = 1;
-            cycle_flag_b = 0;
+        free_object_chain(xenon2.obj_list[2].prev);
+        free_object_chain(xenon2.obj_list[4].prev);
+        free_object_chain(xenon2.obj_list[3].prev);
+        xenon2.level_number++;
+        if ((int16_t)xenon2.level_number >= 6) {
+            xenon2.level_number = 1;
+            xenon2.difficulty++;
+            xenon2.cycle_flag_a = 1;
+            xenon2.cycle_flag_b = 0;
         }
-        loading_level_digit = (uint8_t)(level_number + 0x30);
+        xenon2.loading_level_digit = (uint8_t)(xenon2.level_number + 0x30);
         level_load();
         create_queued_objects();
-        if (nashwan_timer)
+        if (xenon2.nashwan_timer)
             init_weapons(0);
         level_start();
-        player_active[2] = 0;
-        player_active[3] = 0;
+        xenon2.player_active[2] = 0;
+        xenon2.player_active[3] = 0;
         switch_player();
         wait_vbl_and_show();
         music_restart_if_enabled();
@@ -609,35 +609,35 @@ static void game_session_start(void)
 {
     clear_palette();
     clear_screens_large();
-    key_code = 0;
-    joy_stick = 0;
-    key_pressed = 0;
-    sfx_cmd = -1;
-    sfx_cmd_aux = -1;
-    sfx_cmd2 = -1;
-    sfx_cmd2_aux = -1;
-    last_flip_vbl = vbl_count;
+    xenon2.key_code = 0;
+    xenon2.joy_stick = 0;
+    xenon2.key_pressed = 0;
+    xenon2.sfx_cmd = -1;
+    xenon2.sfx_cmd_aux = -1;
+    xenon2.sfx_cmd2 = -1;
+    xenon2.sfx_cmd2_aux = -1;
+    xenon2.last_flip_vbl = xenon2.vbl_count;
     title_credits();
     menu();
     clear_palette();
-    cycle_flag_a = 1;
-    cycle_flag_b = 0;
-    level_number = 1;
-    loading_level_digit = 0x31;
+    xenon2.cycle_flag_a = 1;
+    xenon2.cycle_flag_b = 0;
+    xenon2.level_number = 1;
+    xenon2.loading_level_digit = 0x31;
     level_load();
     init_level_state();
     level_start();
-    ready_text[18] = 0x31;
-    if (player_active[0] == 0)
-        ready_text[18] = 0x32;
-    text_wait_key = 0xff;
-    title_message(ready_text);
-    text_wait_key = 0;
+    xenon2.ready_text[18] = 0x31;
+    if (xenon2.player_active[0] == 0)
+        xenon2.ready_text[18] = 0x32;
+    xenon2.text_wait_key = 0xff;
+    title_message(xenon2.ready_text);
+    xenon2.text_wait_key = 0;
     clear_palette();
     music_restart_if_enabled();
     wait_vbl_and_show();
-    joy_stick = 0;
-    key_pressed = 0;
+    xenon2.joy_stick = 0;
+    xenon2.key_pressed = 0;
 }
 
 /* orig $0076A0-$0077C4: interrupt vectors, CIAs, display (4 lowres bitplanes, 320x192, copper list), DMA */
@@ -645,9 +645,9 @@ static void hardware_init(void)
 {
     uint8_t sink;
 
-    irq_vectors[0] = irq_disk_block;
-    irq_vectors[1] = irq_keyboard;
-    irq_vectors[2] = irq_vblank;
+    xenon2.irq_vectors[0] = irq_disk_block;
+    xenon2.irq_vectors[1] = irq_keyboard;
+    xenon2.irq_vectors[2] = irq_vblank;
     CIAB_PRB = 0xff;
     CIAB_PRB = 0x87;
     CIAB_PRB = 0xff;
@@ -676,8 +676,8 @@ static void hardware_init(void)
         custom->spr[i][2] = 0;
         custom->spr[i][3] = 0;
     }
-    custom->cop1lc = ADDR(copper_list_b);
-    copper_cur = copper_list_b;
+    custom->cop1lc = ADDR(xenon2.copper_list_b);
+    xenon2.copper_cur = xenon2.copper_list_b;
     custom->copjmp1 = 0;
 }
 
@@ -693,43 +693,43 @@ static void hardware_init(void)
  *  - the menu itself is inside title_credits/menu (not C yet). */
 void game_entry(void)
 {
-    uint16_t *rows = (uint16_t *)row_offset;
+    uint16_t *rows = (uint16_t *)xenon2.row_offset;
     uint16_t off;
 
     for (int i = 0; i < 23; i++)
-        exc_vectors_lo[i] = game_entry;
+        xenon2.exc_vectors_lo[i] = game_entry;
     for (int i = 0; i < 7; i++)
-        irq_vectors[i] = game_entry;
+        xenon2.irq_vectors[i] = game_entry;
     for (int i = 0; i < 224; i++)
-        exc_vectors_hi[i] = game_entry;
+        xenon2.exc_vectors_hi[i] = game_entry;
     clear_palette();
-    last_flip_vbl = 0;
-    draw_screen = screen_b;
-    show_screen = screen_a;
-    sfx_cmd = -1;
-    sfx_cmd_aux = -1;
-    sfx_cmd2 = -1;
-    sfx_cmd2_aux = -1;
-    min_vbl_per_frame = 4;
-    music_paused = 0xff;
+    xenon2.last_flip_vbl = 0;
+    xenon2.draw_screen = xenon2.screen_b;
+    xenon2.show_screen = xenon2.screen_a;
+    xenon2.sfx_cmd = -1;
+    xenon2.sfx_cmd_aux = -1;
+    xenon2.sfx_cmd2 = -1;
+    xenon2.sfx_cmd2_aux = -1;
+    xenon2.min_vbl_per_frame = 4;
+    xenon2.music_paused = 0xff;
     if (!(CIAA_CRA & 0x80)) {
-        min_vbl_per_frame = 5;
-        music_paused = 0;
+        xenon2.min_vbl_per_frame = 5;
+        xenon2.music_paused = 0;
     }
     hardware_init();
     /* SR = $2000: interrupts on */
-    music_switch = 0xff;
-    crush_reload = 1;
-    music_aux_a = 0;
-    music_aux_b = 0;
-    clip_bottom = 0xbf;
+    xenon2.music_switch = 0xff;
+    xenon2.crush_reload = 1;
+    xenon2.music_aux_a = 0;
+    xenon2.music_aux_b = 0;
+    xenon2.clip_bottom = 0xbf;
     off = 0;
     for (int i = 0; i < 200; i++) {
         rows[i] = off;
         off += 0xa0;
     }
     stars_init_dots();
-    players = 1;
+    xenon2.players = 1;
     for (;;) {
         game_session_start();
         main_loop();

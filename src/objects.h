@@ -10,7 +10,7 @@ typedef void (*AnimOp)(Object *, const uint8_t *);
  * links of the objects: forward $12 (`prev`), backward $E (`next`). */
 #define OBJ_FWD(o) ((o)->prev)
 #define OBJ_BACK(o) ((o)->next)
-#define LIST_SENTINEL(i) (&obj_list[i])
+#define LIST_SENTINEL(i) (&xenon2.obj_list[i])
 #define LIST_HEAD(i) (LIST_SENTINEL(i)->prev)
 enum { LIST_PLAYER = 0, LIST_MISC = 1, LIST_ENEMY = 2, LIST_EFFECT = 3, LIST_FRONT = 4 };
 

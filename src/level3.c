@@ -88,22 +88,22 @@ void l3_event(uint16_t event, const uint8_t *rec)
         spawn_wave_326c(0, rec);   /* $E5A */
         break;
     case 1:
-        spawn_formation(0, rec, level3_data.formation_1);
+        spawn_formation(0, rec, xenon2.level3_data.formation_1);
         break;
     case 2:
-        spawn_formation(0, rec, level3_data.formation_2);
+        spawn_formation(0, rec, xenon2.level3_data.formation_2);
         break;
     case 3:
-        saved = difficulty_x2;
-        difficulty_x2 = level3_data.event_param;
-        spawn_formation(0, rec, level3_data.formation_3);
-        difficulty_x2 = saved;
+        saved = xenon2.difficulty_x2;
+        xenon2.difficulty_x2 = xenon2.level3_data.event_param;
+        spawn_formation(0, rec, xenon2.level3_data.formation_3);
+        xenon2.difficulty_x2 = saved;
         break;
     case 4:
-        spawn_formation(0, rec, level3_data.formation_4);
+        spawn_formation(0, rec, xenon2.level3_data.formation_4);
         break;
     case 5:
-        spawn_formation(0, rec, level3_data.formation_5);
+        spawn_formation(0, rec, xenon2.level3_data.formation_5);
         break;
     }
 }
@@ -141,29 +141,29 @@ void l3_hook(uint16_t hook, const uint8_t *rec, uint16_t scroll_value)
  * spawner runs and when its flags say so the bonuses come once */
 void l3_scroll(void)
 {
-    if (scroll_min == 0xaf0 && scroll_pos == 0xaf0) {
-        scroll_max = 0xaf0;
-        scroll_pos_update(scroll_step);
-        stars_scroll(scroll_step);
-        scroll_step = 0;
+    if (xenon2.scroll_min == 0xaf0 && xenon2.scroll_pos == 0xaf0) {
+        xenon2.scroll_max = 0xaf0;
+        scroll_pos_update(xenon2.scroll_step);
+        stars_scroll(xenon2.scroll_step);
+        xenon2.scroll_step = 0;
         if (B(0xd96) != 0)
             sh_w8(0xd96, 0);
         else
-            scroll_min = 0;
+            xenon2.scroll_min = 0;
     }
-    if ((int16_t)scroll_pos <= 0xd0) {
-        if ((int16_t)scroll_max < 0x20)
-            scroll_max = 0x20;
+    if ((int16_t)xenon2.scroll_pos <= 0xd0) {
+        if ((int16_t)xenon2.scroll_max < 0x20)
+            xenon2.scroll_max = 0x20;
         if (B(0xd92) == 0 && B(0xd94) == 0)
             l3_worm_spawn(0);
         sh_w8(0xd94, 0);
         sh_w8(0xd95, 0);
-        if (B(0xd92) != 0 && B(0xd93) != 0 && boss_dead == 0) {
+        if (B(0xd92) != 0 && B(0xd93) != 0 && xenon2.boss_dead == 0) {
             spawn_bonuses(9);
-            boss_dead = 0xff;
+            xenon2.boss_dead = 0xff;
         }
-    } else if ((int16_t)scroll_max < 0xa30) {
-        scroll_max = 0xa30;
+    } else if ((int16_t)xenon2.scroll_max < 0xa30) {
+        xenon2.scroll_max = 0xa30;
     }
 }
 
@@ -174,13 +174,13 @@ void l3_init(void)
     Object *end_obj, *front, *old;
     int i;
 
-    if (level_init_src == (uint8_t *)GPTR(0x74386)) {
+    if (xenon2.level_init_src == (uint8_t *)GPTR(0x74386)) {
         for (i = 11999; i >= 0; i--)
             ((uint8_t *)GPTR(0x7d120))[i] = ((const uint8_t *)GPTR(0x74386))[i];
-        level_init_src = (uint8_t *)GPTR(0x7d120);
+        xenon2.level_init_src = (uint8_t *)GPTR(0x7d120);
     }
-    scroll_min = 0xaf0;
-    scroll_max = 0x11ff;
+    xenon2.scroll_min = 0xaf0;
+    xenon2.scroll_max = 0x11ff;
     end_obj = obj_free_pop();
     front = LIST_SENTINEL(LIST_FRONT);
     old = front->next;
@@ -192,21 +192,21 @@ void l3_init(void)
     end_obj->fn_update = (obj_fn)obj_nop_thunk;
     end_obj->fn_draw = FN(l3_end_draw);
     end_obj->persists = -1;
-    unit_seed[0] = 0xe496aa8a;
-    unit_seed[1] = 0x5274b949;
+    xenon2.unit_seed[0] = 0xe496aa8a;
+    xenon2.unit_seed[1] = 0x5274b949;
     sh_w8(0xd92, 0);
     sh_w8(0xd93, 0xff);
     sh_w8(0xd94, 0);
     sh_w8(0xd95, 0);
     sh_w16(0xd64, 0);
-    sh_w16(0xd66, level3_data.init_patch);
-    sh_w16(0xd68, level3_data.init_patch);
+    sh_w16(0xd66, xenon2.level3_data.init_patch);
+    sh_w16(0xd68, xenon2.level3_data.init_patch);
     sh_w8(0xd96, 0);
     sh_w16(0xd6a, 2);
-    sh_w16(0xd60, level3_data.init_patch_2);
-    sh_w16(0xd62, level3_data.init_patch_2);
-    difficulty_x1 = (uint16_t)(difficulty * 2);
-    difficulty_x2 = (uint16_t)(difficulty * 3);
+    sh_w16(0xd60, xenon2.level3_data.init_patch_2);
+    sh_w16(0xd62, xenon2.level3_data.init_patch_2);
+    xenon2.difficulty_x1 = (uint16_t)(xenon2.difficulty * 2);
+    xenon2.difficulty_x2 = (uint16_t)(xenon2.difficulty * 3);
 }
 
 /* ---- what the level 3's records put into the field ---- */
@@ -214,13 +214,13 @@ void l3_init(void)
 /* level3 $056F60: draws the tile grids of the table at $56F9A (the pieces of the end) that are on the screen */
 void l3_end_draw(Object *obj)
 {
-    const struct Level3EndPiece *piece = level3_data.end_pieces;
+    const struct Level3EndPiece *piece = xenon2.level3_data.end_pieces;
 
     (void)obj;
     if (B(0xd94) == 0 && B(0xd95) == 0)
         return;
     for (; piece->cells != 0; piece++) {
-        int16_t sy = (int16_t)(piece->y - scroll_pos);
+        int16_t sy = (int16_t)(piece->y - xenon2.scroll_pos);
 
         if (sy >= 0xc0 || sy <= -0x30)
             continue;
@@ -233,7 +233,7 @@ void l3_end_draw(Object *obj)
 void l3_worm_spawn(uint16_t side)
 {
     uint16_t path_index;
-    const struct Level3WormPiece *entry = level3_data.worm_spawn.pieces;
+    const struct Level3WormPiece *entry = xenon2.level3_data.worm_spawn.pieces;
     uint32_t path;
     int16_t delay = 0, x, y;
     int n, count;
@@ -243,7 +243,7 @@ void l3_worm_spawn(uint16_t side)
         path_index = W(0xd64);
         sh_w16(0xd64, (uint16_t)(path_index + 1));
     } else {
-        uint32_t *seed = &unit_seed[side == 0 ? 0 : 1];
+        uint32_t *seed = &xenon2.unit_seed[side == 0 ? 0 : 1];
 
         do {
             *seed = (*seed >> 5) | (*seed << 27);
@@ -252,8 +252,8 @@ void l3_worm_spawn(uint16_t side)
     }
     path = sh_r32(0x6ef36 + 4 * (uint32_t)path_index);
     x = (int16_t)W(path + 2);
-    y = (int16_t)(W(path + 4) - scroll_pos - scroll_step);
-    count = level3_data.worm_spawn.last + 1;
+    y = (int16_t)(W(path + 4) - xenon2.scroll_pos - xenon2.scroll_step);
+    count = xenon2.level3_data.worm_spawn.last + 1;
     for (n = 0; n < count; n++) {
         Object *seg = alloc_in(LIST_C);
 
@@ -279,7 +279,7 @@ void l3_worm_spawn(uint16_t side)
         seg->x = x;
         seg->y = y;
         seg->kind = 0;
-        seg->steps = (int16_t)level3_data.worm_spawn_steps;
+        seg->steps = (int16_t)xenon2.level3_data.worm_spawn_steps;
         seg->worm.side = (int16_t)side;
         bbox_from_frame(seg);
         seg->target = head;
@@ -299,25 +299,25 @@ static void l3_enemy(Object *obj, const uint8_t *const *table)
 /* level3 $055044: an enemy whose picture follows its phase v2c (eight pictures of a table; $05504E and $055058 are the same with another table) */
 void l3_enemy_a(Object *obj)
 {
-    l3_enemy(obj, level3_data.enemy_a_pictures);
+    l3_enemy(obj, xenon2.level3_data.enemy_a_pictures);
 }
 
 /* level3 $05504E */
 void l3_enemy_b(Object *obj)
 {
-    l3_enemy(obj, level3_data.enemy_b_pictures);
+    l3_enemy(obj, xenon2.level3_data.enemy_b_pictures);
 }
 
 /* level3 $055058 */
 void l3_enemy_c(Object *obj)
 {
-    l3_enemy(obj, level3_data.enemy_c_pictures);
+    l3_enemy(obj, xenon2.level3_data.enemy_c_pictures);
 }
 
 /* a snake's piece leaves the field at y $E8 */
 static int l3_snake_off(Object *obj)
 {
-    obj->y = (int16_t)(obj->y + scroll_speed);
+    obj->y = (int16_t)(obj->y + xenon2.scroll_speed);
     if (obj->y >= 0xe8) {
         kill_thunk(obj);
         return 1;
@@ -405,18 +405,18 @@ void l3_spawn_snake(const uint8_t *rec)
 
     if (flag)
         x = (int16_t)(x + 0x20);
-    y = (int16_t)(rd16(rec + 0xa) - scroll_pos);
+    y = (int16_t)(rd16(rec + 0xa) - xenon2.scroll_pos);
     seg = alloc_in(LIST_C);
     head = seg;
     for (i = 7; i >= 0; i--) {
         int16_t offset;
 
         seg->type = flag ? 0xcc : 0xc8;
-        seg->gfx = (void *)(flag ? level3_data.snake_picture_a : level3_data.snake_picture_b);
+        seg->gfx = (void *)(flag ? xenon2.level3_data.snake_picture_a : xenon2.level3_data.snake_picture_b);
         seg->anim_delay = 0;
         SET_V5E(seg, 0);
         if (i == 0)
-            set_anim(seg, flag ? level3_data.snake_anim_a : level3_data.snake_anim_b);
+            set_anim(seg, flag ? xenon2.level3_data.snake_anim_a : xenon2.level3_data.snake_anim_b);
         seg->fn_update = FN(l3_snake_body);
         if (i == 0)
             seg->fn_update = FN(l3_snake_tail);
@@ -428,7 +428,7 @@ void l3_spawn_snake(const uint8_t *rec)
         seg->y = y;
         seg->fn_hit = (void *)hit_part;
         seg->is_part = 1;
-        seg->energy = (int16_t)level3_data.snake_energy;
+        seg->energy = (int16_t)xenon2.level3_data.snake_energy;
         seg->big = 0;
         seg->score = 0x190;
         seg->snake.swing = 0;
@@ -477,11 +477,11 @@ void l3_diver_shot(Object *obj)
         return;
     if (obj->x < 0x80) {
         obj->diver.side = 3;
-        obj->gfx = (void *)level3_data.diver_shot_picture_a;
+        obj->gfx = (void *)xenon2.level3_data.diver_shot_picture_a;
     }
     if (obj->x >= 0xc0) {
         obj->diver.side = 5;
-        obj->gfx = (void *)level3_data.diver_shot_picture_b;
+        obj->gfx = (void *)xenon2.level3_data.diver_shot_picture_b;
     }
 }
 
@@ -494,8 +494,8 @@ void l3_diver_update(Object *obj)
     const uint8_t *anim;
     int flip;
 
-    obj->y = (int16_t)(obj->y + scroll_speed);
-    x = (int16_t)((int16_t)scroll_max + 0xd0 - scroll_pos);
+    obj->y = (int16_t)(obj->y + xenon2.scroll_speed);
+    x = (int16_t)((int16_t)xenon2.scroll_max + 0xd0 - xenon2.scroll_pos);
     if (x < obj->y) {
         kill_thunk(obj);
         return;
@@ -506,19 +506,19 @@ void l3_diver_update(Object *obj)
         obj->x = x;
         if (x <= -0x20) {
             obj->x = 0;
-            anim = level3_data.diver_update_data;
+            anim = xenon2.level3_data.diver_update_data;
             flip = 1;
         } else if (x >= 0x160) {
             obj->x = 0x140;
-            anim = level3_data.diver_update_data_2;
+            anim = xenon2.level3_data.diver_update_data_2;
             flip = 1;
         } else if (x == 0x88) {
             obj->diver.state = 1;
-            anim = level3_data.diver_update_data_3;
+            anim = xenon2.level3_data.diver_update_data_3;
             flip = 0;
         } else if (x == 0xb8) {
             obj->diver.state = 1;
-            anim = level3_data.diver_update_data_4;
+            anim = xenon2.level3_data.diver_update_data_4;
             flip = 0;
         } else {
             bbox_from_frame(obj);
@@ -528,22 +528,22 @@ void l3_diver_update(Object *obj)
         obj->diver.state = 0;
         if (obj->x > 0xa0) {
             obj->x = 0xd8;
-            anim = level3_data.diver_update_data;
+            anim = xenon2.level3_data.diver_update_data;
         } else {
             obj->x = 0x68;
-            anim = level3_data.diver_update_data_2;
+            anim = xenon2.level3_data.diver_update_data_2;
         }
         flip = 1;
     } else {
         obj->diver.state++;
         if (obj->diver.state == 0xb) {
             int16_t sx = (int16_t)(obj->x - 5), sy = (int16_t)(obj->y + 4);
-            const uint8_t *gfx = level3_data.diver_shot_picture_a;
+            const uint8_t *gfx = xenon2.level3_data.diver_shot_picture_a;
             Object *shot;
 
             if (sx > 0xa0) {
                 sx = (int16_t)(sx + 0xa);
-                gfx = level3_data.diver_shot_picture_b;
+                gfx = xenon2.level3_data.diver_shot_picture_b;
             }
             shot = alloc_in(LIST_B);
             shot->type = 0x14;
@@ -554,7 +554,7 @@ void l3_diver_update(Object *obj)
             shot->x = sx;
             shot->y = sy;
             shot->diver.state = 0;
-            shot->steps = (int16_t)level3_data.diver_steps;
+            shot->steps = (int16_t)xenon2.level3_data.diver_steps;
             shot->diver.side = 3;
             if (obj->x >= 0xa0)
                 shot->diver.side = 5;
@@ -572,22 +572,22 @@ void l3_diver_update(Object *obj)
 void l3_spawn_diver(const uint8_t *rec)
 {
     Object *obj = alloc_in(LIST_C);
-    const uint8_t *anim = level3_data.diver_update_data;
+    const uint8_t *anim = xenon2.level3_data.diver_update_data;
 
     obj->type = 0xd0;
     obj->fn_update = FN(l3_diver_update);
     obj->fn_draw = draw_bob_masked;
     SET_V5E(obj, 0);
     obj->x = (int16_t)(rd16(rec + 8) - 8);
-    obj->y = (int16_t)(rd16(rec + 0xa) + 8 - scroll_pos);
+    obj->y = (int16_t)(rd16(rec + 0xa) + 8 - xenon2.scroll_pos);
     obj->diver.side = 2;
     if (obj->x > 0xa0) {
-        anim = level3_data.diver_update_data_2;
+        anim = xenon2.level3_data.diver_update_data_2;
         obj->diver.side = -2;
     }
     set_anim(obj, anim);
     obj->fn_hit = (void *)hit_enemy;
-    obj->energy = (int16_t)level3_data.diver_energy;
+    obj->energy = (int16_t)xenon2.level3_data.diver_energy;
     obj->big = -1;
     obj->score = 0x12c;
     obj->diver.state = 0;
@@ -612,7 +612,7 @@ static void l3_centre(const Object *o, int16_t *x, int16_t *y)
  * of them is the head of the chain; v30 is the place after the part's entry in the table */
 void l3_spawn_parts(void)
 {
-    const struct Level3Part *entry = level3_data.parts;
+    const struct Level3Part *entry = xenon2.level3_data.parts;
     Object *first = 0, *prev = 0;
 
     do {
@@ -633,22 +633,22 @@ void l3_spawn_parts(void)
         SET_V5E(part, 0);
         part->score = 0x3e8;
         part->big = -1;
-        part->script = level3_data.spawn_parts_data_2;
-        part->x = (int16_t)(level3_data.spawn_parts_words - 0x20);
-        part->y = (int16_t)(level3_data.spawn_parts_words_2 - 0x28);
+        part->script = xenon2.level3_data.spawn_parts_data_2;
+        part->x = (int16_t)(xenon2.level3_data.spawn_parts_words - 0x20);
+        part->y = (int16_t)(xenon2.level3_data.spawn_parts_words_2 - 0x28);
         part->x_frac = 0;
         part->y_frac = 0;
-        part->cursor = level3_data.spawn_parts_data_3;
+        part->cursor = xenon2.level3_data.spawn_parts_data_3;
         part->path.angle_hi = 0;
         part->path.angle_lo = 0;
         part->turn_step = 0;
         part->kind = 0;
-        part->steps = (int16_t)level3_data.parts_steps;
+        part->steps = (int16_t)xenon2.level3_data.parts_steps;
         bbox_from_frame(part);
         part->target = first;
         part->chain = 0;
         entry++;
-        part->part.slot = (int16_t)((entry - level3_data.parts) * 16);
+        part->part.slot = (int16_t)((entry - xenon2.level3_data.parts) * 16);
         part->arm_b.swing = 0;
         prev = part;
     } while (entry->update != 0);
@@ -663,7 +663,7 @@ void l3_part_core(Object *obj)
 
     sh_w8(0xd96, 0xff);
     enemy_update(obj);
-    sum = (uint16_t)(obj->v5e_b[0] + level3_data.part_core_fire_rate);
+    sum = (uint16_t)(obj->v5e_b[0] + xenon2.level3_data.part_core_fire_rate);
     obj->v5e_b[0] = (uint8_t)sum;
     if (sum > 0xff) {
         Object *shot;
@@ -671,8 +671,8 @@ void l3_part_core(Object *obj)
 
         obj->v5e_b[0] = (uint8_t)(random_next() & 0x3f);
         angle = direction8((int16_t)(PLAYER_X - obj->x), (int16_t)(PLAYER_Y - obj->y));
-        shot = spawn_enemy_shot((uint16_t)(obj->x + 0x10), (uint16_t)(obj->y + 0x3c), angle, level3_data.part_core_shot_steps, 0);
-        set_anim(shot, level3_data.part_core_data);
+        shot = spawn_enemy_shot((uint16_t)(obj->x + 0x10), (uint16_t)(obj->y + 0x3c), angle, xenon2.level3_data.part_core_shot_steps, 0);
+        set_anim(shot, xenon2.level3_data.part_core_data);
     }
 }
 
@@ -698,7 +698,7 @@ void l3_part_gun(Object *obj)
     l3_part_follow(obj);
     side = (int16_t)W(obj->gun.side == 0x40 ? 0xd60 : 0xd62);
     if (side <= 0) {
-        obj->gfx = (void *)(obj->gun.side == 0x40 ? level3_data.part_gun_picture_side_40 : level3_data.part_gun_picture_other);
+        obj->gfx = (void *)(obj->gun.side == 0x40 ? xenon2.level3_data.part_gun_picture_side_40 : xenon2.level3_data.part_gun_picture_other);
         obj->anim_delay = 0;
         obj->hit[0] = 0x3e8;
         obj->fn_hit = (void *)obj_nop_thunk;
@@ -709,12 +709,12 @@ void l3_part_gun(Object *obj)
         return;
     }
     {
-        uint16_t sum = (uint16_t)(obj->v5e_b[0] + level3_data.part_gun_fire_rate);
+        uint16_t sum = (uint16_t)(obj->v5e_b[0] + xenon2.level3_data.part_gun_fire_rate);
 
         obj->v5e_b[0] = (uint8_t)sum;
         if (sum > 0xff) {
             obj->v5e_b[0] = (uint8_t)(random_next() & 0x3f);
-            set_anim(obj, level3_data.part_gun_data_3);
+            set_anim(obj, xenon2.level3_data.part_gun_data_3);
         }
     }
     obj->hit[0] = 0x3e8;
@@ -769,7 +769,7 @@ void l3_part_arm(Object *obj)
         bbox_from_frame(obj);
         return;
     }
-    sfx_cmd2 = 0xf;
+    xenon2.sfx_cmd2 = 0xf;
     obj->arm_b.swing = 1;
     obj->arm.swing_step = 1;
     {
@@ -841,9 +841,9 @@ void l3_part_arm_tip(Object *obj)
     obj_script_run(obj);
     angle_bits = (uint16_t)(((uint16_t)obj->arm.angle_lo >> 2) & 0x38);
     if (obj->steps == 0xe)
-        sfx_cmd = 0xc;
-    tick_bits = (uint16_t)(frame_tick & 4);
-    obj->gfx = (void *)level3_data.arm_tip_pictures[(uint16_t)(angle_bits + tick_bits) / 4];
+        xenon2.sfx_cmd = 0xc;
+    tick_bits = (uint16_t)(xenon2.frame_tick & 4);
+    obj->gfx = (void *)xenon2.level3_data.arm_tip_pictures[(uint16_t)(angle_bits + tick_bits) / 4];
     obj->anim_delay = 0;
     bbox_from_frame(obj);
 }
@@ -867,7 +867,7 @@ void l3_enemy_enter(Object *obj)
     } else {
         anim_off = (int16_t)(y - 0xc0) < (int16_t)(x - 0x140) ? 8 : 0xc;
     }
-    set_anim(obj, level3_data.enemy_enter_anims[anim_off / 4]);
+    set_anim(obj, xenon2.level3_data.enemy_enter_anims[anim_off / 4]);
     obj->fn_update = FN(enemy_update);
     bbox_from_frame(obj);
 }
@@ -893,17 +893,17 @@ void l3_gun_update(Object *obj)
     int16_t y;
     const uint8_t *cells;
 
-    if ((int16_t)(scroll_max + 0xd0) < obj->y) {
+    if ((int16_t)(xenon2.scroll_max + 0xd0) < obj->y) {
         kill_thunk(obj);
         return;
     }
     obj->hit[0] = (int16_t)(obj->x + 2);
     obj->hit[2] = (int16_t)(obj->x + 0xe);
-    y = (int16_t)(obj->y - scroll_pos + 2);
+    y = (int16_t)(obj->y - xenon2.scroll_pos + 2);
     obj->hit[1] = y;
     obj->hit[3] = (int16_t)(y + 0xc);
     if (obj->l3_gun.open == 0) {
-        uint16_t sum = (uint16_t)(obj->v5e_b[0] + level3_data.gun_fire_rate);
+        uint16_t sum = (uint16_t)(obj->v5e_b[0] + xenon2.level3_data.gun_fire_rate);
 
         obj->v5e_b[0] = (uint8_t)sum;
         if (sum > 0xff) {
@@ -912,17 +912,17 @@ void l3_gun_update(Object *obj)
         }
         return;
     }
-    cells = obj->type == 0xf0 ? level3_data.gun_cells_f0 : level3_data.gun_cells_other;
+    cells = obj->type == 0xf0 ? xenon2.level3_data.gun_cells_f0 : xenon2.level3_data.gun_cells_other;
     copy2(obj->script, cells + (uint16_t)(obj->l3_gun.open & ~1));
     obj->l3_gun.open++;
     if (obj->l3_gun.open == 8) {
-        int16_t x = (int16_t)(obj->x + 8), y = (int16_t)(obj->y - scroll_pos), angle = 0;
+        int16_t x = (int16_t)(obj->x + 8), y = (int16_t)(obj->y - xenon2.scroll_pos), angle = 0;
 
         if (obj->type != 0xf0) {
             angle = 4;
             y = (int16_t)(y + 0xa);
         }
-        spawn_enemy_shot((uint16_t)x, (uint16_t)y, (uint16_t)angle, level3_data.gun_shot_steps, (void *)level3_data.gun_shot_picture);
+        spawn_enemy_shot((uint16_t)x, (uint16_t)y, (uint16_t)angle, xenon2.level3_data.gun_shot_steps, (void *)xenon2.level3_data.gun_shot_picture);
         return;
     }
     if (obj->l3_gun.open == 0xe)
@@ -934,14 +934,14 @@ void l3_spawn_gun(const uint8_t *rec)
 {
     int flag = rd16(rec + 0xc) != 0;
     Object *obj = spawn_marker_enemy(flag ? 0xf4 : 0xf0, rec, (void (*)(void))l3_gun_update);
-    const uint8_t *cells = flag ? level3_data.gun_cells_other : level3_data.gun_cells_f0;
+    const uint8_t *cells = flag ? xenon2.level3_data.gun_cells_other : xenon2.level3_data.gun_cells_f0;
 
     obj->fn_hit = (void *)hit_tile;
-    obj->energy = (int16_t)level3_data.gun_energy;
+    obj->energy = (int16_t)xenon2.level3_data.gun_energy;
     obj->hit[0] = 0x3e8;
     obj->hit[2] = 0x3e8;
     obj->gfx = (void *)cells;
-    obj->anim = flag ? level3_data.gun_anim_a : level3_data.gun_anim_b;
+    obj->anim = flag ? xenon2.level3_data.gun_anim_a : xenon2.level3_data.gun_anim_b;
     copy2(obj->script, cells);
     obj->score = 0x64;
     obj->tile.cols = 0;
@@ -957,12 +957,12 @@ void l3_spawn_boss(const uint8_t *rec)
 
     obj->fn_draw = (obj_fn)obj_nop_thunk;
     obj->fn_hit = (void *)l3_boss_hit;
-    obj->energy = (int16_t)level3_data.boss_energy;
+    obj->energy = (int16_t)xenon2.level3_data.boss_energy;
     obj->hit[0] = 0x3e8;
     obj->hit[2] = 0x3e8;
     for (i = 0; i < 6; i++) {
-        copy4(script, level3_data.spawn_boss_data + 8 * i);
-        copy4(script + 4, level3_data.spawn_boss_data + 8 * i + 4);
+        copy4(script, xenon2.level3_data.spawn_boss_data + 8 * i);
+        copy4(script + 4, xenon2.level3_data.spawn_boss_data + 8 * i + 4);
         script += 0x28;
     }
 }
@@ -974,23 +974,23 @@ void l3_boss_update(Object *obj)
     uint16_t cell;
     uint8_t *script;
 
-    if ((int16_t)(scroll_max + 0xd0) < obj->y) {
+    if ((int16_t)(xenon2.scroll_max + 0xd0) < obj->y) {
         kill_thunk(obj);
         return;
     }
     obj->hit[0] = (int16_t)(obj->x + 0x10);
     obj->hit[2] = (int16_t)(obj->hit[0] + 0x1f);
-    cell = (uint16_t)(obj->y - scroll_pos + 0x40);
+    cell = (uint16_t)(obj->y - xenon2.scroll_pos + 0x40);
     obj->hit[1] = (int16_t)cell;
     obj->hit[3] = (int16_t)(cell + 0x1a);
     cell = (uint16_t)obj->l3_boss.cell;
     if (cell == 0) {
-        if ((uint8_t)random_next() >= level3_data.boss_chance)
+        if ((uint8_t)random_next() >= xenon2.level3_data.boss_chance)
             return;
     }
     script = obj->script;
-    copy4(script + 0xa2, level3_data.boss_update_data + 4 * (cell & ~1u));
-    copy4(script + 0xca, level3_data.boss_update_data + 4 * (cell & ~1u) + 4);
+    copy4(script + 0xa2, xenon2.level3_data.boss_update_data + 4 * (cell & ~1u));
+    copy4(script + 0xca, xenon2.level3_data.boss_update_data + 4 * (cell & ~1u) + 4);
     obj->l3_boss.cell++;
     if (obj->l3_boss.cell == 0x12) {
         obj->l3_boss.cell = 0;
@@ -999,12 +999,12 @@ void l3_boss_update(Object *obj)
     if (obj->l3_boss.cell < 4)
         return;
     if (obj->l3_boss.cell > 0xb) {
-        if (obj->l3_boss.cell == 0xc && (uint8_t)random_next() < level3_data.boss_chance_2)
+        if (obj->l3_boss.cell == 0xc && (uint8_t)random_next() < xenon2.level3_data.boss_chance_2)
             obj->l3_boss.cell = 4;
         return;
     }
     {
-        uint16_t sum = (uint16_t)(obj->v5e_b[0] + level3_data.boss_fire_rate);
+        uint16_t sum = (uint16_t)(obj->v5e_b[0] + xenon2.level3_data.boss_fire_rate);
         int16_t x, y;
         uint16_t angle = 4, step;
         uint32_t gfx;
@@ -1014,14 +1014,14 @@ void l3_boss_update(Object *obj)
             return;
         obj->v5e_b[0] = (uint8_t)(random_next() & 0x3f);
         x = (int16_t)(obj->x + 0x20);
-        y = (int16_t)(obj->y - scroll_pos + 0x58);
-        gfx = sh_r32(sh_r32(0x6ee26 + 4 * (uint32_t)level3_data.boss_param));
+        y = (int16_t)(obj->y - xenon2.scroll_pos + 0x58);
+        gfx = sh_r32(sh_r32(0x6ee26 + 4 * (uint32_t)xenon2.level3_data.boss_param));
         step = (uint16_t)(obj->l3_boss.cell & ~1);
         if (step == 6)
             angle = 3;
         if (step == 8)
             angle = 5;
-        spawn_enemy_shot((uint16_t)x, (uint16_t)y, angle, level3_data.gun_energy, GPTR(gfx));
+        spawn_enemy_shot((uint16_t)x, (uint16_t)y, angle, xenon2.level3_data.gun_energy, GPTR(gfx));
     }
 }
 
@@ -1037,7 +1037,7 @@ void l3_boss_hit(Object *shot, Object *boss, uint16_t damage)
         boss->fn_draw = FN(l3_boss_flash);
         return;
     }
-    spawn_effect((int16_t)(boss->x + 0x20), (int16_t)(boss->y - scroll_pos + 0x40), big_explosion_anim, draw_bob_masked);
+    spawn_effect((int16_t)(boss->x + 0x20), (int16_t)(boss->y - xenon2.scroll_pos + 0x40), xenon2.big_explosion_anim, draw_bob_masked);
     script = boss->script;
     wr32(script + 0x50, 0);
     wr32(script + 0x54, 0);
@@ -1049,21 +1049,21 @@ void l3_boss_hit(Object *shot, Object *boss, uint16_t damage)
     boss->fn_update = FN(l3_boss2_update);
     boss->fn_draw = (obj_fn)obj_nop_thunk;
     boss->fn_hit = (void *)l3_boss2_hit;
-    boss->energy = (int16_t)level3_data.boss_energy_2;
+    boss->energy = (int16_t)xenon2.level3_data.boss_energy_2;
     boss->hit[0] = 0x3e8;
     boss->hit[2] = 0x3e8;
     boss->l3_boss.cell = 0;
-    player_score += 0x1f4;
+    xenon2.player_score += 0x1f4;
 }
 
 /* level3 $056A8C: the draw of the boss of tiles for the frame after a hit: its two grids as flashes */
 void l3_boss_flash(Object *obj)
 {
-    int16_t y = (int16_t)(obj->y - scroll_pos);
-    const uint8_t *cells = level3_data.boss_update_data + 4 * (uint32_t)(obj->l3_boss.cell & ~1);
+    int16_t y = (int16_t)(obj->y - xenon2.scroll_pos);
+    const uint8_t *cells = xenon2.level3_data.boss_update_data + 4 * (uint32_t)(obj->l3_boss.cell & ~1);
 
     obj->fn_draw = (obj_fn)obj_nop_thunk;
-    draw_tile_grid_flash(level3_data.boss_flash_grid, 3, 2, (int16_t)(y + 0x20), (uint16_t)(((uint16_t)obj->x >> 1) & 0xfffc));
+    draw_tile_grid_flash(xenon2.level3_data.boss_flash_grid, 3, 2, (int16_t)(y + 0x20), (uint16_t)(((uint16_t)obj->x >> 1) & 0xfffc));
     draw_tile_grid_flash(cells, 1, 1, (int16_t)(y + 0x40), (uint16_t)(((uint16_t)(obj->x + 0x10) >> 1) & 0xfffc));
 }
 
@@ -1074,18 +1074,18 @@ void l3_boss2_update(Object *obj)
     uint16_t cell;
     uint8_t *script;
 
-    if ((int16_t)(scroll_max + 0xd0) < obj->y) {
+    if ((int16_t)(xenon2.scroll_max + 0xd0) < obj->y) {
         kill_thunk(obj);
         return;
     }
     obj->hit[0] = (int16_t)(obj->x + 0x10);
     obj->hit[2] = (int16_t)(obj->hit[0] + 0x1f);
-    cell = (uint16_t)(obj->y + 4 - scroll_pos);
+    cell = (uint16_t)(obj->y + 4 - xenon2.scroll_pos);
     obj->hit[1] = (int16_t)cell;
     obj->hit[3] = (int16_t)(cell + 0x17);
     cell = (uint16_t)obj->l3_boss2.cell;
     if (cell == 0) {
-        uint16_t sum = (uint16_t)(obj->v5e_b[0] + level3_data.boss2_fire_rate);
+        uint16_t sum = (uint16_t)(obj->v5e_b[0] + xenon2.level3_data.boss2_fire_rate);
 
         obj->v5e_b[0] = (uint8_t)sum;
         if (sum <= 0xff)
@@ -1093,21 +1093,21 @@ void l3_boss2_update(Object *obj)
         obj->v5e_b[0] = (uint8_t)(random_next() & 0x3f);
     }
     script = obj->script;
-    copy4(script + 2, level3_data.boss2_update_data + 4 * (cell & ~1u));
-    copy4(script + 0x2a, level3_data.boss2_update_data + 4 * (cell & ~1u) + 4);
+    copy4(script + 2, xenon2.level3_data.boss2_update_data + 4 * (cell & ~1u));
+    copy4(script + 0x2a, xenon2.level3_data.boss2_update_data + 4 * (cell & ~1u) + 4);
     obj->l3_boss2.cell++;
     if (obj->l3_boss2.cell == 0xa) {
         obj->l3_boss2.cell = 0;
         return;
     }
     if (obj->l3_boss2.cell == 4) {
-        int16_t x = (int16_t)(obj->x + 0x20), y = (int16_t)(obj->y - scroll_pos + 0x18);
+        int16_t x = (int16_t)(obj->x + 0x20), y = (int16_t)(obj->y - xenon2.scroll_pos + 0x18);
         int i;
 
         for (i = 7; i >= 0; i--) {
-            Object *shot = spawn_enemy_shot((uint16_t)x, (uint16_t)y, (uint16_t)i, level3_data.boss2_shot_steps, 0);
+            Object *shot = spawn_enemy_shot((uint16_t)x, (uint16_t)y, (uint16_t)i, xenon2.level3_data.boss2_shot_steps, 0);
 
-            set_anim(shot, level3_data.boss2_shot_anims[7 - i]);
+            set_anim(shot, xenon2.level3_data.boss2_shot_anims[7 - i]);
         }
     }
 }
@@ -1124,13 +1124,13 @@ void l3_boss2_hit(Object *shot, Object *boss, uint16_t damage)
         boss->fn_draw = FN(l3_boss2_flash);
         return;
     }
-    spawn_effect((int16_t)(boss->x + 0x20), (int16_t)(boss->y - scroll_pos + 0x10), big_explosion_anim, draw_bob_masked);
+    spawn_effect((int16_t)(boss->x + 0x20), (int16_t)(boss->y - xenon2.scroll_pos + 0x10), xenon2.big_explosion_anim, draw_bob_masked);
     script = boss->script;
     wr32(script, 0);
     wr32(script + 4, 0);
     wr32(script + 0x28, 0);
     wr32(script + 0x2c, 0);
-    player_score += 0x1f4;
+    xenon2.player_score += 0x1f4;
     kill_thunk(boss);
 }
 
@@ -1138,7 +1138,7 @@ void l3_boss2_hit(Object *shot, Object *boss, uint16_t damage)
 void l3_boss2_flash(Object *obj)
 {
     obj->fn_draw = (obj_fn)obj_nop_thunk;
-    draw_tile_grid_flash(level3_data.boss2_update_data, 1, 1, (int16_t)(obj->y - scroll_pos), (uint16_t)(((uint16_t)(obj->x + 0x10) >> 1) & 0xfffc));
+    draw_tile_grid_flash(xenon2.level3_data.boss2_update_data, 1, 1, (int16_t)(obj->y - xenon2.scroll_pos), (uint16_t)(((uint16_t)(obj->x + 0x10) >> 1) & 0xfffc));
 }
 
 /* level3 $0556F6: a walker ($DC) from a record: the direction w6 of the record gives its first place and picture */
@@ -1152,11 +1152,11 @@ void l3_spawn_walker(const uint8_t *rec)
     obj->fn_draw = draw_bob_masked;
     obj->walker.dir = (int16_t)i;
     SET_V5E(obj, 0);
-    obj->x = (int16_t)(rd16(rec + 8) - 8 + level3_data.walker_spawn_dx[i]);
-    obj->y = (int16_t)(rd16(rec + 10) - 8 - scroll_pos + level3_data.walker_spawn_dy[i]);
-    set_anim(obj, level3_data.walker_spawn_anims[i]);
+    obj->x = (int16_t)(rd16(rec + 8) - 8 + xenon2.level3_data.walker_spawn_dx[i]);
+    obj->y = (int16_t)(rd16(rec + 10) - 8 - xenon2.scroll_pos + xenon2.level3_data.walker_spawn_dy[i]);
+    set_anim(obj, xenon2.level3_data.walker_spawn_anims[i]);
     obj->fn_hit = (void *)hit_enemy;
-    obj->energy = (int16_t)level3_data.walker_energy;
+    obj->energy = (int16_t)xenon2.level3_data.walker_energy;
     obj->big = 0;
     obj->score = 0x64;
     obj->walker.state = 0;
@@ -1174,20 +1174,20 @@ void l3_walker_update(Object *obj)
     int at_tile = 0, turn = 0;
 
     anim_step(obj);
-    obj->y = (int16_t)(obj->y + scroll_speed);
-    if ((int16_t)(scroll_max + 0xd0 - scroll_pos) < obj->y) {
+    obj->y = (int16_t)(obj->y + xenon2.scroll_speed);
+    if ((int16_t)(xenon2.scroll_max + 0xd0 - xenon2.scroll_pos) < obj->y) {
         kill_thunk(obj);
         return;
     }
-    dx = level3_data.walker_update_words[dir_offset / 2];
+    dx = xenon2.level3_data.walker_update_words[dir_offset / 2];
     if (dx != 0) {
         obj->x = (int16_t)(obj->x + dx);
         at_tile = dx < 0 ? (obj->x & 0xf) == 0xf : (obj->x & 0xf) == 0;
     } else {
-        int16_t step = level3_data.walker_update_words_2[dir_offset / 2];
+        int16_t step = xenon2.level3_data.walker_update_words_2[dir_offset / 2];
 
         obj->y = (int16_t)(obj->y + step);
-        map_y = (int16_t)(obj->y + scroll_pos);
+        map_y = (int16_t)(obj->y + xenon2.scroll_pos);
         at_tile = step < 0 ? (map_y & 0xf) == 0xf : (map_y & 0xf) == 0;
     }
     if (at_tile) {
@@ -1196,15 +1196,15 @@ void l3_walker_update(Object *obj)
         if (x == 0 || (uint16_t)x >= 0x140) {
             turn = 1;
         } else {
-            uint16_t row = (uint16_t)((uint16_t)(obj->y + scroll_pos) >> 4);
-            const uint8_t *tile = level_init_src + (int16_t)(uint16_t)(row * 0x28) + (((uint16_t)x >> 3) & 0xfe);
+            uint16_t row = (uint16_t)((uint16_t)(obj->y + xenon2.scroll_pos) >> 4);
+            const uint8_t *tile = xenon2.level_init_src + (int16_t)(uint16_t)(row * 0x28) + (((uint16_t)x >> 3) & 0xfe);
 
             if (rd16(tile) != 0) {
-                obj->x = (int16_t)(obj->x - level3_data.walker_update_words[dir_offset / 2]);
-                obj->y = (int16_t)(obj->y - level3_data.walker_update_words_2[dir_offset / 2]);
+                obj->x = (int16_t)(obj->x - xenon2.level3_data.walker_update_words[dir_offset / 2]);
+                obj->y = (int16_t)(obj->y - xenon2.level3_data.walker_update_words_2[dir_offset / 2]);
                 turn = 1;
             } else {
-                int16_t offset = level3_data.walker_update_words_3[dir_offset / 2];
+                int16_t offset = xenon2.level3_data.walker_update_words_3[dir_offset / 2];
 
                 turn = rd16(tile + offset) == 0;
             }
@@ -1212,24 +1212,24 @@ void l3_walker_update(Object *obj)
         if (turn) {
             uint16_t ni;
 
-            obj->x = (int16_t)(obj->x + level3_data.walker_update_words_4[dir_offset / 2]);
-            obj->y = (int16_t)(obj->y + level3_data.walker_update_words_5[dir_offset / 2]);
-            ni = level3_data.walker_update_words_6[dir_offset / 2];
+            obj->x = (int16_t)(obj->x + xenon2.level3_data.walker_update_words_4[dir_offset / 2]);
+            obj->y = (int16_t)(obj->y + xenon2.level3_data.walker_update_words_5[dir_offset / 2]);
+            ni = xenon2.level3_data.walker_update_words_6[dir_offset / 2];
             obj->walker.dir = (int16_t)ni;
-            set_anim(obj, level3_data.walker_spawn_anims[ni]);
+            set_anim(obj, xenon2.level3_data.walker_spawn_anims[ni]);
         }
     }
     {
-        uint16_t sum = (uint16_t)(obj->v5e_b[0] + level3_data.walker_fire_rate);
+        uint16_t sum = (uint16_t)(obj->v5e_b[0] + xenon2.level3_data.walker_fire_rate);
 
         obj->v5e_b[0] = (uint8_t)sum;
         if (sum > 0xff) {
-            uint32_t gfx = sh_r32(sh_r32(0x6ee26 + 4 * (uint32_t)level3_data.walker_param));
+            uint32_t gfx = sh_r32(sh_r32(0x6ee26 + 4 * (uint32_t)xenon2.level3_data.walker_param));
             uint16_t angle;
 
             obj->v5e_b[0] = (uint8_t)(random_next() & 0x3f);
             angle = direction8((int16_t)(PLAYER_X - obj->x), (int16_t)(PLAYER_Y - obj->y));
-            spawn_enemy_shot((uint16_t)obj->x, (uint16_t)obj->y, angle, level3_data.walker_shot_steps, GPTR(gfx));
+            spawn_enemy_shot((uint16_t)obj->x, (uint16_t)obj->y, angle, xenon2.level3_data.walker_shot_steps, GPTR(gfx));
         }
     }
     bbox_from_frame(obj);
@@ -1238,8 +1238,8 @@ void l3_walker_update(Object *obj)
 /* the picture of a worm's piece follows its phase v2c by a table of eight */
 static void l3_worm_follow(Object *obj, const uint8_t *const *table)
 {
-    obj->y = (int16_t)(obj->y + scroll_speed);
-    if (table == level3_data.worm_follow_pictures)
+    obj->y = (int16_t)(obj->y + xenon2.scroll_speed);
+    if (table == xenon2.level3_data.worm_follow_pictures)
         sh_w8(0xd94 + (uint16_t)obj->worm.side, 0xff);
     enemy_update_no_anim(obj);
     obj->gfx = (void *)table[(((uint16_t)obj->worm.phase + 0x10) >> 5) & 7];
@@ -1252,21 +1252,21 @@ void l3_worm_head(Object *obj)
     uint16_t old = (uint16_t)obj->worm.phase;
     uint16_t frame, old_frame, sum;
 
-    obj->y = (int16_t)(obj->y + scroll_speed);
+    obj->y = (int16_t)(obj->y + xenon2.scroll_speed);
     enemy_update(obj);
     frame = (uint16_t)((((uint16_t)obj->worm.phase + 0x10) >> 3) & 0x1c);
     old_frame = (uint16_t)(((old + 0x10) >> 3) & 0x1c);
     if (old_frame != frame)
-        set_anim(obj, level3_data.worm_head_anims[frame / 4]);
-    sum = (uint16_t)(obj->v5e_b[0] + level3_data.worm_head_fire_rate);
+        set_anim(obj, xenon2.level3_data.worm_head_anims[frame / 4]);
+    sum = (uint16_t)(obj->v5e_b[0] + xenon2.level3_data.worm_head_fire_rate);
     obj->v5e_b[0] = (uint8_t)sum;
     if (sum > 0xff) {
         int i;
 
         for (i = 7; i >= 0; i--) {
-            Object *shot = spawn_enemy_shot((uint16_t)obj->x, (uint16_t)obj->y, (uint16_t)i, level3_data.worm_head_shot_steps, 0);
+            Object *shot = spawn_enemy_shot((uint16_t)obj->x, (uint16_t)obj->y, (uint16_t)i, xenon2.level3_data.worm_head_shot_steps, 0);
 
-            set_anim(shot, level3_data.worm_head_data);
+            set_anim(shot, xenon2.level3_data.worm_head_data);
         }
     }
     bbox_from_frame(obj);
@@ -1275,19 +1275,19 @@ void l3_worm_head(Object *obj)
 /* level3 $05556A */
 void l3_worm_a(Object *obj)
 {
-    l3_worm_follow(obj, level3_data.worm_a_pictures);
+    l3_worm_follow(obj, xenon2.level3_data.worm_a_pictures);
 }
 
 /* level3 $0555AE */
 void l3_worm_b(Object *obj)
 {
-    l3_worm_follow(obj, level3_data.worm_b_pictures);
+    l3_worm_follow(obj, xenon2.level3_data.worm_b_pictures);
 }
 
 /* level3 $0555F2: the last piece: it shows the end's flag of its side (d94 / d95) */
 void l3_worm_c(Object *obj)
 {
-    l3_worm_follow(obj, level3_data.worm_follow_pictures);
+    l3_worm_follow(obj, xenon2.level3_data.worm_follow_pictures);
 }
 
 /* level3 $055642: the hit of the worm's first piece: the energy of its side (d66 / d68) runs out and the whole worm bursts and the side's flag d92 / d93 is set */
@@ -1311,6 +1311,6 @@ void l3_worm_hit(Object *shot, Object *worm, uint16_t damage)
         o = next;
     }
     kill_thunk(worm);
-    debris_burst(shot, 0x13, 0, 0, 0x140, 0xc0, big_explosion_anim);
+    debris_burst(shot, 0x13, 0, 0, 0x140, 0xc0, xenon2.big_explosion_anim);
     free_object_chain(LIST_C->prev);
 }

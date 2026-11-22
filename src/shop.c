@@ -97,13 +97,13 @@
 /* shop $553F8: a picture on both screens (draw_bob_masked_at) */
 void shop_draw_both(uint16_t x, uint16_t y, const uint8_t *gfx)
 {
-    uint8_t *saved = draw_screen;
+    uint8_t *saved = xenon2.draw_screen;
 
-    draw_screen = screen_b;
+    xenon2.draw_screen = xenon2.screen_b;
     draw_bob_masked_at(x, y, gfx);
-    draw_screen = screen_a;
+    xenon2.draw_screen = xenon2.screen_a;
     draw_bob_masked_at(x, y, gfx);
-    draw_screen = saved;
+    xenon2.draw_screen = saved;
 }
 
 /* shop $5537A, $553F2: `rows` rows of 7 words (the first word keeps its top 7 bits, the next five are cleared, the last keeps its low 9 bits) of 4 interleaved planes;
@@ -207,8 +207,8 @@ void shop_lights_draw(void)
 /* shop $56E44: the next line of text */
 void shop_text_newline(void)
 {
-    text_x = 0x37;
-    text_y += 7;
+    xenon2.text_x = 0x37;
+    xenon2.text_y += 7;
 }
 
 /* shop $56D8C: a character of the text at the text position (4 pixels wide: even positions write a byte, odd ones the low nibble) */
@@ -222,11 +222,11 @@ void shop_text_char(uint8_t ch)
         shop_text_newline();
         return;
     }
-    dst_b = screen_b + (int16_t)row_offset[text_y];
-    dst_b += (int16_t)(text_x >> 1);
-    dst_a = screen_a + (dst_b - screen_b);
+    dst_b = xenon2.screen_b + (int16_t)xenon2.row_offset[xenon2.text_y];
+    dst_b += (int16_t)(xenon2.text_x >> 1);
+    dst_a = xenon2.screen_a + (dst_b - xenon2.screen_b);
     glyph = (const uint8_t *)GPTR(SH_FONT) + (int16_t)((uint16_t)(ch - 0x20) << 5);
-    if (!(text_x & 1)) {
+    if (!(xenon2.text_x & 1)) {
         for (row = 7; row >= 0; row--) {
             int p;
 
@@ -253,7 +253,7 @@ void shop_text_char(uint8_t ch)
             dst_a += 0xa0;
         }
     }
-    text_x++;
+    xenon2.text_x++;
 }
 
 
@@ -279,7 +279,7 @@ void shop_records_tick(void)
 void shop_sparkle(const uint8_t *rec)
 {
     uint16_t x = rd16(rec + 2), y = rd16(rec + 4);
-    uint8_t *dst = draw_screen + (int16_t)row_offset[y];
+    uint8_t *dst = xenon2.draw_screen + (int16_t)xenon2.row_offset[y];
     uint16_t shift = x & 0xf, noise, head, mask, inv, rnd;
     int16_t n = 0x1b;
 
@@ -331,8 +331,8 @@ void shop_records_draw(void)
 
         if (st > 0) {
             if (st <= 2) {
-                if (st == 2 && (int16_t)sfx_cmd < 0)
-                    sfx_cmd2 = 0xb;
+                if (st == 2 && (int16_t)xenon2.sfx_cmd < 0)
+                    xenon2.sfx_cmd2 = 0xb;
                 shop_sparkle(rec);
             } else {
                 const uint8_t *pic = GPTR(sh_r32(SH_TAB_PUFF + 4u * (cnt & 1)));
@@ -396,10 +396,10 @@ void shop_door_draw(void)
 {
     uint8_t *dst;
 
-    if (shop_door_right == 0)
+    if (xenon2.shop_door_right == 0)
         return;
-    dst = shop_clear_columns(draw_screen + 0x475a, (uint16_t)(0x44 - shop_door_right));
-    shop_put_rows(GPTR(SH_PIC_SLIDE), dst, (uint16_t)(shop_door_right - 1));
+    dst = shop_clear_columns(xenon2.draw_screen + 0x475a, (uint16_t)(0x44 - xenon2.shop_door_right));
+    shop_put_rows(GPTR(SH_PIC_SLIDE), dst, (uint16_t)(xenon2.shop_door_right - 1));
 }
 
 /* shop $5662A: the room: its pictures, the keeper's lights, the doors */
@@ -409,10 +409,10 @@ void shop_room_draw(void)
     uint8_t *dst;
     uint16_t rows;
 
-    shop_put_rows(GPTR(SH_PIC_TOP), draw_screen + 0x5ba, 0x33);
-    shop_put_rows(GPTR(SH_PIC_MID), draw_screen + 0x3b7a, 9);
+    shop_put_rows(GPTR(SH_PIC_TOP), xenon2.draw_screen + 0x5ba, 0x33);
+    shop_put_rows(GPTR(SH_PIC_MID), xenon2.draw_screen + 0x3b7a, 9);
     pic = GPTR(SH_PIC_LOW);
-    if (shop_keeper_talking != 0) {
+    if (xenon2.shop_keeper_talking != 0) {
         uint32_t rnd = random_next();
         int16_t tries = 3;
 
@@ -427,31 +427,31 @@ void shop_room_draw(void)
             pic += 0x770;
         }
     }
-    shop_put_rows(pic, draw_screen + 0x263a, 0x21);
+    shop_put_rows(pic, xenon2.draw_screen + 0x263a, 0x21);
     shop_lights_draw();
     shop_keeper_blink();
-    if (shop_door_left == 0)
+    if (xenon2.shop_door_left == 0)
         return;
-    if ((int16_t)shop_door_left <= 8) {
+    if ((int16_t)xenon2.shop_door_left <= 8) {
         /* (the closed doors' pictures are drawn only when more than 8 rows have opened) */
     } else {
-        dst = draw_screen + 0x5ba;
-        pic = (const uint8_t *)GPTR(SH_PIC_DOOR) + (int16_t)((uint16_t)(0x30 - shop_door_left) * 0x38);
-        rows = (uint16_t)(shop_door_left - 9);
+        dst = xenon2.draw_screen + 0x5ba;
+        pic = (const uint8_t *)GPTR(SH_PIC_DOOR) + (int16_t)((uint16_t)(0x30 - xenon2.shop_door_left) * 0x38);
+        rows = (uint16_t)(xenon2.shop_door_left - 9);
         shop_put_rows(pic, dst, rows);
-        dst = draw_screen + 0x46ba - (int16_t)((uint16_t)(shop_door_left * 0xa0));
+        dst = xenon2.draw_screen + 0x46ba - (int16_t)((uint16_t)(xenon2.shop_door_left * 0xa0));
         shop_put_rows(GPTR(SH_PIC_DOOR2), dst, rows);
     }
-    draw_bob_masked_at(0xd7, (uint16_t)(shop_door_left + 1), GPTR(SH_GFX_BAR_1));
-    draw_bob_masked_at(0xf7, (uint16_t)(shop_door_left + 1), GPTR(SH_GFX_BAR_2));
-    draw_bob_masked_at(0x117, (uint16_t)(shop_door_left + 1), GPTR(SH_GFX_BAR_3));
-    draw_bob_masked_at(0xd7, (uint16_t)(0x70 - shop_door_left), GPTR(SH_GFX_BAR_4));
-    draw_bob_masked_at(0xf7, (uint16_t)(0x70 - shop_door_left), GPTR(SH_GFX_BAR_5));
-    draw_bob_masked_at(0x117, (uint16_t)(0x70 - shop_door_left), GPTR(SH_GFX_BAR_6));
-    if ((int16_t)shop_door_left >= 8)
+    draw_bob_masked_at(0xd7, (uint16_t)(xenon2.shop_door_left + 1), GPTR(SH_GFX_BAR_1));
+    draw_bob_masked_at(0xf7, (uint16_t)(xenon2.shop_door_left + 1), GPTR(SH_GFX_BAR_2));
+    draw_bob_masked_at(0x117, (uint16_t)(xenon2.shop_door_left + 1), GPTR(SH_GFX_BAR_3));
+    draw_bob_masked_at(0xd7, (uint16_t)(0x70 - xenon2.shop_door_left), GPTR(SH_GFX_BAR_4));
+    draw_bob_masked_at(0xf7, (uint16_t)(0x70 - xenon2.shop_door_left), GPTR(SH_GFX_BAR_5));
+    draw_bob_masked_at(0x117, (uint16_t)(0x70 - xenon2.shop_door_left), GPTR(SH_GFX_BAR_6));
+    if ((int16_t)xenon2.shop_door_left >= 8)
         return;
     {
-        uint8_t *dst = draw_screen + 0x1a, *dst2 = draw_screen + 0x41ba;
+        uint8_t *dst = xenon2.draw_screen + 0x1a, *dst2 = xenon2.draw_screen + 0x41ba;
         const uint8_t *lamp_a = GPTR(SH_PIC_LAMP_A), *lamp_b = GPTR(SH_PIC_LAMP_B);
         int16_t n = 8;
 
@@ -489,11 +489,11 @@ void shop_room_update(void)
 /* shop $5648C: the keeper's picture at SH_KX, SH_KY (clipped at line $68) */
 void shop_keeper_draw(void)
 {
-    uint16_t saved = clip_bottom;
+    uint16_t saved = xenon2.clip_bottom;
 
-    clip_bottom = 0x68;
+    xenon2.clip_bottom = 0x68;
     draw_bob_masked_at(sh_r16(SH_KX), sh_r16(SH_KY), GPTR(sh_r32(SH_KGFX)));
-    clip_bottom = saved;
+    xenon2.clip_bottom = saved;
 }
 
 /* shop $564B2: `frames` frames of the room and the keeper */
@@ -522,22 +522,22 @@ void shop_wait(uint16_t frames)
 /* shop $55360: the text board is cleared on both screens */
 void shop_board_clear(void)
 {
-    shop_clear_columns(screen_b + 0x475a, 0x44);
-    shop_clear_columns(screen_a + 0x475a, 0x44);
+    shop_clear_columns(xenon2.screen_b + 0x475a, 0x44);
+    shop_clear_columns(xenon2.screen_a + 0x475a, 0x44);
 }
 
 /* shop $56CA0: the board is cleared and the text begins again at its top */
 void shop_text_home(void)
 {
     shop_board_clear();
-    text_x = 0x37;
-    text_y = 0x76;
+    xenon2.text_x = 0x37;
+    xenon2.text_y = 0x76;
 }
 
 /* shop $56CB2: the cash is drawn */
 void shop_cash_draw(void)
 {
-    draw_number(player_money, screen_b + 0x6b91);
+    draw_number(xenon2.player_money, xenon2.screen_b + 0x6b91);
 }
 
 /* shop $56CC0: the text (words, $0D = a new line, 0 ends) is drawn a character at a time, the keeper talks at the start of each word, every second character
@@ -548,7 +548,7 @@ void shop_print(const uint8_t *text)
         uint16_t rnd, width;
         const uint8_t *p;
 
-        shop_keeper_talking = 0xff;
+        xenon2.shop_keeper_talking = 0xff;
         do
             rnd = (uint16_t)random_next() & 3;
         while (rnd == 0);
@@ -556,22 +556,22 @@ void shop_print(const uint8_t *text)
         width = 0;
         for (p = text; *p != 0 && *p != 0x20 && *p != 0x0d; p++)
             width++;
-        width = (uint16_t)(width + text_x);
+        width = (uint16_t)(width + xenon2.text_x);
         if ((int16_t)width > 0x4b)
             shop_text_newline();
         for (;;) {
             uint8_t ch = *text++;
 
             if (ch == 0) {
-                shop_keeper_talking = 0;
+                xenon2.shop_keeper_talking = 0;
                 return;
             }
             if (ch == 0x20) {
                 for (;;) {
-                    text_x++;
+                    xenon2.text_x++;
                     ch = *text++;
                     if (ch == 0) {
-                        shop_keeper_talking = 0;
+                        xenon2.shop_keeper_talking = 0;
                         return;
                     }
                     if (ch != 0x20)
@@ -585,7 +585,7 @@ void shop_print(const uint8_t *text)
                 break;
             }
             shop_text_char(ch);
-            if (text_x & 1) {
+            if (xenon2.text_x & 1) {
                 shop_records_tick();
                 shop_records_draw();
                 shop_room_draw();
@@ -598,7 +598,7 @@ void shop_print(const uint8_t *text)
 /* shop $56D56: the number in value (a word, decimal) is drawn, a frame goes by */
 void shop_print_number(uint16_t value)
 {
-    shop_keeper_talking = 0xff;
+    xenon2.shop_keeper_talking = 0xff;
     if ((int16_t)value >= 10) {
         uint32_t q = (uint32_t)(int32_t)(int16_t)value;
         uint32_t d = (q / 10u) & 0xffff;
@@ -612,19 +612,19 @@ void shop_print_number(uint16_t value)
     shop_records_tick();
     shop_records_draw();
     shop_room_draw();
-    shop_keeper_talking = 0;
+    xenon2.shop_keeper_talking = 0;
 }
 
 /* shop $56040 (the cursor drawn), $560A6 (the cursor taken away): the picture of the cursor at the item under it, or of the buttons below the grid */
 static void cursor_show(uint32_t on_item, uint32_t exit_a, uint32_t exit_b, uint32_t exit_c)
 {
-    uint16_t row = shop_cursor_row, x, y, offset;
+    uint16_t row = xenon2.shop_cursor_row, x, y, offset;
     const uint8_t *pic;
 
     if (row == 4) {
         x = 4;
         pic = GPTR(exit_a);
-        if (shop_cursor_col != 0) {
+        if (xenon2.shop_cursor_col != 0) {
             x = 0x2d;
             pic = GPTR(exit_b);
             if (sh_r8(SH_SELLING) == 0)
@@ -633,7 +633,7 @@ static void cursor_show(uint32_t on_item, uint32_t exit_a, uint32_t exit_b, uint
         shop_draw_both(x, 0xa8, pic);
         return;
     }
-    offset = (uint16_t)((uint16_t)(row * 5 + shop_cursor_col) * 0x10);
+    offset = (uint16_t)((uint16_t)(row * 5 + xenon2.shop_cursor_col) * 0x10);
     y = sh_r16(SH_RECS + (int16_t)offset + 4);
     x = sh_r16(SH_RECS + (int16_t)offset + 2);
     shop_draw_both((uint16_t)(x + 0xa), (uint16_t)(y + 0x1f), GPTR(on_item));
@@ -648,38 +648,38 @@ void shop_stick(void)
     for (;;) {
         if (sh_r16(SH_REPEAT) != 0) {
             sh_w16(SH_REPEAT, (uint16_t)(sh_r16(SH_REPEAT) - 1));
-        } else if (key_pressed != 0) {
-            key_pressed = 0;
-            sfx_cmd = 0xd;
+        } else if (xenon2.key_pressed != 0) {
+            xenon2.key_pressed = 0;
+            xenon2.sfx_cmd = 0xd;
             return;
-        } else if (joy_stick != 0) {
-            sfx_cmd = 0xc;
+        } else if (xenon2.joy_stick != 0) {
+            xenon2.sfx_cmd = 0xc;
             sh_w16(SH_REPEAT, 4);
             shop_cursor_erase();
-            if (joy_stick & 4) {
-                if (shop_cursor_row == 4) {
-                    shop_cursor_col = (uint16_t)(shop_cursor_col == 0);
+            if (xenon2.joy_stick & 4) {
+                if (xenon2.shop_cursor_row == 4) {
+                    xenon2.shop_cursor_col = (uint16_t)(xenon2.shop_cursor_col == 0);
                 } else {
-                    shop_cursor_col--;
-                    if ((int16_t)shop_cursor_col < 0)
-                        shop_cursor_col = 4;
+                    xenon2.shop_cursor_col--;
+                    if ((int16_t)xenon2.shop_cursor_col < 0)
+                        xenon2.shop_cursor_col = 4;
                 }
-            } else if (joy_stick & 8) {
-                if (shop_cursor_row == 4) {
-                    shop_cursor_col = (uint16_t)(shop_cursor_col == 0);
+            } else if (xenon2.joy_stick & 8) {
+                if (xenon2.shop_cursor_row == 4) {
+                    xenon2.shop_cursor_col = (uint16_t)(xenon2.shop_cursor_col == 0);
                 } else {
-                    shop_cursor_col++;
-                    if ((int16_t)shop_cursor_col > 4)
-                        shop_cursor_col = 0;
+                    xenon2.shop_cursor_col++;
+                    if ((int16_t)xenon2.shop_cursor_col > 4)
+                        xenon2.shop_cursor_col = 0;
                 }
-            } else if (joy_stick & 1) {
-                shop_cursor_row--;
-                if ((int16_t)shop_cursor_row < 0)
-                    shop_cursor_row = 4;
-            } else if (joy_stick & 2) {
-                shop_cursor_row++;
-                if ((int16_t)shop_cursor_row > 4)
-                    shop_cursor_row = 0;
+            } else if (xenon2.joy_stick & 1) {
+                xenon2.shop_cursor_row--;
+                if ((int16_t)xenon2.shop_cursor_row < 0)
+                    xenon2.shop_cursor_row = 4;
+            } else if (xenon2.joy_stick & 2) {
+                xenon2.shop_cursor_row++;
+                if ((int16_t)xenon2.shop_cursor_row > 4)
+                    xenon2.shop_cursor_row = 0;
             }
             shop_cursor_draw();
         }
@@ -687,7 +687,7 @@ void shop_stick(void)
         shop_records_tick();
         shop_records_draw();
         swap_screens_200();
-        frame_tick++;
+        xenon2.frame_tick++;
     }
 }
 
@@ -700,48 +700,48 @@ int32_t shop_can_buy(void)
     int i;
 
     switch (kind) {
-    case 3: return speed_level == 2 ? 0 : -1;
+    case 3: return xenon2.speed_level == 2 ? 0 : -1;
     case 4:
-    case 7: return player_energy == 0x27 ? 0 : -1;
-    case 5: return autofire_level == 3 ? 0 : -1;
-    case 6: return nashwan_timer != 0 ? 0 : -1;
+    case 7: return xenon2.player_energy == 0x27 ? 0 : -1;
+    case 5: return xenon2.autofire_level == 3 ? 0 : -1;
+    case 6: return xenon2.nashwan_timer != 0 ? 0 : -1;
     case 0xc:
         for (i = 0; i < 7; i++)
-            if (weapon_slots[i].type != 0 && weapon_slots[i].obj->score != weapon_slots[i].obj->energy)
+            if (xenon2.weapon_slots[i].type != 0 && xenon2.weapon_slots[i].obj->score != xenon2.weapon_slots[i].obj->energy)
                 return -1;
         return 0;
-    case 0x10: return dive_charges != 0 ? 0 : -1;
-    case 0x16: return player_lives == 9 ? 0 : -1;
-    case 0x18: return protection != 0 ? 0 : -1;
-    case 0x19: return shades_timer != 0 ? 0 : -1;
+    case 0x10: return xenon2.dive_charges != 0 ? 0 : -1;
+    case 0x16: return xenon2.player_lives == 9 ? 0 : -1;
+    case 0x18: return xenon2.protection != 0 ? 0 : -1;
+    case 0x19: return xenon2.shades_timer != 0 ? 0 : -1;
     }
     flags = sh_r8(SH_TAB_FLAGS + (uint16_t)(kind - 1));
     if (flags & 1) {
-        weapon = weapon_slots[0].obj;
+        weapon = xenon2.weapon_slots[0].obj;
         if (kind != (uint16_t)weapon->kind) {
-            if (weapon_slots[0].type == 0 || weapon_slots[0].type == 0x94)
+            if (xenon2.weapon_slots[0].type == 0 || xenon2.weapon_slots[0].type == 0x94)
                 return -1;
             return 0;
         }
     } else if (flags & 2) {
         for (i = 1; i <= 4; i++)
-            if (weapon_slots[i].type == 0)
+            if (xenon2.weapon_slots[i].type == 0)
                 return -1;
         return 0;
     } else if (flags & 4) {
-        if (weapon_slots[5].type == 0)
+        if (xenon2.weapon_slots[5].type == 0)
             return -1;
-        weapon = weapon_slots[5].obj;
+        weapon = xenon2.weapon_slots[5].obj;
         if (kind != (uint16_t)weapon->kind)
             return 0;
     } else if (flags & 0x10) {
-        if (weapon_slots[6].type == 0 || weapon_slots[5].type == 0)
+        if (xenon2.weapon_slots[6].type == 0 || xenon2.weapon_slots[5].type == 0)
             return -1;
         return 0;
     } else if (flags & 8) {
-        if (weapon_slots[6].type == 0)
+        if (xenon2.weapon_slots[6].type == 0)
             return -1;
-        weapon = weapon_slots[6].obj;
+        weapon = xenon2.weapon_slots[6].obj;
         if (kind != (uint16_t)weapon->kind)
             return 0;
     } else {
@@ -751,7 +751,7 @@ int32_t shop_can_buy(void)
 }
 
 /* shop $558E4, $558EC, $55930, $55938: the items that are not a weapon */
-void shop_item_ca2(void) { nashwan_timer = 0xaa; }
+void shop_item_ca2(void) { xenon2.nashwan_timer = 0xaa; }
 
 /* shop $558EC: the keeper's advice: the next sentence for the level and the number of hints so far */
 void shop_item_advice(void)
@@ -760,15 +760,15 @@ void shop_item_advice(void)
 
     sh_w8(SH_BLINK_A, 0xc);
     shop_text_home();
-    index = (uint16_t)((uint16_t)(level_number - 1) * 0x18 + advice_hints);
-    if (advice_hints != 8 && advice_hints != 0x14)
-        advice_hints += 4;
+    index = (uint16_t)((uint16_t)(xenon2.level_number - 1) * 0x18 + xenon2.advice_hints);
+    if (xenon2.advice_hints != 8 && xenon2.advice_hints != 0x14)
+        xenon2.advice_hints += 4;
     shop_print((const uint8_t *)GPTR(sh_r32(SH_TAB_ADVICE + (int16_t)index)));
     sh_w8(SH_BLINK_A, 0);
 }
 
-void shop_item_c90(void) { shades_timer = 0xdc; }
-void shop_item_cca(void) { player_lives++; }
+void shop_item_c90(void) { xenon2.shades_timer = 0xdc; }
+void shop_item_cca(void) { xenon2.player_lives++; }
 
 /* the routine the item is granted by (the table at $5573A: the pickup and weapon routines of the base game, and the four above) */
 static void item_grant(uint16_t kind)
@@ -824,7 +824,7 @@ void shop_price_text(uint8_t *rec)
     shop_print((const uint8_t *)GPTR(SH_TXT_COST));
     rec = (uint8_t *)GPTR(sh_r32(SH_REC));
     price = sh_r16(SH_TAB_PRICE + (uint16_t)(rd16(rec + 6) * 2) - 2);
-    if (level_number == 5)
+    if (xenon2.level_number == 5)
         price >>= 1;
     sh_w16(SH_PRICE, price);
     shop_print_number(price);
@@ -835,7 +835,7 @@ static uint16_t item_price_at(uint32_t table_entry)
 {
     uint16_t price = sh_r16(table_entry);
 
-    if (level_number == 5)
+    if (xenon2.level_number == 5)
         price >>= 1;
     return price;
 }
@@ -851,18 +851,18 @@ void shop_stock_update(void)
 
     price = (uint16_t)(sh_r16(SH_PAGE) * 2);
     price = sh_r16(SH_TAB_PRICE + 2 + (int16_t)price);
-    if (level_number == 5)
+    if (xenon2.level_number == 5)
         price >>= 1;
-    if ((int32_t)(int16_t)price > (int32_t)player_money)
+    if ((int32_t)(int16_t)price > (int32_t)xenon2.player_money)
         sh_w16(SH_PAGE, 0);
     rec = SH_RECS;
     item = (uint16_t)(sh_r16(SH_PAGE) + 2);
     price_ptr = SH_TAB_PRICE + (uint32_t)(int32_t)(int16_t)(uint16_t)((uint16_t)(item - 1) * 2);
     anim_ptr = SH_TAB_ANIM + (uint32_t)(int32_t)(int16_t)(uint16_t)((uint16_t)(item - 1) * 4);
-    cash = (int32_t)player_money;
+    cash = (int32_t)xenon2.player_money;
     for (;;) {
         cost = (int16_t)item_price_at(price_ptr);
-        if (cost > (int16_t)shop_price_cap || cash < (int32_t)cost) {
+        if (cost > (int16_t)xenon2.shop_price_cap || cash < (int32_t)cost) {
 sold:
             sh_w16(rec + 6, 0x1a);
             sh_w32(rec + 8, SH_LIST_SOLD_OUT);
@@ -891,7 +891,7 @@ sold:
             return;
         if (sh_r16(SH_PAGE) == 0) {
             cost = (int16_t)item_price_at(price_ptr);
-            if (cost > (int16_t)shop_price_cap || cash < (int32_t)cost)
+            if (cost > (int16_t)xenon2.shop_price_cap || cash < (int32_t)cost)
                 goto sold;
         }
         break;
@@ -916,7 +916,7 @@ void shop_stock_sold_out(void)
 void shop_stock_recheck(void)
 {
     uint32_t rec = SH_RECS;
-    int32_t cash = (int32_t)player_money;
+    int32_t cash = (int32_t)xenon2.player_money;
     int16_t n = 0x13;
 
     do {
@@ -931,7 +931,7 @@ void shop_stock_recheck(void)
             } else if ((int16_t)item < 0x1a) {
                 uint16_t price = sh_r16(SH_TAB_PRICE - 2 + (uint16_t)(item * 2));
 
-                if (level_number == 5)
+                if (xenon2.level_number == 5)
                     price >>= 1;
                 if (!(cash >= (int32_t)(int16_t)price))
                     sold = 1;
@@ -949,7 +949,7 @@ void shop_stock_recheck(void)
 void shop_sell_list(void)
 {
     uint32_t rec = SH_RECS;
-    Object *weapon = obj_list[1].prev;
+    Object *weapon = xenon2.obj_list[1].prev;
 
     while (weapon->type != 0) {
         if (weapon->type != 0x94) {
@@ -971,7 +971,7 @@ void shop_sell_list(void)
 /* the record under the cursor (the grid is 5 wide) */
 static uint8_t *cursor_record(void)
 {
-    uint16_t index = (uint16_t)(shop_cursor_row * 5 + shop_cursor_col);
+    uint16_t index = (uint16_t)(xenon2.shop_cursor_row * 5 + xenon2.shop_cursor_col);
 
     return (uint8_t *)GPTR(SH_RECS + (int16_t)(uint16_t)(index * 0x10));
 }
@@ -1026,27 +1026,27 @@ void shop_sell_show(uint8_t *rec)
  * sells it (the cash is paid and the weapon goes); the button below the grid leaves */
 void shop_sell(void)
 {
-    shop_cursor_col = 0;
-    shop_cursor_row = 0;
+    xenon2.shop_cursor_col = 0;
+    xenon2.shop_cursor_row = 0;
     sh_w16(SH_LAST_X, 0xffff);
     shop_cursor_draw();
     sh_w16(SH_PRICE, 0xffff);
     for (;;) {
-        key_pressed = 0;
+        xenon2.key_pressed = 0;
         shop_stick();
-        if (shop_cursor_row == 4) {
-            if (shop_cursor_col == 0) {
+        if (xenon2.shop_cursor_row == 4) {
+            if (xenon2.shop_cursor_col == 0) {
                 shop_cursor_erase();
                 return;
             }
-        } else if (!(shop_cursor_col == sh_r16(SH_LAST_X) && shop_cursor_row == sh_r16(SH_LAST_Y))) {
+        } else if (!(xenon2.shop_cursor_col == sh_r16(SH_LAST_X) && xenon2.shop_cursor_row == sh_r16(SH_LAST_Y))) {
             uint8_t *rec = cursor_record();
             uint16_t kind = rd16(rec + 6);
 
             if (kind == 0)
                 continue;
-            sh_w16(SH_LAST_X, shop_cursor_col);
-            sh_w16(SH_LAST_Y, shop_cursor_row);
+            sh_w16(SH_LAST_X, xenon2.shop_cursor_col);
+            sh_w16(SH_LAST_Y, xenon2.shop_cursor_row);
             sh_w8(SH_BLINK_B, 0xff);
             shop_item_name(kind, (uint16_t)((const Object *)GPTR(rd32(rec + 0xc)))->score);
             shop_sell_show(rec);
@@ -1056,7 +1056,7 @@ void shop_sell(void)
         sh_w16(SH_LAST_X, 0xffff);
         if ((int16_t)sh_r16(SH_PRICE) < 0)
             continue;
-        player_money += (uint32_t)(int32_t)(int16_t)sh_r16(SH_PRICE);
+        xenon2.player_money += (uint32_t)(int32_t)(int16_t)sh_r16(SH_PRICE);
         sh_w16(SH_PRICE, 0xffff);
         shop_cash_draw();
         {
@@ -1074,20 +1074,20 @@ void shop_sell(void)
  * counted down and the item is given); the button below the grid leaves */
 void shop_buy(void)
 {
-    shop_cursor_col = 0;
-    shop_cursor_row = 0;
+    xenon2.shop_cursor_col = 0;
+    xenon2.shop_cursor_row = 0;
     sh_w16(SH_LAST_X, 0xffff);
     shop_cursor_draw();
     sh_w16(SH_PRICE, 0xffff);
     for (;;) {
-        key_pressed = 0;
+        xenon2.key_pressed = 0;
         shop_stick();
-        if (shop_cursor_row == 4) {
-            if (shop_cursor_col == 0) {
+        if (xenon2.shop_cursor_row == 4) {
+            if (xenon2.shop_cursor_col == 0) {
                 shop_cursor_erase();
                 return;
             }
-        } else if (!(shop_cursor_col == sh_r16(SH_LAST_X) && shop_cursor_row == sh_r16(SH_LAST_Y))) {
+        } else if (!(xenon2.shop_cursor_col == sh_r16(SH_LAST_X) && xenon2.shop_cursor_row == sh_r16(SH_LAST_Y))) {
             uint8_t *rec = cursor_record();
             uint16_t kind = rd16(rec + 6);
 
@@ -1109,9 +1109,9 @@ void shop_buy(void)
                 sh_w16(SH_PRICE, 0xffff);
                 continue;
             }
-            sh_w16(SH_LAST_X, shop_cursor_col);
-            sh_w16(SH_LAST_Y, shop_cursor_row);
-            shop_item_name(kind, (uint16_t)(shop_cursor_row * 5));
+            sh_w16(SH_LAST_X, xenon2.shop_cursor_col);
+            sh_w16(SH_LAST_Y, xenon2.shop_cursor_row);
+            shop_item_name(kind, (uint16_t)(xenon2.shop_cursor_row * 5));
             shop_price_text(rec);
             continue;
         }
@@ -1131,8 +1131,8 @@ void shop_buy(void)
             const uint8_t *rec;
 
             while (price >= 0x64) {
-                sfx_cmd = 0xd;
-                player_money -= 0x64;
+                xenon2.sfx_cmd = 0xd;
+                xenon2.player_money -= 0x64;
                 price -= 0x64;
                 shop_cash_draw();
                 shop_room_draw();
@@ -1140,7 +1140,7 @@ void shop_buy(void)
                 shop_records_draw();
                 swap_screens_200();
             }
-            player_money -= (uint32_t)price;
+            xenon2.player_money -= (uint32_t)price;
             rec = (const uint8_t *)GPTR(sh_r32(SH_REC));
             item_grant(rd16(rec + 6));
             sh_w16(SH_PRICE, 0xffff);
@@ -1163,8 +1163,8 @@ static void pillars_draw(uint16_t y, uint16_t state)
     shop_draw_both(0x122, y, GPTR(gfx));
 }
 
-void shop_pillars_a(void) { pillars_draw(4, shop_door_left); }
-void shop_pillars_b(void) { pillars_draw(0x6d, shop_door_right); }
+void shop_pillars_a(void) { pillars_draw(4, xenon2.shop_door_left); }
+void shop_pillars_b(void) { pillars_draw(0x6d, xenon2.shop_door_right); }
 
 /* shop $5504E */
 void shop_delay(void)
@@ -1185,25 +1185,25 @@ void shop_slide_in(void)
 {
     do {
         swap_screens_200();
-        if (shop_door_left != 0) {
-            shop_door_left -= 4;
-            if ((int16_t)shop_door_left < 0 || shop_door_left == 0) {
+        if (xenon2.shop_door_left != 0) {
+            xenon2.shop_door_left -= 4;
+            if ((int16_t)xenon2.shop_door_left < 0 || xenon2.shop_door_left == 0) {
                 shop_sound_cmd(0x83);
-                shop_door_left = 0;
+                xenon2.shop_door_left = 0;
             }
         }
-        if (shop_door_right != 0) {
-            shop_door_right -= 4;
-            if (shop_door_right == 0 || (int16_t)shop_door_right < 0) {
-                if ((int16_t)shop_door_right < 0)
-                    shop_door_right = 0;
-                sfx_cmd = 0;
+        if (xenon2.shop_door_right != 0) {
+            xenon2.shop_door_right -= 4;
+            if (xenon2.shop_door_right == 0 || (int16_t)xenon2.shop_door_right < 0) {
+                if ((int16_t)xenon2.shop_door_right < 0)
+                    xenon2.shop_door_right = 0;
+                xenon2.sfx_cmd = 0;
             }
         }
         shop_room_update();
         shop_pillars_a();
         shop_pillars_b();
-    } while (shop_door_left != 0 || shop_door_right != 0);
+    } while (xenon2.shop_door_left != 0 || xenon2.shop_door_right != 0);
     shop_board_clear();
 }
 
@@ -1213,20 +1213,20 @@ void shop_slide_out(void)
     shop_board_clear();
     do {
         swap_screens_200();
-        if (shop_door_right != 0x44) {
-            shop_door_right += 4;
-            if ((int16_t)shop_door_right > 0x44)
-                shop_door_right = 0x44;
+        if (xenon2.shop_door_right != 0x44) {
+            xenon2.shop_door_right += 4;
+            if ((int16_t)xenon2.shop_door_right > 0x44)
+                xenon2.shop_door_right = 0x44;
         }
-        if (shop_door_left != 0x30) {
-            shop_door_left += 4;
-            if ((int16_t)shop_door_left > 0x30)
-                shop_door_left = 0x30;
+        if (xenon2.shop_door_left != 0x30) {
+            xenon2.shop_door_left += 4;
+            if ((int16_t)xenon2.shop_door_left > 0x30)
+                xenon2.shop_door_left = 0x30;
         }
         shop_room_update();
         shop_pillars_b();
         shop_pillars_a();
-    } while (shop_door_right != 0x44);
+    } while (xenon2.shop_door_right != 0x44);
 }
 
 /* shop $564CE: the keeper walks to the counter, talks, and goes back */
@@ -1320,14 +1320,14 @@ void shop_close(void)
 /* shop $55198: the screen is cleared and two rows of the picture of the end of the broadcast are drawn */
 void shop_blank_screen(void)
 {
-    uint8_t *dst = draw_screen;
+    uint8_t *dst = xenon2.draw_screen;
     int16_t n = 0x1f3f;
 
     do {
         wr32(dst, 0);
         dst += 4;
     } while (n-- != 0);
-    dst = draw_screen + 0x3e94;
+    dst = xenon2.draw_screen + 0x3e94;
     wr16(dst, 0xf);
     wr16(dst + 0x28, 6);
     wr16(dst + 0x50, 0xf);
@@ -1342,13 +1342,13 @@ void shop_blank_screen(void)
 /* the weapon slots' latch of the level ($352E) without its test of nashwan_timer: type and score of each of the 7 slots to slot_snapshot; an empty slot repeats last_score */
 static void latch_slots_all(uint16_t last_score)
 {
-    uint16_t *out = slot_snapshot;
+    uint16_t *out = xenon2.slot_snapshot;
     int i;
 
     for (i = 0; i < 7; i++) {
-        *out++ = weapon_slots[i].type;
-        if (weapon_slots[i].type != 0)
-            last_score = (uint16_t)weapon_slots[i].obj->score;
+        *out++ = xenon2.weapon_slots[i].type;
+        if (xenon2.weapon_slots[i].type != 0)
+            last_score = (uint16_t)xenon2.weapon_slots[i].obj->score;
         *out++ = last_score;
     }
 }
@@ -1358,14 +1358,14 @@ void shop_leave(void)
 {
     palette_fade_out(2);
     work_area_restore();
-    clip_bottom = 0xbf;
+    xenon2.clip_bottom = 0xbf;
     refill_slot0(0, 0);
     latch_slots_all(0);
     shop_sound_stop();
     shop_sound_reset();
-    music_tick_fn = music_tick;
-    music_cmd_fn = (irq_fn)(void *)sfx_play;
-    advice_hints = 0xc;
+    xenon2.music_tick_fn = music_tick;
+    xenon2.music_cmd_fn = (irq_fn)(void *)sfx_play;
+    xenon2.advice_hints = 0xc;
 }
 
 /* shop $5505A: the last words of the broadcast, the doorway closes, the screen goes dark in flickering colours */
@@ -1381,16 +1381,16 @@ void shop_end_of_broadcast(void)
     shop_print((const uint8_t *)GPTR(SH_TXT_GOOD_ENOUGH));
     shop_wait(0x11);
     shop_close();
-    sfx_cmd = 0x16;
+    xenon2.sfx_cmd = 0x16;
     shop_slide_out();
-    sfx_cmd = 8;
+    xenon2.sfx_cmd = 8;
     swap_screens_200();
     shop_delay();
     shop_room_update();
     swap_screens_200();
     shop_room_update();
     palette_fade_out(2);
-    sfx_cmd = 0x12;
+    xenon2.sfx_cmd = 0x12;
     for (n = 0x96; n != 0; n--) {
         uint32_t c[8];
         int i;
@@ -1399,8 +1399,8 @@ void shop_end_of_broadcast(void)
         swap_screens_200();
         for (i = 0; i < 8; i++) {
             c[i] = sh_r32(SH_PALETTE_END + 4u * i);
-            palette_shadow[2 * i] = (uint16_t)(c[i] >> 16);
-            palette_shadow[2 * i + 1] = (uint16_t)c[i];
+            xenon2.palette_shadow[2 * i] = (uint16_t)(c[i] >> 16);
+            xenon2.palette_shadow[2 * i + 1] = (uint16_t)c[i];
         }
         for (i = 0; i < 8; i++) {
             c[i] += c[i];
@@ -1423,14 +1423,14 @@ void shop_main(void)
     int16_t x, y, i;
     int32_t n;
 
-    clip_bottom = 0xc7;
+    xenon2.clip_bottom = 0xc7;
     work_area_save();
-    music_tick_fn = shop_irq_tick;
-    music_cmd_fn = (irq_fn)(void *)shop_sound_cmd;
+    xenon2.music_tick_fn = shop_irq_tick;
+    xenon2.music_cmd_fn = (irq_fn)(void *)shop_sound_cmd;
     sh_w8(SH_NTSC, 0);
     if (!(CIAA_CRA & 0x80))
         sh_w8(SH_NTSC, 0xff);
-    screen = draw_screen;
+    screen = xenon2.draw_screen;
     for (n = 0; n < 0x1f40; n++)
         wr32(screen + 4 * n, 0);
     for (y = 0; y < 0xa4; y = (int16_t)(y + 0x29))
@@ -1439,24 +1439,24 @@ void shop_main(void)
             draw_bob_masked_at((uint16_t)x, (uint16_t)y, GPTR(SH_GFX_BEDROOM2));
         }
     for (pic = SH_TAB_PICS; sh_r32(pic) != 0; pic += 10)
-        shop_copy_block((const uint8_t *)GPTR(sh_r32(pic)), draw_screen + (int16_t)sh_r16(pic + 4), sh_r16(pic + 6), sh_r16(pic + 8));
-    if (cur_player != 0)
+        shop_copy_block((const uint8_t *)GPTR(sh_r32(pic)), xenon2.draw_screen + (int16_t)sh_r16(pic + 4), sh_r16(pic + 6), sh_r16(pic + 8));
+    if (xenon2.cur_player != 0)
         draw_bob_masked_at(0xc1, 0xbc, GPTR(SH_GFX_PLAYER2));
-    screen = draw_screen;
+    screen = xenon2.draw_screen;
     for (n = 0; n < 0x1f40; n++)
-        wr32(show_screen + 4 * n, rd32(screen + 4 * n));
+        wr32(xenon2.show_screen + 4 * n, rd32(screen + 4 * n));
     sh_w8(SH_SELLING, 0xff);
     sh_w8(SH_NO_BLINK, 0xff);
     sh_w8(SH_BLINK_A, 0);
     sh_w16(SH_PAGE, 0);
     for (rec = SH_RECS, i = 0x13; i >= 0; i--, rec += 0x10)
         sh_w16(rec, 0xfff7);
-    shop_door_left = 0x30;
-    shop_door_right = 0x44;
-    shop_keeper_talking = 0;
-    shop_keeper_aux = 0;
-    shop_cursor_col = 1;
-    shop_cursor_row = 4;
+    xenon2.shop_door_left = 0x30;
+    xenon2.shop_door_right = 0x44;
+    xenon2.shop_keeper_talking = 0;
+    xenon2.shop_keeper_aux = 0;
+    xenon2.shop_cursor_col = 1;
+    xenon2.shop_cursor_row = 4;
     shop_cursor_erase();
     shop_cash_draw();
     shop_room_update();
@@ -1469,23 +1469,23 @@ void shop_main(void)
             colors[i] = sh_r16(SH_PALETTE + 2u * (uint16_t)i);
         palette_fade_in(colors);
     }
-    sfx_cmd = 8;
+    xenon2.sfx_cmd = 8;
     shop_delay();
-    sfx_cmd = 0x16;
+    xenon2.sfx_cmd = 0x16;
     shop_slide_in();
-    if (shop_closing)
+    if (xenon2.shop_closing)
         shop_stock_sold_out();
     else
         shop_sell_list();
     shop_open();
     shop_keeper_in();
     shop_text_home();
-    if (shop_closing) {
+    if (xenon2.shop_closing) {
         shop_end_of_broadcast();
     } else {
         const uint8_t *text = (const uint8_t *)GPTR(SH_TXT_SELL);
 
-        if (level_number == 5) {
+        if (xenon2.level_number == 5) {
             shop_print((const uint8_t *)GPTR(SH_TXT_WELCOME_A));
             shop_hold(0x11);
             shop_text_home();
@@ -1498,8 +1498,8 @@ void shop_main(void)
         shop_sell();
         shop_close();
         sh_w8(SH_SELLING, 0);
-        shop_cursor_col = 1;
-        shop_cursor_row = 4;
+        xenon2.shop_cursor_col = 1;
+        xenon2.shop_cursor_row = 4;
         shop_cursor_erase();
         shop_stock_update();
         shop_open();
@@ -1507,9 +1507,9 @@ void shop_main(void)
         shop_print((const uint8_t *)GPTR(SH_TXT_BUY));
         shop_buy();
         shop_close();
-        sfx_cmd = 0x16;
+        xenon2.sfx_cmd = 0x16;
         shop_slide_out();
-        sfx_cmd = 8;
+        xenon2.sfx_cmd = 8;
         swap_screens_200();
         shop_delay();
         shop_room_update();
