@@ -57,7 +57,7 @@ int32_t find_glyph(uint8_t ch, const uint8_t *list)
  * 22 rows high in 4 planes; characters not in the font leave a gap */
 void draw_text_row_at(uint8_t *dst, const uint8_t *s, uint16_t count)
 {
-    RawWord *out = (RawWord *)dst;
+    uint16_t *out = (uint16_t *)dst;
     uint16_t n = count;
 
     do {
@@ -68,10 +68,10 @@ void draw_text_row_at(uint8_t *dst, const uint8_t *s, uint16_t count)
             int row;
 
             for (row = 0; row < 22; row++) {
-                wr16(out[0].b, *g++);
-                wr16(out[SCREEN_PLANE_WORDS].b, *g++);
-                wr16(out[2 * SCREEN_PLANE_WORDS].b, *g++);
-                wr16(out[3 * SCREEN_PLANE_WORDS].b, *g++);
+                out[0] = *g++;
+                out[SCREEN_PLANE_WORDS] = *g++;
+                out[2 * SCREEN_PLANE_WORDS] = *g++;
+                out[3 * SCREEN_PLANE_WORDS] = *g++;
                 out += SCREEN_ROW_WORDS;
             }
             out -= 22 * SCREEN_ROW_WORDS;
@@ -92,7 +92,7 @@ void draw_text_row(const uint8_t *s)
  * the rows the rotating mask drops are left out; from step 16 on the line is drawn plain */
 void draw_text_squeezed(const uint8_t *s)
 {
-    RawWord *out, *end;
+    uint16_t *out, *end;
     uint8_t *at;
     uint16_t col, offset;
     const uint16_t *mask;
@@ -103,7 +103,7 @@ void draw_text_squeezed(const uint8_t *s)
         return;
     }
     at = xenon2.draw_screen;
-    end = (RawWord *)(at + 0x7d00);
+    end = (uint16_t *)(at + 0x7d00);
     col = xenon2.title_scale;
     offset = (uint16_t)(((uint16_t)(xenon2.title_y + xenon2.title_y) - col) >> 1);
     at += (int16_t)(uint16_t)(offset * 0xa0u);
@@ -111,14 +111,14 @@ void draw_text_squeezed(const uint8_t *s)
     col = offset & 0xf;
     offset = (uint16_t)((offset - col) >> 3);
     at += (int16_t)offset;
-    out = (RawWord *)at;
+    out = (uint16_t *)at;
     mask = &xenon2.squeeze_masks[(int16_t)xenon2.title_scale];
 
     for (n = 0; n < 20; n++) {
         int32_t idx = find_glyph(*s++, xenon2.title_font_chars);
 
         if (idx >= 0) {
-            RawWord *keep = out;
+            uint16_t *keep = out;
             const uint16_t *g = xenon2.title_font + ((uint16_t)idx * 0xb0u) / 2;
             uint16_t row_mask = *mask;
             uint16_t rows = 0x15;
@@ -151,10 +151,10 @@ void draw_text_squeezed(const uint8_t *s)
                     }
                     shift = (int16_t)(0x10 - col - xenon2.title_scale);
                     if (shift >= 0) {
-                        wr16(out[SCREEN_PLANE_WORDS].b, rd16(out[SCREEN_PLANE_WORDS].b) | (uint16_t)((plane2 >> 16) << shift));
-                        wr16(out[2 * SCREEN_PLANE_WORDS].b, rd16(out[2 * SCREEN_PLANE_WORDS].b) | (uint16_t)((plane3 >> 16) << shift));
-                        wr16(out[3 * SCREEN_PLANE_WORDS].b, rd16(out[3 * SCREEN_PLANE_WORDS].b) | (uint16_t)((plane4 >> 16) << shift));
-                        wr16(out[0].b, rd16(out[0].b) | (uint16_t)((plane1 >> 16) << shift));
+                        out[SCREEN_PLANE_WORDS] = out[SCREEN_PLANE_WORDS] | (uint16_t)((plane2 >> 16) << shift);
+                        out[2 * SCREEN_PLANE_WORDS] = out[2 * SCREEN_PLANE_WORDS] | (uint16_t)((plane3 >> 16) << shift);
+                        out[3 * SCREEN_PLANE_WORDS] = out[3 * SCREEN_PLANE_WORDS] | (uint16_t)((plane4 >> 16) << shift);
+                        out[0] = out[0] | (uint16_t)((plane1 >> 16) << shift);
                         out++;
                     } else {
                         shift += 0x10;
@@ -162,15 +162,15 @@ void draw_text_squeezed(const uint8_t *s)
                         plane2 = (plane2 << shift) | (plane2 >> (32 - shift));
                         plane3 = (plane3 << shift) | (plane3 >> (32 - shift));
                         plane4 = (plane4 << shift) | (plane4 >> (32 - shift));
-                        wr16(out[SCREEN_PLANE_WORDS].b, rd16(out[SCREEN_PLANE_WORDS].b) | (uint16_t)plane2);
-                        wr16(out[2 * SCREEN_PLANE_WORDS].b, rd16(out[2 * SCREEN_PLANE_WORDS].b) | (uint16_t)plane3);
-                        wr16(out[3 * SCREEN_PLANE_WORDS].b, rd16(out[3 * SCREEN_PLANE_WORDS].b) | (uint16_t)plane4);
-                        wr16(out[0].b, rd16(out[0].b) | (uint16_t)plane1);
+                        out[SCREEN_PLANE_WORDS] = out[SCREEN_PLANE_WORDS] | (uint16_t)plane2;
+                        out[2 * SCREEN_PLANE_WORDS] = out[2 * SCREEN_PLANE_WORDS] | (uint16_t)plane3;
+                        out[3 * SCREEN_PLANE_WORDS] = out[3 * SCREEN_PLANE_WORDS] | (uint16_t)plane4;
+                        out[0] = out[0] | (uint16_t)plane1;
                         out++;
-                        wr16(out[0].b, (uint16_t)(plane1 >> 16));
-                        wr16(out[SCREEN_PLANE_WORDS].b, (uint16_t)(plane2 >> 16));
-                        wr16(out[2 * SCREEN_PLANE_WORDS].b, (uint16_t)(plane3 >> 16));
-                        wr16(out[3 * SCREEN_PLANE_WORDS].b, (uint16_t)(plane4 >> 16));
+                        out[0] = (uint16_t)(plane1 >> 16);
+                        out[SCREEN_PLANE_WORDS] = (uint16_t)(plane2 >> 16);
+                        out[2 * SCREEN_PLANE_WORDS] = (uint16_t)(plane3 >> 16);
+                        out[3 * SCREEN_PLANE_WORDS] = (uint16_t)(plane4 >> 16);
                     }
                     out += SCREEN_ROW_WORDS - 1;
                 }
@@ -200,7 +200,7 @@ void stars_update(void)
         int32_t x = s->x, y = s->y;
         int16_t z = (int16_t)(((uint16_t)s->z & 0x7fff) - 0x200);
         uint16_t px, py, mask, color;
-        RawWord *dst;
+        uint16_t *dst;
         int pixel;
 
         if (!(z > 0x200))
@@ -228,17 +228,17 @@ void stars_update(void)
         goto again;
     plot:
         pixel = px & 0xf;
-        dst = (RawWord *)(xenon2.draw_screen + (int16_t)(uint16_t)(py * 0xa0u) + (int16_t)(uint16_t)((px - pixel) >> 3));
+        dst = (uint16_t *)(xenon2.draw_screen + (int16_t)(uint16_t)(py * 0xa0u) + (int16_t)(uint16_t)((px - pixel) >> 3));
         mask = (uint16_t)(0x8000 >> pixel);
-        if ((rd16(dst[0].b) | rd16(dst[SCREEN_PLANE_WORDS].b) | rd16(dst[2 * SCREEN_PLANE_WORDS].b) | rd16(dst[3 * SCREEN_PLANE_WORDS].b)) & mask) {
+        if ((dst[0] | dst[SCREEN_PLANE_WORDS] | dst[2 * SCREEN_PLANE_WORDS] | dst[3 * SCREEN_PLANE_WORDS]) & mask) {
             s->z |= (int16_t)0x8000;
             continue;
         }
         color = xenon2.star_colors[(((uint16_t)z << 6) | ((uint16_t)z >> 10)) & 7];
-        if (color & 1) wr16(dst[0].b, rd16(dst[0].b) | mask);
-        if (color & 2) wr16(dst[SCREEN_PLANE_WORDS].b, rd16(dst[SCREEN_PLANE_WORDS].b) | mask);
-        if (color & 4) wr16(dst[2 * SCREEN_PLANE_WORDS].b, rd16(dst[2 * SCREEN_PLANE_WORDS].b) | mask);
-        if (color & 8) wr16(dst[3 * SCREEN_PLANE_WORDS].b, rd16(dst[3 * SCREEN_PLANE_WORDS].b) | mask);
+        if (color & 1) dst[0] = dst[0] | mask;
+        if (color & 2) dst[SCREEN_PLANE_WORDS] = dst[SCREEN_PLANE_WORDS] | mask;
+        if (color & 4) dst[2 * SCREEN_PLANE_WORDS] = dst[2 * SCREEN_PLANE_WORDS] | mask;
+        if (color & 8) dst[3 * SCREEN_PLANE_WORDS] = dst[3 * SCREEN_PLANE_WORDS] | mask;
     }
 }
 
@@ -250,7 +250,7 @@ void stars_erase(void)
     for (i = 0; i < 48; i++) {
         struct Star *s = &xenon2.stars[i];
         uint16_t px, py, byte_off;
-        RawWord *dst;
+        uint16_t *dst;
         int pixel;
         uint16_t keep;
 
@@ -260,12 +260,12 @@ void stars_erase(void)
         py = (uint16_t)(divs_low((int32_t)((uint32_t)(int32_t)s->y << 4), s->z) + 0x64);
         pixel = px & 0xf;
         byte_off = (uint16_t)((px - pixel) >> 3);
-        dst = (RawWord *)(xenon2.draw_screen + (int16_t)(uint16_t)(py * 0xa0u) + (int16_t)byte_off);
+        dst = (uint16_t *)(xenon2.draw_screen + (int16_t)(uint16_t)(py * 0xa0u) + (int16_t)byte_off);
         keep = (uint16_t)((0x7fff >> pixel) | (0x7fff << (16 - pixel)));
-        wr16(dst[0].b, rd16(dst[0].b) & keep);
-        wr16(dst[SCREEN_PLANE_WORDS].b, rd16(dst[SCREEN_PLANE_WORDS].b) & keep);
-        wr16(dst[2 * SCREEN_PLANE_WORDS].b, rd16(dst[2 * SCREEN_PLANE_WORDS].b) & keep);
-        wr16(dst[3 * SCREEN_PLANE_WORDS].b, rd16(dst[3 * SCREEN_PLANE_WORDS].b) & keep);
+        dst[0] = dst[0] & keep;
+        dst[SCREEN_PLANE_WORDS] = dst[SCREEN_PLANE_WORDS] & keep;
+        dst[2 * SCREEN_PLANE_WORDS] = dst[2 * SCREEN_PLANE_WORDS] & keep;
+        dst[3 * SCREEN_PLANE_WORDS] = dst[3 * SCREEN_PLANE_WORDS] & keep;
     }
 }
 
@@ -276,7 +276,7 @@ void stars_erase(void)
 void draw_logo_scaled(const uint16_t *gfx, int16_t x, int16_t y, int16_t width, int16_t rows)
 {
     const uint16_t *src = gfx;
-    RawWord *dst;
+    uint16_t *dst;
     uint16_t px = (uint16_t)((int16_t)(uint16_t)(int32_t)((int32_t)x * (int16_t)xenon2.title_scale) >> 4) + 0xa0;
     uint16_t py = (uint16_t)((int16_t)(uint16_t)(int32_t)((int32_t)y * (int16_t)xenon2.title_scale) >> 4) + 0x64;
     uint16_t shift = px & 0xf;
@@ -285,7 +285,7 @@ void draw_logo_scaled(const uint16_t *gfx, int16_t x, int16_t y, int16_t width, 
     uint16_t rowpat = mask, colpat = mask;
     uint32_t marker;
 
-    dst = (RawWord *)(xenon2.draw_screen + (int16_t)(uint16_t)((int32_t)(int16_t)py * 0xa0) + (int16_t)(uint16_t)((uint16_t)(px - shift) >> 3));
+    dst = (uint16_t *)(xenon2.draw_screen + (int16_t)(uint16_t)((int32_t)(int16_t)py * 0xa0) + (int16_t)(uint16_t)((uint16_t)(px - shift) >> 3));
     marker = 0x10000u << shift;
     do {
         uint32_t w0 = marker, w1 = marker, w2 = marker, w3 = marker;
@@ -296,7 +296,7 @@ void draw_logo_scaled(const uint16_t *gfx, int16_t x, int16_t y, int16_t width, 
         if (bit == 0) {
             src += (8 + ((uint16_t)width & 0xfff0) / 2) / 2;
         } else {
-            RawWord *out = dst;
+            uint16_t *out = dst;
             uint16_t bits_left = 0;
             uint8_t carry;
 
@@ -327,10 +327,10 @@ void draw_logo_scaled(const uint16_t *gfx, int16_t x, int16_t y, int16_t width, 
                         continue;
                     break;
                 }
-                wr16(out[SCREEN_PLANE_WORDS].b, (uint16_t)(w1 >> 16));
-                wr16(out[2 * SCREEN_PLANE_WORDS].b, (uint16_t)(w2 >> 16));
-                wr16(out[3 * SCREEN_PLANE_WORDS].b, (uint16_t)(w3 >> 16));
-                wr16(out[0].b, (uint16_t)(w0 >> 16));
+                out[SCREEN_PLANE_WORDS] = (uint16_t)(w1 >> 16);
+                out[2 * SCREEN_PLANE_WORDS] = (uint16_t)(w2 >> 16);
+                out[3 * SCREEN_PLANE_WORDS] = (uint16_t)(w3 >> 16);
+                out[0] = (uint16_t)(w0 >> 16);
                 out++;
                 w0 = 0x10000u | (w0 & 0xffff);
                 w1 = 0x10000u | (w1 & 0xffff);
@@ -344,10 +344,10 @@ void draw_logo_scaled(const uint16_t *gfx, int16_t x, int16_t y, int16_t width, 
                 carry = (uint8_t)(w3 >> 31);
                 w0 <<= 1; w1 <<= 1; w2 <<= 1; w3 <<= 1;
             } while (!carry);
-            wr16(out[SCREEN_PLANE_WORDS].b, (uint16_t)(w1 >> 16));
-            wr16(out[2 * SCREEN_PLANE_WORDS].b, (uint16_t)(w2 >> 16));
-            wr16(out[3 * SCREEN_PLANE_WORDS].b, (uint16_t)(w3 >> 16));
-            wr16(out[0].b, (uint16_t)(w0 >> 16));
+            out[SCREEN_PLANE_WORDS] = (uint16_t)(w1 >> 16);
+            out[2 * SCREEN_PLANE_WORDS] = (uint16_t)(w2 >> 16);
+            out[3 * SCREEN_PLANE_WORDS] = (uint16_t)(w3 >> 16);
+            out[0] = (uint16_t)(w0 >> 16);
             dst += SCREEN_ROW_WORDS;
         }
         cnt--;
@@ -398,18 +398,18 @@ void title_fade_in(void)
 /* orig $007DE2: clears the screen and draws the logo (54 rows of 13 groups) at its place */
 void title_draw_logo(void)
 {
-    RawWord *dst;
+    uint16_t *dst;
     const uint16_t *g = xenon2.title_gfx;
     int row, k;
 
     clear_screen();
-    dst = (RawWord *)(xenon2.draw_screen + 0xc86);
+    dst = (uint16_t *)(xenon2.draw_screen + 0xc86);
     for (row = 0; row < 54; row++) {
         for (k = 0; k < 13; k++) {
-            wr16(dst[k].b, *g++);
-            wr16(dst[k + SCREEN_PLANE_WORDS].b, *g++);
-            wr16(dst[k + 2 * SCREEN_PLANE_WORDS].b, *g++);
-            wr16(dst[k + 3 * SCREEN_PLANE_WORDS].b, *g++);
+            dst[k] = *g++;
+            dst[k + SCREEN_PLANE_WORDS] = *g++;
+            dst[k + 2 * SCREEN_PLANE_WORDS] = *g++;
+            dst[k + 3 * SCREEN_PLANE_WORDS] = *g++;
         }
         dst += SCREEN_ROW_WORDS;
     }

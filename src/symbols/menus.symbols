@@ -22,7 +22,7 @@ var disk_track 0x9202 int16_t                      ; the track the head is on (n
 var disk_want 0x9204 uint16_t                      ; the track being read
 var disk_done 0x9206 volatile uint8_t              ; set by the disk-block interrupt
 var disk_error 0x9207 volatile uint8_t
-arr disk_header 0x9208 uint8_t 4                   ; decoded sector header: format, track, sector, sectors to the gap
+arr disk_header 0x9208 uint16_t 2                   ; decoded sector header: format, track, sector, sectors to the gap
 var disk_total 0x920c uint16_t                     ; sectors asked for
 arr disk_seen 0x920e uint8_t 11                    ; bit 7: the sector of this track was read
 var disk_dest 0x92c0 uint8_t *
@@ -33,5 +33,5 @@ tab mfm_sync_b 0x95c4 uint32_t 8
 var work_area_users 0x963e uint16_t                ; how many have the work area saved
 arr rand_saved 0x9660 uint32_t 4                   ; random state: [0..1] kept by the first script run, [2..3] the caller's
 tab sine_table 0x98f6 int8_t 320                   ; sine of a 256-step circle (the cosine is 64 on)
-arr work_area 0x4fa uint8_t 1280                   ; 1280 bytes of the low RAM that the title page saves and restores
-var enemy_shot_gfx 0x54e28 uint8_t *               ; the level's picture of an enemy shot
+arr work_area 0x4fa uint16_t 640                   ; 1280 bytes of the low RAM that the title page saves and restores
+var enemy_shot_gfx 0x54e28 uint16_t *               ; the level's picture of an enemy shot

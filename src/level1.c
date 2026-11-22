@@ -195,7 +195,7 @@ void level1_launcher_update(Object *launcher)
     dy = (int16_t)(launcher->y - PLAYER->y);
     if (dy <= 0xa && dy >= -0x1e && (uint8_t)random_next() < 0x32) {
         Object *tail;
-        const uint8_t *anim;
+        const uint16_t *anim;
 
         launcher->launcher.step = 0;
         launcher->next->prev = launcher->prev;
@@ -236,7 +236,7 @@ static Object *level1_turret(uint16_t type, const struct SpawnRec *rec, void (*u
 }
 
 /* the end of the turrets' set-up: the first cells are written into the map ($46), the object hides them again when it is shot */
-static void level1_turret_cells(Object *turret, const Cell *cells, const uint8_t *anim)
+static void level1_turret_cells(Object *turret, const Cell *cells, const uint16_t *anim)
 {
     turret->gfx = cells;
     turret->anim = anim;
@@ -324,7 +324,7 @@ void level1_scroll(void)
                 uint8_t *dst = xenon2.level_init_src + (int16_t)patches[0];
 
                 (*vars)--;
-                wr16(dst, patches[1 + (*vars & 3)]);
+                *(Cell *)dst = patches[1 + (*vars & 3)];
             }
             vars++;
             patches += 5;
@@ -341,8 +341,8 @@ void level1_boss_update(Object *boss)
     int i;
     int16_t wave, new_y, lost, box_y;
     int32_t turn;
-    const uint8_t *src;
-    static const uint8_t *const sources[4] = { xenon2.level1_data.boss_draw_sources, xenon2.level1_data.boss_draw_sources + 16, xenon2.level1_data.boss_draw_sources + 32, xenon2.level1_data.boss_draw_sources + 16 };
+    const uint16_t *src;
+    static const uint16_t *const sources[4] = { xenon2.level1_data.boss_draw_sources, xenon2.level1_data.boss_draw_sources + 8, xenon2.level1_data.boss_draw_sources + 16, xenon2.level1_data.boss_draw_sources + 8 };
 
     if ((int16_t)xenon2.scroll_pos > 0x1c0)
         goto hide;
@@ -370,10 +370,10 @@ void level1_boss_update(Object *boss)
             part->fn_update = level1_boss_part_update;
             part->fn_draw = draw_bob_masked;
             part->fn_hit = (void *)hit_kill_shooter;
-            part->gfx = xenon2.level1_data.boss_part_picture;
+            part->gfx = &xenon2.level1_data.boss_part_picture;
             part->anim_delay = 0;
             part->shot_count = part->shot_rate = 0;
-            part->anim = (const uint8_t *)prev_part;
+            part->anim = (const uint16_t *)prev_part;
             prev_part = part;
             part->big = 0;
             part->persists = -1;
@@ -457,9 +457,9 @@ void level1_boss_update(Object *boss)
 draw_table:
     src = sources[(xenon2.frame_tick & 0xc) >> 2];
     copy_long(&xenon2.level1_data.boss_draw_table[0], src);
-    copy_long(&xenon2.level1_data.boss_draw_table[4], src + 4);
-    copy_long(&xenon2.level1_data.boss_draw_table[12], src + 8);
-    copy_long(&xenon2.level1_data.boss_draw_table[16], src + 12);
+    copy_long(&xenon2.level1_data.boss_draw_table[2], src + 2);
+    copy_long(&xenon2.level1_data.boss_draw_table[6], src + 4);
+    copy_long(&xenon2.level1_data.boss_draw_table[8], src + 6);
     if (boss->l1_boss.phase != 0)
         return;
 hide:
@@ -470,12 +470,12 @@ hide:
 /* orig $05661A: draw routine of the level 1 boss */
 void level1_boss_draw(Object *boss)
 {
-    static const void *const eyes[4] = { xenon2.level1_data.eyes_a, xenon2.level1_data.eyes_b, xenon2.level1_data.eyes_c, xenon2.level1_data.eyes_b };
+    const void *const eyes[4] = { &xenon2.level1_data.eyes_a, &xenon2.level1_data.eyes_b, &xenon2.level1_data.eyes_c, &xenon2.level1_data.eyes_b };
     uint16_t eye;
 
     if ((int16_t)xenon2.scroll_pos >= 0x280)
         return;
-    draw_tile_grid(xenon2.level1_data.boss_grid, 5, 6, (uint16_t)(boss->y - xenon2.scroll_pos), 0x38);
+    draw_tile_grid(&xenon2.level1_data.boss_grid, 5, 6, (uint16_t)(boss->y - xenon2.scroll_pos), 0x38);
     eye = (xenon2.l1_eyes_phase >> 4) & 0xc;
     draw_bob_masked_at(0x98, (uint16_t)(boss->y - xenon2.scroll_pos + 0x42), eyes[eye >> 2]);
 }
@@ -486,10 +486,10 @@ void level1_init(void)
     Object *boss, *link;
     int i;
 
-    if (xenon2.level_init_src == xenon2.level1_data.data_src) {
-        for (i = 11999; i >= 0; i--)
+    if (xenon2.level_init_src == (const uint8_t *)xenon2.level1_data.data_src) {
+        for (i = 5999; i >= 0; i--)
             xenon2.level_data_dst[i] = xenon2.level1_data.data_src[i];
-        xenon2.level_init_src = xenon2.level_data_dst;
+        xenon2.level_init_src = (uint8_t *)xenon2.level_data_dst;
     }
     xenon2.scroll_min = 0;
     xenon2.scroll_max = 0x11ff;
@@ -643,7 +643,7 @@ void level1_segment_update(Object *seg)
 {
     Object *ahead;
     uint16_t offset;
-    const uint8_t *const *tab;
+    const uint16_t *const *tab;
 
     xenon2.unit_live[(uint16_t)seg->unit.id] = 0xff;
     ahead = OBJ_FWD(seg);
@@ -667,7 +667,7 @@ void level1_segment_update(Object *seg)
 }
 
 /* the end of $055C2E and $055C46: the piece bursts into a piece that flies away (animation anim), its score is added, the object goes */
-static void level1_piece_burst(Object *piece, const uint8_t *anim)
+static void level1_piece_burst(Object *piece, const uint16_t *anim)
 {
     Object *n = alloc_b(0);
 
@@ -734,7 +734,7 @@ void level1_boss_flash(Object *boss)
     boss->fn_draw = (obj_fn)level1_boss_draw;
     if ((int16_t)xenon2.scroll_pos >= 0x280)
         return;
-    draw_tile_grid_flash(xenon2.level1_data.boss_grid, 5, 6, (int16_t)(boss->y - xenon2.scroll_pos), 0x38);
+    draw_tile_grid_flash(&xenon2.level1_data.boss_grid, 5, 6, (int16_t)(boss->y - xenon2.scroll_pos), 0x38);
 }
 
 /* orig $0561DA: hit routine of the level 1 boss: when the shooter's box meets the part of the boss that can be hurt the boss flashes

@@ -24,9 +24,9 @@ static uint32_t rgb_of(uint16_t c)
     return (uint32_t)((c >> 8) & 15) * 0x110000u + (uint32_t)((c >> 4) & 15) * 0x1100u + (uint32_t)(c & 15) * 0x11u;
 }
 
-static const uint8_t *plane_ptr(uint32_t address)
+static const uint16_t *plane_ptr(uint32_t address)
 {
-    return (const uint8_t *)guest_ptr(address);
+    return (const uint16_t *)guest_ptr(address);
 }
 
 static void draw_line(uint32_t *row, struct state *s, int vstart_is_first)
@@ -57,11 +57,11 @@ static void draw_line(uint32_t *row, struct state *s, int vstart_is_first)
         for (int p = 0; p < planes; p++) {
             int delay = (p & 1) ? delay2 : delay1;
             int bx = x - delay;
-            const uint8_t *base = plane_ptr(s->pt[p]);
+            const uint16_t *base = plane_ptr(s->pt[p]);
 
             if (bx < 0 || bx >= width || !base)
                 continue;
-            if ((base[bx >> 3] >> (7 - (bx & 7))) & 1)
+            if ((base[bx >> 4] >> (15 - (bx & 15))) & 1)
                 index |= 1u << p;
         }
         row[canvas_x] = palette[index & 31];

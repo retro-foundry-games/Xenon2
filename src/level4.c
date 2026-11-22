@@ -52,7 +52,7 @@ static Object *insert_head(Object *list)
     return o;
 }
 
-static void set_anim(Object *o, const uint8_t *anim)
+static void set_anim(Object *o, const uint16_t *anim)
 {
     anim_header_set(o, anim);
 }
@@ -73,7 +73,7 @@ static uint16_t aim_at_player(const Object *obj, int16_t dx, int16_t dy)
 }
 
 /* the picture of the table at $77B70 (by the index of the level) */
-static const uint8_t *shot_picture(uint16_t index)
+static const uint16_t *shot_picture(uint16_t index)
 {
     return xenon2.level4_data.shot_gfx_table[index]->pic;
 }
@@ -138,10 +138,10 @@ void l4_init(void)
 {
     int i;
 
-    if (xenon2.level_init_src != xenon2.level_data_dst) {
-        for (i = 11999; i >= 0; i--)
-            xenon2.level_data_dst[i] = xenon2.level_init_src[i];
-        xenon2.level_init_src = xenon2.level_data_dst;
+    if (xenon2.level_init_src != (uint8_t *)xenon2.level_data_dst) {
+        for (i = 5999; i >= 0; i--)
+            xenon2.level_data_dst[i] = i >= 80 ? xenon2.level_data_dst[i - 80] : xenon2.level4_data.data_src[i];
+        xenon2.level_init_src = (uint8_t *)xenon2.level_data_dst;
     }
     xenon2.scroll_min = 0x880;
     xenon2.scroll_max = 0x11ff;
@@ -223,7 +223,7 @@ void l4_tower_hit(Object *shot, Object *enemy, uint16_t damage)
 void l4_tower_draw(Object *obj)
 {
     obj->fn_draw = (obj_fn)obj_nop_thunk;
-    draw_tile_grid_flash((const uint8_t *)(obj->type == 0xd0 ? xenon2.level4_data.tower_cells_d0 : xenon2.level4_data.tower_cells_d4), 1, 1, (int16_t)(obj->y - xenon2.scroll_pos), (uint16_t)((uint16_t)obj->x >> 1));
+    draw_tile_grid_flash((const uint16_t *)(obj->type == 0xd0 ? xenon2.level4_data.tower_cells_d0 : xenon2.level4_data.tower_cells_d4), 1, 1, (int16_t)(obj->y - xenon2.scroll_pos), (uint16_t)((uint16_t)obj->x >> 1));
 }
 
 /* level4 $05700A: a marker makes a tower; the record's word at +$C says which of the two */
@@ -322,7 +322,7 @@ void l4_enemy_a(Object *obj)
 void l4_shot_a(Object *obj)
 {
     int16_t angle, dx;
-    const uint8_t *anim, *cells;
+    const uint16_t *anim, *cells;
     uint16_t kind;
     Object *drop;
     uint16_t *group;
@@ -334,10 +334,10 @@ void l4_shot_a(Object *obj)
         const struct Pic *frame = obj->gfx;
         int16_t x, y;
 
-        x = (int16_t)(obj->x - (int16_t)rd16(frame->hot_x.b));
-        y = (int16_t)(obj->y - (int16_t)rd16(frame->hot_y.b));
-        x = (int16_t)(x * 2 + (int16_t)rd16(frame->width.b));
-        y = (int16_t)(y * 2 + (int16_t)rd16(frame->height.b));
+        x = (int16_t)(obj->x - (int16_t)frame->hot_x);
+        y = (int16_t)(obj->y - (int16_t)frame->hot_y);
+        x = (int16_t)(x * 2 + (int16_t)frame->width);
+        y = (int16_t)(y * 2 + (int16_t)frame->height);
         obj->type = 0xc;
         obj->fn_update = (obj_fn)animate_only;
         obj->x = (int16_t)(x >> 1);
@@ -431,7 +431,7 @@ void l4_enemy_b(Object *obj)
     if (add_carry(&obj->shot_count, xenon2.level4_data.enemy_b_fire_rate)) {
         int16_t x = (int16_t)(obj->x + 0x1a), y = (int16_t)(obj->y + 0x1a);
         uint16_t angle = 0xa;
-        const uint8_t *gfx = xenon2.level4_data.enemy_b_picture;
+        const uint16_t *gfx = xenon2.level4_data.enemy_b_picture;
 
         obj->shot_count = (uint8_t)(random_next() & 0x3f);
         if (obj->type != 0xd8) {
@@ -582,7 +582,7 @@ void l4_b1_gun(Object *obj)
     if (add_carry(&obj->shot_count, xenon2.level4_data.b1_gun_fire_rate)) {
         Object *s;
         uint16_t angle = (uint16_t)(int16_t)(obj->b1_gun.dir >> 16);
-        const uint8_t *anim = xenon2.level4_data.b1_gun_anims_by_angle[angle];
+        const uint16_t *anim = xenon2.level4_data.b1_gun_anims_by_angle[angle];
 
         obj->shot_count = (uint8_t)(random_next() & 0x3f);
         s = spawn_enemy_shot((uint16_t)(obj->x + 0x10), (uint16_t)(obj->y + 0x10), angle, xenon2.level4_data.b1_gun_shot_steps, anim);
@@ -595,8 +595,8 @@ void l4_b1_gun(Object *obj)
 /* the picture of a gun or the core by the cells of a table */
 static void gun_cells(Object *obj, int flash)
 {
-    const uint8_t *const *grid = obj->x < 0xa0 ? xenon2.level4_data.gun_cells_left : xenon2.level4_data.gun_cells_right;
-    const uint8_t *cells = grid[(int16_t)(int16_t)(obj->b1_gun.dir >> 16)];
+    const uint16_t *const *grid = obj->x < 0xa0 ? xenon2.level4_data.gun_cells_left : xenon2.level4_data.gun_cells_right;
+    const uint16_t *cells = grid[(int16_t)(int16_t)(obj->b1_gun.dir >> 16)];
 
     if (flash)
         draw_tile_grid_flash(cells, 1, 1, obj->y, (uint16_t)((uint16_t)obj->x >> 1));
@@ -620,7 +620,7 @@ void l4_b1_gun_draw(Object *obj)
 static void core_cells(Object *obj, int flash)
 {
     uint16_t rows = 4;
-    const uint8_t *cells = xenon2.level4_data.core_cells;
+    const uint16_t *cells = xenon2.level4_data.core_cells;
 
     if (obj->core.tick != 0) {
         rows = 5;
@@ -698,7 +698,7 @@ void l4_b1_head(Object *obj)
 
 static void follow_chain(Object *obj);
 
-static void l4_b1_piece(Object *obj, const uint8_t *gfx)
+static void l4_b1_piece(Object *obj, const uint16_t *gfx)
 {
     obj->gfx = (void *)gfx;
     obj->anim_delay = 0;
@@ -1088,17 +1088,17 @@ void l4_bar_draw(Object *obj)
 
     if (obj->type == 0x10c) {
         if (span != 0)
-            draw_tile_grid(xenon2.level4_data.bar_cells + sizeof xenon2.level4_data.bar_cells - 2 * span, (uint16_t)(span - 1), 1, obj->y, (uint16_t)((uint16_t)obj->x >> 1));
+            draw_tile_grid(xenon2.level4_data.bar_cells + sizeof xenon2.level4_data.bar_cells / sizeof xenon2.level4_data.bar_cells[0] - span, (uint16_t)(span - 1), 1, obj->y, (uint16_t)((uint16_t)obj->x >> 1));
         x = (int16_t)((span << 4) + obj->x);
         y = (int16_t)(obj->y + 8);
     } else {
         if (span != 0)
-            draw_tile_grid(xenon2.level4_data.bar_cells + sizeof xenon2.level4_data.bar_cells - 2 * span, (uint16_t)(span - 1), 1, obj->y,
+            draw_tile_grid(xenon2.level4_data.bar_cells + sizeof xenon2.level4_data.bar_cells / sizeof xenon2.level4_data.bar_cells[0] - span, (uint16_t)(span - 1), 1, obj->y,
                            (uint16_t)((uint16_t)((obj->x - (int16_t)(span << 4)) + 0x10) >> 1));
         x = (int16_t)(obj->x - (int16_t)(span << 4) + 0xf);
         y = (int16_t)(obj->y + 8);
     }
-    draw_bob_masked_at((uint16_t)x, (uint16_t)y, (const uint8_t *)obj->gfx);
+    draw_bob_masked_at((uint16_t)x, (uint16_t)y, (const uint16_t *)obj->gfx);
 }
 
 /* ---- the walker ($56C3E): it stands, then walks to the other side along the screen ---- */
@@ -1196,8 +1196,8 @@ void l4_walker_hit(Object *shot, Object *enemy, uint16_t damage)
         return;
     }
     frame = enemy->gfx;
-    x = (int16_t)(((int16_t)(enemy->x - (int16_t)rd16(frame->hot_x.b)) * 2 + (int16_t)rd16(frame->width.b)) >> 1);
-    y = (int16_t)(((int16_t)(enemy->y - (int16_t)rd16(frame->hot_y.b)) * 2 + (int16_t)rd16(frame->height.b)) >> 1);
+    x = (int16_t)(((int16_t)(enemy->x - (int16_t)frame->hot_x) * 2 + (int16_t)frame->width) >> 1);
+    y = (int16_t)(((int16_t)(enemy->y - (int16_t)frame->hot_y) * 2 + (int16_t)frame->height) >> 1);
     y = (int16_t)(y - xenon2.scroll_pos);
     spawn_effect(x, y, xenon2.big_explosion_anim, draw_bob_masked);
     xenon2.player_score += (uint16_t)enemy->score;
@@ -1231,7 +1231,7 @@ void l4_walker_flash(Object *obj)
     obj->fn_draw = (obj_fn)l4_walker_draw;
     if (y > 0xdc)
         return;
-    draw_bob_or_at((uint16_t)obj->x, (uint16_t)y, (const uint8_t *)obj->gfx);
+    draw_bob_or_at((uint16_t)obj->x, (uint16_t)y, (const uint16_t *)obj->gfx);
     walker_tiles(obj);
 }
 
@@ -1242,6 +1242,6 @@ void l4_walker_draw(Object *obj)
 
     if (y > 0xdc)
         return;
-    draw_bob_masked_at((uint16_t)obj->x, (uint16_t)y, (const uint8_t *)obj->gfx);
+    draw_bob_masked_at((uint16_t)obj->x, (uint16_t)y, (const uint16_t *)obj->gfx);
     walker_tiles(obj);
 }

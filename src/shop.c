@@ -8,13 +8,13 @@
 /* ---- drawing helpers ---- */
 
 /* shop $553F8: a picture on both screens (draw_bob_masked_at) */
-void shop_draw_both(uint16_t x, uint16_t y, const uint8_t *gfx)
+void shop_draw_both(uint16_t x, uint16_t y, const uint16_t *gfx)
 {
     uint8_t *saved = xenon2.draw_screen;
 
-    xenon2.draw_screen = xenon2.screen_b;
+    xenon2.draw_screen = (uint8_t *)xenon2.screen_b;
     draw_bob_masked_at(x, y, gfx);
-    xenon2.draw_screen = xenon2.screen_a;
+    xenon2.draw_screen = (uint8_t *)xenon2.screen_a;
     draw_bob_masked_at(x, y, gfx);
     xenon2.draw_screen = saved;
 }
@@ -23,19 +23,19 @@ void shop_draw_both(uint16_t x, uint16_t y, const uint8_t *gfx)
  * returns the address after the rows */
 uint8_t *shop_clear_columns(uint8_t *dst, uint16_t rows)
 {
-    RawWord *d = (RawWord *)dst;
+    uint16_t *d = (uint16_t *)dst;
 
     while (rows-- != 0) {
         int p;
 
         for (p = 0; p < 4; p++) {
-            RawWord *b = d + p * SCREEN_PLANE_WORDS;
+            uint16_t *b = d + p * SCREEN_PLANE_WORDS;
             int c;
 
-            wr16(b[0].b, (uint16_t)(rd16(b[0].b) & 0xfe00));
+            b[0] = (uint16_t)(b[0] & 0xfe00);
             for (c = 1; c <= 5; c++)
-                wr16(b[c].b, 0);
-            wr16(b[6].b, (uint16_t)(rd16(b[6].b) & 0x01ff));
+                b[c] = 0;
+            b[6] = (uint16_t)(b[6] & 0x01ff);
         }
         d += SCREEN_ROW_WORDS;
     }
@@ -43,20 +43,20 @@ uint8_t *shop_clear_columns(uint8_t *dst, uint16_t rows)
 }
 
 /* shop $55200: a block of w+1 words by h+1 rows of 4 planes from src to dst (a row is $A0 bytes) */
-void shop_copy_block(const uint8_t *src, uint8_t *dst, uint16_t w, uint16_t h)
+void shop_copy_block(const uint16_t *src, uint8_t *dst, uint16_t w, uint16_t h)
 {
     const struct Cell4 *s = (const struct Cell4 *)src;
-    RawWord *d = (RawWord *)dst;
+    uint16_t *d = (uint16_t *)dst;
 
     do {
-        RawWord *next = d + SCREEN_ROW_WORDS;
+        uint16_t *next = d + SCREEN_ROW_WORDS;
         uint16_t n = w;
 
         do {
-            wr16(d[0].b, rd16(s->plane[0].b));
-            wr16(d[SCREEN_PLANE_WORDS].b, rd16(s->plane[1].b));
-            wr16(d[2 * SCREEN_PLANE_WORDS].b, rd16(s->plane[2].b));
-            wr16(d[3 * SCREEN_PLANE_WORDS].b, rd16(s->plane[3].b));
+            d[0] = s->plane[0];
+            d[SCREEN_PLANE_WORDS] = s->plane[1];
+            d[2 * SCREEN_PLANE_WORDS] = s->plane[2];
+            d[3 * SCREEN_PLANE_WORDS] = s->plane[3];
             s++;
             d++;
         } while (n-- != 0);
@@ -65,42 +65,39 @@ void shop_copy_block(const uint8_t *src, uint8_t *dst, uint16_t w, uint16_t h)
 }
 
 /* shop $56912: rows+1 rows of 28 words of a picture over the screen: 7 columns of 4 planes, the first and the last mixed in under masks */
-void shop_put_rows(const uint8_t *src, uint8_t *dst, uint16_t rows)
+void shop_put_rows(const uint16_t *src, uint8_t *dst, uint16_t rows)
 {
-    RawWord *d = (RawWord *)dst;
+    uint16_t *d = (uint16_t *)dst;
 
     do {
         int p, c;
 
         for (p = 0; p < 4; p++)
-            wr16(d[p * SCREEN_PLANE_WORDS].b, (uint16_t)(rd16(d[p * SCREEN_PLANE_WORDS].b) & 0xfe00));
+            d[p * SCREEN_PLANE_WORDS] = (uint16_t)(d[p * SCREEN_PLANE_WORDS] & 0xfe00);
         for (p = 0; p < 4; p++) {
-            wr16(d[p * SCREEN_PLANE_WORDS].b, (uint16_t)(rd16(d[p * SCREEN_PLANE_WORDS].b) | rd16(src)));
-            src += 2;
+            d[p * SCREEN_PLANE_WORDS] = (uint16_t)(d[p * SCREEN_PLANE_WORDS] | *src++);
         }
         for (c = 1; c <= 5; c++)
             for (p = 0; p < 4; p++) {
-                wr16(d[c + p * SCREEN_PLANE_WORDS].b, rd16(src));
-                src += 2;
+                d[c + p * SCREEN_PLANE_WORDS] = *src++;
             }
         for (p = 0; p < 4; p++)
-            wr16(d[6 + p * SCREEN_PLANE_WORDS].b, (uint16_t)(rd16(d[6 + p * SCREEN_PLANE_WORDS].b) & 0x01ff));
+            d[6 + p * SCREEN_PLANE_WORDS] = (uint16_t)(d[6 + p * SCREEN_PLANE_WORDS] & 0x01ff);
         for (p = 0; p < 4; p++) {
-            wr16(d[6 + p * SCREEN_PLANE_WORDS].b, (uint16_t)(rd16(d[6 + p * SCREEN_PLANE_WORDS].b) | rd16(src)));
-            src += 2;
+            d[6 + p * SCREEN_PLANE_WORDS] = (uint16_t)(d[6 + p * SCREEN_PLANE_WORDS] | *src++);
         }
         d += SCREEN_ROW_WORDS;
     } while (rows-- != 0);
 }
 
 /* the next picture of a looping list at SLOT (the place in the list): the list is pictures, 0 then the address of the list to loop to */
-static const uint8_t *list_next(const uint8_t **slot)
+static const uint16_t *list_next(const uint8_t **slot)
 {
-    const uint8_t *const *p = (const uint8_t *const *)*slot;
-    const uint8_t *g = *p++;
+    const uint16_t *const *p = (const uint16_t *const *)*slot;
+    const uint16_t *g = *p++;
 
     if (g == 0) {
-        p = (const uint8_t *const *)*p;
+        p = (const uint16_t *const *)*p;
         g = *p++;
     }
     *slot = (const uint8_t *)p;
@@ -137,9 +134,9 @@ void shop_text_char(uint8_t ch)
         shop_text_newline();
         return;
     }
-    dst_b = xenon2.screen_b + (int16_t)xenon2.row_offset[xenon2.text_y];
+    dst_b = (uint8_t *)xenon2.screen_b + (int16_t)xenon2.row_offset[xenon2.text_y];
     dst_b += (int16_t)(xenon2.text_x >> 1);
-    dst_a = xenon2.screen_a + (dst_b - xenon2.screen_b);
+    dst_a = (uint8_t *)xenon2.screen_a + (dst_b - (uint8_t *)xenon2.screen_b);
     glyph = xenon2.shop_data.font + (int16_t)((uint16_t)(ch - 0x20) << 5);
     if (!(xenon2.text_x & 1)) {
         for (row = 7; row >= 0; row--) {
@@ -148,8 +145,8 @@ void shop_text_char(uint8_t ch)
             for (p = 0; p < 4; p++) {
                 uint8_t bits = *glyph++;
 
-                dst_b[p * SCREEN_PLANE_BYTES] = bits;
-                dst_a[p * SCREEN_PLANE_BYTES] = bits;
+                put_screen_byte(dst_b + p * SCREEN_PLANE_BYTES, bits);
+                put_screen_byte(dst_a + p * SCREEN_PLANE_BYTES, bits);
             }
             dst_b += SCREEN_ROW_BYTES;
             dst_a += SCREEN_ROW_BYTES;
@@ -161,8 +158,8 @@ void shop_text_char(uint8_t ch)
             for (p = 0; p < 4; p++) {
                 uint8_t bits = (uint8_t)(*glyph++ >> 4);
 
-                dst_b[p * SCREEN_PLANE_BYTES] |= bits;
-                dst_a[p * SCREEN_PLANE_BYTES] |= bits;
+                or_screen_byte(dst_b + p * SCREEN_PLANE_BYTES, bits);
+                or_screen_byte(dst_a + p * SCREEN_PLANE_BYTES, bits);
             }
             dst_b += SCREEN_ROW_BYTES;
             dst_a += SCREEN_ROW_BYTES;
@@ -194,7 +191,7 @@ void shop_records_tick(void)
 void shop_sparkle(const struct ShopRec *rec)
 {
     uint16_t x = rec->x, y = rec->y;
-    RawWord *dst = (RawWord *)(xenon2.draw_screen + (int16_t)xenon2.row_offset[y] + (int16_t)((uint16_t)(x ^ (x & 0xf)) >> 3));
+    uint16_t *dst = (uint16_t *)(xenon2.draw_screen + (int16_t)xenon2.row_offset[y] + (int16_t)((uint16_t)(x ^ (x & 0xf)) >> 3));
     uint16_t shift = x & 0xf, noise, head, mask, inv, rnd;
     int16_t n = 0x1b;
     int p;
@@ -213,17 +210,17 @@ void shop_sparkle(const struct ShopRec *rec)
         noise = (uint16_t)((rnd >> 8) ^ rnd);
         head = (uint16_t)(noise & mask);
         for (p = 0; p < 4; p++)
-            wr16(dst[p * SCREEN_PLANE_WORDS].b, (uint16_t)(rd16(dst[p * SCREEN_PLANE_WORDS].b) & inv));
+            dst[p * SCREEN_PLANE_WORDS] = (uint16_t)(dst[p * SCREEN_PLANE_WORDS] & inv);
         for (p = 0; p < 3; p++)
-            wr16(dst[p * SCREEN_PLANE_WORDS].b, (uint16_t)(rd16(dst[p * SCREEN_PLANE_WORDS].b) | head));
+            dst[p * SCREEN_PLANE_WORDS] = (uint16_t)(dst[p * SCREEN_PLANE_WORDS] | head);
         for (p = 0; p < 3; p++)
-            wr16(dst[1 + p * SCREEN_PLANE_WORDS].b, noise);
-        wr16(dst[1 + 3 * SCREEN_PLANE_WORDS].b, 0);
+            dst[1 + p * SCREEN_PLANE_WORDS] = noise;
+        dst[1 + 3 * SCREEN_PLANE_WORDS] = 0;
         noise = (uint16_t)(noise & inv);
         for (p = 0; p < 4; p++)
-            wr16(dst[2 + p * SCREEN_PLANE_WORDS].b, (uint16_t)(rd16(dst[2 + p * SCREEN_PLANE_WORDS].b) & mask));
+            dst[2 + p * SCREEN_PLANE_WORDS] = (uint16_t)(dst[2 + p * SCREEN_PLANE_WORDS] & mask);
         for (p = 0; p < 3; p++)
-            wr16(dst[2 + p * SCREEN_PLANE_WORDS].b, (uint16_t)(rd16(dst[2 + p * SCREEN_PLANE_WORDS].b) | noise));
+            dst[2 + p * SCREEN_PLANE_WORDS] = (uint16_t)(dst[2 + p * SCREEN_PLANE_WORDS] | noise);
         dst += SCREEN_ROW_WORDS;
     } while (n-- != 0);
 }
@@ -243,18 +240,18 @@ void shop_records_draw(void)
                     xenon2.sfx_cmd2 = 0xb;
                 shop_sparkle(rec);
             } else {
-                const uint8_t *pic = xenon2.shop_data.tab_puff[cnt & 1];
+                const uint16_t *pic = xenon2.shop_data.tab_puff[cnt & 1];
                 const struct Pic *header;
                 uint16_t px, py, adj;
 
                 draw_bob_masked_at(rec->x, rec->y, pic);
                 pic = list_next(&rec->list);
                 header = (const struct Pic *)pic;
-                px = (uint16_t)(rec->x + rd16(header->hot_x.b));
-                py = (uint16_t)(rec->y + rd16(header->hot_y.b));
-                adj = (uint16_t)((rd16(header->width.b) >> 1) - 0x10);
+                px = (uint16_t)(rec->x + header->hot_x);
+                py = (uint16_t)(rec->y + header->hot_y);
+                adj = (uint16_t)((header->width >> 1) - 0x10);
                 px = (uint16_t)(px - adj);
-                adj = (uint16_t)(((uint16_t)(rd16(header->height.b) + 1) >> 1) - 0xe);
+                adj = (uint16_t)(((uint16_t)(header->height + 1) >> 1) - 0xe);
                 py = (uint16_t)(py - adj);
                 draw_bob_masked_at(px, py, pic);
             }
@@ -315,7 +312,7 @@ void shop_door_draw(void)
 /* shop $5662A: the room: its pictures, the keeper's lights, the doors */
 void shop_room_draw(void)
 {
-    const uint8_t *pic;
+    const uint16_t *pic;
     uint8_t *dst;
     uint16_t rows;
 
@@ -334,7 +331,7 @@ void shop_room_draw(void)
                 break;
             if (--tries == -1)
                 break;
-            pic += 0x770;
+            pic += 0x770 / 2;
         }
     }
     shop_put_rows(pic, xenon2.draw_screen + 0x263a, 0x21);
@@ -346,7 +343,7 @@ void shop_room_draw(void)
         /* (the closed doors' pictures are drawn only when more than 8 rows have opened) */
     } else {
         dst = xenon2.draw_screen + 0x5ba;
-        pic = xenon2.shop_data.pic_door + (int16_t)((uint16_t)(0x30 - xenon2.shop_door_left) * 0x38);
+        pic = xenon2.shop_data.pic_door + (int16_t)((uint16_t)(0x30 - xenon2.shop_door_left) * 0x38 / 2);
         rows = (uint16_t)(xenon2.shop_door_left - 9);
         shop_put_rows(pic, dst, rows);
         dst = xenon2.draw_screen + 0x46ba - (int16_t)((uint16_t)(xenon2.shop_door_left * SCREEN_ROW_BYTES));
@@ -361,8 +358,8 @@ void shop_room_draw(void)
     if ((int16_t)xenon2.shop_door_left >= 8)
         return;
     {
-        RawWord *dst = (RawWord *)(xenon2.draw_screen + 0x1a), *dst2 = (RawWord *)(xenon2.draw_screen + 0x41ba);
-        const uint8_t *lamp_a = xenon2.shop_data.pic_lamp_a, *lamp_b = xenon2.shop_data.pic_lamp_b;
+        uint16_t *dst = (uint16_t *)(xenon2.draw_screen + 0x1a), *dst2 = (uint16_t *)(xenon2.draw_screen + 0x41ba);
+        const uint16_t *lamp_a = xenon2.shop_data.pic_lamp_a, *lamp_b = xenon2.shop_data.pic_lamp_b;
         int16_t n = 8;
 
         do {
@@ -370,20 +367,18 @@ void shop_room_draw(void)
 
             for (g = 0; g < 7; g++) {
                 for (p = 0; p < 4; p++) {
-                    wr16(dst[p * SCREEN_PLANE_WORDS].b, rd16(lamp_a));
-                    lamp_a += 2;
+                    dst[p * SCREEN_PLANE_WORDS] = *lamp_a++;
                 }
                 for (p = 0; p < 4; p++) {
-                    wr16(dst2[p * SCREEN_PLANE_WORDS].b, rd16(lamp_b));
-                    lamp_b += 2;
+                    dst2[p * SCREEN_PLANE_WORDS] = *lamp_b++;
                 }
                 dst++;
                 dst2++;
             }
             dst += SCREEN_ROW_WORDS - 7;
             dst2 += SCREEN_ROW_WORDS - 7;
-            lamp_a += 8;
-            lamp_b += 8;
+            lamp_a += 4;
+            lamp_b += 4;
         } while (n-- != 0);
     }
 }
@@ -432,8 +427,8 @@ void shop_wait(uint16_t frames)
 /* shop $55360: the text board is cleared on both screens */
 void shop_board_clear(void)
 {
-    shop_clear_columns(xenon2.screen_b + 0x475a, 0x44);
-    shop_clear_columns(xenon2.screen_a + 0x475a, 0x44);
+    shop_clear_columns((uint8_t *)xenon2.screen_b + 0x475a, 0x44);
+    shop_clear_columns((uint8_t *)xenon2.screen_a + 0x475a, 0x44);
 }
 
 /* shop $56CA0: the board is cleared and the text begins again at its top */
@@ -447,7 +442,7 @@ void shop_text_home(void)
 /* shop $56CB2: the cash is drawn */
 void shop_cash_draw(void)
 {
-    draw_number(xenon2.player_money, xenon2.screen_b + 0x6b91);
+    draw_number(xenon2.player_money, (uint8_t *)xenon2.screen_b + 0x6b91);
 }
 
 /* shop $56CC0: the text (words, $0D = a new line, 0 ends) is drawn a character at a time, the keeper talks at the start of each word, every second character
@@ -526,10 +521,10 @@ void shop_print_number(uint16_t value)
 }
 
 /* shop $56040 (the cursor drawn), $560A6 (the cursor taken away): the picture of the cursor at the item under it, or of the buttons below the grid */
-static void cursor_show(const uint8_t *on_item, const uint8_t *exit_a, const uint8_t *exit_b, const uint8_t *exit_c)
+static void cursor_show(const uint16_t *on_item, const uint16_t *exit_a, const uint16_t *exit_b, const uint16_t *exit_c)
 {
     uint16_t row = xenon2.shop_cursor_row, x, y, index;
-    const uint8_t *pic;
+    const uint16_t *pic;
 
     if (row == 4) {
         x = 4;
@@ -755,7 +750,7 @@ void shop_stock_update(void)
 {
     struct ShopRec *rec;
     const uint16_t *price_ptr;
-    const uint8_t **anim_ptr;
+    const uint16_t **anim_ptr;
     uint16_t price, item;
     int32_t cash;
     int16_t cost;
@@ -779,7 +774,7 @@ sold:
             rec->list = (const uint8_t *)&xenon2.shop_data.lists[3];
         } else {
             rec->kind = item;
-            rec->list = *anim_ptr;
+            rec->list = (const uint8_t *)*anim_ptr;
         }
         item++;
         price_ptr++;
@@ -868,7 +863,7 @@ void shop_sell_list(void)
 
             rec->kind = kind;
             rec->weapon = weapon;
-            rec->list = xenon2.shop_data.tab_anim[(uint16_t)(kind - 1)];
+            rec->list = (const uint8_t *)xenon2.shop_data.tab_anim[(uint16_t)(kind - 1)];
             rec++;
         }
         weapon = weapon->prev;
@@ -1062,7 +1057,7 @@ void shop_buy(void)
 /* shop $5530C ($4EC) and $55324 ($4EE): the two pillars of the doorway at their place, their bit 2 selects the picture */
 static void pillars_draw(uint16_t y, uint16_t state)
 {
-    const uint8_t *gfx = (state & 4) ? xenon2.shop_data.gfx_pillar_b : xenon2.shop_data.gfx_pillar_a;
+    const uint16_t *gfx = (state & 4) ? xenon2.shop_data.gfx_pillar_b : xenon2.shop_data.gfx_pillar_a;
 
     shop_draw_both(0xe2, y, gfx);
     shop_draw_both(0x102, y, gfx);
@@ -1230,21 +1225,21 @@ void shop_blank_screen(void)
     int16_t n = 0x1f3f;
 
     do {
-        wr32(dst, 0);
+        *(uint32_t *)dst = 0;
         dst += 4;
     } while (n-- != 0);
     {
-        RawWord *bar = (RawWord *)(xenon2.draw_screen + 0x3e94);
+        uint16_t *bar = (uint16_t *)(xenon2.draw_screen + 0x3e94);
 
-        wr16(bar[0].b, 0xf);
-        wr16(bar[SCREEN_PLANE_WORDS].b, 6);
-        wr16(bar[2 * SCREEN_PLANE_WORDS].b, 0xf);
-        wr16(bar[SCREEN_ROW_WORDS].b, 0xf);
-        wr16(bar[SCREEN_ROW_WORDS + SCREEN_PLANE_WORDS].b, 0xf);
-        wr16(bar[SCREEN_ROW_WORDS + 2 * SCREEN_PLANE_WORDS].b, 0xf);
-        wr16(bar[2 * SCREEN_ROW_WORDS].b, 0xf);
-        wr16(bar[2 * SCREEN_ROW_WORDS + SCREEN_PLANE_WORDS].b, 6);
-        wr16(bar[2 * SCREEN_ROW_WORDS + 2 * SCREEN_PLANE_WORDS].b, 0xf);
+        bar[0] = 0xf;
+        bar[SCREEN_PLANE_WORDS] = 6;
+        bar[2 * SCREEN_PLANE_WORDS] = 0xf;
+        bar[SCREEN_ROW_WORDS] = 0xf;
+        bar[SCREEN_ROW_WORDS + SCREEN_PLANE_WORDS] = 0xf;
+        bar[SCREEN_ROW_WORDS + 2 * SCREEN_PLANE_WORDS] = 0xf;
+        bar[2 * SCREEN_ROW_WORDS] = 0xf;
+        bar[2 * SCREEN_ROW_WORDS + SCREEN_PLANE_WORDS] = 6;
+        bar[2 * SCREEN_ROW_WORDS + 2 * SCREEN_PLANE_WORDS] = 0xf;
     }
 }
 
@@ -1301,21 +1296,14 @@ void shop_end_of_broadcast(void)
     palette_fade_out(2);
     xenon2.sfx_cmd = 0x12;
     for (n = 0x96; n != 0; n--) {
-        uint32_t c[8];
         int i;
 
         shop_blank_screen();
         swap_screens_200();
-        for (i = 0; i < 8; i++) {
-            c[i] = rd32(xenon2.shop_data.palette_a + 4u * i);
-            xenon2.palette_shadow[2 * i] = (uint16_t)(c[i] >> 16);
-            xenon2.palette_shadow[2 * i + 1] = (uint16_t)c[i];
-        }
-        for (i = 0; i < 8; i++) {
-            c[i] += c[i];
-            custom->color[2 * i] = (uint16_t)(c[i] >> 16);
-            custom->color[2 * i + 1] = (uint16_t)c[i];
-        }
+        for (i = 0; i < 16; i++)
+            xenon2.palette_shadow[i] = xenon2.shop_data.palette_a[i];
+        for (i = 0; i < 16; i++)
+            custom->color[i] = (uint16_t)(xenon2.shop_data.palette_a[i] + xenon2.shop_data.palette_a[i]);
     }
     palette_fade_out(4);
     shop_sound_reset();
@@ -1342,7 +1330,7 @@ void shop_main(void)
         xenon2.shop_data.snd.chan[0].head.sample_id = 0xff;
     screen = xenon2.draw_screen;
     for (n = 0; n < 0x1f40; n++)
-        wr32(screen + 4 * n, 0);
+        *(uint32_t *)(screen + 4 * n) = 0;
     for (y = 0; y < 0xa4; y = (int16_t)(y + 0x29))
         for (x = 0; x < 0xcd; x = (int16_t)(x + 0x29)) {
             draw_bob_masked_at((uint16_t)x, (uint16_t)y, xenon2.shop_data.gfx_bedroom);
@@ -1354,7 +1342,7 @@ void shop_main(void)
         draw_bob_masked_at(0xc1, 0xbc, xenon2.shop_data.gfx_player2);
     screen = xenon2.draw_screen;
     for (n = 0; n < 0x1f40; n++)
-        wr32(xenon2.show_screen + 4 * n, rd32(screen + 4 * n));
+        *(uint32_t *)(xenon2.show_screen + 4 * n) = *(const uint32_t *)(screen + 4 * n);
     xenon2.shop_data.selling = 0xff;
     xenon2.shop_data.no_blink = 0xff;
     xenon2.shop_data.blink_a = 0;
@@ -1376,7 +1364,7 @@ void shop_main(void)
         uint16_t colors[16];
 
         for (i = 0; i < 16; i++)
-            colors[i] = rd16(xenon2.shop_data.palette_b + 2u * (uint16_t)i);
+            colors[i] = xenon2.shop_data.palette_b[i];
         palette_fade_in(colors);
     }
     xenon2.sfx_cmd = 8;

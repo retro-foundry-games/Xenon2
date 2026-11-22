@@ -17,7 +17,7 @@ struct Object {
     Object *prev;               /* 12 */
     const void *gfx;            /* 16 */
     int16_t anim_delay;         /* 1a */
-    const uint8_t *anim;        /* 1c: the animation script (raw bytes) */
+    const uint16_t *anim;       /* 1c: the animation script */
     int16_t x;                  /* 20 */
     uint16_t x_frac;            /* 22: not cleared when the slot is reused; only some kinds set it */
     int16_t y;                  /* 24 */

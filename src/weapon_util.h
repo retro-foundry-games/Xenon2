@@ -36,16 +36,14 @@ static inline Object *alloc_b_front(Object *caller)
     return o;
 }
 
-static inline void copy_long(uint8_t *dst, const uint8_t *src)
+static inline void copy_long(uint16_t *dst, const uint16_t *src)
 {
     dst[0] = src[0];
     dst[1] = src[1];
-    dst[2] = src[2];
-    dst[3] = src[3];
 }
 
 /* move.l (a2)+,$16(a); move.w (a2)+,$1a(a); move.l a2,$1c(a) */
-static inline void set_anim(Object *o, const uint8_t *a)
+static inline void set_anim(Object *o, const uint16_t *a)
 {
     anim_header_set(o, a);
 }

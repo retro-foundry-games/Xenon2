@@ -4,7 +4,7 @@ record Level5Boss1Piece 24
 2 update code
 6 draw code
 10 hit code
-14 anim ptr
+14 anim ptr:u16
 18 dx s16
 20 dy s16
 22 energy u8
@@ -15,7 +15,7 @@ record Level5Boss2Piece 24
 2 update code
 6 draw code
 10 hit code
-14 gfx ptr
+14 gfx ptr:u16
 18 dx s16
 20 dy s16
 22 energy u16
@@ -63,50 +63,50 @@ end
 54e7f boss2_mover_fire_rate_2 u8 1
 54e92 formations Formation1 8
 551dc gunner_paths ptr 3
-552ba gunner_anims ptr 8
-55516 cannon_anim_a u8 36
-5553a cannon_anim_b u8 36
-5555e cannon_anim_100 u8 36
-55582 cannon_anim_other u8 604
-557de pellet_anims_by_dir ptr 8
+552ba gunner_anims ptr:u16 8
+55516 cannon_anim_a u16 18
+5553a cannon_anim_b u16 18
+5555e cannon_anim_100 u16 18
+55582 cannon_anim_other u16 302
+557de pellet_anims_by_dir ptr:u16 8
 557fe pellet_dx_by_dir s16 8
 5580e pellet_dy_by_dir s16 8
 5594e boss1_pieces Level5Boss1Piece 22
-55f2e boss_arm2_pictures ptr 5
-55f42 boss_draw_table ptr 15
-55f7e boss_update_data u8 192
-5603e missile_anims_by_dir ptr 8
-56276 heart_pictures ptr 12
+55f2e boss_arm2_pictures ptr:u16 5
+55f42 boss_draw_table ptr:u16 15
+55f7e boss_update_data u16 96
+5603e missile_anims_by_dir ptr:u16 8
+56276 heart_pictures ptr:u16 12
 5633a boss2_pieces Level5Boss2Piece 10
-5650e wheel_pictures ptr 6
+5650e wheel_pictures ptr:u16 6
 565c2 spinner_source_118 ptr 4
 565d2 spinner_source_other ptr 4
-56658 boss2_turret_pictures ptr 8
-5688c boss2_draw_rows u8 108
-568f8 boss2_flash_grid u8 16
-56908 boss2_draw_data u8 36
+56658 boss2_turret_pictures ptr:u16 8
+5688c boss2_draw_rows u16 54
+568f8 boss2_flash_grid u16 8
+56908 boss2_draw_data u16 18
 56b2c gates Level5Gate 3
-56c30 gate_update_data cell 50
-56c94 wall_cells_128 cell 4
-56c9c wall_cells_other cell 4
-56e3c wall_flash_a_grid u8 2
-56e3e wall_flash_b_grid u8 2
-56ea2 bridge_cells cell 139
-56fb8 bridge_update_data u8 358
-5711e group_cells cell 198
+56c30 gate_update_data u16 50
+56c94 wall_cells_128 u16 4
+56c9c wall_cells_other u16 4
+56e3c wall_flash_a_grid u16 1
+56e3e wall_flash_b_grid u16 1
+56ea2 bridge_cells u16 139
+56fb8 bridge_update_data u16 179
+5711e group_cells u16 198
 572aa unit_dirs Level5UnitDir 8
-572ca unit_shot_pictures ptr 8
-57514 gun_cells_a cell 8
-57524 gun_cells_b cell 8
-57534 gun_anim_b u8 2
-57536 gun_anim_a u8 2
-57538 gun_anim_108 u8 24
-57550 gun_anim_other u8 278
-57666 boss1_cells u8 540
-5c1ea gunner_picture u8 7596
-5df96 boss2_dead_picture u8 4968
-5f2fe beam_top_picture u8 66
-5f340 beam_end_picture u8 32
+572ca unit_shot_pictures ptr:u16 8
+57514 gun_cells_a u16 8
+57524 gun_cells_b u16 8
+57534 gun_anim_b u16 1
+57536 gun_anim_a u16 1
+57538 gun_anim_108 u16 12
+57550 gun_anim_other u16 139
+57666 boss1_cells u16 270
+5c1ea gunner_picture u16 3798
+5df96 boss2_dead_picture u16 2484
+5f2fe beam_top_picture u16 33
+5f340 beam_end_picture u16 16
 72ec8 shot_gfx_table ptr:ShotPic 4
 72ed8 shot_gfx_cells ShotPic 2
 72ee0 formation_paths ptr:PathCmd 110
@@ -115,3 +115,10 @@ end
 75142 events_a_end s16
 62d22 events_b SpawnRec 55
 63024 events_b_end s16
+78d44 data_src u16 6000
+54f62 pad_54f62 u16 51
+578a2 pad_578a2 u16 7565
+5f4c0 pad_5f4c0 u16 3892
+63026 pad_63026 u16 23538
+74326 pad_74326 u16 740
+75144 pad_75144 u16 7680

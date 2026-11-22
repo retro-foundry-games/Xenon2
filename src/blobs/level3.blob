@@ -1,6 +1,6 @@
 ; level 3: its blob at $54E00 (see tools/gen_blobs.py)
 record Level3EndPiece 12
-0 cells ptr
+0 cells ptr:u16
 4 w u16
 6 h u16
 8 y u16
@@ -9,7 +9,7 @@ end
 record Level3WormPiece 10
 0 delay u16
 2 update code
-6 gfx ptr
+6 gfx ptr:u16
 end
 record Level3WormSpawn 112
 0 last u16
@@ -18,7 +18,7 @@ end
 record Level3Part 16
 0 update code
 4 hit code
-8 anim ptr
+8 anim ptr:u16
 12 x u16
 14 y u16
 end
@@ -55,56 +55,56 @@ end
 54eb2 formation_3 Formation1
 54f5c formation_4 Formation1
 54f76 formation_5 Formation1
-55078 enemy_a_pictures ptr 8
-55098 enemy_b_pictures ptr 8
-550b8 enemy_c_pictures ptr 8
-5513e enemy_enter_anims ptr 4
+55078 enemy_a_pictures ptr:u16 8
+55098 enemy_b_pictures ptr:u16 8
+550b8 enemy_c_pictures ptr:u16 8
+5513e enemy_enter_anims ptr:u16 4
 55270 worm_spawn Level3WormSpawn 1
-55400 worm_head_anims ptr 8
-5549e worm_head_data u8 240
-5558e worm_a_pictures ptr 8
-555d2 worm_b_pictures ptr 8
-55622 worm_follow_pictures ptr 8
+55400 worm_head_anims ptr:u16 8
+5549e worm_head_data u16 120
+5558e worm_a_pictures ptr:u16 8
+555d2 worm_b_pictures ptr:u16 8
+55622 worm_follow_pictures ptr:u16 8
 55790 walker_spawn_dx s16 8
 557a0 walker_spawn_dy s16 8
-557b0 walker_spawn_anims ptr 8
+557b0 walker_spawn_anims ptr:u16 8
 558f0 parts Level3Part 18
-55a40 part_gun_data_3 u8 212
-55b14 part_core_data u8 664
-55dac arm_tip_pictures ptr 16
-560b4 snake_anim_b u8 42
-560de snake_anim_a u8 274
-561f0 spawn_boss_data cell 80
+55a40 part_gun_data_3 u16 106
+55b14 part_core_data u16 332
+55dac arm_tip_pictures ptr:u16 16
+560b4 snake_anim_b u16 21
+560de snake_anim_a u16 137
+561f0 spawn_boss_data u16 80
 56290 walker_update_words s16 8
 562a0 walker_update_words_2 s16 8
 56450 walker_update_words_3 s16 8
 56460 walker_update_words_4 s16 8
 56470 walker_update_words_5 s16 8
 56480 walker_update_words_6 u16 8
-567ce diver_update_data u8 36
-567f2 diver_update_data_3 u8 42
-5681c diver_update_data_2 u8 36
-56840 diver_update_data_4 u8 354
-569a2 boss_update_data cell 105
-56a74 boss_flash_grid u8 376
-56bec boss2_shot_anims ptr 8
-56d2c boss2_update_data cell 215
-56eda gun_cells_f0 cell 7
-56ee8 gun_cells_other cell 7
-56ef6 gun_anim_b u8 2
-56ef8 gun_anim_a u8 162
+567ce diver_update_data u16 18
+567f2 diver_update_data_3 u16 21
+5681c diver_update_data_2 u16 18
+56840 diver_update_data_4 u16 177
+569a2 boss_update_data u16 105
+56a74 boss_flash_grid u16 188
+56bec boss2_shot_anims ptr:u16 8
+56d2c boss2_update_data u16 215
+56eda gun_cells_f0 u16 7
+56ee8 gun_cells_other u16 7
+56ef6 gun_anim_b u16 1
+56ef8 gun_anim_a u16 81
 56f9a end_pieces Level3EndPiece 6
-570c2 spawn_parts_data_2 u8 2
+570c2 spawn_parts_data_2 u16 1
 570c4 spawn_parts_words u16 1
 570c6 spawn_parts_words_2 u16 1
-570c8 spawn_parts_data_3 u8 16648
-5b1d0 snake_picture_a u8 176
-5b280 snake_picture_b u8 176
-5b330 diver_shot_picture_a u8 86
-5b386 diver_shot_picture_b u8 13080
-5e69e gun_shot_picture u8 2496
-5f05e part_gun_picture_side_40 u8 146
-5f0f0 part_gun_picture_other u8 32
+570c8 spawn_parts_data_3 u16 8324
+5b1d0 snake_picture_a u16 88
+5b280 snake_picture_b u16 88
+5b330 diver_shot_picture_a u16 43
+5b386 diver_shot_picture_b u16 6540
+5e69e gun_shot_picture u16 1248
+5f05e part_gun_picture_side_40 u16 73
+5f0f0 part_gun_picture_other u16 16
 6ee26 shot_gfx_table ptr:ShotPic 5
 6ee3a shot_gfx_cells ShotPic 3
 6ee46 formation_paths ptr:PathCmd 60
@@ -114,3 +114,10 @@ end
 70784 events_a_end s16
 662b6 events_b SpawnRec 65
 66644 events_b_end s16
+74386 data_src u16 6000
+54fcc pad_54fcc u16 18
+55818 pad_55818 u16 108
+5f1c0 pad_5f1c0 u16 14188
+66646 pad_66646 u16 17392
+6f73e pad_6f73e u16 12
+70786 pad_70786 u16 7680

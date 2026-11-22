@@ -41,7 +41,7 @@ static void kill_thunk(Object *o)
 }
 
 /* the animation header at an address of the blob */
-static void set_anim(Object *o, const uint8_t *anim)
+static void set_anim(Object *o, const uint16_t *anim)
 {
     anim_header_set(o, anim);
 }
@@ -52,9 +52,9 @@ static uint32_t ror5(uint32_t *seed)
     return *seed;
 }
 
-/* the table of blocks that break: four groups (by the quarter of the screen), each a count and that many entries (the words stay big endian) */
-struct L2Block { RawWord state, x, y, cell; };
-struct L2Group { RawWord count; struct L2Block entries[]; };
+/* the table of blocks that break: four groups (by the quarter of the screen), each a count and that many entries */
+struct L2Block { uint16_t state, x, y, cell; };
+struct L2Group { uint16_t count; struct L2Block entries[]; };
 
 /* ---- the entries the engine calls ($54E0C..$54E2C) ---- */
 
@@ -75,20 +75,20 @@ Object *l2_collision_hook(int16_t box_x0, int16_t box_y0, int16_t box_x1, int16_
     if (box_x0 <= 0x80)
         quarter |= 8;
     {
-        const struct L2Group *group = (const struct L2Group *)(xenon2.l2_block_table + xenon2.level2_data.block_group_offsets[quarter / 4]);
+        const struct L2Group *group = (const struct L2Group *)((const uint8_t *)xenon2.l2_block_table + xenon2.level2_data.block_group_offsets[quarter / 4]);
 
-        n = rd16(group->count.b);
+        n = group->count;
         entry = group->entries;
     }
     for (; n != 0; n--, entry++) {
         int16_t x, y;
 
-        if (rd16(entry->state.b) == 0)
+        if (entry->state == 0)
             continue;
-        x = (int16_t)rd16(entry->x.b);
+        x = (int16_t)entry->x;
         if (x > box_x1)
             return 0;
-        y = (int16_t)rd16(entry->y.b);
+        y = (int16_t)entry->y;
         if (box_overlap(box_x0, box_y0, box_x1, box_y1, x, y, (int16_t)(x + 0xf), (int16_t)(y + 0xf))) {
             xenon2.l2_block_object.gfx = entry;
             return &xenon2.l2_block_object;
@@ -101,12 +101,12 @@ Object *l2_collision_hook(int16_t box_x0, int16_t box_y0, int16_t box_x1, int16_
 void l2_block_hit(Object *attacker, Object *target, uint16_t damage)
 {
     struct L2Block *e = (struct L2Block *)xenon2.l2_block_object.gfx;
-    uint16_t x = rd16(e->x.b), y = rd16(e->y.b);
+    uint16_t x = e->x, y = e->y;
     uint16_t cell;
 
-    wr16(e->state.b, 0);
+    e->state = 0;
     cell = (uint16_t)((uint16_t)(y >> 3) * 0x14 + (x >> 3));
-    wr16(xenon2.level_init_src + cell, 0);
+    *(Cell *)(xenon2.level_init_src + cell) = 0;
     spawn_effect((int16_t)(x + 8), (int16_t)(y - xenon2.scroll_pos + 8), xenon2.anim_explosion, draw_bob_masked);
 }
 
@@ -143,7 +143,7 @@ void l2_hook(uint16_t hook, const struct SpawnRec *rec, uint16_t rec_scroll)
         obj->hit[0] = 0x3e8;
         obj->hit[2] = 0x3e8;
         obj->gfx = (void *)(flag ? xenon2.level2_data.hook_picture_a : xenon2.level2_data.hook_picture_b);
-        obj->anim = flag ? xenon2.level2_data.hook_anim_a : xenon2.level2_data.hook_anim_b;
+        obj->anim = (const uint16_t *)(flag ? &xenon2.level2_data.hook_anim_a : &xenon2.level2_data.hook_anim_b);
         obj->map[0] = *(const Cell *)obj->gfx;
         obj->score = 0x64;
         obj->tile.cols = 0;
@@ -211,16 +211,14 @@ void l2_scroll(void)
 /* level2 $054E2C, $054E68: a change of players: the table of blocks and the second player's copy exchange */
 void l2_swap_hook(void)
 {
-    uint8_t *blocks = xenon2.l2_block_table, *saved = xenon2.l2_blocks_player2;
+    uint16_t *blocks = xenon2.l2_block_table, *saved = xenon2.l2_blocks_player2;
     int i;
 
-    for (i = 0; i < 0xb4; i++, blocks += 2, saved += 2) {
-        uint8_t t0 = blocks[0], t1 = blocks[1];
+    for (i = 0; i < 0xb4; i++, blocks++, saved++) {
+        uint16_t t = *blocks;
 
-        blocks[0] = saved[0];
-        blocks[1] = saved[1];
-        saved[0] = t0;
-        saved[1] = t1;
+        *blocks = *saved;
+        *saved = t;
     }
 }
 
@@ -232,13 +230,13 @@ void l2_init(void)
     Object *obj;
     int i, gate;
 
-    if (xenon2.level_init_src != xenon2.level_data_dst) {
-        for (i = 11999; i >= 0; i--)
-            xenon2.level_data_dst[i] = xenon2.level_init_src[i];
-        for (i = 359; i >= 0; i--)
-            xenon2.l2_blocks[i] = (xenon2.level_init_src - 360)[i];
-        xenon2.level_init_src = xenon2.level_data_dst;
-        xenon2.l2_block_table = xenon2.l2_blocks;
+    if (xenon2.level_init_src != (uint8_t *)xenon2.level_data_dst) {
+        for (i = 5999; i >= 0; i--)
+            xenon2.level_data_dst[i] = xenon2.level2_data.data_src[i];
+        for (i = 179; i >= 0; i--)
+            xenon2.level2_data.blocks[i] = xenon2.level2_data.block_source[i];
+        xenon2.level_init_src = (uint8_t *)xenon2.level_data_dst;
+        xenon2.l2_block_table = xenon2.level2_data.blocks;
     }
     xenon2.scroll_min = 0x9e0;
     xenon2.scroll_max = 0x11ff;
@@ -285,11 +283,10 @@ void l2_init(void)
     for (i = 0; i < 8; i++)
         xenon2.level_vars[i] = 0;
     for (i = 0; i < 4; i++) {
-        uint8_t *g = xenon2.l2_block_table + groups[i];
-        uint16_t n = rd16(g);
+        struct L2Group *g = (struct L2Group *)((uint8_t *)xenon2.l2_block_table + groups[i]);
 
-        for (g += 2; n != 0; n--, g += 8)
-            wr16(g, 1);
+        for (uint16_t n = 0; n < g->count; n++)
+            g->entries[n].state = 1;
     }
     xenon2.l2_block_object.type = 0;
     xenon2.l2_block_object.prev = &xenon2.l2_block_object;
@@ -302,8 +299,7 @@ void l2_init(void)
     xenon2.difficulty_x1 = (uint16_t)(xenon2.difficulty * 1);
     xenon2.difficulty_x2 = (uint16_t)(xenon2.difficulty * 2);
     for (i = 0; i < 0xb4; i++) {
-        xenon2.l2_blocks_player2[2 * i] = xenon2.l2_block_table[2 * i];
-        xenon2.l2_blocks_player2[2 * i + 1] = xenon2.l2_block_table[2 * i + 1];
+        xenon2.l2_blocks_player2[i] = xenon2.l2_block_table[i];
     }
 }
 
@@ -357,8 +353,8 @@ void l2_front_piece_update(Object *part)
     }
     if (burst) {
         const struct Pic *f = part->gfx;
-        int16_t ex = (int16_t)(((int16_t)(part->x - (int16_t)rd16(f->hot_x.b)) * 2 + (int16_t)rd16(f->width.b)) >> 1);
-        int16_t ey = (int16_t)(((int16_t)(part->y - (int16_t)rd16(f->hot_y.b)) * 2 + (int16_t)rd16(f->height.b)) >> 1);
+        int16_t ex = (int16_t)(((int16_t)(part->x - (int16_t)f->hot_x) * 2 + (int16_t)f->width) >> 1);
+        int16_t ey = (int16_t)(((int16_t)(part->y - (int16_t)f->hot_y) * 2 + (int16_t)f->height) >> 1);
 
         spawn_effect(ex, ey, xenon2.anim_explosion, draw_bob_masked);
     }
@@ -538,23 +534,23 @@ static void l2_restore_blocks(Object *bolt)
     if (box_x0 <= 0x80)
         quarter |= 8;
     {
-        struct L2Group *group = (struct L2Group *)(xenon2.l2_block_table + xenon2.level2_data.block_group_offsets[quarter / 4]);
+        struct L2Group *group = (struct L2Group *)((uint8_t *)xenon2.l2_block_table + xenon2.level2_data.block_group_offsets[quarter / 4]);
 
-        n = rd16(group->count.b);
+        n = group->count;
         entry = group->entries;
     }
     for (; n != 0; n--, entry++) {
         struct L2Block *e = entry;
         int16_t x, y;
 
-        if (rd16(e->state.b) != 0)
+        if (e->state != 0)
             continue;
-        x = (int16_t)rd16(e->x.b);
-        y = (int16_t)rd16(e->y.b);
+        x = (int16_t)e->x;
+        y = (int16_t)e->y;
         if (!box_overlap(box_x0, box_y0, box_x1, box_y1, x, y, (int16_t)(x + 0xf), (int16_t)(y + 0xf)))
             continue;
-        wr16(e->state.b, 1);
-        wr16(xenon2.level_init_src + (uint16_t)(((uint16_t)y >> 3) * 0x14 + ((uint16_t)x >> 3)), rd16(e->cell.b));
+        e->state = 1;
+        *(Cell *)(xenon2.level_init_src + (uint16_t)(((uint16_t)y >> 3) * 0x14 + ((uint16_t)x >> 3))) = e->cell;
         return;
     }
 }
@@ -750,7 +746,7 @@ void l2_front_update(Object *marker)
 void l2_turret_update(Object *turret)
 {
     int16_t left, top, shot_x, shot_y, dir;
-    const uint8_t *pic;
+    const uint16_t *pic;
 
     if ((int16_t)(xenon2.scroll_max + 0xd0) < turret->y) {
         kill_thunk(turret);
@@ -829,7 +825,7 @@ void l2_launcher_update(Object *launcher)
 }
 
 /* the end of $055DEC, $055E0E and $055E28: the object obj bursts into a wreck (animation anim) that flies away, the object goes */
-static void l2_wreck(Object *obj, const uint8_t *anim)
+static void l2_wreck(Object *obj, const uint16_t *anim)
 {
     Object *wreck = alloc_in(LIST_B);
 
@@ -993,9 +989,9 @@ void l2_piece_update(Object *part)
             part->fn_draw = draw_bob_behind_map;
     } else if (part->fn_draw == draw_bob_behind_map) {
         cursor = part->cursor;
-        if (rd16(cursor->op.b) != 0 && cursor != (const struct PathCmd *)(&((const struct PathCmd *)part->script)->arg.move + 1))
+        if (cursor->op != 0 && cursor != (const struct PathCmd *)(&((const struct PathCmd *)part->script)->arg.move + 1))
             part->fn_draw = draw_bob_masked;
-    } else if (rd16(part->cursor->op.b) == 0) {
+    } else if (part->cursor->op == 0) {
         part->fn_draw = draw_bob_behind_map;
     }
     pic_index = (uint16_t)(((uint16_t)((int16_t)part->piece.dir + 0x10) >> 3) & 0x1c);
@@ -1040,23 +1036,23 @@ void l2_gate_update(Object *gate)
     frame = gate->gate.step;
     if (frame > 4)
         frame = (int16_t)(8 - frame);
-    *(uint16_t *)((uint8_t *)gate->gfx) = *(const uint16_t *)(xenon2.level2_data.gate_number_cells + 2 * frame);
+    *(uint16_t *)gate->gfx = xenon2.level2_data.gate_number_cells[frame];
     if (gate->gate.number == 2) {
-        const uint8_t *cells = xenon2.level2_data.gate_cells;
+        const uint16_t *cells = xenon2.level2_data.gate_cells;
         uint16_t *counter = xenon2.level_vars;
         int i;
 
-        for (i = 7; i >= 0; i--, counter++, cells += 0x12) {
+        for (i = 7; i >= 0; i--, counter++, cells += 9) {
             uint8_t *dst;
-            const uint8_t *src;
+            const uint16_t *src;
 
             if (*counter == 0)
                 continue;
-            dst = xenon2.level_init_src + (int16_t)rd16(cells);
+            dst = xenon2.level_init_src + (int16_t)*(const uint16_t *)cells;
             (*counter)--;
-            src = cells + ((*counter & 2) ? 0xa : 2);
+            src = cells + ((*counter & 2) ? 5 : 1);
             *(uint32_t *)(dst) = *(const uint32_t *)(src);
-            *(uint32_t *)(dst + 0x28) = *(const uint32_t *)(src + 4);
+            *(uint32_t *)(dst + 0x28) = *(const uint32_t *)(src + 2);
         }
     }
 }
@@ -1064,7 +1060,7 @@ void l2_gate_update(Object *gate)
 /* level2 $0568C6: the draw of a gate that was hit: its cells (by its number) flash once */
 void l2_gate_flash(Object *gate)
 {
-    const uint8_t *cells = xenon2.level2_data.gate_flash_cells_a;
+    const uint16_t *cells = xenon2.level2_data.gate_flash_cells_a;
     uint16_t rows = 1;
     int16_t y = (int16_t)((gate->y << 4) - xenon2.scroll_pos - 0x10);
     uint16_t x = (uint16_t)((gate->x << 3) - 0x10);
@@ -1099,7 +1095,7 @@ void l2_gate_hit(Object *attacker, Object *gate, uint16_t damage)
     if (old > damage)
         return;
     xenon2.l2_walls_made = 3;
-    wr16((uint8_t *)gate->gfx, 0x8e45);
+    *(uint16_t *)gate->gfx = 0x8e45;
     spawn_effect((int16_t)(gate->hit[0] + 8), (int16_t)(gate->hit[1] + 8), xenon2.anim_explosion, draw_bob_masked);
     kill_thunk(gate);
     xenon2.l2_gates_left--;
@@ -1214,10 +1210,10 @@ static void l2_boss_move(Object *boss)
     }
     boss->y = new_y;
     phase = (int16_t)((xenon2.frame_tick & 1) * 4);
-    *(uint32_t *)(&xenon2.level2_data.boss_cells[0x8]) = *(const uint32_t *)(xenon2.level2_data.boss_move_paths_a[phase / 4]);
-    *(uint32_t *)(&xenon2.level2_data.boss_cells[0x14]) = *(const uint32_t *)(xenon2.level2_data.boss_move_paths_a[phase / 4] + 4);
-    *(uint32_t *)(&xenon2.level2_data.boss_cells[0x10]) = *(const uint32_t *)(xenon2.level2_data.boss_move_paths_b[phase / 4]);
-    *(uint32_t *)(&xenon2.level2_data.boss_cells[0x1c]) = *(const uint32_t *)(xenon2.level2_data.boss_move_paths_b[phase / 4] + 4);
+    *(uint32_t *)(&xenon2.level2_data.boss_cells[4]) = *(const uint32_t *)(xenon2.level2_data.boss_move_paths_a[phase / 4]);
+    *(uint32_t *)(&xenon2.level2_data.boss_cells[0xa]) = *(const uint32_t *)(xenon2.level2_data.boss_move_paths_a[phase / 4] + 4);
+    *(uint32_t *)(&xenon2.level2_data.boss_cells[8]) = *(const uint32_t *)(xenon2.level2_data.boss_move_paths_b[phase / 4]);
+    *(uint32_t *)(&xenon2.level2_data.boss_cells[0xe]) = *(const uint32_t *)(xenon2.level2_data.boss_move_paths_b[phase / 4] + 4);
 }
 
 
@@ -1280,12 +1276,12 @@ void l2_boss_update(Object *boss)
     if ((int16_t)xenon2.scroll_pos >= 0x160)
         return;
     if (boss->l2_boss_b.flash != 0) {
-        const uint8_t *cells;
+        const uint16_t *cells;
 
         boss->l2_boss.cell = (int16_t)((boss->l2_boss.cell + 4) & 0xc);
         cells = xenon2.level2_data.boss_cells_by_cell[(uint16_t)boss->l2_boss.cell / 4];
         *(uint32_t *)(&xenon2.level2_data.boss_cells[0]) = *(const uint32_t *)(cells);
-        *(uint32_t *)(&xenon2.level2_data.boss_cells[0xc]) = *(const uint32_t *)(cells + 4);
+        *(uint32_t *)(&xenon2.level2_data.boss_cells[6]) = *(const uint32_t *)(cells + 2);
         boss->l2_boss_b.flash--;
         if (boss->l2_boss_b.flash != 0)
             return;

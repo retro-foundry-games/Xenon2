@@ -6,7 +6,6 @@ var l2_left_wall_made 0xd8d uint8_t                           ; level 2: $FF onc
 var l2_right_wall_made 0xd8e uint8_t
 var l2_debris_waves 0xd8f uint8_t                           ; level 2: debris waves left before the walls come in the other pattern
 var l2_first_fight_won 0xd90 uint8_t                           ; level 2: $FF when the first fight is won
-var l2_block_table 0xe08 uint8_t *                      ; level 2: the table of blocks that break (four groups of a count and 8-byte entries)
+var l2_block_table 0xe08 uint16_t *                      ; level 2: the table of blocks that break (four groups of a count and 8-byte entries)
 var l2_block_object 0xda0 Object                         ; level 2: the object a hit block stands for (its hit routine is the block's)
-arr l2_blocks 0x7cfb8 uint8_t 360                       ; level 2: the table of blocks as the level has it (copied from the level's data below it)
-arr l2_blocks_player2 0x3eb8c uint8_t 360               ; level 2: the second player's table of blocks (exchanged by the swap)
+arr l2_blocks_player2 0x3eb8c uint16_t 180               ; level 2: the second player's table of blocks (exchanged by the swap)

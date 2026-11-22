@@ -201,11 +201,15 @@ void guest_load_range(uint32_t address, const uint8_t *image, uint32_t length)
 
         if (lo >= hi)
             continue;
-        /* whole elements only: a member is loaded in one piece (the image covers all of it or none) */
-        if (m < address || m + size > address + length)
+        /* records and bytes: a member is loaded in one piece; words and longwords: the elements the image covers */
+        int partial = m < address || m + size > address + length;
+
+        if (partial && (guest_members[i].rec || elem == 1 || ((lo - m) % elem) || ((hi - lo) % elem)))
             continue;
-        uint8_t *dst = (uint8_t *)guest_members[i].dst;
-        const uint8_t *src = image + (m - address);
+        if (partial)
+            size = hi - lo;
+        uint8_t *dst = (uint8_t *)guest_members[i].dst + (lo - m);
+        const uint8_t *src = image + (lo - address);
 
         if (guest_members[i].rec) {
             unsigned rsize = guest_record_size(guest_members[i].rec);
@@ -281,9 +285,13 @@ extern uint32_t guest_code_address(const void *function);
 
 unsigned host_vbl_count(void) { return xenon2.vbl_count; }
 
-static uint8_t guest_high[0x80000];   /* the original's memory from $80000 to $FFFFF (the lockstep gives it); zeros otherwise */
+static uint16_t guest_high[0x40000];   /* the original's memory from $80000 to $FFFFF as words (the lockstep gives it); zeros otherwise */
 
-void guest_load_high(const uint8_t *bytes) { memcpy(guest_high, bytes, sizeof guest_high); }
+void guest_load_high(const uint8_t *bytes)
+{
+    for (unsigned i = 0; i < sizeof guest_high / sizeof guest_high[0]; i++)
+        guest_high[i] = be16(bytes + 2 * i);
+}
 
 /* a pointer past the end of the port's memory stands for the original's memory there: LENGTH bytes at P lie beyond it */
 int guest_beyond(const void *p, size_t length)
@@ -291,18 +299,18 @@ int guest_beyond(const void *p, size_t length)
     return (const uint8_t *)p + length > (const uint8_t *)&xenon2 + sizeof xenon2;
 }
 
-const uint8_t *guest_high_ptr(const void *p)   /* 0 outside $80000..$FFFFF */
+const uint16_t *guest_high_ptr(const void *p)   /* 0 outside $80000..$FFFFF */
 {
     uint32_t address = guest_address(p) - 0x80000;
 
-    return address < sizeof guest_high ? guest_high + address : 0;
+    return address < 2 * sizeof guest_high / sizeof guest_high[0] ? guest_high + address / 2 : 0;
 }
 
 uint16_t guest_high_word(const void *p)
 {
     uint32_t address = guest_address(p) - 0x80000;
 
-    return address + 2 <= sizeof guest_high ? (uint16_t)(guest_high[address] << 8 | guest_high[address + 1]) : 0;
+    return address + 2 <= 2 * sizeof guest_high / sizeof guest_high[0] ? guest_high[address / 2] : 0;
 }
 
 extern uint32_t l2_stale_d0;   /* level2.c */

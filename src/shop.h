@@ -18,10 +18,10 @@ uint32_t guest_address(const void *p);
 /* raw words, longs and bytes of the original's memory at an address of the blob */
 
 /* the shop's code (shop.c) and its sound (shop_sound.c): the interrupt calls shop_irq_tick ($2090), shop_sound_cmd is $2094 */
-void shop_draw_both(uint16_t x, uint16_t y, const uint8_t *gfx);   /* shop $553F8 */
+void shop_draw_both(uint16_t x, uint16_t y, const uint16_t *gfx);   /* shop $553F8 */
 uint8_t *shop_clear_columns(uint8_t *dst, uint16_t rows);             /* shop $5537A */
-void shop_copy_block(const uint8_t *src, uint8_t *dst, uint16_t w, uint16_t h); /* shop $55200 */
-void shop_put_rows(const uint8_t *src, uint8_t *dst, uint16_t rows);   /* shop $56912 */
+void shop_copy_block(const uint16_t *src, uint8_t *dst, uint16_t w, uint16_t h); /* shop $55200 */
+void shop_put_rows(const uint16_t *src, uint8_t *dst, uint16_t rows);   /* shop $56912 */
 void shop_lights_draw(void);                                       /* shop $56E8E */
 void shop_text_newline(void);                                      /* shop $56E44 */
 void shop_text_char(uint8_t ch);                                   /* shop $56D8C */

@@ -1,6 +1,6 @@
 ; level 2: its blob at $54E00 (see tools/gen_blobs.py)
 record Level2FrontEntry 8
-0 anim ptr
+0 anim ptr:u16
 4 dx s16
 6 dy s16
 end
@@ -19,7 +19,7 @@ end
 record Level2WallPiece 12
 0 type u16
 2 hit code
-6 gfx ptr
+6 gfx ptr:u16
 10 score u16
 end
 record Level2WallPieces 146
@@ -51,55 +51,55 @@ end
 54ed0 formation_4 Formation1
 54eea formation_5 Formation1
 54f04 formation_6 Formation1
-5501a flyer_anim2_e0 u8 24
-55032 flyer_anim_e0 u8 24
-5504a flyer_anim2_other u8 6
-55050 flyer_anim_other u8 18
-55062 wreck_a u8 60
-5509e wreck_b u8 60
-550da wreck_c u8 60
-55116 boss_update_data_4 u8 36
-5513a roamer_anim u8 908
-554c6 marker_f8_cells cell 218
-5567a hook_words cell 151
+5501a flyer_anim2_e0 u16 12
+55032 flyer_anim_e0 u16 12
+5504a flyer_anim2_other u16 3
+55050 flyer_anim_other u16 9
+55062 wreck_a u16 30
+5509e wreck_b u16 30
+550da wreck_c u16 30
+55116 boss_update_data_4 u16 18
+5513a roamer_anim u16 454
+554c6 marker_f8_cells u16 218
+5567a hook_words u16 151
 557a8 front_entries Level2FrontEntry 8
 557e8 front_table_f0 ptr 21
 5583c front_table_other ptr 21
-55890 hook_cells_a cell 2
-55894 hook_cells2_a cell 18
-558b8 hook_cells_b cell 2
-558bc hook_cells2_b cell 132
-559c4 hook_anim_a u8 2
-559c6 hook_anim_b u8 2
-559c8 hook_picture_a u8 30
-559e6 hook_picture_b u8 746
-55cd0 hook_fire_anim_b u8 48
-55d00 launcher_anim_other u8 18
-55d12 hook_fire_anim_a u8 48
-55d42 launcher_anim_100 u8 386
+55890 hook_cells_a u16 2
+55894 hook_cells2_a u16 18
+558b8 hook_cells_b u16 2
+558bc hook_cells2_b u16 132
+559c4 hook_anim_a u16 1
+559c6 hook_anim_b u16 1
+559c8 hook_picture_a u16 15
+559e6 hook_picture_b u16 373
+55cd0 hook_fire_anim_b u16 24
+55d00 launcher_anim_other u16 9
+55d12 hook_fire_anim_a u16 24
+55d42 launcher_anim_100 u16 193
 55ec4 wall_pieces Level2WallPieces 1
 55f56 debris_wall_records Level2DebrisWall 16
-563c0 bolt_anims_by_dir ptr 8
+563c0 bolt_anims_by_dir ptr:u16 8
 56526 roamer_shot_entries Level2RoamerNode 8
-56576 front_anims_by_dir ptr 8
-567fa piece_pictures_other ptr 8
-5681a piece_pictures_118 ptr 8
-5683a piece_pictures_11c ptr 8
-5691a gate_flash_cells_b u8 12
-56926 gate_flash_cells_a u8 12
-56932 gate_flash_cells_c u8 540
-56b4e gate_number_cells u8 10
-56b58 gate_cells u8 236
-56c44 boss_cells_by_cell ptr 4
+56576 front_anims_by_dir ptr:u16 8
+567fa piece_pictures_other ptr:u16 8
+5681a piece_pictures_118 ptr:u16 8
+5683a piece_pictures_11c ptr:u16 8
+5691a gate_flash_cells_b u16 6
+56926 gate_flash_cells_a u16 6
+56932 gate_flash_cells_c u16 270
+56b4e gate_number_cells u16 5
+56b58 gate_cells u16 118
+56c44 boss_cells_by_cell ptr:u16 4
 56e46 boss_move_paths_a ptr 2
 56e4e boss_move_paths_b ptr 2
-56e8e boss_update_data u8 30
-56eac boss_update_data_2 u8 120
+56e8e boss_update_data u16 15
+56eac boss_update_data_2 u16 60
 56f24 block_group_offsets u32 4
-5725e boss_grid u8 76
-572aa boss_cells u8 32
-5b5d6 roamer_picture u8 5920
-5ccf6 launcher_shot_picture u8 32
+5725e boss_grid u16 38
+572aa boss_cells u16 16
+5b5d6 roamer_picture u16 2960
+5ccf6 launcher_shot_picture u16 16
 6c89c shot_gfx_table ptr:ShotPic 5
 6c8b0 shot_gfx_cells ShotPic 3
 6c8bc formation_paths ptr:PathCmd 66
@@ -107,3 +107,12 @@ end
 6dca8 events_a_end s16
 5e108 events_b SpawnRec 47
 5e39a events_b_end s16
+718aa block_source u16 180
+71a12 data_src u16 6000
+7cfb8 blocks u16 180
+54f1e pad_54f1e u16 78
+58fa0 pad_58fa0 u16 705
+5cfc0 pad_5cfc0 u16 1824
+5e39c pad_5e39c u16 29312
+6c9c4 pad_6c9c4 u16 1809
+6dcaa pad_6dcaa u16 7680
