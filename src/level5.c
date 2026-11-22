@@ -5,94 +5,7 @@
 #include "blobs.h"
 #include <string.h>
 
-/* level 5: its data tables in the level blob, by the routine that reads them */
-#define L5_SPAWN_GUNNERS_TABLE BLOB_ADDR(Level5Blob, spawn_gunners_table)
-#define L5_GUNNER_ANIMS BLOB_ADDR(Level5Blob, gunner_anims)
-#define L5_SPAWN_CANNON_DATA BLOB_ADDR(Level5Blob, spawn_cannon_data)
-#define L5_SPAWN_CANNON_DATA_2 BLOB_ADDR(Level5Blob, spawn_cannon_data_2)
-#define L5_CANNON_ANIM_100 BLOB_ADDR(Level5Blob, cannon_anim_100)
-#define L5_CANNON_ANIM_OTHER BLOB_ADDR(Level5Blob, cannon_anim_other)
-#define L5_PELLET_ANIMS_BY_DIR BLOB_ADDR(Level5Blob, pellet_anims_by_dir)
-#define L5_PELLET_DX_BY_DIR BLOB_ADDR(Level5Blob, pellet_dx_by_dir)
-#define L5_PELLET_DY_BY_DIR BLOB_ADDR(Level5Blob, pellet_dy_by_dir)
-#define L5_SPAWN_BOSS1_DATA BLOB_ADDR(Level5Blob, spawn_boss1_data)
-#define L5_INIT_DATA BLOB_ADDR(Level5Blob, init_data)
-#define L5_BOSS_DRAW_TABLE_2 BLOB_ADDR(Level5Blob, boss_draw_table_2)
-#define L5_BOSS_DRAW_TABLE BLOB_ADDR(Level5Blob, boss_draw_table)
-#define L5_BOSS_UPDATE_DATA BLOB_ADDR(Level5Blob, boss_update_data)
-#define L5_MISSILE_ANIMS_BY_DIR BLOB_ADDR(Level5Blob, missile_anims_by_dir)
-#define L5_HEART_PICTURES BLOB_ADDR(Level5Blob, heart_pictures)
-#define L5_SPAWN_BOSS2_DATA BLOB_ADDR(Level5Blob, spawn_boss2_data)
-#define L5_INIT_DATA_2 BLOB_ADDR(Level5Blob, init_data_2)
-#define L5_WHEEL_PICTURES BLOB_ADDR(Level5Blob, wheel_pictures)
-#define L5_SPINNER_SOURCE_118 BLOB_ADDR(Level5Blob, spinner_source_118)
-#define L5_SPINNER_SOURCE_OTHER BLOB_ADDR(Level5Blob, spinner_source_other)
-#define L5_BOSS2_TURRET_PICTURES BLOB_ADDR(Level5Blob, boss2_turret_pictures)
-#define L5_BOSS2_DRAW_TABLE BLOB_ADDR(Level5Blob, boss2_draw_table)
-#define L5_BOSS2_DRAW_TABLE_2 BLOB_ADDR(Level5Blob, boss2_draw_table_2)
-#define L5_BOSS2_DRAW_TABLE_3 BLOB_ADDR(Level5Blob, boss2_draw_table_3)
-#define L5_BOSS2_FLASH_GRID BLOB_ADDR(Level5Blob, boss2_flash_grid)
-#define L5_BOSS2_DRAW_DATA BLOB_ADDR(Level5Blob, boss2_draw_data)
-#define L5_BOSS2_DRAW_DATA_2 BLOB_ADDR(Level5Blob, boss2_draw_data_2)
-#define L5_BOSS2_DRAW_DATA_3 BLOB_ADDR(Level5Blob, boss2_draw_data_3)
-#define L5_SPAWN_GATES_DATA BLOB_ADDR(Level5Blob, spawn_gates_data)
-#define L5_GATE_UPDATE_DATA BLOB_ADDR(Level5Blob, gate_update_data)
-#define L5_WALL_CELLS_128 BLOB_ADDR(Level5Blob, wall_cells_128)
-#define L5_WALL_CELLS_OTHER BLOB_ADDR(Level5Blob, wall_cells_other)
-#define L5_WALL_FLASH_A_GRID BLOB_ADDR(Level5Blob, wall_flash_a_grid)
-#define L5_WALL_FLASH_B_GRID BLOB_ADDR(Level5Blob, wall_flash_b_grid)
-#define L5_SPAWN_BRIDGE_DATA BLOB_ADDR(Level5Blob, spawn_bridge_data)
-#define L5_SPAWN_BRIDGE_DATA_2 BLOB_ADDR(Level5Blob, spawn_bridge_data_2)
-#define L5_BRIDGE_UPDATE_DATA BLOB_ADDR(Level5Blob, bridge_update_data)
-#define L5_SPAWN_GROUP_DATA BLOB_ADDR(Level5Blob, spawn_group_data)
-#define L5_SPAWN_GROUP_DATA_2 BLOB_ADDR(Level5Blob, spawn_group_data_2)
-#define L5_UNIT_DX_BY_DIR BLOB_ADDR(Level5Blob, unit_dx_by_dir)
-#define L5_UNIT_DY_BY_DIR BLOB_ADDR(Level5Blob, unit_dy_by_dir)
-#define L5_UNIT_SHOT_PICTURES BLOB_ADDR(Level5Blob, unit_shot_pictures)
-#define L5_SPAWN_GUN_DATA BLOB_ADDR(Level5Blob, spawn_gun_data)
-#define L5_SPAWN_GUN_DATA_2 BLOB_ADDR(Level5Blob, spawn_gun_data_2)
-#define L5_SPAWN_GUN_DATA_4 BLOB_ADDR(Level5Blob, spawn_gun_data_4)
-#define L5_SPAWN_GUN_DATA_3 BLOB_ADDR(Level5Blob, spawn_gun_data_3)
-#define L5_GUN_ANIM_108 BLOB_ADDR(Level5Blob, gun_anim_108)
-#define L5_GUN_ANIM_OTHER BLOB_ADDR(Level5Blob, gun_anim_other)
-#define L5_SPAWN_BOSS1_DATA_2 BLOB_ADDR(Level5Blob, spawn_boss1_data_2)
-#define L5_SPAWN_GUNNERS_DATA BLOB_ADDR(Level5Blob, spawn_gunners_data)
-#define L5_BOSS2_DEAD_DATA BLOB_ADDR(Level5Blob, boss2_dead_data)
-#define L5_BEAM_TOP_PICTURE BLOB_ADDR(Level5Blob, beam_top_picture)
-#define L5_BEAM_END_PICTURE BLOB_ADDR(Level5Blob, beam_end_picture)
 
-/* level 5: its parameter block at E42 (energies, fire rates, shot steps), by the object that reads them */
-#define L5_GUNNERS_ENERGY BLOB_ADDR(Level5Blob, gunners_energy)
-#define L5_GUNNERS_PARAM BLOB_ADDR(Level5Blob, gunners_param)
-#define L5_GUNNERS_STEPS BLOB_ADDR(Level5Blob, gunners_steps)
-#define L5_CANNON_ENERGY BLOB_ADDR(Level5Blob, cannon_energy)
-#define L5_CANNON_FIRE_RATE BLOB_ADDR(Level5Blob, cannon_fire_rate)
-#define L5_PELLET_ENERGY BLOB_ADDR(Level5Blob, pellet_energy)
-#define L5_PELLET_PARAM BLOB_ADDR(Level5Blob, pellet_param)
-#define L5_BOSS_FIRE_RATE BLOB_ADDR(Level5Blob, boss_fire_rate)
-#define L5_BOSS_ENERGY BLOB_ADDR(Level5Blob, boss_energy)
-#define L5_TURRET_FIRE_RATE BLOB_ADDR(Level5Blob, turret_fire_rate)
-#define L5_BOSS2_TURRET_FIRE_RATE BLOB_ADDR(Level5Blob, boss2_turret_fire_rate)
-#define L5_BOSS2_TURRET_SHOT_STEPS BLOB_ADDR(Level5Blob, boss2_turret_shot_steps)
-#define L5_BOSS2_MOVER_FIRE_RATE BLOB_ADDR(Level5Blob, boss2_mover_fire_rate)
-#define L5_TURRET_PARAM BLOB_ADDR(Level5Blob, turret_param)
-#define L5_GATES_ENERGY BLOB_ADDR(Level5Blob, gates_energy)
-#define L5_BRIDGE_ENERGY BLOB_ADDR(Level5Blob, bridge_energy)
-#define L5_GROUP_ENERGY BLOB_ADDR(Level5Blob, group_energy)
-#define L5_UNIT_FIRE_RATE BLOB_ADDR(Level5Blob, unit_fire_rate)
-#define L5_UNIT_SHOT_STEPS BLOB_ADDR(Level5Blob, unit_shot_steps)
-#define L5_GUN_ENERGY BLOB_ADDR(Level5Blob, gun_energy)
-#define L5_GUN_FIRE_RATE BLOB_ADDR(Level5Blob, gun_fire_rate)
-#define L5_GUN_SHOT_STEPS BLOB_ADDR(Level5Blob, gun_shot_steps)
-#define L5_BOSS2_TURRET_SHOT_STEPS_2 BLOB_ADDR(Level5Blob, boss2_turret_shot_steps_2)
-#define L5_INIT_PATCH BLOB_ADDR(Level5Blob, init_patch)
-#define L5_BRIDGE_FIRE_RATE BLOB_ADDR(Level5Blob, bridge_fire_rate)
-#define L5_BRIDGE_SHOT_STEPS BLOB_ADDR(Level5Blob, bridge_shot_steps)
-#define L5_INIT_PATCH_2 BLOB_ADDR(Level5Blob, init_patch_2)
-#define L5_GUNNER_FIRE_RATE BLOB_ADDR(Level5Blob, gunner_fire_rate)
-#define L5_GUNNER_SHOT_STEPS BLOB_ADDR(Level5Blob, gunner_shot_steps)
-#define L5_GUNNER_SHOT_STEPS_2 BLOB_ADDR(Level5Blob, gunner_shot_steps_2)
-#define L5_BOSS2_MOVER_FIRE_RATE_2 BLOB_ADDR(Level5Blob, boss2_mover_fire_rate_2)
 #define FN(f) ((obj_fn)(f))
 void l5_unit_update(Object *a0);
 
@@ -183,9 +96,9 @@ static void kill_thunk(Object *o)
     o->persists = 0;
 }
 
-static void set_anim(Object *o, uint32_t address)
+static void set_anim(Object *o, const uint8_t *anim)
 {
-    anim_header_set(o, (const uint8_t *)GPTR(address));
+    anim_header_set(o, anim);
 }
 
 static void copy4(uint8_t *dst, const uint8_t *src)
@@ -258,7 +171,7 @@ void l5_event(uint16_t d0, const uint8_t *a1)
     if (d0 == 0)
         spawn_wave_326c(0, a1);   /* $E5A */
     else if (d0 < 9)
-        spawn_formation(0, a1, (const uint8_t *)GPTR(0x54e92 + 0x1a * (uint32_t)(d0 - 1)));
+        spawn_formation(0, a1, level5_blob.formations + 0x1a * (d0 - 1));
 }
 
 /* level5 $054E18, $0551AA: the hooks by d0 */
@@ -321,8 +234,8 @@ void l5_init(void)
     sh_w8(0xd9a, 0);
     sh_w16(0xd72, 0x1200);
     sh_w16(0xd76, 0x11a0);
-    sh_w8(L5_INIT_DATA, B(L5_INIT_PATCH));
-    sh_w16(L5_INIT_DATA_2, W(L5_INIT_PATCH_2));
+    level5_blob.boss1_pieces[0].energy = level5_blob.init_patch;
+    level5_blob.boss2_pieces[5].energy = level5_blob.init_patch_2;
     sh_w8(0xd9b, 0);
     sh_w8(0xd9c, 0);
     difficulty_x1 = (uint16_t)(difficulty * 0xc);
@@ -334,7 +247,7 @@ void l5_init(void)
 /* level5 $0551E8: a formation of ten that fly the path of the table by the record's type */
 void l5_spawn_gunners(const uint8_t *a1)
 {
-    uint32_t a2 = sh_r32(L5_SPAWN_GUNNERS_TABLE + 4 * (uint32_t)rd16(a1 + 6));
+    const uint8_t *a2 = level5_blob.gunner_paths[rd16(a1 + 6)];
     int16_t d6 = 0;
     int d7;
 
@@ -345,26 +258,26 @@ void l5_spawn_gunners(const uint8_t *a1)
         a0->fn_update = FN(l5_gunner_update);
         a0->fn_draw = (obj_fn)draw_bob_masked;
         a0->fn_hit = (void *)hit_enemy;
-        a0->gfx = GPTR(L5_SPAWN_GUNNERS_DATA);
+        a0->gfx = (void *)level5_blob.gunner_picture;
         a0->anim_delay = 0;
-        a0->x = (int16_t)W(a2 + 2);
-        a0->y = (int16_t)(W(a2 + 4) - scroll_pos);
-        a0->energy = (int16_t)W(L5_GUNNERS_ENERGY);
+        a0->x = (int16_t)rd16(a2 + 2);
+        a0->y = (int16_t)(rd16(a2 + 4) - scroll_pos);
+        a0->energy = (int16_t)level5_blob.gunners_energy;
         a0->big = 0;
         PATH_ANGLE_HI(a0) = 0;
         PATH_ANGLE_LO(a0) = 0;
         a0->turn[0] = 0;
         a0->turn[1] = 0;
         a0->turn[2] = 0;
-        a0->script = (uint8_t *)GPTR(a2);
-        a0->cursor = (const uint8_t *)GPTR(a2 + 6);
+        a0->script = (uint8_t *)a2;
+        a0->cursor = a2 + 6;
         PATH_WAIT(a0) = d6;
-        d6 = (int16_t)(d6 - (int16_t)W(L5_GUNNERS_PARAM));
+        d6 = (int16_t)(d6 - (int16_t)level5_blob.gunners_param);
         a0->hit[0] = 0x3e8;
         a0->hit[2] = 0x3e8;
         a0->score = 0xc8;
         a0->kind = 0;
-        a0->steps = (int16_t)W(L5_GUNNERS_STEPS);
+        a0->steps = (int16_t)level5_blob.gunners_steps;
         a0->v5e_b[0] = (uint8_t)(d7 * 0x19);
     }
 }
@@ -384,13 +297,13 @@ void l5_gunner_update(Object *a0)
     d0 = (uint16_t)(((uint16_t)(GUNNER_PHASE(a0) + 0x10) >> 3) & 0x1c);
     d1 = (uint16_t)(((uint16_t)(old + 0x10) >> 3) & 0x1c);
     if (d0 != d1)
-        set_anim(a0, sh_r32(L5_GUNNER_ANIMS + d0));
-    if (add_carry(&a0->v5e_b[0], B(L5_GUNNER_FIRE_RATE))) {
+        set_anim(a0, level5_blob.gunner_anims[d0 / 4]);
+    if (add_carry(&a0->v5e_b[0], level5_blob.gunner_fire_rate)) {
         int d7;
 
         a0->v5e_b[0] = 0;
         for (d7 = 7; d7 >= 0; d7--)
-            spawn_enemy_shot((uint16_t)a0->x, (uint16_t)a0->y, (uint16_t)d7, W(L5_GUNNER_SHOT_STEPS), shot_gfx(W(L5_GUNNER_SHOT_STEPS_2)));
+            spawn_enemy_shot((uint16_t)a0->x, (uint16_t)a0->y, (uint16_t)d7, level5_blob.gunner_shot_steps, shot_gfx(level5_blob.gunner_shot_steps_2));
     }
     bbox_from_frame(a0);
 }
@@ -402,19 +315,19 @@ void l5_spawn_cannon(const uint8_t *a1)
 {
     uint16_t d0 = rd16(a1 + 0xc) ? 0x104 : 0x100;
     Object *a0 = spawn_marker_enemy(d0, a1, (void (*)(void))FN(l5_cannon_update));
-    uint32_t a2 = L5_SPAWN_CANNON_DATA;
+    const uint8_t *a2 = level5_blob.cannon_anim_a;
 
     a0->y = (int16_t)(a0->y - scroll_pos);
     a0->fn_draw = (obj_fn)draw_bob_masked;
     a0->fn_hit = (void *)hit_enemy;
-    a0->energy = (int16_t)W(L5_CANNON_ENERGY);
+    a0->energy = (int16_t)level5_blob.cannon_energy;
     a0->big = 0xff;
     a0->hit[0] = 0x3e8;
     a0->hit[2] = 0x3e8;
     a0->score = 0xfa;
     if (a0->type != 0x100) {
         a0->x = (int16_t)(a0->x + 0x10);
-        a2 = L5_SPAWN_CANNON_DATA_2;
+        a2 = level5_blob.cannon_anim_b;
     }
     set_anim(a0, a2);
     a0->kind = 0;
@@ -433,8 +346,8 @@ static void spawn_pellet(int16_t d0, int16_t d1, uint16_t d2)
     a1->x = d0;
     a1->y = d1;
     PELLET_DIR(a1) = (int16_t)d2;
-    set_anim(a1, sh_r32(L5_PELLET_ANIMS_BY_DIR + 4 * (uint32_t)d2));
-    a1->energy = (int16_t)W(L5_PELLET_ENERGY);
+    set_anim(a1, level5_blob.pellet_anims_by_dir[d2]);
+    a1->energy = (int16_t)level5_blob.pellet_energy;
     a1->big = 0;
     a1->score = 0x64;
     PELLET_TICK(a1) = (int16_t)(random_next() & 0x1f);
@@ -462,17 +375,17 @@ void l5_cannon_update(Object *a0)
         d1 = (int16_t)(d1 + a0->y);
         if (d1 >= 0xf20) {
             CANNON_BOB(a0) = -1;
-            set_anim(a0, a0->type == 0x100 ? L5_CANNON_ANIM_100 : L5_CANNON_ANIM_OTHER);
+            set_anim(a0, a0->type == 0x100 ? level5_blob.cannon_anim_100 : level5_blob.cannon_anim_other);
         }
     } else {
         a0->y = (int16_t)(a0->y - 1);
         d1 = (int16_t)(d1 + a0->y);
         if (d1 <= 0xe30) {
             CANNON_BOB(a0) = 1;
-            set_anim(a0, a0->type == 0x100 ? L5_SPAWN_CANNON_DATA : L5_SPAWN_CANNON_DATA_2);
+            set_anim(a0, a0->type == 0x100 ? level5_blob.cannon_anim_a : level5_blob.cannon_anim_b);
         }
     }
-    if (add_carry(&a0->v5e_b[0], B(L5_CANNON_FIRE_RATE))) {
+    if (add_carry(&a0->v5e_b[0], level5_blob.cannon_fire_rate)) {
         int16_t d0 = (int16_t)(a0->x + 0x20);
         uint16_t d2 = 2;
 
@@ -495,7 +408,7 @@ void l5_pellet_update(Object *a0)
     anim_step(a0);
     PELLET_TICK(a0) = (int16_t)(PELLET_TICK(a0) + 1);
     d0 = (uint16_t)PELLET_TICK(a0);
-    if ((int16_t)d0 < (int16_t)W(L5_PELLET_PARAM)) {
+    if ((int16_t)d0 < (int16_t)level5_blob.pellet_param) {
         if ((d0 & 7) == 0) {
             d0 = direction8((int16_t)(PLAYER->x - a0->x), (int16_t)(PLAYER->y - a0->y));
             d0 = (uint16_t)(d0 - (uint16_t)PELLET_DIR(a0));
@@ -506,11 +419,11 @@ void l5_pellet_update(Object *a0)
                 if (d0 >= 4 && (d0 != 4 || !((uint16_t)a0->x & 1)))
                     PELLET_DIR(a0) = (int16_t)(PELLET_DIR(a0) - 2);
                 PELLET_DIR(a0) = (int16_t)(PELLET_DIR(a0) & 7);
-                set_anim(a0, sh_r32(L5_PELLET_ANIMS_BY_DIR + 4 * (uint32_t)PELLET_DIR(a0)));
+                set_anim(a0, level5_blob.pellet_anims_by_dir[PELLET_DIR(a0)]);
             }
         }
-        dx = (int16_t)W(L5_PELLET_DX_BY_DIR + 2 * (uint32_t)PELLET_DIR(a0));
-        dy = (int16_t)(W(L5_PELLET_DY_BY_DIR + 2 * (uint32_t)PELLET_DIR(a0)) + scroll_speed);
+        dx = level5_blob.pellet_dx_by_dir[PELLET_DIR(a0)];
+        dy = (int16_t)(level5_blob.pellet_dy_by_dir[PELLET_DIR(a0)] + scroll_speed);
         a0->x = (int16_t)(a0->x + dx);
         a0->y = (int16_t)(a0->y + dy);
         bbox_from_frame(a0);
@@ -533,7 +446,7 @@ void l5_pellet_update(Object *a0)
 void l5_spawn_boss1(uint16_t d2)
 {
     uint8_t *p;
-    uint32_t rec = L5_SPAWN_BOSS1_DATA;
+    const struct Level5Boss1Piece *rec = level5_blob.boss1_pieces;
     Object *a6 = 0;
     int d7, i;
 
@@ -555,8 +468,8 @@ void l5_spawn_boss1(uint16_t d2)
         memset(p, 0, 6);
         p += 6;
         for (i = 0; i < 15; i++) {
-            p[2 * i] = ((const uint8_t *)GPTR(L5_SPAWN_BOSS1_DATA_2 + 30 * (uint32_t)d7))[2 * i];
-            p[2 * i + 1] = ((const uint8_t *)GPTR(L5_SPAWN_BOSS1_DATA_2 + 30 * (uint32_t)d7))[2 * i + 1];
+            p[2 * i] = level5_blob.boss1_cells[30 * d7 + 2 * i];
+            p[2 * i + 1] = level5_blob.boss1_cells[30 * d7 + 2 * i + 1];
         }
         p += 30;
         memset(p, 0, 4);
@@ -566,25 +479,25 @@ void l5_spawn_boss1(uint16_t d2)
     map_row_offset = 0x410;
     scroll_pos = 0x1a0;
     scroll_max = 0x1a0;
-    for (d7 = 21; d7 >= 0; d7--, rec += 24) {
+    for (d7 = 21; d7 >= 0; d7--, rec++) {
         Object *a0 = insert_head(LIST_C);
 
         if (a6 == 0)
             a6 = a0;
-        a0->type = W(rec);
-        a0->fn_update = GFN(sh_r32(rec + 2));
-        a0->fn_draw = GFN(sh_r32(rec + 6));
-        a0->fn_hit = GFN(sh_r32(rec + 10));
-        set_anim(a0, sh_r32(rec + 14));
+        a0->type = rec->type;
+        a0->fn_update = (obj_fn)rec->update;
+        a0->fn_draw = (obj_fn)rec->draw;
+        a0->fn_hit = (void *)rec->hit;
+        set_anim(a0, rec->anim);
         a0->x = 0x30;
         a0->y = (int16_t)0xfec0;
-        PART_DX(a0) = (int16_t)W(rec + 18);
-        PART_DY(a0) = (int16_t)W(rec + 20);
+        PART_DX(a0) = rec->dx;
+        PART_DY(a0) = rec->dy;
         BOSS_PHASE(a0) = 0;
         a0->persists = 0xff;
         a0->v2a = 4;
-        a0->energy = B(rec + 22);
-        a0->big = B(rec + 23);
+        a0->energy = rec->energy;
+        a0->big = rec->big;
         a0->hit[0] = 0x3e8;
         a0->hit[2] = 0x3e8;
         a0->target = a6;
@@ -597,7 +510,7 @@ void l5_spawn_boss1(uint16_t d2)
 void l5_boss_flash(Object *a0)
 {
     a0->fn_draw = FN(l5_boss_draw);
-    draw_tile_grid_flash((const uint8_t *)GPTR(L5_SPAWN_BOSS1_DATA_2), 0xe, 0x11, a0->y, (uint16_t)((uint16_t)a0->x >> 1));
+    draw_tile_grid_flash(level5_blob.boss1_cells, 0xe, 0x11, a0->y, (uint16_t)((uint16_t)a0->x >> 1));
 }
 
 /* level5 $055D3C: a gun of the boss: it hangs on the boss and its box is a bar */
@@ -642,7 +555,7 @@ void l5_boss_update(Object *a0)
     }
     a0->y = (int16_t)(a0->y + scroll_speed);
     if (BOSS_PHASE(a0) == 0) {
-        if (!add_carry(&a0->v5e_b[0], B(L5_BOSS_FIRE_RATE)))
+        if (!add_carry(&a0->v5e_b[0], level5_blob.boss_fire_rate))
             return;
         a0->v5e_b[0] = (uint8_t)(random_next() & 0x3f);
         sfx_cmd2 = -1;
@@ -688,8 +601,8 @@ fire:
         a1->x = d0;
         a1->y = d1;
         MISSILE_DIR(a1) = 0;
-        set_anim(a1, L5_BOSS_UPDATE_DATA);
-        a1->energy = (int16_t)W(L5_BOSS_ENERGY);
+        set_anim(a1, level5_blob.boss_update_data);
+        a1->energy = (int16_t)level5_blob.boss_energy;
         a1->big = 0;
         a1->score = 0x96;
         BOSS_PHASE(a1) = 1;
@@ -717,12 +630,12 @@ void l5_boss_draw(Object *a0)
     d2 = (int16_t)(d2 & 0xfffc);
     d0 = (int16_t)(a0->x + 0x69);
     d1 = (int16_t)(d1 + a0->y);
-    draw_bob_masked_at((uint16_t)d0, (uint16_t)d1, (const uint8_t *)GPTR(sh_r32(L5_BOSS_DRAW_TABLE + (uint32_t)(uint16_t)d2)));
+    draw_bob_masked_at((uint16_t)d0, (uint16_t)d1, level5_blob.boss_draw_table[(uint16_t)d2 / 4]);
     if (d2 < 0x14 || d2 >= 0x28)
         return;
     d0 = (int16_t)(d0 + 0xe);
     d1 = (int16_t)(d1 + 0x10);
-    draw_bob_masked_at((uint16_t)d0, (uint16_t)d1, (const uint8_t *)GPTR(sh_r32(L5_BOSS_DRAW_TABLE_2 + (uint32_t)(uint16_t)d2)));
+    draw_bob_masked_at((uint16_t)d0, (uint16_t)d1, level5_blob.boss_arm2_pictures[(uint16_t)d2 / 4 - 5]);
 }
 
 /* level5 $05605E: the missile of the boss: it turns to the player by eighths, and goes; it hits the player or the screen's edge */
@@ -743,11 +656,11 @@ void l5_missile_update(Object *a0)
             if (dir >= 4)
                 MISSILE_DIR(a0) = (int16_t)(MISSILE_DIR(a0) - 2);
             MISSILE_DIR(a0) = (int16_t)(MISSILE_DIR(a0) & 7);
-            set_anim(a0, sh_r32(L5_MISSILE_ANIMS_BY_DIR + 4 * (uint32_t)MISSILE_DIR(a0)));
+            set_anim(a0, level5_blob.missile_anims_by_dir[MISSILE_DIR(a0)]);
         }
     }
-    d0 = (int16_t)W(L5_PELLET_DX_BY_DIR + 2 * (uint32_t)MISSILE_DIR(a0));
-    d1 = (int16_t)W(L5_PELLET_DY_BY_DIR + 2 * (uint32_t)MISSILE_DIR(a0));
+    d0 = level5_blob.pellet_dx_by_dir[MISSILE_DIR(a0)];
+    d1 = level5_blob.pellet_dy_by_dir[MISSILE_DIR(a0)];
     if (sh_r16(0xd7a) == 0) {
         d0 = (int16_t)(d0 + d0);
         d1 = (int16_t)(d1 + d1);
@@ -778,9 +691,9 @@ void l5_turret_update(Object *a0)
         a1->x = (int16_t)(a0->x - 2);
         a1->y = (int16_t)(a0->y - 0x18);
         BEAM_LENGTH(a1) = 0;
-        BEAM_DY(a1) = (int16_t)-(int16_t)W(L5_TURRET_PARAM);
+        BEAM_DY(a1) = (int16_t)-(int16_t)level5_blob.turret_param;
     }
-    if (a0->anim_delay == 0 && a0->y >= 0 && add_carry(&a0->v5e_b[0], B(L5_TURRET_FIRE_RATE))) {
+    if (a0->anim_delay == 0 && a0->y >= 0 && add_carry(&a0->v5e_b[0], level5_blob.turret_fire_rate)) {
         a0->v5e_b[0] = (uint8_t)(random_next() & 0x3f);
         a0->anim_delay = 1;
     }
@@ -815,9 +728,9 @@ void l5_heart_hit(Object *a0, Object *a1, uint16_t d0)
     a1->fn_draw = (obj_fn)draw_bob_or_first;
     a2->fn_draw = FN(l5_boss_flash);
     if (!dies(a2, d0)) {
-        uint32_t q = ((uint32_t)(uint16_t)a2->energy * 0xb) / B(L5_INIT_DATA);
+        uint32_t q = ((uint32_t)(uint16_t)a2->energy * 0xb) / level5_blob.boss1_pieces[0].energy;
 
-        a1->gfx = GPTR(sh_r32(L5_HEART_PICTURES + 4 * (uint32_t)(uint16_t)q));
+        a1->gfx = (void *)level5_blob.heart_pictures[q];
         return;
     }
     memset(level_init_src + 0x1e0, 0, 720);
@@ -833,7 +746,7 @@ void l5_heart_hit(Object *a0, Object *a1, uint16_t d0)
 /* level5 $05642A: the second boss */
 void l5_spawn_boss2(const uint8_t *a1)
 {
-    uint32_t rec = L5_SPAWN_BOSS2_DATA;
+    const struct Level5Boss2Piece *rec = level5_blob.boss2_pieces;
     Object *a6 = 0;
     int16_t d1;
     int d7;
@@ -842,25 +755,25 @@ void l5_spawn_boss2(const uint8_t *a1)
         return;
     sh_w8(0xd9a, 0xff);
     d1 = (int16_t)(rd16(a1 + 0xa) - 8 - scroll_pos);
-    for (d7 = 9; d7 >= 0; d7--, rec += 24) {
+    for (d7 = 9; d7 >= 0; d7--, rec++) {
         Object *a0 = insert_head(LIST_C);
 
         if (a6 == 0)
             a6 = a0;
-        a0->type = W(rec);
-        a0->fn_update = GFN(sh_r32(rec + 2));
-        a0->fn_draw = GFN(sh_r32(rec + 6));
-        a0->fn_hit = GFN(sh_r32(rec + 10));
-        a0->gfx = GPTR(sh_r32(rec + 14));
+        a0->type = rec->type;
+        a0->fn_update = (obj_fn)rec->update;
+        a0->fn_draw = (obj_fn)rec->draw;
+        a0->fn_hit = (void *)rec->hit;
+        a0->gfx = (void *)rec->gfx;
         a0->anim_delay = 0;
         a0->persists = 0xff;
         a0->x = 0x70;
         a0->y = d1;
-        PART_DX(a0) = (int16_t)W(rec + 18);
-        PART_DY(a0) = (int16_t)W(rec + 20);
+        PART_DX(a0) = rec->dx;
+        PART_DY(a0) = rec->dy;
         a0->v28 = 0;
         a0->v2a = 4;
-        a0->energy = (int16_t)W(rec + 22);
+        a0->energy = (int16_t)rec->energy;
         a0->hit[0] = 0x3e8;
         a0->hit[2] = 0x3e8;
         a0->target = a6;
@@ -878,7 +791,7 @@ void l5_wheel_update(Object *a0)
     if (d0 >= 0x600)
         d0 = (int16_t)(d0 - 0x600);
     WHEEL_ANGLE(a0) = d0;
-    a0->gfx = GPTR(sh_r32(L5_WHEEL_PICTURES + (uint32_t)(((uint16_t)d0 >> 6) & 0xfffc)));
+    a0->gfx = (void *)level5_blob.wheel_pictures[((uint16_t)d0 >> 8) & 0xff];
     bbox_from_frame(a0);
 }
 
@@ -902,10 +815,10 @@ void l5_wheel_hit(Object *a0, Object *a1, uint16_t d0)
 /* level5 $056594: a small turning part: its picture by the scroll */
 void l5_spinner_update(Object *a0)
 {
-    uint32_t t = a0->type == 0x118 ? L5_SPINNER_SOURCE_118 : L5_SPINNER_SOURCE_OTHER;
+    const uint8_t *const *t = a0->type == 0x118 ? level5_blob.spinner_source_118 : level5_blob.spinner_source_other;
 
     follow_target_offset(a0);
-    a0->gfx = GPTR(sh_r32(t + 4 * (uint32_t)(uint16_t)((uint16_t)(a0->y + scroll_pos) & 3)));
+    a0->gfx = (void *)t[(uint16_t)(a0->y + scroll_pos) & 3];
 }
 
 /* level5 $0565E2: a turret of the boss: it turns to the player and fires */
@@ -916,10 +829,10 @@ void l5_boss2_turret(Object *a0)
     follow_target_offset(a0);
     d0 = direction8((int16_t)(PLAYER->x - a0->x), (int16_t)(PLAYER->y - a0->y));
     L5_TURRET_DIR(a0) = (int16_t)d0;
-    a0->gfx = GPTR(sh_r32(L5_BOSS2_TURRET_PICTURES + 4 * (uint32_t)d0));
-    if (add_carry(&a0->v5e_b[0], B(L5_BOSS2_TURRET_FIRE_RATE))) {
+    a0->gfx = (void *)level5_blob.boss2_turret_pictures[d0];
+    if (add_carry(&a0->v5e_b[0], level5_blob.boss2_turret_fire_rate)) {
         a0->v5e_b[0] = (uint8_t)(random_next() & 0x3f);
-        spawn_enemy_shot((uint16_t)(a0->x + 8), (uint16_t)(a0->y + 8), (uint16_t)L5_TURRET_DIR(a0), W(L5_BOSS2_TURRET_SHOT_STEPS), shot_gfx(W(L5_BOSS2_TURRET_SHOT_STEPS_2)));
+        spawn_enemy_shot((uint16_t)(a0->x + 8), (uint16_t)(a0->y + 8), (uint16_t)L5_TURRET_DIR(a0), level5_blob.boss2_turret_shot_steps, shot_gfx(level5_blob.boss2_turret_shot_steps_2));
     }
     bbox_from_frame(a0);
 }
@@ -943,7 +856,7 @@ void l5_boss2_turret_hit(Object *a0, Object *a1, uint16_t d0)
 void l5_boss2_dead(Object *a0)
 {
     follow_target_offset(a0);
-    a0->gfx = GPTR(L5_BOSS2_DEAD_DATA);
+    a0->gfx = (void *)level5_blob.boss2_dead_picture;
     a0->hit[0] = 0x3e8;
     a0->hit[2] = 0x3e8;
 }
@@ -981,7 +894,7 @@ void l5_boss2_mover(Object *a0)
         }
     }
     if (MOVER_TICK(a0) == 0) {
-        if (!add_carry(&a0->v5e_b[0], B(L5_BOSS2_MOVER_FIRE_RATE)))
+        if (!add_carry(&a0->v5e_b[0], level5_blob.boss2_mover_fire_rate))
             goto pellets;
         a0->v5e_b[0] = (uint8_t)(random_next() & 0x3f);
     }
@@ -999,10 +912,10 @@ void l5_boss2_mover(Object *a0)
         a1->x = 0x96;
         a1->y = (int16_t)(a0->y + 0x30);
         MOVER_TICK(a1) = 0;
-        MOVER_STEP(a1) = (int16_t)W(L5_TURRET_PARAM);
+        MOVER_STEP(a1) = (int16_t)level5_blob.turret_param;
     }
 pellets:
-    if (add_carry(&a0->v5e_b[1], B(L5_BOSS2_MOVER_FIRE_RATE_2))) {
+    if (add_carry(&a0->v5e_b[1], level5_blob.boss2_mover_fire_rate_2)) {
         a0->v5e_b[1] = (uint8_t)(random_next() & 0x3f);
         spawn_pellet(0x6e, (int16_t)(a0->y + 0x30), 6);
         spawn_pellet(0xd2, (int16_t)(a0->y + 0x30), 2);
@@ -1013,7 +926,7 @@ pellets:
 void l5_boss2_flash(Object *a0)
 {
     a0->fn_draw = FN(l5_boss2_draw);
-    draw_tile_grid_flash((const uint8_t *)GPTR(L5_BOSS2_FLASH_GRID), 5, 5, a0->y, 0x38);
+    draw_tile_grid_flash(level5_blob.boss2_flash_grid, 5, 5, a0->y, 0x38);
 }
 
 #define MOVER_CELL(o) ((o)->v28)
@@ -1023,10 +936,10 @@ void l5_boss2_draw(Object *a0)
 {
     uint32_t d0 = (uint32_t)(uint16_t)MOVER_CELL(a0) * 0xc;
 
-    sh_w32(L5_BOSS2_DRAW_DATA, sh_r32(L5_BOSS2_DRAW_TABLE + d0));
-    sh_w32(L5_BOSS2_DRAW_DATA_2, sh_r32(L5_BOSS2_DRAW_TABLE_2 + d0));
-    sh_w32(L5_BOSS2_DRAW_DATA_3, sh_r32(L5_BOSS2_DRAW_TABLE_3 + d0));
-    draw_tile_grid((const uint8_t *)GPTR(L5_BOSS2_FLASH_GRID), 5, 5, a0->y, 0x38);
+    copy4(&level5_blob.boss2_draw_data[0], level5_blob.boss2_draw_rows + d0);
+    copy4(&level5_blob.boss2_draw_data[12], level5_blob.boss2_draw_rows + 4 + d0);
+    copy4(&level5_blob.boss2_draw_data[24], level5_blob.boss2_draw_rows + 8 + d0);
+    draw_tile_grid(level5_blob.boss2_flash_grid, 5, 5, a0->y, 0x38);
 }
 
 /* level5 $056940: the beam: it grows to its length, then it goes; it hurts the player */
@@ -1037,12 +950,12 @@ void l5_beam_update(Object *a0)
     a0->hit[0] = a0->x;
     a0->hit[2] = (int16_t)(a0->x + 0xb);
     if (BEAM_LENGTH(a0) != 0x30) {
-        BEAM_LENGTH(a0) = (int16_t)(BEAM_LENGTH(a0) + (int16_t)W(L5_TURRET_PARAM));
+        BEAM_LENGTH(a0) = (int16_t)(BEAM_LENGTH(a0) + (int16_t)level5_blob.turret_param);
         if (BEAM_LENGTH(a0) > 0x30)
             BEAM_LENGTH(a0) = 0x30;
         a0->y = (int16_t)(a0->y + scroll_speed);
         if (BEAM_DY(a0) < 0)
-            a0->y = (int16_t)(a0->y - (int16_t)W(L5_TURRET_PARAM));
+            a0->y = (int16_t)(a0->y - (int16_t)level5_blob.turret_param);
     } else {
         a0->y = (int16_t)(a0->y + BEAM_DY(a0));
         d0 = a0->y;
@@ -1077,9 +990,9 @@ void l5_beam_draw(Object *a0)
     int16_t d6, d7;
 
     if (BEAM_DY(a0) < 0 || BEAM_LENGTH(a0) == 0x30)
-        draw_bob_masked_at((uint16_t)a0->x, (uint16_t)a0->y, (const uint8_t *)GPTR(L5_BEAM_TOP_PICTURE));
+        draw_bob_masked_at((uint16_t)a0->x, (uint16_t)a0->y, level5_blob.beam_top_picture);
     if (BEAM_DY(a0) >= 0 || BEAM_LENGTH(a0) == 0x30)
-        draw_bob_masked_at((uint16_t)a0->x, (uint16_t)(a0->y + BEAM_LENGTH(a0) - 1), (const uint8_t *)GPTR(L5_BEAM_END_PICTURE));
+        draw_bob_masked_at((uint16_t)a0->x, (uint16_t)(a0->y + BEAM_LENGTH(a0) - 1), level5_blob.beam_end_picture);
     a1 = screen + (((uint16_t)a0->x >> 3) & 0xfffe);
     sh = (uint16_t)a0->x & 0xf;
     d0 >>= sh;
@@ -1138,28 +1051,28 @@ void l5_spawn_gates(const uint8_t *a1)
 {
     int16_t d0 = (int16_t)(rd16(a1 + 8) - 8), d1 = (int16_t)(rd16(a1 + 0xa) - 8);
     uint8_t *a2 = level_init_src + (uint16_t)(((uint16_t)d0 >> 3) & 0xfe) + (int16_t)(uint16_t)((uint32_t)((uint16_t)d1 >> 4) * 0x28);
-    uint32_t rec = L5_SPAWN_GATES_DATA;
+    const struct Level5Gate *rec = level5_blob.gates;
     int d7;
 
     wr16(a2, 0x8ad3);
     wr32(a2 + 2, 0);
     wr16(a2 + 6, 0x8add);
-    for (d7 = 2; d7 >= 0; d7--, rec += 12) {
+    for (d7 = 2; d7 >= 0; d7--, rec++) {
         Object *a0 = insert_head(LIST_C);
         uint16_t d2;
 
-        a0->type = W(rec);
-        a0->fn_update = GFN(sh_r32(rec + 2));
+        a0->type = rec->type;
+        a0->fn_update = (obj_fn)rec->update;
         a0->fn_draw = (obj_fn)obj_nop_thunk;
-        a0->fn_hit = GFN(sh_r32(rec + 6));
+        a0->fn_hit = (void *)rec->hit;
         a0->x = d0;
         a0->y = d1;
         L5_CELL(a0) = 0;
-        a0->energy = (int16_t)W(L5_GATES_ENERGY);
+        a0->energy = (int16_t)level5_blob.gates_energy;
         a0->hit[0] = 0x3e8;
         a0->hit[2] = 0x3e8;
         a0->script = a2;
-        d2 = W(rec + 10);
+        d2 = rec->step;
         a2 += (int16_t)d2;
         d0 = (int16_t)(d0 + (int16_t)(d2 << 3));
     }
@@ -1173,7 +1086,7 @@ void l5_gate_update(Object *a0)
     if (d0 >= 0x10)
         d0 = 0;
     L5_CELL(a0) = d0;
-    copy4(a0->script, (const uint8_t *)GPTR(L5_GATE_UPDATE_DATA + (uint32_t)d0));
+    copy4(a0->script, level5_blob.gate_update_data + d0);
     a0->hit[0] = a0->x;
     a0->hit[2] = (int16_t)(a0->x + 0x20);
     a0->hit[1] = (int16_t)(a0->y - scroll_pos + 2);
@@ -1183,10 +1096,10 @@ void l5_gate_update(Object *a0)
 /* level5 $056C40: a gun in the wall: its cell by four */
 void l5_wall_update(Object *a0)
 {
-    uint32_t a2 = a0->type == 0x128 ? L5_WALL_CELLS_128 : L5_WALL_CELLS_OTHER;
+    const uint8_t *a2 = a0->type == 0x128 ? level5_blob.wall_cells_128 : level5_blob.wall_cells_other;
 
     L5_CELL(a0) = (int16_t)((L5_CELL(a0) + 1) & 3);
-    wr16(a0->script, W(a2 + 2 * (uint32_t)L5_CELL(a0)));
+    wr16(a0->script, rd16(a2 + 2 * (uint32_t)L5_CELL(a0)));
     a0->hit[0] = (int16_t)(a0->x + 3);
     a0->hit[2] = (int16_t)(a0->hit[0] + 0xa);
     a0->hit[1] = (int16_t)(a0->y - scroll_pos + 3);
@@ -1243,14 +1156,14 @@ void l5_wall_hit_b(Object *a0, Object *a1, uint16_t d0)
 void l5_wall_flash_a(Object *a0)
 {
     a0->fn_draw = (obj_fn)obj_nop_thunk;
-    draw_tile_grid_flash((const uint8_t *)GPTR(L5_WALL_FLASH_A_GRID), 0, 0, (int16_t)(a0->y - scroll_pos), (uint16_t)((uint16_t)a0->x >> 1));
+    draw_tile_grid_flash(level5_blob.wall_flash_a_grid, 0, 0, (int16_t)(a0->y - scroll_pos), (uint16_t)((uint16_t)a0->x >> 1));
 }
 
 /* level5 $056E1A: the flash of the gun on the right, one frame */
 void l5_wall_flash_b(Object *a0)
 {
     a0->fn_draw = (obj_fn)obj_nop_thunk;
-    draw_tile_grid_flash((const uint8_t *)GPTR(L5_WALL_FLASH_B_GRID), 0, 0, (int16_t)(a0->y - scroll_pos), (uint16_t)((uint16_t)a0->x >> 1));
+    draw_tile_grid_flash(level5_blob.wall_flash_b_grid, 0, 0, (int16_t)(a0->y - scroll_pos), (uint16_t)((uint16_t)a0->x >> 1));
 }
 
 /* ---- the bridge pieces ($56E40) ---- */
@@ -1262,7 +1175,7 @@ void l5_spawn_bridge(const uint8_t *a1)
     uint8_t *c;
 
     a0->fn_hit = FN(l5_bridge_hit);
-    a0->energy = (int16_t)W(L5_BRIDGE_ENERGY);
+    a0->energy = (int16_t)level5_blob.bridge_energy;
     a0->hit[0] = 0x3e8;
     a0->hit[2] = 0x3e8;
     c = a0->script;
@@ -1274,8 +1187,8 @@ void l5_spawn_bridge(const uint8_t *a1)
         wr16(c + 4, 0xc7);
         wr16(c + 0x2c, 0x177);
     }
-    copy4(c, (const uint8_t *)GPTR(L5_SPAWN_BRIDGE_DATA));
-    copy4(c + 0x28, (const uint8_t *)GPTR(L5_SPAWN_BRIDGE_DATA_2));
+    copy4(c, level5_blob.bridge_cells);
+    copy4(c + 0x28, level5_blob.bridge_cells + 4);
 }
 
 #define BRIDGE_CELL(o) ((o)->v28)
@@ -1295,20 +1208,20 @@ void l5_bridge_update(Object *a0)
     a0->hit[1] = (int16_t)(a0->y - scroll_pos + 4);
     a0->hit[3] = (int16_t)(a0->hit[1] + 0x18);
     BRIDGE_CELL(a0) = (int16_t)((BRIDGE_CELL(a0) + 1) & 0xf);
-    if (add_carry(&a0->v5e_b[0], B(L5_BRIDGE_FIRE_RATE))) {
+    if (add_carry(&a0->v5e_b[0], level5_blob.bridge_fire_rate)) {
         int d7;
 
         a0->v5e_b[0] = (uint8_t)(random_next() & 0x3f);
         for (d7 = 7; d7 >= 0; d7--) {
-            Object *a1 = spawn_enemy_shot((uint16_t)(a0->x + 0x10), (uint16_t)(a0->y - scroll_pos + 0x10), (uint16_t)d7, W(L5_BRIDGE_SHOT_STEPS), 0);
+            Object *a1 = spawn_enemy_shot((uint16_t)(a0->x + 0x10), (uint16_t)(a0->y - scroll_pos + 0x10), (uint16_t)d7, level5_blob.bridge_shot_steps, 0);
 
-            set_anim(a1, L5_BRIDGE_UPDATE_DATA);
+            set_anim(a1, level5_blob.bridge_update_data);
         }
     }
     c = a0->script;
     d0 = (uint32_t)((uint16_t)BRIDGE_CELL(a0) & 0xe) * 4;
-    copy4(c, (const uint8_t *)GPTR(L5_SPAWN_BRIDGE_DATA + d0));
-    copy4(c + 0x28, (const uint8_t *)GPTR(L5_SPAWN_BRIDGE_DATA_2 + d0));
+    copy4(c, level5_blob.bridge_cells + d0);
+    copy4(c + 0x28, level5_blob.bridge_cells + 4 + d0);
 }
 
 /* level5 $056FDC: the hit of the piece: the burst, the cells go back, the score */
@@ -1340,7 +1253,7 @@ void l5_bridge_hit(Object *a0, Object *a1, uint16_t d0)
 void l5_bridge_flash(Object *a0)
 {
     a0->fn_draw = (obj_fn)obj_nop_thunk;
-    draw_tile_grid_flash((const uint8_t *)GPTR(L5_SPAWN_BRIDGE_DATA), 1, 1, (int16_t)(a0->y - scroll_pos), (uint16_t)((uint16_t)a0->x >> 1));
+    draw_tile_grid_flash(level5_blob.bridge_cells, 1, 1, (int16_t)(a0->y - scroll_pos), (uint16_t)((uint16_t)a0->x >> 1));
 }
 
 /* ---- the units of eight directions ($570AA) ---- */
@@ -1363,7 +1276,7 @@ Object *l5_spawn_unit(const uint8_t *a1)
 
     UNIT_DIR(a0) = (int16_t)rd16(a1 + 0xc);
     a0->fn_hit = FN(l5_unit_hit);
-    a0->energy = (int16_t)W(L5_GROUP_ENERGY);
+    a0->energy = (int16_t)level5_blob.group_energy;
     a0->hit[0] = 0x3e8;
     a0->hit[2] = 0x3e8;
     c = a0->script;
@@ -1377,8 +1290,8 @@ Object *l5_spawn_unit(const uint8_t *a1)
         wr16(c + 4, 0x8287);
         wr16(c + 0x2c, 0x8339);
     }
-    copy4(c, (const uint8_t *)GPTR(L5_SPAWN_GROUP_DATA + d0));
-    copy4(c + 0x28, (const uint8_t *)GPTR(L5_SPAWN_GROUP_DATA_2 + d0));
+    copy4(c, level5_blob.group_cells + d0);
+    copy4(c + 0x28, level5_blob.group_cells + 4 + d0);
     return a0;
 }
 
@@ -1416,23 +1329,23 @@ void l5_unit_update(Object *a0)
         }
         UNIT_DIR(a0) = (int16_t)(UNIT_DIR(a0) & 7);
     }
-    if (add_carry(&a0->v5e_b[0], B(L5_UNIT_FIRE_RATE))) {
+    if (add_carry(&a0->v5e_b[0], level5_blob.unit_fire_rate)) {
         int16_t x = (int16_t)(a0->x + 0x10), y = (int16_t)(a0->y - scroll_pos + 0x10);
         uint16_t d3 = (uint16_t)((UNIT_DIR(a0) * 4) & 0x1c);
 
         a0->v5e_b[0] = (uint8_t)(random_next() & 0x3f);
-        x = (int16_t)(x + (int16_t)W(L5_UNIT_DX_BY_DIR + d3));
-        y = (int16_t)(y + (int16_t)W(L5_UNIT_DY_BY_DIR + d3));
+        x = (int16_t)(x + level5_blob.unit_dirs[d3 / 4].dx);
+        y = (int16_t)(y + level5_blob.unit_dirs[d3 / 4].dy);
         d3 &= 0xc;
         if (!(frame_tick & 1))
             d3 += 0x10;
-        spawn_enemy_shot((uint16_t)x, (uint16_t)y, (uint16_t)UNIT_DIR(a0), W(L5_UNIT_SHOT_STEPS), GPTR(sh_r32(L5_UNIT_SHOT_PICTURES + d3)));
+        spawn_enemy_shot((uint16_t)x, (uint16_t)y, (uint16_t)UNIT_DIR(a0), level5_blob.unit_shot_steps, (void *)level5_blob.unit_shot_pictures[d3 / 4]);
     }
 cells:
     c = a0->script;
     d0 = (uint32_t)(uint16_t)UNIT_DIR(a0) << 3;
-    copy4(c, (const uint8_t *)GPTR(L5_SPAWN_GROUP_DATA + d0));
-    copy4(c + 0x28, (const uint8_t *)GPTR(L5_SPAWN_GROUP_DATA_2 + d0));
+    copy4(c, level5_blob.group_cells + d0);
+    copy4(c + 0x28, level5_blob.group_cells + 4 + d0);
 }
 
 /* level5 $0572EA: the hit of the unit: at the end the burst, its flag, the cells go back */
@@ -1466,7 +1379,7 @@ void l5_unit_hit(Object *a0, Object *a1, uint16_t d0)
 void l5_unit_flash(Object *a0)
 {
     a0->fn_draw = (obj_fn)obj_nop_thunk;
-    draw_tile_grid_flash((const uint8_t *)GPTR(L5_SPAWN_GROUP_DATA), 1, 1, (int16_t)(a0->y - scroll_pos), (uint16_t)((uint16_t)a0->x >> 1));
+    draw_tile_grid_flash(level5_blob.group_cells, 1, 1, (int16_t)(a0->y - scroll_pos), (uint16_t)((uint16_t)a0->x >> 1));
 }
 
 /* ---- the guns of cells ($573AC) ---- */
@@ -1476,15 +1389,15 @@ void l5_spawn_gun(const uint8_t *a1)
 {
     int right = rd16(a1 + 0xc) != 0;
     Object *a0 = spawn_marker_enemy(right ? 0x10c : 0x108, a1, (void (*)(void))FN(l5_gun_update));
-    uint32_t a2 = right ? L5_SPAWN_GUN_DATA : L5_SPAWN_GUN_DATA_2, a4 = right ? L5_SPAWN_GUN_DATA_3 : L5_SPAWN_GUN_DATA_4;
+    const uint8_t *a2 = right ? level5_blob.gun_cells_a : level5_blob.gun_cells_b, *a4 = right ? level5_blob.gun_anim_a : level5_blob.gun_anim_b;
 
     a0->fn_hit = (void *)hit_tile;
-    a0->energy = (int16_t)W(L5_GUN_ENERGY);
+    a0->energy = (int16_t)level5_blob.gun_energy;
     a0->hit[0] = 0x3e8;
     a0->hit[2] = 0x3e8;
-    a0->gfx = GPTR(a2);
-    a0->anim = (const uint8_t *)GPTR(a4);
-    wr16(a0->script, W(a2));
+    a0->gfx = (void *)a2;
+    a0->anim = a4;
+    wr16(a0->script, rd16(a2));
     a0->score = 0x64;
     PART_DX(a0) = 0;
     PART_DY(a0) = 0;
@@ -1493,7 +1406,7 @@ void l5_spawn_gun(const uint8_t *a1)
 /* level5 $05741C: the gun: its cell goes round and it fires every third step */
 void l5_gun_update(Object *a0)
 {
-    uint32_t a2;
+    const uint8_t *a2;
 
     if ((int16_t)(scroll_max + 0xd0) < a0->y) {
         kill_thunk(a0);
@@ -1504,13 +1417,13 @@ void l5_gun_update(Object *a0)
     a0->hit[1] = (int16_t)(a0->y - scroll_pos + 2);
     a0->hit[3] = (int16_t)(a0->hit[1] + 0xc);
     if (L5_CELL(a0) == 0) {
-        if (!add_carry(&a0->v5e_b[0], B(L5_GUN_FIRE_RATE)))
+        if (!add_carry(&a0->v5e_b[0], level5_blob.gun_fire_rate))
             return;
         a0->v5e_b[0] = (uint8_t)(random_next() & 0x3f);
     }
     L5_CELL(a0) = (int16_t)(L5_CELL(a0) + 1);
-    a2 = a0->type == 0x108 ? L5_SPAWN_GUN_DATA_2 : L5_SPAWN_GUN_DATA;
-    wr16(a0->script, W(a2 + 2 * (uint32_t)(uint16_t)L5_CELL(a0)));
+    a2 = a0->type == 0x108 ? level5_blob.gun_cells_b : level5_blob.gun_cells_a;
+    wr16(a0->script, rd16(a2 + 2 * (uint32_t)(uint16_t)L5_CELL(a0)));
     if (L5_CELL(a0) == 3) {
         int16_t d0 = (int16_t)(a0->x + 0x18), d1 = (int16_t)(a0->y - scroll_pos + 8);
         uint16_t d2 = 2;
@@ -1520,8 +1433,8 @@ void l5_gun_update(Object *a0)
             d2 = 6;
             d0 = (int16_t)(d0 - 0x18);
         }
-        a1 = spawn_enemy_shot((uint16_t)d0, (uint16_t)d1, d2, W(L5_GUN_SHOT_STEPS), 0);
-        set_anim(a1, a0->type == 0x108 ? L5_GUN_ANIM_108 : L5_GUN_ANIM_OTHER);
+        a1 = spawn_enemy_shot((uint16_t)d0, (uint16_t)d1, d2, level5_blob.gun_shot_steps, 0);
+        set_anim(a1, a0->type == 0x108 ? level5_blob.gun_anim_108 : level5_blob.gun_anim_other);
         return;
     }
     if (L5_CELL(a0) == 7)

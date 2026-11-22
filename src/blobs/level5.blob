@@ -1,88 +1,109 @@
-; level 5: the members of its blob at $54E00 (raw big-endian memory, read with rd16/rd32/GPTR); a member runs to the next one,
-raw
-; the code between the tables is not separated
-54e42 gunners_energy u16
-54e44 gunners_param u16
-54e46 gunners_steps u16
-54e48 cannon_energy u16
-54e4b cannon_fire_rate u8
-54e4c pellet_energy u16
-54e4e pellet_param u16
-54e51 boss_fire_rate u8
-54e52 boss_energy u16
-54e55 turret_fire_rate u8
-54e57 boss2_turret_fire_rate u8
-54e58 boss2_turret_shot_steps u16
-54e5b boss2_mover_fire_rate u8
-54e5c turret_param u16
-54e5e gates_energy u16
-54e60 bridge_energy u16
-54e62 group_energy u16
-54e65 unit_fire_rate u8
-54e66 unit_shot_steps u16
-54e68 gun_energy u16
-54e6b gun_fire_rate u8
-54e6c gun_shot_steps u16
-54e6e boss2_turret_shot_steps_2 u16
-54e71 init_patch u8
-54e73 bridge_fire_rate u8
-54e74 bridge_shot_steps u16
-54e76 init_patch_2 u16
-54e79 gunner_fire_rate u8
-54e7a gunner_shot_steps u16
-54e7c gunner_shot_steps_2 u16
-54e7f boss2_mover_fire_rate_2 u8
-551dc spawn_gunners_table u32
-552ba gunner_anims u32
-55516 spawn_cannon_data u8
-5553a spawn_cannon_data_2 u8
-5555e cannon_anim_100 u8
-55582 cannon_anim_other u8
-557de pellet_anims_by_dir u32
-557fe pellet_dx_by_dir u16
-5580e pellet_dy_by_dir u16
-5594e spawn_boss1_data u8
-55964 init_data u8
-55f1a boss_draw_table_2 u32
-55f42 boss_draw_table u32
-55f7e boss_update_data u8
-5603e missile_anims_by_dir u32
-56276 heart_pictures u32
-5633a spawn_boss2_data u8
-563c8 init_data_2 u16
-5650e wheel_pictures u32
-565c2 spinner_source_118 u8
-565d2 spinner_source_other u8
-56658 boss2_turret_pictures u32
-5688c boss2_draw_table u32
-56890 boss2_draw_table_2 u32
-56894 boss2_draw_table_3 u32
-568f8 boss2_flash_grid u8
-56908 boss2_draw_data u8
-56914 boss2_draw_data_2 u8
-56920 boss2_draw_data_3 u8
-56b2c spawn_gates_data u8
-56c30 gate_update_data u8
-56c94 wall_cells_128 u8
-56c9c wall_cells_other u8
-56e3c wall_flash_a_grid u8
-56e3e wall_flash_b_grid u8
-56ea2 spawn_bridge_data u8
-56ea6 spawn_bridge_data_2 u8
-56fb8 bridge_update_data u8
-5711e spawn_group_data u8
-57122 spawn_group_data_2 u8
-572aa unit_dx_by_dir u16
-572ac unit_dy_by_dir u16
-572ca unit_shot_pictures u32
-57514 spawn_gun_data u8
-57524 spawn_gun_data_2 u8
-57534 spawn_gun_data_4 u8
-57536 spawn_gun_data_3 u8
-57538 gun_anim_108 u8
-57550 gun_anim_other u8
-57666 spawn_boss1_data_2 u8
-5c1ea spawn_gunners_data u8
-5df96 boss2_dead_data u8
-5f2fe beam_top_picture u8
-5f340 beam_end_picture u8
+; level 5: its blob at $54E00 (see tools/gen_blobs.py)
+record Level5Boss1Piece 24
+0 type u16
+2 update code
+6 draw code
+10 hit code
+14 anim ptr
+18 dx s16
+20 dy s16
+22 energy u8
+23 big u8
+end
+record Level5Boss2Piece 24
+0 type u16
+2 update code
+6 draw code
+10 hit code
+14 gfx ptr
+18 dx s16
+20 dy s16
+22 energy u16
+end
+record Level5Gate 12
+0 type u16
+2 update code
+6 hit code
+10 step u16
+end
+record Level5UnitDir 4
+0 dx s16
+2 dy s16
+end
+54e42 gunners_energy u16 1
+54e44 gunners_param u16 1
+54e46 gunners_steps u16 1
+54e48 cannon_energy u16 1
+54e4b cannon_fire_rate u8 1
+54e4c pellet_energy u16 1
+54e4e pellet_param u16 1
+54e51 boss_fire_rate u8 1
+54e52 boss_energy u16 1
+54e55 turret_fire_rate u8 1
+54e57 boss2_turret_fire_rate u8 1
+54e58 boss2_turret_shot_steps u16 1
+54e5b boss2_mover_fire_rate u8 1
+54e5c turret_param u16 1
+54e5e gates_energy u16 1
+54e60 bridge_energy u16 1
+54e62 group_energy u16 1
+54e65 unit_fire_rate u8 1
+54e66 unit_shot_steps u16 1
+54e68 gun_energy u16 1
+54e6b gun_fire_rate u8 1
+54e6c gun_shot_steps u16 1
+54e6e boss2_turret_shot_steps_2 u16 1
+54e71 init_patch u8 1
+54e73 bridge_fire_rate u8 1
+54e74 bridge_shot_steps u16 1
+54e76 init_patch_2 u16 1
+54e79 gunner_fire_rate u8 1
+54e7a gunner_shot_steps u16 1
+54e7c gunner_shot_steps_2 u16 1
+54e7f boss2_mover_fire_rate_2 u8 1
+54e92 formations u8 208
+551dc gunner_paths ptr 3
+552ba gunner_anims ptr 8
+55516 cannon_anim_a u8 36
+5553a cannon_anim_b u8 36
+5555e cannon_anim_100 u8 36
+55582 cannon_anim_other u8 604
+557de pellet_anims_by_dir ptr 8
+557fe pellet_dx_by_dir s16 8
+5580e pellet_dy_by_dir s16 8
+5594e boss1_pieces Level5Boss1Piece 22
+55f2e boss_arm2_pictures ptr 5
+55f42 boss_draw_table ptr 15
+55f7e boss_update_data u8 192
+5603e missile_anims_by_dir ptr 8
+56276 heart_pictures ptr 12
+5633a boss2_pieces Level5Boss2Piece 10
+5650e wheel_pictures ptr 6
+565c2 spinner_source_118 ptr 4
+565d2 spinner_source_other ptr 4
+56658 boss2_turret_pictures ptr 8
+5688c boss2_draw_rows u8 108
+568f8 boss2_flash_grid u8 16
+56908 boss2_draw_data u8 36
+56b2c gates Level5Gate 3
+56c30 gate_update_data u8 100
+56c94 wall_cells_128 u8 8
+56c9c wall_cells_other u8 8
+56e3c wall_flash_a_grid u8 2
+56e3e wall_flash_b_grid u8 2
+56ea2 bridge_cells u8 278
+56fb8 bridge_update_data u8 358
+5711e group_cells u8 396
+572aa unit_dirs Level5UnitDir 8
+572ca unit_shot_pictures ptr 8
+57514 gun_cells_a u8 16
+57524 gun_cells_b u8 16
+57534 gun_anim_b u8 2
+57536 gun_anim_a u8 2
+57538 gun_anim_108 u8 24
+57550 gun_anim_other u8 278
+57666 boss1_cells u8 540
+5c1ea gunner_picture u8 7596
+5df96 boss2_dead_picture u8 4968
+5f2fe beam_top_picture u8 66
+5f340 beam_end_picture u8 32

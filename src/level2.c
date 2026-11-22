@@ -1,5 +1,5 @@
-/* level2: level 2's own code (the blob at $54E00 while level 2 is loaded).  The blob is raw big-endian memory read and written with
- * sh_r16 and the like at the addresses it has in the original (guest_blob_raw 2: level 1's members beyond the header do not describe it);
+/* level2: level 2's own code (the blob at $54E00 while level 2 is loaded).  The blob is level2_blob (struct Level2Blob, blobs.h): its integer and
+ * pointer members are converted when it is loaded, the bytes (cells, animations, pictures) stay big endian (guest_blob_raw 2);
  * a function has `level2 $ADDR` for its address (not `orig $`: level 1's code is at the same addresses).  The addresses of code with no C
  * yet resolve to a function that does nothing (guest_missing_code); the ones this file names itself go through GFN(). */
 #include "weapons.h"
