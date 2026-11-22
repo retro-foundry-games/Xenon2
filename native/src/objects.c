@@ -799,25 +799,26 @@ Object *spawn_marker_front(uint16_t d0, const uint8_t *a1, void (*a2)(void))
  * screen; when it meets the player the player is hit (unless shield_timer) and the shot goes */
 void enemy_shot_update(Object *a0)
 {
-    uint16_t d2;
-    uint32_t d0, d1;
-    int32_t m;
+    uint16_t dir;
+    uint32_t x_fixed, y_fixed;   /* 16.16 */
+    uint32_t x, y;
+    int32_t step;
 
     anim_step(a0);
-    d2 = (uint16_t)a0->enemy_shot.dir;
-    d0 = ((uint32_t)(uint16_t)a0->x << 16) | a0->x_frac;
-    d1 = ((uint32_t)(uint16_t)a0->y << 16) | a0->y_frac;
-    m = (int32_t)enemy_shot_dx[d2] * (int16_t)a0->steps;
-    d0 += (uint32_t)m << 2;
-    m = (int32_t)enemy_shot_dy[d2] * (int16_t)a0->steps;
-    d1 += (uint32_t)m << 2;
-    a0->x = (uint16_t)(d0 >> 16);
-    a0->x_frac = (uint16_t)d0;
-    a0->y_frac = (uint16_t)d1;
-    d0 >>= 16;
-    d1 = (uint16_t)((d1 >> 16) + scroll_speed);
-    a0->y = (int16_t)d1;
-    if (d0 < 0x140 && d1 < 0xc0) {
+    dir = (uint16_t)a0->enemy_shot.dir;
+    x_fixed = ((uint32_t)(uint16_t)a0->x << 16) | a0->x_frac;
+    y_fixed = ((uint32_t)(uint16_t)a0->y << 16) | a0->y_frac;
+    step = (int32_t)enemy_shot_dx[dir] * (int16_t)a0->steps;
+    x_fixed += (uint32_t)step << 2;
+    step = (int32_t)enemy_shot_dy[dir] * (int16_t)a0->steps;
+    y_fixed += (uint32_t)step << 2;
+    a0->x = (uint16_t)(x_fixed >> 16);
+    a0->x_frac = (uint16_t)x_fixed;
+    a0->y_frac = (uint16_t)y_fixed;
+    x = x_fixed >> 16;
+    y = (uint16_t)((y_fixed >> 16) + scroll_speed);
+    a0->y = (int16_t)y;
+    if (x < 0x140 && y < 0xc0) {
         bbox_from_frame(a0);
         if (!player_hits(a0))
             return;
