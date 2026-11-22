@@ -107,8 +107,9 @@ end
 5df96 boss2_dead_picture u8 4968
 5f2fe beam_top_picture u8 66
 5f340 beam_end_picture u8 32
-72ec8 shot_gfx_table ptr 4
-72ed8 shot_gfx_cells u8 8
+72ec8 shot_gfx_table ptr:ShotPic 4
+72ed8 shot_gfx_cells ShotPic 2
+72ee0 formation_paths ptr:PathCmd 110
 6158c turret_fire_picture u8 1
 7491c events_a SpawnRec 149
 75142 events_a_end s16

@@ -600,7 +600,7 @@ void l2_roamer_shot_update(Object *bolt)
             const void *gfx;
 
             bolt->shot_count = (uint8_t)(random_next() & 0x3f);
-            gfx = GPTR(rd32(xenon2.level2_data.shot_gfx_table[param]));
+            gfx = xenon2.level2_data.shot_gfx_table[param]->pic;
             angle = direction8((int16_t)(PLAYER_X - bolt->x), (int16_t)(PLAYER_Y - bolt->y));
             spawn_enemy_shot((uint16_t)bolt->x, (uint16_t)bolt->y, angle, xenon2.level2_data.roamer_shot_shot_steps, gfx);
         }
@@ -750,7 +750,7 @@ void l2_front_update(Object *marker)
 void l2_turret_update(Object *turret)
 {
     int16_t left, top, shot_x, shot_y, dir;
-    uint32_t pic;
+    const uint8_t *pic;
 
     if ((int16_t)(xenon2.scroll_max + 0xd0) < turret->y) {
         kill_thunk(turret);
@@ -776,9 +776,9 @@ void l2_turret_update(Object *turret)
     }
     shot_x = (int16_t)(turret->x + 8);
     shot_y = (int16_t)(turret->y - xenon2.scroll_pos + 8);
-    pic = rd32(xenon2.level2_data.shot_gfx_table[xenon2.level2_data.turret_param]);
+    pic = xenon2.level2_data.shot_gfx_table[xenon2.level2_data.turret_param]->pic;
     dir = turret->type == 0xec ? 2 : 6;
-    spawn_enemy_shot((uint16_t)shot_x, (uint16_t)shot_y, (uint16_t)dir, xenon2.level2_data.turret_shot_steps, GPTR(pic));
+    spawn_enemy_shot((uint16_t)shot_x, (uint16_t)shot_y, (uint16_t)dir, xenon2.level2_data.turret_shot_steps, pic);
 }
 
 /* the launcher's use of the scratch fields of Object */

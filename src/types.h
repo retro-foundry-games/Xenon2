@@ -7,6 +7,17 @@ typedef struct Cell { uint8_t b[2]; } Cell;
 
 /* a word of the original's data that stays big endian (read with rd16 on .b) */
 typedef struct RawWord { uint8_t b[2]; } RawWord;
+typedef struct RawLong { uint8_t b[4]; } RawLong;
+
+/* the steps of an animation script (raw, big endian): a picture and a delay; the picture 0 and the code to call (it takes the position after it);
+ * the header of a script is its first step; the script "jump" has the address of the script to go on with */
+struct AnimStep { RawLong gfx; RawWord delay; };
+struct AnimCall { RawLong zero; RawLong code; };
+struct AnimJump { RawLong script; };
+
+/* a row of a tile mask (16 of them, 160 bytes): the words of the row; the map's masks are read by the first one or two */
+struct MaskRow { RawWord w[5]; };
+struct Cell4 { RawWord plane[4]; };
 
 /* a sample of the shop's sound bank: its size in bytes (a long; the words kept apart for the 16-bit use), its rate, then the samples */
 struct BankSample { RawWord size_hi, size_lo, rate; };

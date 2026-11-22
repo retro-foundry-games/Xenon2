@@ -26,6 +26,9 @@ record Formation2 50
 0 defs SpawnDef 2
 48 end u16
 end
+record ShotPic 4
+0 pic ptr
+end
 record LevelSpawn 12
 0 x s16
 2 y s16
@@ -95,7 +98,9 @@ end
 55d6c unit_starts LevelSpawn 16
 56174 piece_pictures ptr 16
 5638a boss_part_pictures ptr 8
-68f40 shot_gfx_table ptr 5
+68f40 shot_gfx_table ptr:ShotPic 5
+68f54 shot_gfx_cells ShotPic 3
+68f60 formation_paths ptr:PathCmd 87
 6e80a data_src u8 12000
 567fa boss_draw_table u8 20
 6a5da events_a SpawnRec 113

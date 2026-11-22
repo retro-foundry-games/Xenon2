@@ -22,6 +22,16 @@ arr player_shot_pictures 0x27c2 uint8_t * 12                     ; pictures of t
 tab anim_weaponb0 0x2540 uint8_t 6                   ; animation headers: picture (long), delay, then the script
 tab anim_spinner 0x25a0 uint8_t 6
 tab anim_wave_326c 0x2564 uint8_t 6
+tab anim_debris_0 0x2abc uint8_t 6
+tab anim_debris_1 0x2a80 uint8_t 6
+tab anim_debris_2 0x251c uint8_t 6
+tab anim_debris_3 0x24f8 uint8_t 6
+tab anim_debris_4 0x2864 uint8_t 6
+tab anim_debris_5 0x2b70 uint8_t 6
+tab anim_debris_6 0x2a44 uint8_t 6
+tab anim_debris_7 0x2810 uint8_t 6
+tab anim_debris_13 0x379a uint8_t 6
+tab anim_debris_17 0x2b34 uint8_t 6
 tab anim_weapon2c 0x25be uint8_t 6
 tab anim_shell_9c 0x25e2 uint8_t 6
 tab anim_weapon20 0x2612 uint8_t 6
@@ -61,7 +71,9 @@ tab weapon2c_patterns 0x3d66 int16_t 99                      ; shot patterns of 
 tab weapon_damage 0x7966 uint16_t 4               ; damage: $7966 bomb pieces, $7968 beam of weapon $4C, $796A the pod's trail, $796C
 tab blast_damage 0x7974 uint16_t 3                ; $7974 per level of the $34 beam, $7976 the shell, $7978 the blast of weapon $38/$3C
 var area_damage_kept 0x30dc uint16_t                        ; the damage $3096 keeps while it calls the hit routines
+var shot_pic_b 0xf5c uint8_t *                         ; the picture of an enemy shot (a level's shot table points here)
 var piece_directions 0xf60 int8_t *                         ; table of the pieces' directions (two bytes each, 64 apart)
+var shot_pic_a 0xf68 uint8_t *                         ; the picture of an enemy shot (a level's shot table points here)
 var explosion_anim_f70 0xf70 uint8_t *                    ; an explosion's animation header (level 3's part bursts)
 var big_explosion_anim 0xf64 uint8_t *                        ; the big explosion's animation header
 tab anim_drill_head_1 0x2936 uint8_t 6

@@ -105,9 +105,11 @@ end
 5e69e gun_shot_picture u8 2496
 5f05e part_gun_picture_side_40 u8 146
 5f0f0 part_gun_picture_other u8 32
-6ee26 shot_gfx_table ptr 5
-6ee3a shot_gfx_cells u8 12
-6ef36 worm_paths ptr 12
+6ee26 shot_gfx_table ptr:ShotPic 5
+6ee3a shot_gfx_cells ShotPic 3
+6ee46 formation_paths ptr:PathCmd 60
+6ef36 worm_paths ptr:PathCmd 12
+6ef66 formation_paths_end ptr:PathCmd 11
 6ff5e events_a SpawnRec 149
 70784 events_a_end s16
 662b6 events_b SpawnRec 65

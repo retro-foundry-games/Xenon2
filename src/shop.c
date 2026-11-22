@@ -45,6 +45,7 @@ uint8_t *shop_clear_columns(uint8_t *dst, uint16_t rows)
 /* shop $55200: a block of w+1 words by h+1 rows of 4 planes from src to dst (a row is $A0 bytes) */
 void shop_copy_block(const uint8_t *src, uint8_t *dst, uint16_t w, uint16_t h)
 {
+    const struct Cell4 *s = (const struct Cell4 *)src;
     RawWord *d = (RawWord *)dst;
 
     do {
@@ -52,11 +53,11 @@ void shop_copy_block(const uint8_t *src, uint8_t *dst, uint16_t w, uint16_t h)
         uint16_t n = w;
 
         do {
-            wr16(d[0].b, rd16(src));
-            wr16(d[SCREEN_PLANE_WORDS].b, rd16(src + 2));
-            wr16(d[2 * SCREEN_PLANE_WORDS].b, rd16(src + 4));
-            wr16(d[3 * SCREEN_PLANE_WORDS].b, rd16(src + 6));
-            src += 8;
+            wr16(d[0].b, rd16(s->plane[0].b));
+            wr16(d[SCREEN_PLANE_WORDS].b, rd16(s->plane[1].b));
+            wr16(d[2 * SCREEN_PLANE_WORDS].b, rd16(s->plane[2].b));
+            wr16(d[3 * SCREEN_PLANE_WORDS].b, rd16(s->plane[3].b));
+            s++;
             d++;
         } while (n-- != 0);
         d = next;

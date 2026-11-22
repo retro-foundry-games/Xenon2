@@ -19,11 +19,13 @@ extern void *guest_ptr(uint32_t address);
 #define GPTR(a) ((void *)(uintptr_t)(a))
 #endif
 /* an animation header (raw bytes): picture address (long), delay (word), then the script */
-static inline void anim_header_set(Object *o, const uint8_t *h)
+static inline void anim_header_set(Object *o, const uint8_t *header)
 {
-    o->gfx = GPTR(rd32(h));
-    o->anim_delay = (int16_t)rd16(h + 4);
-    o->anim = h + 6;
+    const struct AnimStep *h = (const struct AnimStep *)header;
+
+    o->gfx = GPTR(rd32(h->gfx.b));
+    o->anim_delay = (int16_t)rd16(h->delay.b);
+    o->anim = (const uint8_t *)(h + 1);
 }
 
 void free_object(Object *obj);

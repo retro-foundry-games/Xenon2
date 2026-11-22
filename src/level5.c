@@ -87,7 +87,7 @@ static int add_carry(uint8_t *b, uint8_t add)
 /* the picture of the shot by the table at $72EC8 */
 static const void *shot_gfx(uint16_t index)
 {
-    return GPTR(rd32(xenon2.level5_data.shot_gfx_table[index]));
+    return xenon2.level5_data.shot_gfx_table[index]->pic;
 }
 
 /* the object follows its target ($564C4) */
