@@ -1404,22 +1404,6 @@ move:
 
 /* ---- weapons and level 1 routines the recorded run never reached (from the listing) ---- */
 
-/* the pointer in the words $30 and $32 (the drill's target) */
-static Object *get_ptr_30(const Object *o)
-{
-    uint32_t v = ((uint32_t)(uint16_t)o->drill.target_hi << 16) | (uint16_t)o->energy;
-
-    return v ? (Object *)GPTR(v) : 0;
-}
-
-static void set_ptr_30(Object *o, Object *p)
-{
-    uint32_t v = p ? GADDR(p) : 0;
-
-    o->drill.target_hi = (uint16_t)(v >> 16);
-    o->energy = (uint16_t)v;
-}
-
 /* orig $006912: the draw of a weapon object while respawn_shield is not 0 (after a respawn: 8 down to 0; at $10 nothing is drawn): the position
  * becomes the player's centre plus the difference of the centres times respawn_shield (the centre of the picture, not its corner) */
 void weapon_shield_draw(Object *obj)
@@ -1579,6 +1563,7 @@ void drill_update(Object *obj)
 {
     static const uint8_t *const heads[8] = { xenon2.anim_drill_head_0, xenon2.anim_drill_head_1, xenon2.anim_drill_head_2, xenon2.anim_drill_head_3, xenon2.anim_drill_head_4, xenon2.anim_drill_head_5, xenon2.anim_drill_head_6, xenon2.anim_drill_head_7 };
     Object *target;
+    uint32_t address;
     int16_t x, y, dx, dy, turn;
 
     if (xenon2.player_dead) {
@@ -1594,7 +1579,8 @@ void drill_update(Object *obj)
         y = obj->y;
         goto test;
     }
-    target = get_ptr_30(obj);
+    address = ((uint32_t)(uint16_t)obj->drill.target_hi << 16) | (uint16_t)obj->energy;   /* the target: an address kept in the words $30 and $32 */
+    target = address ? (Object *)GPTR(address) : 0;
     if (target == 0)
         goto find;
     if ((int16_t)target->type < 0xc8 || target->hit[2] < 0 || target->hit[0] >= 0x140 || target->hit[3] < 0 || target->hit[1] >= 0xc0)
@@ -1607,7 +1593,9 @@ find:
         kill_object(obj);
         return;
     }
-    set_ptr_30(obj, target);
+    address = GADDR(target);
+    obj->drill.target_hi = (uint16_t)(address >> 16);
+    obj->energy = (uint16_t)address;
 have:
     if (obj->drill.state != 0) {
         obj->drill.state++;
