@@ -107,3 +107,8 @@ end
 5df96 boss2_dead_picture u8 4968
 5f2fe beam_top_picture u8 66
 5f340 beam_end_picture u8 32
+72ec8 shot_gfx_table ptr 4
+72ed8 shot_gfx_cells u8 8
+62d22 swap_limit_a cell
+7491c swap_limit_b cell
+6158c turret_fire_picture u8 1

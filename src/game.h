@@ -147,7 +147,19 @@ struct Xenon2 {
     uint16_t l1_eyes_phase;  /* $000D5A var */
     uint16_t l2_gates_left;  /* $000D5C var */
     uint8_t l2_walls_made;  /* $000D5E var */
-    PAD(29)
+    uint8_t l2_walls_spare;  /* $000D5F var */
+    uint16_t l3_gun_energy[2];  /* $000D60 arr */
+    uint16_t l3_worm_path;  /* $000D64 var */
+    uint16_t l3_worm_energy[2];  /* $000D66 arr */
+    uint16_t l3_guns_left;  /* $000D6A var */
+    uint16_t l4_boss2_pieces_left;  /* $000D6C var */
+    uint16_t l4_boss1_guns_left;  /* $000D6E var */
+    uint16_t l4_core_sway;  /* $000D70 var */
+    uint16_t l5_limit_a;  /* $000D72 var */
+    PAD(2)
+    uint16_t l5_limit_b;  /* $000D76 var */
+    PAD(2)
+    uint16_t l5_boss_pieces_left;  /* $000D7A var */
     uint8_t score_digits[7];  /* $000D7C arr */
     uint8_t protection;  /* $000D83 var */
     uint8_t player_dead;  /* $000D84 var */
@@ -159,7 +171,16 @@ struct Xenon2 {
     uint8_t l2_right_wall_made;  /* $000D8E var */
     uint8_t l2_debris_waves;  /* $000D8F var */
     uint8_t l2_first_fight_won;  /* $000D90 var */
-    PAD(15)
+    PAD(1)
+    uint8_t l3_worm_dead[2];  /* $000D92 arr */
+    uint8_t l3_worm_shown[2];  /* $000D94 arr */
+    uint8_t l3_end_active;  /* $000D96 var */
+    uint8_t l4_boss2_spawned;  /* $000D97 var */
+    uint8_t l4_boss1_spawned;  /* $000D98 var */
+    uint8_t l5_boss1_spawned;  /* $000D99 var */
+    uint8_t l5_gunners_spawned;  /* $000D9A var */
+    uint8_t l5_group_done[2];  /* $000D9B arr */
+    PAD(3)
     struct Object l2_block_object;  /* $000DA0 var */
     uint16_t difficulty;  /* $000E02 var */
     uint16_t level_number;  /* $000E04 var */
@@ -168,7 +189,9 @@ struct Xenon2 {
     PAD(340)
     int8_t * piece_directions;  /* $000F60 var */
     uint8_t * big_explosion_anim;  /* $000F64 var */
-    PAD(172)
+    PAD(8)
+    uint8_t * explosion_anim_f70;  /* $000F70 var */
+    PAD(160)
     uint16_t copper_list_a[18];  /* $001014 arr */
     uint16_t copper_list_b[18];  /* $001038 arr */
     PAD(1602)
@@ -440,7 +463,7 @@ struct Xenon2 {
     const uint16_t hit_mask_data[1200];  /* $03AED6 tab */
     PAD(1142)
     uint8_t other_player_level[12000];  /* $03BCAC arr */
-    PAD(360)
+    uint8_t l2_blocks_player2[360];  /* $03EB8C arr */
     uint32_t other_player_block[202];  /* $03ECF4 arr */
     struct Object player;  /* $03F01C var */
     struct Object obj_pool[159];  /* $03F07E arr */
@@ -478,7 +501,8 @@ struct Xenon2 {
         struct Level4Data level4_data;
         struct Level5Data level5_data;
     };
-    PAD(47670)
+    PAD(21544)
+    uint8_t l2_blocks[360];  /* $07CFB8 arr */
     uint8_t level_data_dst[12000];  /* $07D120 arr */
 };
 extern struct Xenon2 xenon2;
@@ -588,6 +612,17 @@ LAYOUT_ASSERT(unit_seed, 0xd46);
 LAYOUT_ASSERT(l1_eyes_phase, 0xd5a);
 LAYOUT_ASSERT(l2_gates_left, 0xd5c);
 LAYOUT_ASSERT(l2_walls_made, 0xd5e);
+LAYOUT_ASSERT(l2_walls_spare, 0xd5f);
+LAYOUT_ASSERT(l3_gun_energy, 0xd60);
+LAYOUT_ASSERT(l3_worm_path, 0xd64);
+LAYOUT_ASSERT(l3_worm_energy, 0xd66);
+LAYOUT_ASSERT(l3_guns_left, 0xd6a);
+LAYOUT_ASSERT(l4_boss2_pieces_left, 0xd6c);
+LAYOUT_ASSERT(l4_boss1_guns_left, 0xd6e);
+LAYOUT_ASSERT(l4_core_sway, 0xd70);
+LAYOUT_ASSERT(l5_limit_a, 0xd72);
+LAYOUT_ASSERT(l5_limit_b, 0xd76);
+LAYOUT_ASSERT(l5_boss_pieces_left, 0xd7a);
 LAYOUT_ASSERT(score_digits, 0xd7c);
 LAYOUT_ASSERT(protection, 0xd83);
 LAYOUT_ASSERT(player_dead, 0xd84);
@@ -599,6 +634,14 @@ LAYOUT_ASSERT(l2_left_wall_made, 0xd8d);
 LAYOUT_ASSERT(l2_right_wall_made, 0xd8e);
 LAYOUT_ASSERT(l2_debris_waves, 0xd8f);
 LAYOUT_ASSERT(l2_first_fight_won, 0xd90);
+LAYOUT_ASSERT(l3_worm_dead, 0xd92);
+LAYOUT_ASSERT(l3_worm_shown, 0xd94);
+LAYOUT_ASSERT(l3_end_active, 0xd96);
+LAYOUT_ASSERT(l4_boss2_spawned, 0xd97);
+LAYOUT_ASSERT(l4_boss1_spawned, 0xd98);
+LAYOUT_ASSERT(l5_boss1_spawned, 0xd99);
+LAYOUT_ASSERT(l5_gunners_spawned, 0xd9a);
+LAYOUT_ASSERT(l5_group_done, 0xd9b);
 LAYOUT_ASSERT(l2_block_object, 0xda0);
 LAYOUT_ASSERT(difficulty, 0xe02);
 LAYOUT_ASSERT(level_number, 0xe04);
@@ -606,6 +649,7 @@ LAYOUT_ASSERT(respawn_shield, 0xe06);
 LAYOUT_ASSERT(l2_block_table, 0xe08);
 LAYOUT_ASSERT(piece_directions, 0xf60);
 LAYOUT_ASSERT(big_explosion_anim, 0xf64);
+LAYOUT_ASSERT(explosion_anim_f70, 0xf70);
 LAYOUT_ASSERT(copper_list_a, 0x1014);
 LAYOUT_ASSERT(copper_list_b, 0x1038);
 LAYOUT_ASSERT(pow10, 0x169e);
@@ -788,6 +832,7 @@ LAYOUT_ASSERT(sample_bank, 0x1bb80);
 LAYOUT_ASSERT(hit_mask_ptrs, 0x3ae96);
 LAYOUT_ASSERT(hit_mask_data, 0x3aed6);
 LAYOUT_ASSERT(other_player_level, 0x3bcac);
+LAYOUT_ASSERT(l2_blocks_player2, 0x3eb8c);
 LAYOUT_ASSERT(other_player_block, 0x3ecf4);
 LAYOUT_ASSERT(player, 0x3f01c);
 LAYOUT_ASSERT(obj_pool, 0x3f07e);
@@ -815,6 +860,7 @@ LAYOUT_ASSERT(level2_data, 0x54e40);
 LAYOUT_ASSERT(level3_data, 0x54e40);
 LAYOUT_ASSERT(level4_data, 0x54e40);
 LAYOUT_ASSERT(level5_data, 0x54e40);
+LAYOUT_ASSERT(l2_blocks, 0x7cfb8);
 LAYOUT_ASSERT(level_data_dst, 0x7d120);
 
 #include "amiga/hw.h"

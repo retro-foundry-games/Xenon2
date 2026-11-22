@@ -105,3 +105,6 @@ end
 5e69e gun_shot_picture u8 2496
 5f05e part_gun_picture_side_40 u8 146
 5f0f0 part_gun_picture_other u8 32
+6ee26 shot_gfx_table ptr 5
+6ee3a shot_gfx_cells u8 12
+6ef36 worm_paths ptr 12

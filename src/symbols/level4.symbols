@@ -1,0 +1,6 @@
+; level4: the variables level 4's blob ($54E00 while level 4 is loaded) uses
+var l4_boss2_pieces_left 0xd6c uint16_t                 ; level 4: the pieces of the second boss that still stand
+var l4_boss1_guns_left 0xd6e uint16_t                   ; level 4: the guns of the first boss that still stand
+var l4_core_sway 0xd70 uint16_t                         ; level 4: the first boss's core's vertical step in this frame, which its guns follow
+var l4_boss2_spawned 0xd97 uint8_t                      ; level 4: $FF once the second boss is made
+var l4_boss1_spawned 0xd98 uint8_t                      ; level 4: $FF once the first boss is made

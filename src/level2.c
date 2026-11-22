@@ -15,8 +15,6 @@
 /* the scratch fields of Object, by the kind that uses them */
 
 
-#define W(a) sh_r16(a)
-#define B(a) sh_r8(a)
 #define PLAYER_X (PLAYER->x)
 #define PLAYER_Y (PLAYER->y)
 
@@ -205,7 +203,7 @@ void l2_scroll(void)
 /* level2 $054E2C, $054E68: a change of players: the table of blocks and the second player's copy exchange */
 void l2_swap_hook(void)
 {
-    uint8_t *blocks = xenon2.l2_block_table, *saved = (uint8_t *)GPTR(0x3eb8c);
+    uint8_t *blocks = xenon2.l2_block_table, *saved = xenon2.l2_blocks_player2;
     int i;
 
     for (i = 0; i < 0xb4; i++, blocks += 2, saved += 2) {
@@ -226,13 +224,13 @@ void l2_init(void)
     Object *obj;
     int i, gate;
 
-    if (xenon2.level_init_src == (uint8_t *)GPTR(0x71a12)) {
+    if (xenon2.level_init_src != xenon2.level_data_dst) {
         for (i = 11999; i >= 0; i--)
-            ((uint8_t *)GPTR(0x7d120))[i] = ((const uint8_t *)GPTR(0x71a12))[i];
-        xenon2.level_init_src = (uint8_t *)GPTR(0x7d120);
+            xenon2.level_data_dst[i] = xenon2.level_init_src[i];
         for (i = 359; i >= 0; i--)
-            ((uint8_t *)GPTR(0x7d120 - 360))[i] = ((const uint8_t *)GPTR(0x71a12 - 360))[i];
-        xenon2.l2_block_table = (uint8_t *)GPTR(0x7d120 - 360);
+            xenon2.l2_blocks[i] = (xenon2.level_init_src - 360)[i];
+        xenon2.level_init_src = xenon2.level_data_dst;
+        xenon2.l2_block_table = xenon2.l2_blocks;
     }
     xenon2.scroll_min = 0x9e0;
     xenon2.scroll_max = 0x11ff;
@@ -272,7 +270,7 @@ void l2_init(void)
     }
     xenon2.l2_gates_left = 3;
     xenon2.l2_walls_made = 0;
-    sh_w8(0xd5f, 0);
+    xenon2.l2_walls_spare = 0;
     xenon2.l2_left_wall_made = 0;
     xenon2.l2_right_wall_made = 0;
     xenon2.l2_debris_waves = 2;
@@ -296,8 +294,8 @@ void l2_init(void)
     xenon2.difficulty_x1 = (uint16_t)(xenon2.difficulty * 1);
     xenon2.difficulty_x2 = (uint16_t)(xenon2.difficulty * 2);
     for (i = 0; i < 0xb4; i++) {
-        ((uint8_t *)GPTR(0x3eb8c))[2 * i] = xenon2.l2_block_table[2 * i];
-        ((uint8_t *)GPTR(0x3eb8c))[2 * i + 1] = xenon2.l2_block_table[2 * i + 1];
+        xenon2.l2_blocks_player2[2 * i] = xenon2.l2_block_table[2 * i];
+        xenon2.l2_blocks_player2[2 * i + 1] = xenon2.l2_block_table[2 * i + 1];
     }
 }
 
@@ -591,7 +589,7 @@ void l2_roamer_shot_update(Object *bolt)
             const void *gfx;
 
             bolt->shot_count = (uint8_t)(random_next() & 0x3f);
-            gfx = GPTR(sh_r32(sh_r32(0x6c89c + (uint32_t)param * 4)));
+            gfx = GPTR(rd32(xenon2.level2_data.shot_gfx_table[param]));
             angle = direction8((int16_t)(PLAYER_X - bolt->x), (int16_t)(PLAYER_Y - bolt->y));
             spawn_enemy_shot((uint16_t)bolt->x, (uint16_t)bolt->y, angle, xenon2.level2_data.roamer_shot_shot_steps, gfx);
         }
@@ -767,7 +765,7 @@ void l2_turret_update(Object *turret)
     }
     shot_x = (int16_t)(turret->x + 8);
     shot_y = (int16_t)(turret->y - xenon2.scroll_pos + 8);
-    pic = sh_r32(sh_r32(0x6c89c + 4 * (uint32_t)xenon2.level2_data.turret_param));
+    pic = rd32(xenon2.level2_data.shot_gfx_table[xenon2.level2_data.turret_param]);
     dir = turret->type == 0xec ? 2 : 6;
     spawn_enemy_shot((uint16_t)shot_x, (uint16_t)shot_y, (uint16_t)dir, xenon2.level2_data.turret_shot_steps, GPTR(pic));
 }
@@ -1191,7 +1189,7 @@ static void l2_boss_move(Object *boss)
         l2_boss_rest(boss);
         return;
     }
-    if (B(0x19f9e + 0x1794) == 0)
+    if (xenon2.sfx_channels[2].active == 0)
         xenon2.sfx_cmd = 3;
     boss->l2_boss.frames--;
     new_y = (int16_t)((int16_t)(boss->l2_boss.step >> 16) + boss->y);

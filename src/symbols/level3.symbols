@@ -1,0 +1,8 @@
+; level3: the variables level 3's blob ($54E00 while level 3 is loaded) uses
+arr l3_gun_energy 0xd60 uint16_t 2                      ; level 3: the energy of each gun of the end (the gun of side $40 first)
+var l3_worm_path 0xd64 uint16_t                         ; level 3: the path of the next worm of the end (1 is the first, then by the seed)
+arr l3_worm_energy 0xd66 uint16_t 2                     ; level 3: the energy of the worm of each side
+var l3_guns_left 0xd6a uint16_t                         ; level 3: the guns of the end that still stand
+arr l3_worm_dead 0xd92 uint8_t 2                        ; level 3: $FF when the worm of the side is destroyed
+arr l3_worm_shown 0xd94 uint8_t 2                       ; level 3: $FF while the worm of the side is drawn
+var l3_end_active 0xd96 uint8_t                         ; level 3: $FF while the parts of the end are in the field
