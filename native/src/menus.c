@@ -4,7 +4,7 @@
 #include "title.h"
 #include "draw.h"
 
-#define SCREEN_A_WORDS(off) (&xenon2.screen_a[(off) / 2])   /* the byte offset off of screen_a */
+#define DISK_SCRATCH ((struct DiskScratch *)xenon2.screen_a)
 
 /* ---- title lines, fade, high-score table ---- */
 
@@ -132,7 +132,7 @@ void draw_big_text(const uint8_t *text, uint16_t *dest)
 void hiscore_draw(void)
 {
     const uint8_t *line = xenon2.hiscore_lines;
-    uint16_t *dest = (uint16_t *)(xenon2.draw_screen + 0x17c4);
+    uint16_t *dest = (uint16_t *)SCREEN_POS(xenon2.draw_screen, 38, 4);
     int i;
 
     clear_screen();
@@ -142,7 +142,7 @@ void hiscore_draw(void)
     for (i = 9; i >= 0; i--) {
         draw_big_text(line, dest);
         line += 15;
-        dest += 0x500;
+        dest += 16 * SCREEN_ROW_WORDS;
     }
     stars_update();
     swap_screens_200();
@@ -281,7 +281,7 @@ letter_done:
 void credits_draw(void)
 {
     xenon2.credits_text[8] = (uint8_t)(xenon2.continues_left + 0x30);
-    draw_text(xenon2.credits_text, xenon2.draw_screen + 0x7316);
+    draw_text(xenon2.credits_text, SCREEN_POS(xenon2.draw_screen, 184, 22));
 }
 
 /* orig $8CB6: the menu: 1 player, 2 players, music on/off; up/down moves the marker, fire takes it; leaves players = 1 or 2 */
@@ -398,9 +398,9 @@ int game_disk_present(void)
         swap_screens_200();
     }
     xenon2.irq_vectors[2] = irq_vblank_hooked;
-    disk_read_sectors(0, 1, SCREEN_A_WORDS(0x5600));
+    disk_read_sectors(0, 1, DISK_SCRATCH->boot);
     xenon2.irq_vectors[2] = irq_vblank;
-    ok = xenon2.screen_a[0x5602 / 2] == 0x5832 && xenon2.screen_a[0x5604 / 2] == 0x4220;
+    ok = DISK_SCRATCH->boot[1] == 0x5832 && DISK_SCRATCH->boot[2] == 0x4220;
     return ok;
 }
 
@@ -616,7 +616,7 @@ HLE_WEAK void disk_seek(uint16_t track)
         if (xenon2.disk_count != 0)
             digit = (uint16_t)((uint32_t)((uint16_t)(xenon2.disk_count - 1) * 10u) / xenon2.disk_total);
         xenon2.progress_text[0] = (uint8_t)(digit + 0x30);
-        draw_text_row_at(xenon2.show_screen + 0x3854, xenon2.progress_text, 0);
+        draw_text_row_at(SCREEN_POS(xenon2.show_screen, 90, 20), xenon2.progress_text, 0);
     }
     xenon2.disk_track = (int16_t)(xenon2.disk_track + delta);
     delta >>= 1;
@@ -683,7 +683,7 @@ int32_t mfm_align(const uint16_t *src)
         }
     }
 found:
-    out = SCREEN_A_WORDS(0x1600);
+    out = DISK_SCRATCH->track;
     shift_left = (uint16_t)(0x10 - shift_right);
     for (i = 0; i < 0x2000; i++) {
         uint16_t hi = (uint16_t)((uint32_t)p[-1] << shift_left);
@@ -708,7 +708,7 @@ retry:
     for (n = 0; n < 11; n++)
         xenon2.disk_seen[n] = 0;
     custom->dsklen = 0x4000;
-    custom->dskpt = ADDR(SCREEN_A_WORDS(0x1600));
+    custom->dskpt = ADDR(DISK_SCRATCH->track);
     SETCLR_WRITE(intreq, 0x1002);
     SETCLR_WRITE(adkcon, 0x6600);
     SETCLR_WRITE(adkcon, 0x9100);
@@ -717,10 +717,10 @@ retry:
     while (!xenon2.disk_done)
         HOST_IDLE();
     custom->dsklen = 0x4000;
-    mfm_align(SCREEN_A_WORDS(0x1604));
+    mfm_align(&DISK_SCRATCH->track[2]);
     if (xenon2.disk_error)
         goto fail;
-    p = SCREEN_A_WORDS(0x1602);
+    p = &DISK_SCRATCH->track[1];
     while (*p == 0x4489)
         p++;
     for (n = 10; n >= 0; n--) {
@@ -734,10 +734,10 @@ retry:
         if (xenon2.disk_seen[sector] & 0x80)
             goto fail;
         xenon2.disk_seen[sector] |= 0x80;
-        p = mfm_decode(SCREEN_A_WORDS((uint16_t)(sector << 9)), p, 0x200);
+        p = mfm_decode(DISK_SCRATCH->sector[sector].word, p, 0x200);
         if ((xenon2.disk_header[1] & 0xff) == 1) {
             mfm_align(p);
-            p = SCREEN_A_WORDS(0x1602);
+            p = &DISK_SCRATCH->track[1];
             while (*p == 0x4489)
                 p++;
         } else {
@@ -783,7 +783,7 @@ HLE_WEAK int disk_read_sectors(uint16_t first_sector, uint16_t count, void *dest
             return -1;
         }
         to = (uint32_t *)xenon2.disk_dest;
-        from = (const uint32_t *)SCREEN_A_WORDS((uint16_t)(xenon2.disk_sector * 0x200u));
+        from = (const uint32_t *)DISK_SCRATCH->sector[xenon2.disk_sector].word;
         n = (int16_t)(11 - xenon2.disk_sector);
         if (!(n <= (int16_t)xenon2.disk_count))
             n = (int16_t)xenon2.disk_count;

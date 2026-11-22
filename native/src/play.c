@@ -1,3 +1,4 @@
+#include <string.h>
 #include "play.h"
 #include "game_all.h"
 #include "amiga/hw.h"
@@ -14,38 +15,28 @@ static void list_append(Object *head, Object *o)
     last->next = o;
 }
 
-/* orig $006bc8 and $006bce: clears both screens (last+1 longwords each; $6bc8 last=$1f3f, $6bce last=$1dff) */
-static void clear_screens(uint16_t last)
+/* orig $006bc8 and $006bce: clears the first `rows` rows of both screens (the panel's rows follow the screen's: $6bc8 clears 200, $6bce 192) */
+static void clear_screens(uint16_t rows)
 {
-    uint32_t *a = (uint32_t *)xenon2.screen_b;
-    uint32_t *b = (uint32_t *)xenon2.screen_a;
-    uint32_t i;
+    for (uint16_t row = 0; row < rows; row++) {
+        uint16_t *a = row < SCREEN_ROWS ? &xenon2.screen_b[row * SCREEN_ROW_WORDS] : &xenon2.panel_b[(row - SCREEN_ROWS) * SCREEN_ROW_WORDS];
+        uint16_t *b = row < SCREEN_ROWS ? &xenon2.screen_a[row * SCREEN_ROW_WORDS] : &xenon2.panel_a[(row - SCREEN_ROWS) * SCREEN_ROW_WORDS];
 
-    for (i = 0; i <= last; i++) {
-        if (i < 0x1e00) {
-            a[i] = 0;
-            b[i] = 0;
-        } else {
-            int k;
-
-            for (k = 0; k < 2; k++) {
-                xenon2.panel_b[(i - 0x1e00) * 2 + k] = 0;
-                xenon2.panel_a[(i - 0x1e00) * 2 + k] = 0;
-            }
-        }
+        memset(a, 0, SCREEN_ROW_BYTES);
+        memset(b, 0, SCREEN_ROW_BYTES);
     }
 }
 
-/* orig $006bc8: clears $1F40 longwords of both screens */
+/* orig $006bc8: clears the screens and the panels */
 void clear_screens_large(void)
 {
-    clear_screens(0x1f3f);
+    clear_screens(SCREEN_ROWS + PANEL_ROWS);
 }
 
-/* orig $006bce: clears $1E00 longwords of both screens */
+/* orig $006bce: clears the screens */
 void clear_screens_small(void)
 {
-    clear_screens(0x1dff);
+    clear_screens(SCREEN_ROWS);
 }
 
 /* orig $00668c: fills the score area of both screens at the current player's place with the first glyph rows */
@@ -127,8 +118,8 @@ void update_score_display(void)
             for (k = 0; k < 4; k++) {
                 uint8_t b = *g++;
 
-                put_screen_byte(pb + off + row * 0xa0 + k * 0x28, b);
-                put_screen_byte(pa + off + row * 0xa0 + k * 0x28, b);
+                put_screen_byte(pb + off + row * SCREEN_ROW_BYTES + k * SCREEN_PLANE_BYTES, b);
+                put_screen_byte(pa + off + row * SCREEN_ROW_BYTES + k * SCREEN_PLANE_BYTES, b);
             }
         }
         if (*digit != 0)
@@ -618,7 +609,7 @@ void respawn_player(void)
     pos += 0xbf;
     xenon2.next_event_b = pos;
     xenon2.scroll_fine = xenon2.scroll_y & 0xf;
-    xenon2.map_row_offset = (uint16_t)((xenon2.scroll_y >> 4) * 0x28);
+    xenon2.map_row_offset = (uint16_t)MAP_ROW(xenon2.scroll_y >> 4);
     create_queued_objects();
     xenon2.player_money = xenon2.player_money_saved;
     for (i = 0; i < 16; i++)
@@ -693,7 +684,7 @@ void draw_gauge(uint16_t x, uint16_t y, uint16_t fill, uint16_t max)
 /* orig $006f1e: the scroll and timing variables at the start of a level */
 void level_reset_scroll(void)
 {
-    xenon2.map_row_offset = 0x2d00;
+    xenon2.map_row_offset = MAP_ROW(288);
     xenon2.scroll_fine = 0;
     xenon2.scroll_pos = 0x1200;
     xenon2.next_event_a = 0x7fee;

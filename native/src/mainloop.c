@@ -96,7 +96,7 @@ void stars_scroll(uint16_t speed)
         while ((int16_t)frac < 0) {
             STAR_OFF(s) -= 0xa0;
             if ((int16_t)STAR_OFF(s) < 0)
-                STAR_OFF(s) += 0x7800;
+                STAR_OFF(s) += SCREEN_ROWS * SCREEN_ROW_BYTES;
             frac += 0x180;
         }
         while ((int16_t)frac >= 0x180) {

@@ -312,7 +312,7 @@ void level1_scroll(void)
         xenon2.l1_boss_zone_entered = 0xff;
         xenon2.scroll_pos = 0x9c0;
         xenon2.scroll_max = 0x9c0;
-        xenon2.map_row_offset = 0x1860;
+        xenon2.map_row_offset = MAP_ROW(156);
         xenon2.scroll_fine = 0;
     }
     if ((int16_t)xenon2.scroll_pos >= 0xa40 && (int16_t)xenon2.scroll_pos <= 0xd10) {

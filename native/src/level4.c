@@ -969,13 +969,13 @@ void l4_b2_gun_hit(Object *shot, Object *enemy, uint16_t damage)
     }
     debris_burst(shot, 0x27, 0, 0, 0x140, 0xc0, xenon2.big_explosion_anim);
     spawn_bonuses(4);
-    memset(xenon2.level_init_src + 0x1658, 0, 0xa0 * 4);
+    memset(xenon2.level_init_src + MAP_ROW(143), 0, MAP_ROW(16));
     xenon2.scroll_min = 0;
     xenon2.player_score += 0x7d0;
     xenon2.scroll_step_target = 1;
     xenon2.scroll_pos = 0x8a0;
     xenon2.scroll_max = 0x8a0;
-    xenon2.map_row_offset = 0x1590;
+    xenon2.map_row_offset = MAP_ROW(138);
     xenon2.scroll_fine = 0;
 }
 

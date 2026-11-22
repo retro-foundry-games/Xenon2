@@ -437,7 +437,7 @@ void l5_spawn_boss1(uint16_t slot_value)
         p += 4;
     }
     memset(p, 0, 600);
-    xenon2.map_row_offset = 0x410;
+    xenon2.map_row_offset = MAP_ROW(26);
     xenon2.scroll_pos = 0x1a0;
     xenon2.scroll_max = 0x1a0;
     for (count = 21; count >= 0; count--, rec++) {
@@ -693,7 +693,7 @@ void l5_heart_hit(Object *shot, Object *heart, uint16_t damage)
         heart->gfx = (void *)xenon2.level5_data.heart_pictures[index];
         return;
     }
-    memset(xenon2.level_init_src + 0x1e0, 0, 720);
+    memset(xenon2.level_init_src + MAP_ROW(12), 0, MAP_ROW(18));
     free_object_chain(LIST_C->prev);
     spawn_bonuses(9);
     debris_burst(shot, 0x27, 0, 0, 0x140, 0xc0, xenon2.big_explosion_anim);
@@ -768,7 +768,7 @@ void l5_wheel_hit(Object *shot, Object *wheel, uint16_t damage)
     debris_burst(shot, 0x13, 0x70, (uint16_t)(0x8d0 - xenon2.scroll_pos), 0x60, 0xa0, xenon2.big_explosion_anim);
     spawn_bonuses(4);
     for (i = 0; i < 10; i++)
-        memset(xenon2.level_init_src + 0x1614 + 0x28 * i, 0, 16);
+        memset(xenon2.level_init_src + MAP_CELL(141, 6) + MAP_ROW(i), 0, 8 * sizeof(Cell));
     xenon2.player_score += 0x5dc;
 }
 
@@ -943,7 +943,7 @@ gone:
 void l5_beam_draw(Object *obj)
 {
     uint8_t *screen = xenon2.draw_screen;
-    uint16_t *dst, *limit = (uint16_t *)(screen + 0x7800);
+    uint16_t *dst, *limit = (uint16_t *)(screen + SCREEN_ROWS * SCREEN_ROW_BYTES);
     uint32_t pat0 = 0xfff00000u, pat1 = 0xbfd00000u, pat2 = 0xfff00000u, pat3 = 0xc0300000u;
     uint16_t shift;
     uint32_t base0, base1, base2, base3, base4, base5;
@@ -1010,7 +1010,7 @@ void l5_beam_draw(Object *obj)
 void l5_spawn_gates(const struct SpawnRec *record)
 {
     int16_t x = (int16_t)(record->x - 8), y = (int16_t)(record->y - 8);
-    Cell *cells = (Cell *)(xenon2.level_init_src + (uint16_t)(((uint16_t)x >> 3) & 0xfe) + (int16_t)(uint16_t)((uint32_t)((uint16_t)y >> 4) * 0x28));
+    Cell *cells = (Cell *)(xenon2.level_init_src + (uint16_t)(((uint16_t)x >> 3) & 0xfe) + (int16_t)(uint16_t)((uint32_t)MAP_ROW((uint16_t)y >> 4)));
     const struct Level5Gate *rec = xenon2.level5_data.gates;
     int count;
 
