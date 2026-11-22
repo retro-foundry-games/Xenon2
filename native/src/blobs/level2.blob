@@ -1,4 +1,5 @@
 ; level 2: the members of its blob at $54E00 (raw big-endian memory, read with rd16/rd32/GPTR); a member runs to the next one,
+raw
 ; the code between the tables is not separated
 54e42 marker_f8_energy u16
 54e44 marker_fc_energy u16
