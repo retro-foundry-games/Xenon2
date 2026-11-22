@@ -11,7 +11,7 @@ struct ObjMove {
     void (*fn_draw)(Object *); /* 6 */
     void *fn_hit;              /* a */
     uint8_t pad0e[0x12];        /* e */
-    uint16_t x_hi, x_lo;        /* 20: 16.16 as a long: the high word (the x of Object) then the fraction (words, not a uint32_t: a long over words is wrong on a little-endian host) */
+    uint16_t x_hi, x_lo;        /* 20: 16.16 as a long: the high word (the x of Object) then the fraction */
     uint16_t y_hi, y_lo;        /* 24 */
     int16_t wait;               /* 28: steps left of the running command (negative: a wait) */
     uint16_t angle_hi, angle_lo; /* 2a: the angle is the low word (at 2c), the high word a fraction */
@@ -21,7 +21,18 @@ struct ObjMove {
     uint16_t id;                /* 44 */
     const uint8_t *script;      /* 46: the script's start */
     const uint8_t *cursor;      /* 4a: the next command */
-    uint16_t turn_hi, turn_lo;  /* 4e: angle change per step, 8.24 */
+    union {
+        uint32_t turn_fixed;          /* 4e: angle change per step, 8.24 */
+        struct {
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+            uint16_t turn_lo;
+            uint16_t turn_hi;
+#else
+            uint16_t turn_hi;
+            uint16_t turn_lo;
+#endif
+        };
+    };
     int16_t turn_step;          /* 52 */
     uint16_t steps;             /* 54: steps per call */
     ObjMove *target;            /* 56 */

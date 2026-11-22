@@ -628,8 +628,8 @@ void l3_spawn_parts(void)
         a0->fn_hit = (void *)t->hit;
         a0->path.wait = 0;
         set_anim(a0, t->anim);
-        a0->turn[0] = t->x;
-        a0->turn[1] = t->y;
+        a0->turn_hi = t->x;
+        a0->turn_lo = t->y;
         SET_V5E(a0, 0);
         a0->score = 0x3e8;
         a0->big = -1;
@@ -641,7 +641,7 @@ void l3_spawn_parts(void)
         a0->cursor = level3_data.spawn_parts_data_3;
         a0->path.angle_hi = 0;
         a0->path.angle_lo = 0;
-        a0->turn[2] = 0;
+        a0->turn_step = 0;
         a0->kind = 0;
         a0->steps = (int16_t)level3_data.parts_steps;
         bbox_from_frame(a0);
@@ -683,8 +683,8 @@ void l3_part_follow(Object *a0)
 
     anim_step(a0);
     a1 = a0->target;
-    a0->x = (int16_t)(a1->x + (int16_t)a0->turn[0]);
-    a0->y = (int16_t)(a1->y + (int16_t)a0->turn[1]);
+    a0->x = (int16_t)(a1->x + (int16_t)a0->turn_hi);
+    a0->y = (int16_t)(a1->y + (int16_t)a0->turn_lo);
     bbox_from_frame(a0);
 }
 
@@ -780,13 +780,13 @@ void l3_part_arm(Object *a0)
         a1->arm.angle_hi = 0;
         a1->arm.angle_lo = (int16_t)d0;
         r = (((random_next() & 0x1f) + 0x20) << 8) << 2;
-        split32(&a1->turn[0], &a1->turn[1], r);
-        a1->turn[2] = 0;
+        a1->turn_fixed = r;
+        a1->turn_step = 0;
         a1->steps = 1;
         if (a0->part.slot == 0x60) {
             a1->arm.angle_lo = (int16_t)((a1->arm.angle_lo & 0xff00) | (uint8_t)(a1->arm.angle_lo + 0x40));
             r = -r;
-            split32(&a1->turn[0], &a1->turn[1], r);
+            a1->turn_fixed = r;
         }
     }
     bbox_from_frame(a0);
@@ -814,20 +814,20 @@ void l3_part_arm_piece(Object *a0)
     l3_arm_follow(a0);
     s2a = a0->arm.angle_hi;
     s2c = a0->arm.angle_lo;
-    s4e0 = (int16_t)a0->turn[0];
-    s4e1 = (int16_t)a0->turn[1];
-    s52 = (int16_t)a0->turn[2];
+    s4e0 = (int16_t)a0->turn_hi;
+    s4e1 = (int16_t)a0->turn_lo;
+    s52 = (int16_t)a0->turn_step;
     obj_script_run(a0);
     a1 = a0->prev;
     a1->arm.angle_hi = a0->arm.angle_hi;
     a1->arm.angle_lo = a0->arm.angle_lo;
-    a1->turn[0] = a0->turn[0];
-    a1->turn[1] = a0->turn[1];
-    a1->turn[2] = a0->turn[2];
+    a1->turn_hi = a0->turn_hi;
+    a1->turn_lo = a0->turn_lo;
+    a1->turn_step = a0->turn_step;
     a1->steps = a0->steps;
-    a0->turn[2] = (uint16_t)s52;
-    a0->turn[1] = (uint16_t)s4e1;
-    a0->turn[0] = (uint16_t)s4e0;
+    a0->turn_step = (uint16_t)s52;
+    a0->turn_lo = (uint16_t)s4e1;
+    a0->turn_hi = (uint16_t)s4e0;
     a0->arm.angle_lo = s2c;
     a0->arm.angle_hi = s2a;
 }

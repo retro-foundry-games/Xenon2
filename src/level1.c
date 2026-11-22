@@ -389,9 +389,9 @@ void level1_boss_update(Object *a0)
         }
         a0->l1.angle_hi = 0;
         a0->l1.angle_lo = 0;
-        a0->turn[0] = 0;
-        a0->turn[1] = 0;
-        a0->turn[2] = 0;
+        a0->turn_hi = 0;
+        a0->turn_lo = 0;
+        a0->turn_step = 0;
     }
     if ((int16_t)scroll_max <= 0x1c0)
         scroll_max = 0x1c0;
@@ -429,12 +429,12 @@ void level1_boss_update(Object *a0)
     if (d0 & 0x80)
         d0 = (~d0) & 0xff;
     l = (int32_t)(int16_t)(d0 - 0x40) << 10;
-    split32(&a0->turn[0], &a0->turn[1], (uint32_t)l);
+    a0->turn_fixed = (uint32_t)l;
     d0 = (int16_t)((frame_tick + 0xa0) & 0x1ff);
     if (d0 & 0x100)
         d0 ^= 0x1ff;
     d0 -= 0x80;
-    a0->turn[2] = (uint16_t)(d0 << 5);
+    a0->turn_step = (uint16_t)(d0 << 5);
     d0 = (int16_t)(a0->l1_boss.move + a0->y);
     if (d0 < 0x10) {
         d0 = 0x10;
@@ -790,9 +790,9 @@ void level1_boss_part_update(Object *a0)
     a0->y_frac = a1->y_frac;
     a0->l1.angle_hi = a1->l1.angle_hi;
     a0->l1.angle_lo = a1->l1.angle_lo;
-    a0->turn[0] = a1->turn[0];
-    a0->turn[1] = a1->turn[1];
-    a0->turn[2] = a1->turn[2];
+    a0->turn_hi = a1->turn_hi;
+    a0->turn_lo = a1->turn_lo;
+    a0->turn_step = a1->turn_step;
     a0->steps = a1->steps;
     if (a1->type == 0x50) {
         a0->x = 0xa0;
