@@ -247,7 +247,7 @@ void l3_worm_spawn(uint16_t side)
             path_index = (uint16_t)(*seed & 7);
         } while (path_index < 1 || path_index == 7);
     }
-    path = (const struct PathCmd *)xenon2.level3_data.worm_paths[path_index];
+    path = xenon2.level3_data.worm_paths[path_index];
     x = (int16_t)rd16(path->arg.pos.x.b);
     y = (int16_t)(rd16(path->arg.pos.y.b) - xenon2.scroll_pos - xenon2.scroll_step);
     count = xenon2.level3_data.worm_spawn.last + 1;
@@ -258,7 +258,7 @@ void l3_worm_spawn(uint16_t side)
             prev->chain = seg;
         else
             head = seg;
-        seg->fn_hit = prev ? GFN(0xf2c) : (void *)l3_worm_hit;
+        seg->fn_hit = prev ? (void *)hit_kill_shooter : (void *)l3_worm_hit;
         seg->type = 0x50;
         seg->worm.delay = delay;
         delay = (int16_t)(delay - (int16_t)entry->delay);
@@ -989,7 +989,7 @@ void l3_boss_update(Object *obj)
         uint16_t sum = (uint16_t)(obj->shot_count + xenon2.level3_data.boss_fire_rate);
         int16_t x, y;
         uint16_t angle = 4, step;
-        uint32_t gfx;
+        const uint8_t *gfx;
 
         obj->shot_count = (uint8_t)sum;
         if (sum <= 0xff)
@@ -997,13 +997,13 @@ void l3_boss_update(Object *obj)
         obj->shot_count = (uint8_t)(random_next() & 0x3f);
         x = (int16_t)(obj->x + 0x20);
         y = (int16_t)(obj->y - xenon2.scroll_pos + 0x58);
-        gfx = rd32(xenon2.level3_data.shot_gfx_table[xenon2.level3_data.boss_param]);
+        gfx = xenon2.level3_data.shot_gfx_table[xenon2.level3_data.boss_param]->pic;
         step = (uint16_t)(obj->l3_boss.cell & ~1);
         if (step == 6)
             angle = 3;
         if (step == 8)
             angle = 5;
-        spawn_enemy_shot((uint16_t)x, (uint16_t)y, angle, xenon2.level3_data.gun_energy, GPTR(gfx));
+        spawn_enemy_shot((uint16_t)x, (uint16_t)y, angle, xenon2.level3_data.gun_energy, gfx);
     }
 }
 
@@ -1208,12 +1208,12 @@ void l3_walker_update(Object *obj)
 
         obj->shot_count = (uint8_t)sum;
         if (sum > 0xff) {
-            uint32_t gfx = rd32(xenon2.level3_data.shot_gfx_table[xenon2.level3_data.walker_param]);
+            const uint8_t *gfx = xenon2.level3_data.shot_gfx_table[xenon2.level3_data.walker_param]->pic;
             uint16_t angle;
 
             obj->shot_count = (uint8_t)(random_next() & 0x3f);
             angle = direction8((int16_t)(PLAYER_X - obj->x), (int16_t)(PLAYER_Y - obj->y));
-            spawn_enemy_shot((uint16_t)obj->x, (uint16_t)obj->y, angle, xenon2.level3_data.walker_shot_steps, GPTR(gfx));
+            spawn_enemy_shot((uint16_t)obj->x, (uint16_t)obj->y, angle, xenon2.level3_data.walker_shot_steps, gfx);
         }
     }
     bbox_from_frame(obj);

@@ -73,9 +73,9 @@ static uint16_t aim_at_player(const Object *obj, int16_t dx, int16_t dy)
 }
 
 /* the picture of the table at $77B70 (by the index of the level) */
-static uint32_t shot_picture(uint16_t index)
+static const uint8_t *shot_picture(uint16_t index)
 {
-    return rd32(xenon2.level4_data.shot_gfx_table[index]);
+    return xenon2.level4_data.shot_gfx_table[index]->pic;
 }
 
 /* the four cells of a table entry go to two cells at the cell and two a row below it */
@@ -196,7 +196,7 @@ void l4_tower_update(Object *obj)
             angle = 6;
             x = (int16_t)(x - 8);
         }
-        spawn_enemy_shot((uint16_t)x, (uint16_t)y, angle, xenon2.level4_data.tower_shot_steps, GPTR(rd32(xenon2.level4_data.shot_gfx_table[xenon2.level4_data.tower_param])));
+        spawn_enemy_shot((uint16_t)x, (uint16_t)y, angle, xenon2.level4_data.tower_shot_steps, xenon2.level4_data.shot_gfx_table[xenon2.level4_data.tower_param]->pic);
         return;
     }
     if (obj->tower.phase == 6)
@@ -313,7 +313,7 @@ void l4_enemy_a(Object *obj)
         obj->shot_rate = (uint8_t)(random_next() & 0x3f);
         if (obj->type != 0xc8)
             x = (int16_t)(x - 0x24);
-        spawn_enemy_shot((uint16_t)x, (uint16_t)obj->y, 4, xenon2.level4_data.enemy_a_shot_steps, GPTR(shot_picture(xenon2.level4_data.enemy_a_shot_picture)));
+        spawn_enemy_shot((uint16_t)x, (uint16_t)obj->y, 4, xenon2.level4_data.enemy_a_shot_steps, shot_picture(xenon2.level4_data.enemy_a_shot_picture));
     }
     bbox_from_frame(obj);
 }
@@ -918,7 +918,7 @@ void l4_b2_ring(Object *obj)
 
         obj->shot_count = (uint8_t)(random_next() & 0x3f);
         for (dir = 7; dir >= 0; dir--) {
-            Object *s = spawn_enemy_shot((uint16_t)obj->x, (uint16_t)obj->y, (uint16_t)dir, xenon2.level4_data.b2_ring_shot_steps, GPTR(shot_picture(xenon2.level4_data.b2_ring_shot_picture)));
+            Object *s = spawn_enemy_shot((uint16_t)obj->x, (uint16_t)obj->y, (uint16_t)dir, xenon2.level4_data.b2_ring_shot_steps, shot_picture(xenon2.level4_data.b2_ring_shot_picture));
 
             set_anim(s, xenon2.level4_data.b2_shot_anim);
         }

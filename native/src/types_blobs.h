@@ -47,6 +47,11 @@ struct Formation2 {
 };
 _Static_assert(sizeof(struct Formation2) == 50, "Formation2");
 
+struct ShotPic {
+    const uint8_t *pic;
+};
+_Static_assert(sizeof(struct ShotPic) == 4, "ShotPic");
+
 struct LevelSpawn {
     int16_t x;
     int16_t y;
@@ -403,8 +408,10 @@ struct Level1Data {
     struct SpawnRec events_b[51];   /* 5C854 */
     int16_t events_b_end;   /* 5CB1E */
     BLOB_PAD(50208)
-    const uint8_t *shot_gfx_table[5];   /* 68F40 */
-    BLOB_PAD(5766)
+    struct ShotPic *shot_gfx_table[5];   /* 68F40 */
+    struct ShotPic shot_gfx_cells[3];   /* 68F54 */
+    struct PathCmd *formation_paths[87];   /* 68F60 */
+    BLOB_PAD(5406)
     struct SpawnRec events_a[113];   /* 6A5DA */
     int16_t events_a_end;   /* 6AC08 */
     BLOB_PAD(15360)
@@ -471,6 +478,8 @@ _Static_assert(offsetof(struct Level1Data, eyes_c) == 0x5C244 - BLOB_BASE, "Leve
 _Static_assert(offsetof(struct Level1Data, events_b) == 0x5C854 - BLOB_BASE, "Level1Data.events_b");
 _Static_assert(offsetof(struct Level1Data, events_b_end) == 0x5CB1E - BLOB_BASE, "Level1Data.events_b_end");
 _Static_assert(offsetof(struct Level1Data, shot_gfx_table) == 0x68F40 - BLOB_BASE, "Level1Data.shot_gfx_table");
+_Static_assert(offsetof(struct Level1Data, shot_gfx_cells) == 0x68F54 - BLOB_BASE, "Level1Data.shot_gfx_cells");
+_Static_assert(offsetof(struct Level1Data, formation_paths) == 0x68F60 - BLOB_BASE, "Level1Data.formation_paths");
 _Static_assert(offsetof(struct Level1Data, events_a) == 0x6A5DA - BLOB_BASE, "Level1Data.events_a");
 _Static_assert(offsetof(struct Level1Data, events_a_end) == 0x6AC08 - BLOB_BASE, "Level1Data.events_a_end");
 _Static_assert(offsetof(struct Level1Data, data_src) == 0x6E80A - BLOB_BASE, "Level1Data.data_src");
@@ -568,9 +577,10 @@ struct Level2Data {
     struct SpawnRec events_b[47];   /* 5E108 */
     int16_t events_b_end;   /* 5E39A */
     BLOB_PAD(58624)
-    const uint8_t *shot_gfx_table[5];   /* 6C89C */
-    uint8_t shot_gfx_cells[12];   /* 6C8B0 */
-    BLOB_PAD(3882)
+    struct ShotPic *shot_gfx_table[5];   /* 6C89C */
+    struct ShotPic shot_gfx_cells[3];   /* 6C8B0 */
+    struct PathCmd *formation_paths[66];   /* 6C8BC */
+    BLOB_PAD(3618)
     struct SpawnRec events_a[87];   /* 6D7E6 */
     int16_t events_a_end;   /* 6DCA8 */
 };
@@ -653,6 +663,7 @@ _Static_assert(offsetof(struct Level2Data, events_b) == 0x5E108 - BLOB_BASE, "Le
 _Static_assert(offsetof(struct Level2Data, events_b_end) == 0x5E39A - BLOB_BASE, "Level2Data.events_b_end");
 _Static_assert(offsetof(struct Level2Data, shot_gfx_table) == 0x6C89C - BLOB_BASE, "Level2Data.shot_gfx_table");
 _Static_assert(offsetof(struct Level2Data, shot_gfx_cells) == 0x6C8B0 - BLOB_BASE, "Level2Data.shot_gfx_cells");
+_Static_assert(offsetof(struct Level2Data, formation_paths) == 0x6C8BC - BLOB_BASE, "Level2Data.formation_paths");
 _Static_assert(offsetof(struct Level2Data, events_a) == 0x6D7E6 - BLOB_BASE, "Level2Data.events_a");
 _Static_assert(offsetof(struct Level2Data, events_a_end) == 0x6DCA8 - BLOB_BASE, "Level2Data.events_a_end");
 
@@ -771,11 +782,12 @@ struct Level3Data {
     struct SpawnRec events_b[65];   /* 662B6 */
     int16_t events_b_end;   /* 66644 */
     BLOB_PAD(34784)
-    const uint8_t *shot_gfx_table[5];   /* 6EE26 */
-    uint8_t shot_gfx_cells[12];   /* 6EE3A */
-    BLOB_PAD(240)
-    const uint8_t *worm_paths[12];   /* 6EF36 */
-    BLOB_PAD(4088)
+    struct ShotPic *shot_gfx_table[5];   /* 6EE26 */
+    struct ShotPic shot_gfx_cells[3];   /* 6EE3A */
+    struct PathCmd *formation_paths[60];   /* 6EE46 */
+    struct PathCmd *worm_paths[12];   /* 6EF36 */
+    struct PathCmd *formation_paths_end[11];   /* 6EF66 */
+    BLOB_PAD(4044)
     struct SpawnRec events_a[149];   /* 6FF5E */
     int16_t events_a_end;   /* 70784 */
 };
@@ -867,7 +879,9 @@ _Static_assert(offsetof(struct Level3Data, events_b) == 0x662B6 - BLOB_BASE, "Le
 _Static_assert(offsetof(struct Level3Data, events_b_end) == 0x66644 - BLOB_BASE, "Level3Data.events_b_end");
 _Static_assert(offsetof(struct Level3Data, shot_gfx_table) == 0x6EE26 - BLOB_BASE, "Level3Data.shot_gfx_table");
 _Static_assert(offsetof(struct Level3Data, shot_gfx_cells) == 0x6EE3A - BLOB_BASE, "Level3Data.shot_gfx_cells");
+_Static_assert(offsetof(struct Level3Data, formation_paths) == 0x6EE46 - BLOB_BASE, "Level3Data.formation_paths");
 _Static_assert(offsetof(struct Level3Data, worm_paths) == 0x6EF36 - BLOB_BASE, "Level3Data.worm_paths");
+_Static_assert(offsetof(struct Level3Data, formation_paths_end) == 0x6EF66 - BLOB_BASE, "Level3Data.formation_paths_end");
 _Static_assert(offsetof(struct Level3Data, events_a) == 0x6FF5E - BLOB_BASE, "Level3Data.events_a");
 _Static_assert(offsetof(struct Level3Data, events_a_end) == 0x70784 - BLOB_BASE, "Level3Data.events_a_end");
 
@@ -996,9 +1010,10 @@ struct Level4Data {
     struct SpawnRec events_b[36];   /* 67896 */
     int16_t events_b_end;   /* 67A8E */
     BLOB_PAD(65760)
-    const uint8_t *shot_gfx_table[5];   /* 77B70 */
-    uint8_t shot_gfx_cells[12];   /* 77B84 */
-    BLOB_PAD(4940)
+    struct ShotPic *shot_gfx_table[5];   /* 77B70 */
+    struct ShotPic shot_gfx_cells[3];   /* 77B84 */
+    struct PathCmd *formation_paths[72];   /* 77B90 */
+    BLOB_PAD(4652)
     struct SpawnRec events_a[103];   /* 78EDC */
     int16_t events_a_end;   /* 7947E */
 };
@@ -1093,6 +1108,7 @@ _Static_assert(offsetof(struct Level4Data, events_b) == 0x67896 - BLOB_BASE, "Le
 _Static_assert(offsetof(struct Level4Data, events_b_end) == 0x67A8E - BLOB_BASE, "Level4Data.events_b_end");
 _Static_assert(offsetof(struct Level4Data, shot_gfx_table) == 0x77B70 - BLOB_BASE, "Level4Data.shot_gfx_table");
 _Static_assert(offsetof(struct Level4Data, shot_gfx_cells) == 0x77B84 - BLOB_BASE, "Level4Data.shot_gfx_cells");
+_Static_assert(offsetof(struct Level4Data, formation_paths) == 0x77B90 - BLOB_BASE, "Level4Data.formation_paths");
 _Static_assert(offsetof(struct Level4Data, events_a) == 0x78EDC - BLOB_BASE, "Level4Data.events_a");
 _Static_assert(offsetof(struct Level4Data, events_a_end) == 0x7947E - BLOB_BASE, "Level4Data.events_a_end");
 
@@ -1210,9 +1226,10 @@ struct Level5Data {
     struct SpawnRec events_b[55];   /* 62D22 */
     int16_t events_b_end;   /* 63024 */
     BLOB_PAD(65186)
-    const uint8_t *shot_gfx_table[4];   /* 72EC8 */
-    uint8_t shot_gfx_cells[8];   /* 72ED8 */
-    BLOB_PAD(6716)
+    struct ShotPic *shot_gfx_table[4];   /* 72EC8 */
+    struct ShotPic shot_gfx_cells[2];   /* 72ED8 */
+    struct PathCmd *formation_paths[110];   /* 72EE0 */
+    BLOB_PAD(6276)
     struct SpawnRec events_a[149];   /* 7491C */
     int16_t events_a_end;   /* 75142 */
 };
@@ -1299,6 +1316,7 @@ _Static_assert(offsetof(struct Level5Data, events_b) == 0x62D22 - BLOB_BASE, "Le
 _Static_assert(offsetof(struct Level5Data, events_b_end) == 0x63024 - BLOB_BASE, "Level5Data.events_b_end");
 _Static_assert(offsetof(struct Level5Data, shot_gfx_table) == 0x72EC8 - BLOB_BASE, "Level5Data.shot_gfx_table");
 _Static_assert(offsetof(struct Level5Data, shot_gfx_cells) == 0x72ED8 - BLOB_BASE, "Level5Data.shot_gfx_cells");
+_Static_assert(offsetof(struct Level5Data, formation_paths) == 0x72EE0 - BLOB_BASE, "Level5Data.formation_paths");
 _Static_assert(offsetof(struct Level5Data, events_a) == 0x7491C - BLOB_BASE, "Level5Data.events_a");
 _Static_assert(offsetof(struct Level5Data, events_a_end) == 0x75142 - BLOB_BASE, "Level5Data.events_a_end");
 

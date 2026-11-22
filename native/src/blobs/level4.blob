@@ -114,8 +114,9 @@ end
 5fda6 b2_eye_shot_picture u8 192
 5fe66 enemy_b_picture_2 u8 86
 5febc enemy_b_picture u8 32
-77b70 shot_gfx_table ptr 5
-77b84 shot_gfx_cells u8 12
+77b70 shot_gfx_table ptr:ShotPic 5
+77b84 shot_gfx_cells ShotPic 3
+77b90 formation_paths ptr:PathCmd 72
 78edc events_a SpawnRec 103
 7947e events_a_end s16
 67896 events_b SpawnRec 36

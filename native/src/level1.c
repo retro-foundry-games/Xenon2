@@ -48,7 +48,7 @@ void level1_event(uint16_t id, const struct SpawnRec *rec)
 /* the picture of an enemy shot: the table at $68F40 has addresses of longs, the long is the picture */
 static const void *level1_shot_gfx(uint16_t idx)
 {
-    return GPTR(rd32(xenon2.level1_data.shot_gfx_table[idx]));
+    return xenon2.level1_data.shot_gfx_table[idx]->pic;
 }
 
 /* the turret has left the screen: it dies */

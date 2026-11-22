@@ -186,10 +186,12 @@ struct Xenon2 {
     uint16_t level_number;  /* $000E04 var */
     uint16_t respawn_shield;  /* $000E06 var */
     uint8_t * l2_block_table;  /* $000E08 var */
-    PAD(340)
+    PAD(336)
+    uint8_t * shot_pic_b;  /* $000F5C var */
     int8_t * piece_directions;  /* $000F60 var */
     uint8_t * big_explosion_anim;  /* $000F64 var */
-    PAD(8)
+    uint8_t * shot_pic_a;  /* $000F68 var */
+    PAD(4)
     uint8_t * explosion_anim_f70;  /* $000F70 var */
     PAD(160)
     uint16_t copper_list_a[18];  /* $001014 arr */
@@ -211,7 +213,11 @@ struct Xenon2 {
     const uint16_t star_speed[34];  /* $002298 tab */
     PAD(296)
     const int16_t weapon_slot_offsets[8];  /* $002404 tab */
-    PAD(300)
+    PAD(228)
+    const uint8_t anim_debris_3[6];  /* $0024F8 tab */
+    PAD(30)
+    const uint8_t anim_debris_2[6];  /* $00251C tab */
+    PAD(30)
     const uint8_t anim_weaponb0[6];  /* $002540 tab */
     PAD(30)
     const uint8_t anim_wave_326c[6];  /* $002564 tab */
@@ -240,9 +246,12 @@ struct Xenon2 {
     const uint8_t anim_weapon34_fire[6];  /* $0027F2 tab */
     PAD(18)
     const uint8_t anim_weapon34[6];  /* $00280A tab */
-    PAD(42)
+    const uint8_t anim_debris_7[6];  /* $002810 tab */
+    PAD(36)
     const uint8_t anim_weapon44[6];  /* $00283A tab */
-    PAD(78)
+    PAD(36)
+    const uint8_t anim_debris_4[6];  /* $002864 tab */
+    PAD(36)
     const uint8_t anim_pod_trail[6];  /* $00288E tab */
     PAD(30)
     const uint8_t anim_weapon38[6];  /* $0028B2 tab */
@@ -276,7 +285,17 @@ struct Xenon2 {
     const uint8_t anim_drill_head_7[6];  /* $0029EA tab */
     PAD(18)
     const uint8_t anim_weapon4c[6];  /* $002A02 tab */
-    PAD(540)
+    PAD(60)
+    const uint8_t anim_debris_6[6];  /* $002A44 tab */
+    PAD(54)
+    const uint8_t anim_debris_1[6];  /* $002A80 tab */
+    PAD(54)
+    const uint8_t anim_debris_0[6];  /* $002ABC tab */
+    PAD(114)
+    const uint8_t anim_debris_17[6];  /* $002B34 tab */
+    PAD(54)
+    const uint8_t anim_debris_5[6];  /* $002B70 tab */
+    PAD(174)
     const uint8_t anim_weapon90[6];  /* $002C24 tab */
     PAD(444)
     const uint8_t mask_empty[160];  /* $002DE6 tab */
@@ -286,7 +305,9 @@ struct Xenon2 {
     uint16_t area_damage_kept;  /* $0030DC var */
     PAD(1610)
     const struct SpawnKind spawn_kinds[18];  /* $003728 tab */
-    PAD(318)
+    PAD(6)
+    const uint8_t anim_debris_13[6];  /* $00379A tab */
+    PAD(306)
     const int16_t enemy_shot_dx[16];  /* $0038D2 tab */
     const int16_t enemy_shot_dy[16];  /* $0038F2 tab */
     PAD(432)
@@ -489,7 +510,7 @@ struct Xenon2 {
     PAD(8)
     uint8_t * enemy_shot_gfx;  /* $054E28 var */
     PAD(4)
-    uint8_t * level_formations;  /* $054E30 var */
+    struct PathCmd ** level_formations;  /* $054E30 var */
     uint8_t * level_data_start;  /* $054E34 var */
     struct SpawnRec * level_events_a;  /* $054E38 var */
     uint16_t shop_money_early;  /* $054E3C var */
@@ -647,8 +668,10 @@ LAYOUT_ASSERT(difficulty, 0xe02);
 LAYOUT_ASSERT(level_number, 0xe04);
 LAYOUT_ASSERT(respawn_shield, 0xe06);
 LAYOUT_ASSERT(l2_block_table, 0xe08);
+LAYOUT_ASSERT(shot_pic_b, 0xf5c);
 LAYOUT_ASSERT(piece_directions, 0xf60);
 LAYOUT_ASSERT(big_explosion_anim, 0xf64);
+LAYOUT_ASSERT(shot_pic_a, 0xf68);
 LAYOUT_ASSERT(explosion_anim_f70, 0xf70);
 LAYOUT_ASSERT(copper_list_a, 0x1014);
 LAYOUT_ASSERT(copper_list_b, 0x1038);
@@ -663,6 +686,8 @@ LAYOUT_ASSERT(music_tick_fn, 0x2090);
 LAYOUT_ASSERT(music_cmd_fn, 0x2094);
 LAYOUT_ASSERT(star_speed, 0x2298);
 LAYOUT_ASSERT(weapon_slot_offsets, 0x2404);
+LAYOUT_ASSERT(anim_debris_3, 0x24f8);
+LAYOUT_ASSERT(anim_debris_2, 0x251c);
 LAYOUT_ASSERT(anim_weaponb0, 0x2540);
 LAYOUT_ASSERT(anim_wave_326c, 0x2564);
 LAYOUT_ASSERT(anim_spinner, 0x25a0);
@@ -678,7 +703,9 @@ LAYOUT_ASSERT(anim_weaponb0_shot, 0x2796);
 LAYOUT_ASSERT(player_shot_pictures, 0x27c2);
 LAYOUT_ASSERT(anim_weapon34_fire, 0x27f2);
 LAYOUT_ASSERT(anim_weapon34, 0x280a);
+LAYOUT_ASSERT(anim_debris_7, 0x2810);
 LAYOUT_ASSERT(anim_weapon44, 0x283a);
+LAYOUT_ASSERT(anim_debris_4, 0x2864);
 LAYOUT_ASSERT(anim_pod_trail, 0x288e);
 LAYOUT_ASSERT(anim_weapon38, 0x28b2);
 LAYOUT_ASSERT(anim_weapon3c, 0x28d0);
@@ -700,11 +727,17 @@ LAYOUT_ASSERT(anim_drill_head_6, 0x29cc);
 LAYOUT_ASSERT(anim_drill_7, 0x29e4);
 LAYOUT_ASSERT(anim_drill_head_7, 0x29ea);
 LAYOUT_ASSERT(anim_weapon4c, 0x2a02);
+LAYOUT_ASSERT(anim_debris_6, 0x2a44);
+LAYOUT_ASSERT(anim_debris_1, 0x2a80);
+LAYOUT_ASSERT(anim_debris_0, 0x2abc);
+LAYOUT_ASSERT(anim_debris_17, 0x2b34);
+LAYOUT_ASSERT(anim_debris_5, 0x2b70);
 LAYOUT_ASSERT(anim_weapon90, 0x2c24);
 LAYOUT_ASSERT(mask_empty, 0x2de6);
 LAYOUT_ASSERT(mask_full, 0x2ea6);
 LAYOUT_ASSERT(area_damage_kept, 0x30dc);
 LAYOUT_ASSERT(spawn_kinds, 0x3728);
+LAYOUT_ASSERT(anim_debris_13, 0x379a);
 LAYOUT_ASSERT(enemy_shot_dx, 0x38d2);
 LAYOUT_ASSERT(enemy_shot_dy, 0x38f2);
 LAYOUT_ASSERT(drill_dy, 0x3ac2);

@@ -48,8 +48,7 @@ static void kill_object(Object *o)
  * a delay, or a zero picture followed by the address of a routine that is called with the script position) */
 void anim_step(Object *o)
 {
-    const uint8_t *w;
-    uint32_t gfx;
+    const struct AnimStep *step;
     int16_t t = (int16_t)(o->anim_delay - 1);
 
     o->anim_delay = t;
@@ -59,25 +58,23 @@ void anim_step(Object *o)
     }
     if (t != 0)
         return;
-    w = o->anim;
-    gfx = rd32(w);
-    w += 4;
-    if (gfx == 0) {
-        AnimOp op = (AnimOp)GFN(rd32(w));
+    step = (const struct AnimStep *)o->anim;
+    if (rd32(step->gfx.b) == 0) {
+        const struct AnimCall *call = (const struct AnimCall *)step;
+        AnimOp op = (AnimOp)GFN(rd32(call->code.b));
 
-        w += 4;
-        op(o, w);
+        op(o, (const uint8_t *)(call + 1));
         return;
     }
-    o->gfx = GPTR(gfx);
-    o->anim_delay = (int16_t)rd16(w);
-    o->anim = w + 2;
+    o->gfx = GPTR(rd32(step->gfx.b));
+    o->anim_delay = (int16_t)rd16(step->delay.b);
+    o->anim = (const uint8_t *)(step + 1);
 }
 
 /* orig $E2A, $002C82: script step "jump": the next longword is the address of the script to go on with */
 void anim_op_jump(Object *o, const uint8_t *script)
 {
-    anim_header_set(o, (const uint8_t *)GPTR(rd32(script)));
+    anim_header_set(o, (const uint8_t *)GPTR(rd32(((const struct AnimJump *)script)->script.b)));
 }
 
 /* orig $E30, $002C92: script step "end": the object (and the pieces chained to it, if it is one of a group) goes dead */
@@ -106,22 +103,22 @@ extern const uint8_t *guest_high_ptr(uint32_t address);   /* sdl/guest.c */
 
 /* the three words of tile pointers for the next 16 pixel row of the map: 0 = empty tile mask, a negative word = a mask in
  * tile_gfx, else a full one */
-static const uint8_t *tile_mask_ptr(uint16_t w)
+static const struct MaskRow *tile_mask_ptr(uint16_t w)
 {
     if (w == 0)
-        return xenon2.mask_empty;
+        return (const struct MaskRow *)xenon2.mask_empty;
     if ((int16_t)w < 0) {
         const uint8_t *m = xenon2.tile_gfx + ((uint32_t)(w & 0x7fff) << 4);
 
 #ifdef GAME_SDL
         if (GADDR(m) + 0xa0 > sizeof xenon2) {   /* the original's memory beyond 512 KB (the lockstep gives it) */
             m = guest_high_ptr(GADDR(m));
-            return m ? m : xenon2.mask_empty;
+            return m ? (const struct MaskRow *)m : (const struct MaskRow *)xenon2.mask_empty;
         }
 #endif
-        return m;
+        return (const struct MaskRow *)m;
     }
-    return xenon2.mask_full;
+    return (const struct MaskRow *)xenon2.mask_full;
 }
 
 /* A row of cells can lie past the end of the memory the port has (bobs above the screen read the original's memory beyond 512 KB: the lockstep supplies
@@ -129,48 +126,43 @@ static const uint8_t *tile_mask_ptr(uint16_t w)
 #ifdef GAME_SDL
 extern uint16_t guest_high_word(uint32_t address);   /* sdl/guest.c */
 #endif
-static const uint8_t *tile_mask_ptr_at(const uint8_t *cell)
+static const struct MaskRow *tile_mask_ptr_at(const Cell *cell)
 {
 #ifdef GAME_SDL
     if (GADDR(cell) + 2 > sizeof xenon2)
         return tile_mask_ptr(guest_high_word(GADDR(cell)));
 #endif
-    return tile_mask_ptr(rd16(cell));
+    return tile_mask_ptr(rd16(cell->b));
 }
 
 /* orig $002D1A: fill tile_mask_buf with the tile masks (three words a row) of the map at pixel (x, y), rows + 1 rows high.
  * Inlined: $2D7A (the three pointers of a row of cells, results in mask0, mask1, mask2). */
 void map_tile_mask(uint16_t x, uint16_t y, uint16_t rows)
 {
-    const uint8_t *cell = xenon2.level_init_src + (int16_t)xenon2.map_row_offset;
-    const uint8_t *mask0, *mask1, *mask2;
-    uint16_t offset, line;
+    const Cell *cell = (const Cell *)(xenon2.level_init_src + (int16_t)xenon2.map_row_offset);
+    const struct MaskRow *mask0, *mask1, *mask2;
+    uint16_t row;
     uint16_t *out = xenon2.tile_mask_buf;
 
     y = (uint16_t)(y + xenon2.scroll_fine);
-    offset = y & 0xf;
-    line = offset;
-    offset = (uint16_t)(offset + offset);
-    offset = (uint16_t)(offset + offset);
-    offset = (uint16_t)(offset + line);
-    offset = (uint16_t)(offset + offset);
-    cell += (int16_t)(uint16_t)((uint32_t)(y >> 4) * 0x28);
-    cell += (uint16_t)((x >> 3) & 0xfe);
+    row = y & 0xf;
+    cell = (const Cell *)((const uint8_t *)cell + (int16_t)(uint16_t)((uint32_t)(y >> 4) * (2 * MAP_COLS)));
+    cell += (x >> 4) & 0x7f;
     mask0 = tile_mask_ptr_at(cell);
-    mask1 = tile_mask_ptr_at(cell + 2);
-    mask2 = tile_mask_ptr_at(cell + 4);
-    cell += 40;
+    mask1 = tile_mask_ptr_at(cell + 1);
+    mask2 = tile_mask_ptr_at(cell + 2);
+    cell += MAP_COLS;
     do {
-        *out++ = rd16(mask0 + offset);
-        *out++ = rd16(mask1 + offset);
-        *out++ = rd16(mask2 + offset);
-        offset = (uint16_t)(offset + 10);
-        if (offset == 0xa0) {
+        *out++ = rd16(mask0[row].w[0].b);
+        *out++ = rd16(mask1[row].w[0].b);
+        *out++ = rd16(mask2[row].w[0].b);
+        row++;
+        if (row == 16) {
             mask0 = tile_mask_ptr_at(cell);
-            mask1 = tile_mask_ptr_at(cell + 2);
-            mask2 = tile_mask_ptr_at(cell + 4);
-            cell += 40;
-            offset = 0;
+            mask1 = tile_mask_ptr_at(cell + 1);
+            mask2 = tile_mask_ptr_at(cell + 2);
+            cell += MAP_COLS;
+            row = 0;
         }
     } while ((uint16_t)--rows != 0xffff);
 }
@@ -181,34 +173,29 @@ uint16_t tile_mask2_words;   /* the words of tile_mask_buf the last map_tile_mas
 
 void map_tile_mask2(uint16_t x, uint16_t y, uint16_t rows)
 {
-    const uint8_t *cell = xenon2.level_init_src + (int16_t)xenon2.map_row_offset;
-    const uint8_t *mask0, *mask1;
-    uint16_t offset, line;
-    uint8_t *out = (uint8_t *)xenon2.tile_mask_buf;
+    const Cell *cell = (const Cell *)(xenon2.level_init_src + (int16_t)xenon2.map_row_offset);
+    const struct MaskRow *mask0, *mask1;
+    uint16_t row;
+    RawWord *out = (RawWord *)xenon2.tile_mask_buf;
 
     tile_mask2_words = (uint16_t)((rows + 1) * 2);
     y = (uint16_t)(y + xenon2.scroll_fine);
-    offset = y & 0xf;
-    line = offset;
-    offset = (uint16_t)(offset + offset);
-    offset = (uint16_t)(offset + offset);
-    offset = (uint16_t)(offset + line);
-    offset = (uint16_t)(offset + offset);
-    cell += (int16_t)(uint16_t)((uint32_t)(y >> 4) * 0x28);
-    cell += (uint16_t)((x >> 3) & 0xfe);
+    row = y & 0xf;
+    cell = (const Cell *)((const uint8_t *)cell + (int16_t)(uint16_t)((uint32_t)(y >> 4) * (2 * MAP_COLS)));
+    cell += (x >> 4) & 0x7f;
     mask0 = tile_mask_ptr_at(cell);
-    mask1 = tile_mask_ptr_at(cell + 2);
-    cell += 40;
+    mask1 = tile_mask_ptr_at(cell + 1);
+    cell += MAP_COLS;
     do {
-        wr16(out, rd16(mask0 + offset));
-        wr16(out + 2, rd16(mask1 + offset));
-        out += 4;
-        offset = (uint16_t)(offset + 10);
-        if (offset == 0xa0) {
+        wr16(out[0].b, rd16(mask0[row].w[0].b));
+        wr16(out[1].b, rd16(mask1[row].w[0].b));
+        out += 2;
+        row++;
+        if (row == 16) {
             mask0 = tile_mask_ptr_at(cell);
-            mask1 = tile_mask_ptr_at(cell + 2);
-            cell += 40;
-            offset = 0;
+            mask1 = tile_mask_ptr_at(cell + 1);
+            cell += MAP_COLS;
+            row = 0;
         }
     } while ((uint16_t)--rows != 0xffff);
 }
@@ -423,7 +410,7 @@ Object *spawn_formation(Object *obj, const struct SpawnRec *rec, const struct Sp
             }
             if (leader != obj)
                 obj->path.wait = (int16_t)(obj->path.wait - (int16_t)def_ptr->score);
-            e = (const struct PathCmd *)GPTR(rd32(xenon2.level_formations + (int16_t)(uint16_t)((rec->index - 1) * 4)));
+            e = xenon2.level_formations[(uint16_t)(rec->index - 1)];
             if ((const void *)e < (const void *)xenon2.level_data_start || (const void *)e >= (const void *)xenon2.level_events_a)
                 return obj;
             obj->script = (uint8_t *)e;
