@@ -2,102 +2,103 @@
 #include "weapons.h"
 #include "shop.h"
 #include "game_all.h"
+#include "blobs.h"
 #include <string.h>
 
 /* level 4: its data tables in the level blob, by the routine that reads them */
-#define L4_SCROLL_DATA 0x5515a
-#define L4_ENEMY_A_CELLS_C8 0x5537e
-#define L4_ENEMY_A_CELLS_OTHER 0x55386
-#define L4_ANIMS_BY_KIND 0x55574
-#define L4_ENEMY_F8_TABLE 0x55714
-#define L4_SPAWN_BOSS1_DATA 0x55880
-#define L4_INIT_DATA_3 0x55890
-#define L4_INIT_DATA 0x558a2
-#define L4_INIT_DATA_2 0x558b4
-#define L4_CORE_CELLS_DATA 0x55aac
-#define L4_CORE_CELLS_DATA_2 0x55ae8
-#define L4_GUN_CELLS_LEFT 0x55ba0
-#define L4_GUN_CELLS_RIGHT 0x55bc4
-#define L4_B1_CORE_SWAY 0x55c54
-#define L4_B1_GUN_DX_BY_DIR 0x55e10
-#define L4_B1_GUN_DY_BY_DIR 0x55e20
-#define L4_B1_GUN_ANIMS_BY_ANGLE 0x55e30
-#define L4_B1_GUN_DATA 0x55ec8
-#define L4_B1_GUN_DATA_2 0x55ed0
-#define L4_SPAWN_BOSS2_DATA 0x5613a
-#define L4_INIT_DATA_9 0x5619c
-#define L4_INIT_DATA_8 0x56278
-#define L4_INIT_DATA_4 0x5628c
-#define L4_INIT_DATA_5 0x562a0
-#define L4_INIT_DATA_6 0x562b4
-#define L4_INIT_DATA_7 0x562c8
-#define L4_B2_SHOT_ANIM 0x56552
-#define L4_HEAD_PICTURES 0x56576
-#define L4_B2_GUN_PICTURES 0x565da
-#define L4_B2_BARREL_ANIMS_BY_DIR 0x56680
-#define L4_B2_MUZZLE_DX 0x566a0
-#define L4_B2_MUZZLE_DY 0x566b0
-#define L4_B2_EYE_ANIMS 0x568d2
-#define L4_BAR_ANIM_10C 0x56a74
-#define L4_BAR_ANIM_OTHER 0x56a98
-#define L4_BAR_GRIDS 0x56c32
-#define L4_WALKER_ANIM_OTHER 0x56cd4
-#define L4_WALKER_ANIM_E0 0x56cf8
-#define L4_WALKER_GRID_X 0x56fd2
-#define L4_WALKER_GRID_Y 0x56fe8
-#define L4_WALKER_GRID_E0 0x56ffe
-#define L4_WALKER_GRID_E4 0x57004
-#define L4_TOWER_CELLS_D0 0x57160
-#define L4_TOWER_CELLS_D4 0x57190
-#define L4_TOWER_HIT_CELLS_D0 0x57236
-#define L4_TOWER_HIT_CELLS_D4 0x5723e
-#define L4_SHOT_A_DATA_4 0x5738e
-#define L4_SHOT_A_DATA_2 0x57434
-#define L4_SHOT_A_DATA 0x5edca
-#define L4_SHOT_A_DATA_3 0x5f4aa
-#define L4_B1_TAIL_PICTURE 0x5f81a
-#define L4_B1_HEAD_PICTURE 0x5f8ca
-#define L4_B2_EYE_SHOT_PICTURE 0x5fda6
-#define L4_ENEMY_B_DATA_2 0x5fe66
-#define L4_ENEMY_B_DATA 0x5febc
+#define L4_SCROLL_DATA BLOB_ADDR(Level4Blob, scroll_data)
+#define L4_ENEMY_A_CELLS_C8 BLOB_ADDR(Level4Blob, enemy_a_cells_c8)
+#define L4_ENEMY_A_CELLS_OTHER BLOB_ADDR(Level4Blob, enemy_a_cells_other)
+#define L4_ANIMS_BY_KIND BLOB_ADDR(Level4Blob, anims_by_kind)
+#define L4_ENEMY_F8_TABLE BLOB_ADDR(Level4Blob, enemy_f8_table)
+#define L4_SPAWN_BOSS1_DATA BLOB_ADDR(Level4Blob, spawn_boss1_data)
+#define L4_INIT_DATA_3 BLOB_ADDR(Level4Blob, init_data_3)
+#define L4_INIT_DATA BLOB_ADDR(Level4Blob, init_data)
+#define L4_INIT_DATA_2 BLOB_ADDR(Level4Blob, init_data_2)
+#define L4_CORE_CELLS_DATA BLOB_ADDR(Level4Blob, core_cells_data)
+#define L4_CORE_CELLS_DATA_2 BLOB_ADDR(Level4Blob, core_cells_data_2)
+#define L4_GUN_CELLS_LEFT BLOB_ADDR(Level4Blob, gun_cells_left)
+#define L4_GUN_CELLS_RIGHT BLOB_ADDR(Level4Blob, gun_cells_right)
+#define L4_B1_CORE_SWAY BLOB_ADDR(Level4Blob, b1_core_sway)
+#define L4_B1_GUN_DX_BY_DIR BLOB_ADDR(Level4Blob, b1_gun_dx_by_dir)
+#define L4_B1_GUN_DY_BY_DIR BLOB_ADDR(Level4Blob, b1_gun_dy_by_dir)
+#define L4_B1_GUN_ANIMS_BY_ANGLE BLOB_ADDR(Level4Blob, b1_gun_anims_by_angle)
+#define L4_B1_GUN_DATA BLOB_ADDR(Level4Blob, b1_gun_data)
+#define L4_B1_GUN_DATA_2 BLOB_ADDR(Level4Blob, b1_gun_data_2)
+#define L4_SPAWN_BOSS2_DATA BLOB_ADDR(Level4Blob, spawn_boss2_data)
+#define L4_INIT_DATA_9 BLOB_ADDR(Level4Blob, init_data_9)
+#define L4_INIT_DATA_8 BLOB_ADDR(Level4Blob, init_data_8)
+#define L4_INIT_DATA_4 BLOB_ADDR(Level4Blob, init_data_4)
+#define L4_INIT_DATA_5 BLOB_ADDR(Level4Blob, init_data_5)
+#define L4_INIT_DATA_6 BLOB_ADDR(Level4Blob, init_data_6)
+#define L4_INIT_DATA_7 BLOB_ADDR(Level4Blob, init_data_7)
+#define L4_B2_SHOT_ANIM BLOB_ADDR(Level4Blob, b2_shot_anim)
+#define L4_HEAD_PICTURES BLOB_ADDR(Level4Blob, head_pictures)
+#define L4_B2_GUN_PICTURES BLOB_ADDR(Level4Blob, b2_gun_pictures)
+#define L4_B2_BARREL_ANIMS_BY_DIR BLOB_ADDR(Level4Blob, b2_barrel_anims_by_dir)
+#define L4_B2_MUZZLE_DX BLOB_ADDR(Level4Blob, b2_muzzle_dx)
+#define L4_B2_MUZZLE_DY BLOB_ADDR(Level4Blob, b2_muzzle_dy)
+#define L4_B2_EYE_ANIMS BLOB_ADDR(Level4Blob, b2_eye_anims)
+#define L4_BAR_ANIM_10C BLOB_ADDR(Level4Blob, bar_anim_10c)
+#define L4_BAR_ANIM_OTHER BLOB_ADDR(Level4Blob, bar_anim_other)
+#define L4_BAR_GRIDS BLOB_ADDR(Level4Blob, bar_grids)
+#define L4_WALKER_ANIM_OTHER BLOB_ADDR(Level4Blob, walker_anim_other)
+#define L4_WALKER_ANIM_E0 BLOB_ADDR(Level4Blob, walker_anim_e0)
+#define L4_WALKER_GRID_X BLOB_ADDR(Level4Blob, walker_grid_x)
+#define L4_WALKER_GRID_Y BLOB_ADDR(Level4Blob, walker_grid_y)
+#define L4_WALKER_GRID_E0 BLOB_ADDR(Level4Blob, walker_grid_e0)
+#define L4_WALKER_GRID_E4 BLOB_ADDR(Level4Blob, walker_grid_e4)
+#define L4_TOWER_CELLS_D0 BLOB_ADDR(Level4Blob, tower_cells_d0)
+#define L4_TOWER_CELLS_D4 BLOB_ADDR(Level4Blob, tower_cells_d4)
+#define L4_TOWER_HIT_CELLS_D0 BLOB_ADDR(Level4Blob, tower_hit_cells_d0)
+#define L4_TOWER_HIT_CELLS_D4 BLOB_ADDR(Level4Blob, tower_hit_cells_d4)
+#define L4_SHOT_A_DATA_4 BLOB_ADDR(Level4Blob, shot_a_data_4)
+#define L4_SHOT_A_DATA_2 BLOB_ADDR(Level4Blob, shot_a_data_2)
+#define L4_SHOT_A_DATA BLOB_ADDR(Level4Blob, shot_a_data)
+#define L4_SHOT_A_DATA_3 BLOB_ADDR(Level4Blob, shot_a_data_3)
+#define L4_B1_TAIL_PICTURE BLOB_ADDR(Level4Blob, b1_tail_picture)
+#define L4_B1_HEAD_PICTURE BLOB_ADDR(Level4Blob, b1_head_picture)
+#define L4_B2_EYE_SHOT_PICTURE BLOB_ADDR(Level4Blob, b2_eye_shot_picture)
+#define L4_ENEMY_B_DATA_2 BLOB_ADDR(Level4Blob, enemy_b_data_2)
+#define L4_ENEMY_B_DATA BLOB_ADDR(Level4Blob, enemy_b_data)
 
 /* level 4: its parameter block at E42 (energies, fire rates, shot steps), by the object that reads them */
-#define L4_SCROLL_ENERGY 0x54e42
-#define L4_ENEMY_A_FALL 0x54e44
-#define L4_ENEMY_A_FIRE_RATE 0x54e47
-#define L4_SHOT_A_ENERGY 0x54e48
-#define L4_SHOT_A_STEPS 0x54e4a
-#define L4_ENEMY_B_FALL 0x54e4c
-#define L4_ENEMY_B_FIRE_RATE 0x54e4f
-#define L4_ENEMY_B_SHOT_STEPS 0x54e50
-#define L4_B1_CORE_FIRE_RATE 0x54e53
-#define L4_B1_GUN_FIRE_RATE 0x54e55
-#define L4_B1_GUN_SHOT_STEPS 0x54e56
-#define L4_B2_HEAD_CHANCE 0x54e59
-#define L4_B2_EYE_FIRE_RATE 0x54e5b
-#define L4_B2_EYE_SHOT_STEPS 0x54e5c
-#define L4_BAR_FIRE_RATE 0x54e5f
-#define L4_WALKER_ENERGY 0x54e60
-#define L4_WALKER_CHANCE 0x54e63
-#define L4_WALKER_STEP_X 0x54e64
-#define L4_TOWER_ENERGY 0x54e66
-#define L4_ENEMY_A_FIRE_RATE_2 0x54e67
-#define L4_TOWER_FIRE_RATE 0x54e69
-#define L4_TOWER_PARAM 0x54e6a
-#define L4_TOWER_SHOT_STEPS 0x54e6c
-#define L4_INIT_PATCH 0x54e6e
-#define L4_INIT_PATCH_2 0x54e70
-#define L4_B2_BARREL_FIRE_RATE 0x54e73
-#define L4_B2_BARREL_SHOT_STEPS 0x54e74
-#define L4_INIT_PATCH_3 0x54e77
-#define L4_INIT_PATCH_4 0x54e79
-#define L4_INIT_PATCH_5 0x54e7b
-#define L4_WALKER_V5E 0x54e7c
-#define L4_B2_RING_FIRE_RATE 0x54e7f
-#define L4_B2_RING_SHOT_STEPS 0x54e80
-#define L4_B2_RING_SHOT_PICTURE 0x54e82
-#define L4_ENEMY_A_SHOT_STEPS 0x54e86
-#define L4_ENEMY_A_SHOT_PICTURE 0x54e88
+#define L4_SCROLL_ENERGY BLOB_ADDR(Level4Blob, scroll_energy)
+#define L4_ENEMY_A_FALL BLOB_ADDR(Level4Blob, enemy_a_fall)
+#define L4_ENEMY_A_FIRE_RATE BLOB_ADDR(Level4Blob, enemy_a_fire_rate)
+#define L4_SHOT_A_ENERGY BLOB_ADDR(Level4Blob, shot_a_energy)
+#define L4_SHOT_A_STEPS BLOB_ADDR(Level4Blob, shot_a_steps)
+#define L4_ENEMY_B_FALL BLOB_ADDR(Level4Blob, enemy_b_fall)
+#define L4_ENEMY_B_FIRE_RATE BLOB_ADDR(Level4Blob, enemy_b_fire_rate)
+#define L4_ENEMY_B_SHOT_STEPS BLOB_ADDR(Level4Blob, enemy_b_shot_steps)
+#define L4_B1_CORE_FIRE_RATE BLOB_ADDR(Level4Blob, b1_core_fire_rate)
+#define L4_B1_GUN_FIRE_RATE BLOB_ADDR(Level4Blob, b1_gun_fire_rate)
+#define L4_B1_GUN_SHOT_STEPS BLOB_ADDR(Level4Blob, b1_gun_shot_steps)
+#define L4_B2_HEAD_CHANCE BLOB_ADDR(Level4Blob, b2_head_chance)
+#define L4_B2_EYE_FIRE_RATE BLOB_ADDR(Level4Blob, b2_eye_fire_rate)
+#define L4_B2_EYE_SHOT_STEPS BLOB_ADDR(Level4Blob, b2_eye_shot_steps)
+#define L4_BAR_FIRE_RATE BLOB_ADDR(Level4Blob, bar_fire_rate)
+#define L4_WALKER_ENERGY BLOB_ADDR(Level4Blob, walker_energy)
+#define L4_WALKER_CHANCE BLOB_ADDR(Level4Blob, walker_chance)
+#define L4_WALKER_STEP_X BLOB_ADDR(Level4Blob, walker_step_x)
+#define L4_TOWER_ENERGY BLOB_ADDR(Level4Blob, tower_energy)
+#define L4_ENEMY_A_FIRE_RATE_2 BLOB_ADDR(Level4Blob, enemy_a_fire_rate_2)
+#define L4_TOWER_FIRE_RATE BLOB_ADDR(Level4Blob, tower_fire_rate)
+#define L4_TOWER_PARAM BLOB_ADDR(Level4Blob, tower_param)
+#define L4_TOWER_SHOT_STEPS BLOB_ADDR(Level4Blob, tower_shot_steps)
+#define L4_INIT_PATCH BLOB_ADDR(Level4Blob, init_patch)
+#define L4_INIT_PATCH_2 BLOB_ADDR(Level4Blob, init_patch_2)
+#define L4_B2_BARREL_FIRE_RATE BLOB_ADDR(Level4Blob, b2_barrel_fire_rate)
+#define L4_B2_BARREL_SHOT_STEPS BLOB_ADDR(Level4Blob, b2_barrel_shot_steps)
+#define L4_INIT_PATCH_3 BLOB_ADDR(Level4Blob, init_patch_3)
+#define L4_INIT_PATCH_4 BLOB_ADDR(Level4Blob, init_patch_4)
+#define L4_INIT_PATCH_5 BLOB_ADDR(Level4Blob, init_patch_5)
+#define L4_WALKER_V5E BLOB_ADDR(Level4Blob, walker_v5e)
+#define L4_B2_RING_FIRE_RATE BLOB_ADDR(Level4Blob, b2_ring_fire_rate)
+#define L4_B2_RING_SHOT_STEPS BLOB_ADDR(Level4Blob, b2_ring_shot_steps)
+#define L4_B2_RING_SHOT_PICTURE BLOB_ADDR(Level4Blob, b2_ring_shot_picture)
+#define L4_ENEMY_A_SHOT_STEPS BLOB_ADDR(Level4Blob, enemy_a_shot_steps)
+#define L4_ENEMY_A_SHOT_PICTURE BLOB_ADDR(Level4Blob, enemy_a_shot_picture)
 #define PICKUP_MODE(o) ((o)->v28)
 #define PICKUP_DIR(o)  ((o)->v2a)
 #define PATH_WAIT(o) ((o)->v28)

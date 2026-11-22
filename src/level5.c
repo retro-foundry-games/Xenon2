@@ -2,96 +2,97 @@
 #include "weapons.h"
 #include "shop.h"
 #include "game_all.h"
+#include "blobs.h"
 #include <string.h>
 
 /* level 5: its data tables in the level blob, by the routine that reads them */
-#define L5_SPAWN_GUNNERS_TABLE 0x551dc
-#define L5_GUNNER_ANIMS 0x552ba
-#define L5_SPAWN_CANNON_DATA 0x55516
-#define L5_SPAWN_CANNON_DATA_2 0x5553a
-#define L5_CANNON_ANIM_100 0x5555e
-#define L5_CANNON_ANIM_OTHER 0x55582
-#define L5_PELLET_ANIMS_BY_DIR 0x557de
-#define L5_PELLET_DX_BY_DIR 0x557fe
-#define L5_PELLET_DY_BY_DIR 0x5580e
-#define L5_SPAWN_BOSS1_DATA 0x5594e
-#define L5_INIT_DATA 0x55964
-#define L5_BOSS_DRAW_TABLE_2 0x55f1a
-#define L5_BOSS_DRAW_TABLE 0x55f42
-#define L5_BOSS_UPDATE_DATA 0x55f7e
-#define L5_MISSILE_ANIMS_BY_DIR 0x5603e
-#define L5_HEART_PICTURES 0x56276
-#define L5_SPAWN_BOSS2_DATA 0x5633a
-#define L5_INIT_DATA_2 0x563c8
-#define L5_WHEEL_PICTURES 0x5650e
-#define L5_SPINNER_SOURCE_118 0x565c2
-#define L5_SPINNER_SOURCE_OTHER 0x565d2
-#define L5_BOSS2_TURRET_PICTURES 0x56658
-#define L5_BOSS2_DRAW_TABLE 0x5688c
-#define L5_BOSS2_DRAW_TABLE_2 0x56890
-#define L5_BOSS2_DRAW_TABLE_3 0x56894
-#define L5_BOSS2_FLASH_GRID 0x568f8
-#define L5_BOSS2_DRAW_DATA 0x56908
-#define L5_BOSS2_DRAW_DATA_2 0x56914
-#define L5_BOSS2_DRAW_DATA_3 0x56920
-#define L5_SPAWN_GATES_DATA 0x56b2c
-#define L5_GATE_UPDATE_DATA 0x56c30
-#define L5_WALL_CELLS_128 0x56c94
-#define L5_WALL_CELLS_OTHER 0x56c9c
-#define L5_WALL_FLASH_A_GRID 0x56e3c
-#define L5_WALL_FLASH_B_GRID 0x56e3e
-#define L5_SPAWN_BRIDGE_DATA 0x56ea2
-#define L5_SPAWN_BRIDGE_DATA_2 0x56ea6
-#define L5_BRIDGE_UPDATE_DATA 0x56fb8
-#define L5_SPAWN_GROUP_DATA 0x5711e
-#define L5_SPAWN_GROUP_DATA_2 0x57122
-#define L5_UNIT_DX_BY_DIR 0x572aa
-#define L5_UNIT_DY_BY_DIR 0x572ac
-#define L5_UNIT_SHOT_PICTURES 0x572ca
-#define L5_SPAWN_GUN_DATA 0x57514
-#define L5_SPAWN_GUN_DATA_2 0x57524
-#define L5_SPAWN_GUN_DATA_4 0x57534
-#define L5_SPAWN_GUN_DATA_3 0x57536
-#define L5_GUN_ANIM_108 0x57538
-#define L5_GUN_ANIM_OTHER 0x57550
-#define L5_SPAWN_BOSS1_DATA_2 0x57666
-#define L5_SPAWN_GUNNERS_DATA 0x5c1ea
-#define L5_BOSS2_DEAD_DATA 0x5df96
-#define L5_BEAM_TOP_PICTURE 0x5f2fe
-#define L5_BEAM_END_PICTURE 0x5f340
+#define L5_SPAWN_GUNNERS_TABLE BLOB_ADDR(Level5Blob, spawn_gunners_table)
+#define L5_GUNNER_ANIMS BLOB_ADDR(Level5Blob, gunner_anims)
+#define L5_SPAWN_CANNON_DATA BLOB_ADDR(Level5Blob, spawn_cannon_data)
+#define L5_SPAWN_CANNON_DATA_2 BLOB_ADDR(Level5Blob, spawn_cannon_data_2)
+#define L5_CANNON_ANIM_100 BLOB_ADDR(Level5Blob, cannon_anim_100)
+#define L5_CANNON_ANIM_OTHER BLOB_ADDR(Level5Blob, cannon_anim_other)
+#define L5_PELLET_ANIMS_BY_DIR BLOB_ADDR(Level5Blob, pellet_anims_by_dir)
+#define L5_PELLET_DX_BY_DIR BLOB_ADDR(Level5Blob, pellet_dx_by_dir)
+#define L5_PELLET_DY_BY_DIR BLOB_ADDR(Level5Blob, pellet_dy_by_dir)
+#define L5_SPAWN_BOSS1_DATA BLOB_ADDR(Level5Blob, spawn_boss1_data)
+#define L5_INIT_DATA BLOB_ADDR(Level5Blob, init_data)
+#define L5_BOSS_DRAW_TABLE_2 BLOB_ADDR(Level5Blob, boss_draw_table_2)
+#define L5_BOSS_DRAW_TABLE BLOB_ADDR(Level5Blob, boss_draw_table)
+#define L5_BOSS_UPDATE_DATA BLOB_ADDR(Level5Blob, boss_update_data)
+#define L5_MISSILE_ANIMS_BY_DIR BLOB_ADDR(Level5Blob, missile_anims_by_dir)
+#define L5_HEART_PICTURES BLOB_ADDR(Level5Blob, heart_pictures)
+#define L5_SPAWN_BOSS2_DATA BLOB_ADDR(Level5Blob, spawn_boss2_data)
+#define L5_INIT_DATA_2 BLOB_ADDR(Level5Blob, init_data_2)
+#define L5_WHEEL_PICTURES BLOB_ADDR(Level5Blob, wheel_pictures)
+#define L5_SPINNER_SOURCE_118 BLOB_ADDR(Level5Blob, spinner_source_118)
+#define L5_SPINNER_SOURCE_OTHER BLOB_ADDR(Level5Blob, spinner_source_other)
+#define L5_BOSS2_TURRET_PICTURES BLOB_ADDR(Level5Blob, boss2_turret_pictures)
+#define L5_BOSS2_DRAW_TABLE BLOB_ADDR(Level5Blob, boss2_draw_table)
+#define L5_BOSS2_DRAW_TABLE_2 BLOB_ADDR(Level5Blob, boss2_draw_table_2)
+#define L5_BOSS2_DRAW_TABLE_3 BLOB_ADDR(Level5Blob, boss2_draw_table_3)
+#define L5_BOSS2_FLASH_GRID BLOB_ADDR(Level5Blob, boss2_flash_grid)
+#define L5_BOSS2_DRAW_DATA BLOB_ADDR(Level5Blob, boss2_draw_data)
+#define L5_BOSS2_DRAW_DATA_2 BLOB_ADDR(Level5Blob, boss2_draw_data_2)
+#define L5_BOSS2_DRAW_DATA_3 BLOB_ADDR(Level5Blob, boss2_draw_data_3)
+#define L5_SPAWN_GATES_DATA BLOB_ADDR(Level5Blob, spawn_gates_data)
+#define L5_GATE_UPDATE_DATA BLOB_ADDR(Level5Blob, gate_update_data)
+#define L5_WALL_CELLS_128 BLOB_ADDR(Level5Blob, wall_cells_128)
+#define L5_WALL_CELLS_OTHER BLOB_ADDR(Level5Blob, wall_cells_other)
+#define L5_WALL_FLASH_A_GRID BLOB_ADDR(Level5Blob, wall_flash_a_grid)
+#define L5_WALL_FLASH_B_GRID BLOB_ADDR(Level5Blob, wall_flash_b_grid)
+#define L5_SPAWN_BRIDGE_DATA BLOB_ADDR(Level5Blob, spawn_bridge_data)
+#define L5_SPAWN_BRIDGE_DATA_2 BLOB_ADDR(Level5Blob, spawn_bridge_data_2)
+#define L5_BRIDGE_UPDATE_DATA BLOB_ADDR(Level5Blob, bridge_update_data)
+#define L5_SPAWN_GROUP_DATA BLOB_ADDR(Level5Blob, spawn_group_data)
+#define L5_SPAWN_GROUP_DATA_2 BLOB_ADDR(Level5Blob, spawn_group_data_2)
+#define L5_UNIT_DX_BY_DIR BLOB_ADDR(Level5Blob, unit_dx_by_dir)
+#define L5_UNIT_DY_BY_DIR BLOB_ADDR(Level5Blob, unit_dy_by_dir)
+#define L5_UNIT_SHOT_PICTURES BLOB_ADDR(Level5Blob, unit_shot_pictures)
+#define L5_SPAWN_GUN_DATA BLOB_ADDR(Level5Blob, spawn_gun_data)
+#define L5_SPAWN_GUN_DATA_2 BLOB_ADDR(Level5Blob, spawn_gun_data_2)
+#define L5_SPAWN_GUN_DATA_4 BLOB_ADDR(Level5Blob, spawn_gun_data_4)
+#define L5_SPAWN_GUN_DATA_3 BLOB_ADDR(Level5Blob, spawn_gun_data_3)
+#define L5_GUN_ANIM_108 BLOB_ADDR(Level5Blob, gun_anim_108)
+#define L5_GUN_ANIM_OTHER BLOB_ADDR(Level5Blob, gun_anim_other)
+#define L5_SPAWN_BOSS1_DATA_2 BLOB_ADDR(Level5Blob, spawn_boss1_data_2)
+#define L5_SPAWN_GUNNERS_DATA BLOB_ADDR(Level5Blob, spawn_gunners_data)
+#define L5_BOSS2_DEAD_DATA BLOB_ADDR(Level5Blob, boss2_dead_data)
+#define L5_BEAM_TOP_PICTURE BLOB_ADDR(Level5Blob, beam_top_picture)
+#define L5_BEAM_END_PICTURE BLOB_ADDR(Level5Blob, beam_end_picture)
 
 /* level 5: its parameter block at E42 (energies, fire rates, shot steps), by the object that reads them */
-#define L5_GUNNERS_ENERGY 0x54e42
-#define L5_GUNNERS_PARAM 0x54e44
-#define L5_GUNNERS_STEPS 0x54e46
-#define L5_CANNON_ENERGY 0x54e48
-#define L5_CANNON_FIRE_RATE 0x54e4b
-#define L5_PELLET_ENERGY 0x54e4c
-#define L5_PELLET_PARAM 0x54e4e
-#define L5_BOSS_FIRE_RATE 0x54e51
-#define L5_BOSS_ENERGY 0x54e52
-#define L5_TURRET_FIRE_RATE 0x54e55
-#define L5_BOSS2_TURRET_FIRE_RATE 0x54e57
-#define L5_BOSS2_TURRET_SHOT_STEPS 0x54e58
-#define L5_BOSS2_MOVER_FIRE_RATE 0x54e5b
-#define L5_TURRET_PARAM 0x54e5c
-#define L5_GATES_ENERGY 0x54e5e
-#define L5_BRIDGE_ENERGY 0x54e60
-#define L5_GROUP_ENERGY 0x54e62
-#define L5_UNIT_FIRE_RATE 0x54e65
-#define L5_UNIT_SHOT_STEPS 0x54e66
-#define L5_GUN_ENERGY 0x54e68
-#define L5_GUN_FIRE_RATE 0x54e6b
-#define L5_GUN_SHOT_STEPS 0x54e6c
-#define L5_BOSS2_TURRET_SHOT_STEPS_2 0x54e6e
-#define L5_INIT_PATCH 0x54e71
-#define L5_BRIDGE_FIRE_RATE 0x54e73
-#define L5_BRIDGE_SHOT_STEPS 0x54e74
-#define L5_INIT_PATCH_2 0x54e76
-#define L5_GUNNER_FIRE_RATE 0x54e79
-#define L5_GUNNER_SHOT_STEPS 0x54e7a
-#define L5_GUNNER_SHOT_STEPS_2 0x54e7c
-#define L5_BOSS2_MOVER_FIRE_RATE_2 0x54e7f
+#define L5_GUNNERS_ENERGY BLOB_ADDR(Level5Blob, gunners_energy)
+#define L5_GUNNERS_PARAM BLOB_ADDR(Level5Blob, gunners_param)
+#define L5_GUNNERS_STEPS BLOB_ADDR(Level5Blob, gunners_steps)
+#define L5_CANNON_ENERGY BLOB_ADDR(Level5Blob, cannon_energy)
+#define L5_CANNON_FIRE_RATE BLOB_ADDR(Level5Blob, cannon_fire_rate)
+#define L5_PELLET_ENERGY BLOB_ADDR(Level5Blob, pellet_energy)
+#define L5_PELLET_PARAM BLOB_ADDR(Level5Blob, pellet_param)
+#define L5_BOSS_FIRE_RATE BLOB_ADDR(Level5Blob, boss_fire_rate)
+#define L5_BOSS_ENERGY BLOB_ADDR(Level5Blob, boss_energy)
+#define L5_TURRET_FIRE_RATE BLOB_ADDR(Level5Blob, turret_fire_rate)
+#define L5_BOSS2_TURRET_FIRE_RATE BLOB_ADDR(Level5Blob, boss2_turret_fire_rate)
+#define L5_BOSS2_TURRET_SHOT_STEPS BLOB_ADDR(Level5Blob, boss2_turret_shot_steps)
+#define L5_BOSS2_MOVER_FIRE_RATE BLOB_ADDR(Level5Blob, boss2_mover_fire_rate)
+#define L5_TURRET_PARAM BLOB_ADDR(Level5Blob, turret_param)
+#define L5_GATES_ENERGY BLOB_ADDR(Level5Blob, gates_energy)
+#define L5_BRIDGE_ENERGY BLOB_ADDR(Level5Blob, bridge_energy)
+#define L5_GROUP_ENERGY BLOB_ADDR(Level5Blob, group_energy)
+#define L5_UNIT_FIRE_RATE BLOB_ADDR(Level5Blob, unit_fire_rate)
+#define L5_UNIT_SHOT_STEPS BLOB_ADDR(Level5Blob, unit_shot_steps)
+#define L5_GUN_ENERGY BLOB_ADDR(Level5Blob, gun_energy)
+#define L5_GUN_FIRE_RATE BLOB_ADDR(Level5Blob, gun_fire_rate)
+#define L5_GUN_SHOT_STEPS BLOB_ADDR(Level5Blob, gun_shot_steps)
+#define L5_BOSS2_TURRET_SHOT_STEPS_2 BLOB_ADDR(Level5Blob, boss2_turret_shot_steps_2)
+#define L5_INIT_PATCH BLOB_ADDR(Level5Blob, init_patch)
+#define L5_BRIDGE_FIRE_RATE BLOB_ADDR(Level5Blob, bridge_fire_rate)
+#define L5_BRIDGE_SHOT_STEPS BLOB_ADDR(Level5Blob, bridge_shot_steps)
+#define L5_INIT_PATCH_2 BLOB_ADDR(Level5Blob, init_patch_2)
+#define L5_GUNNER_FIRE_RATE BLOB_ADDR(Level5Blob, gunner_fire_rate)
+#define L5_GUNNER_SHOT_STEPS BLOB_ADDR(Level5Blob, gunner_shot_steps)
+#define L5_GUNNER_SHOT_STEPS_2 BLOB_ADDR(Level5Blob, gunner_shot_steps_2)
+#define L5_BOSS2_MOVER_FIRE_RATE_2 BLOB_ADDR(Level5Blob, boss2_mover_fire_rate_2)
 #define FN(f) ((obj_fn)(f))
 void l5_unit_update(Object *a0);
 

@@ -5,80 +5,81 @@
 #include "weapons.h"
 #include "shop.h"
 #include "game_all.h"
+#include "blobs.h"
 
 /* level 2: its data tables in the level blob, by the routine that reads them */
-#define L2_FLYER_ANIM2_E0 0x5501a
-#define L2_FLYER_ANIM_E0 0x55032
-#define L2_FLYER_ANIM2_OTHER 0x5504a
-#define L2_FLYER_ANIM_OTHER 0x55050
-#define L2_WRECK_A 0x55062
-#define L2_WRECK_B 0x5509e
-#define L2_WRECK_C 0x550da
-#define L2_BOSS_UPDATE_DATA_4 0x55116
-#define L2_ROAMER_ANIM 0x5513a
-#define L2_MARKER_F8_CELLS 0x554c6
-#define L2_HOOK_DATA_11 0x5567a
-#define L2_FRONT_ENTRIES 0x557a8
-#define L2_FRONT_TABLE_F0 0x557e8
-#define L2_FRONT_TABLE_OTHER 0x5583c
-#define L2_HOOK_CELLS_A 0x55890
-#define L2_HOOK_CELLS2_A 0x55894
-#define L2_HOOK_CELLS_B 0x558b8
-#define L2_HOOK_CELLS2_B 0x558bc
-#define L2_HOOK_ANIM_A 0x559c4
-#define L2_HOOK_ANIM_B 0x559c6
-#define L2_HOOK_PICTURE_A 0x559c8
-#define L2_HOOK_PICTURE_B 0x559e6
-#define L2_HOOK_FIRE_ANIM_B 0x55cd0
-#define L2_LAUNCHER_ANIM_OTHER 0x55d00
-#define L2_HOOK_FIRE_ANIM_A 0x55d12
-#define L2_LAUNCHER_ANIM_100 0x55d42
-#define L2_DEBRIS_WALL_DATA_2 0x55ec4
-#define L2_DEBRIS_WALL_RECORDS 0x55f56
-#define L2_BOLT_ANIMS_BY_DIR 0x563c0
-#define L2_ROAMER_SHOT_ENTRIES 0x56526
-#define L2_FRONT_ANIMS_BY_DIR 0x56576
-#define L2_PIECE_PICTURES_OTHER 0x567fa
-#define L2_PIECE_PICTURES_118 0x5681a
-#define L2_PIECE_PICTURES_11C 0x5683a
-#define L2_GATE_FLASH_CELLS_B 0x5691a
-#define L2_GATE_FLASH_CELLS_A 0x56926
-#define L2_GATE_FLASH_CELLS_C 0x56932
-#define L2_GATE_NUMBER_CELLS 0x56b4e
-#define L2_GATE_CELLS 0x56b58
-#define L2_BOSS_CELLS_BY_CELL 0x56c44
-#define L2_BOSS_MOVE_PATHS_A 0x56e46
-#define L2_BOSS_MOVE_PATHS_B 0x56e4e
-#define L2_BOSS_UPDATE_DATA 0x56e8e
-#define L2_BOSS_UPDATE_DATA_2 0x56eac
-#define L2_BLOCK_GROUP_OFFSETS 0x56f24
-#define L2_BOSS_GRID 0x5725e
-#define L2_BOSS_UPDATE_DATA_3 0x572aa
-#define L2_BOSS_MOVE_SLOT_A 0x572b2
-#define L2_BOSS_MOVE_SLOT_B 0x572ba
-#define L2_ROAMER_PICTURE 0x5b5d6
-#define L2_LAUNCHER_SHOT_PICTURE 0x5ccf6
+#define L2_FLYER_ANIM2_E0 BLOB_ADDR(Level2Blob, flyer_anim2_e0)
+#define L2_FLYER_ANIM_E0 BLOB_ADDR(Level2Blob, flyer_anim_e0)
+#define L2_FLYER_ANIM2_OTHER BLOB_ADDR(Level2Blob, flyer_anim2_other)
+#define L2_FLYER_ANIM_OTHER BLOB_ADDR(Level2Blob, flyer_anim_other)
+#define L2_WRECK_A BLOB_ADDR(Level2Blob, wreck_a)
+#define L2_WRECK_B BLOB_ADDR(Level2Blob, wreck_b)
+#define L2_WRECK_C BLOB_ADDR(Level2Blob, wreck_c)
+#define L2_BOSS_UPDATE_DATA_4 BLOB_ADDR(Level2Blob, boss_update_data_4)
+#define L2_ROAMER_ANIM BLOB_ADDR(Level2Blob, roamer_anim)
+#define L2_MARKER_F8_CELLS BLOB_ADDR(Level2Blob, marker_f8_cells)
+#define L2_HOOK_DATA_11 BLOB_ADDR(Level2Blob, hook_data_11)
+#define L2_FRONT_ENTRIES BLOB_ADDR(Level2Blob, front_entries)
+#define L2_FRONT_TABLE_F0 BLOB_ADDR(Level2Blob, front_table_f0)
+#define L2_FRONT_TABLE_OTHER BLOB_ADDR(Level2Blob, front_table_other)
+#define L2_HOOK_CELLS_A BLOB_ADDR(Level2Blob, hook_cells_a)
+#define L2_HOOK_CELLS2_A BLOB_ADDR(Level2Blob, hook_cells2_a)
+#define L2_HOOK_CELLS_B BLOB_ADDR(Level2Blob, hook_cells_b)
+#define L2_HOOK_CELLS2_B BLOB_ADDR(Level2Blob, hook_cells2_b)
+#define L2_HOOK_ANIM_A BLOB_ADDR(Level2Blob, hook_anim_a)
+#define L2_HOOK_ANIM_B BLOB_ADDR(Level2Blob, hook_anim_b)
+#define L2_HOOK_PICTURE_A BLOB_ADDR(Level2Blob, hook_picture_a)
+#define L2_HOOK_PICTURE_B BLOB_ADDR(Level2Blob, hook_picture_b)
+#define L2_HOOK_FIRE_ANIM_B BLOB_ADDR(Level2Blob, hook_fire_anim_b)
+#define L2_LAUNCHER_ANIM_OTHER BLOB_ADDR(Level2Blob, launcher_anim_other)
+#define L2_HOOK_FIRE_ANIM_A BLOB_ADDR(Level2Blob, hook_fire_anim_a)
+#define L2_LAUNCHER_ANIM_100 BLOB_ADDR(Level2Blob, launcher_anim_100)
+#define L2_DEBRIS_WALL_DATA_2 BLOB_ADDR(Level2Blob, debris_wall_data_2)
+#define L2_DEBRIS_WALL_RECORDS BLOB_ADDR(Level2Blob, debris_wall_records)
+#define L2_BOLT_ANIMS_BY_DIR BLOB_ADDR(Level2Blob, bolt_anims_by_dir)
+#define L2_ROAMER_SHOT_ENTRIES BLOB_ADDR(Level2Blob, roamer_shot_entries)
+#define L2_FRONT_ANIMS_BY_DIR BLOB_ADDR(Level2Blob, front_anims_by_dir)
+#define L2_PIECE_PICTURES_OTHER BLOB_ADDR(Level2Blob, piece_pictures_other)
+#define L2_PIECE_PICTURES_118 BLOB_ADDR(Level2Blob, piece_pictures_118)
+#define L2_PIECE_PICTURES_11C BLOB_ADDR(Level2Blob, piece_pictures_11c)
+#define L2_GATE_FLASH_CELLS_B BLOB_ADDR(Level2Blob, gate_flash_cells_b)
+#define L2_GATE_FLASH_CELLS_A BLOB_ADDR(Level2Blob, gate_flash_cells_a)
+#define L2_GATE_FLASH_CELLS_C BLOB_ADDR(Level2Blob, gate_flash_cells_c)
+#define L2_GATE_NUMBER_CELLS BLOB_ADDR(Level2Blob, gate_number_cells)
+#define L2_GATE_CELLS BLOB_ADDR(Level2Blob, gate_cells)
+#define L2_BOSS_CELLS_BY_CELL BLOB_ADDR(Level2Blob, boss_cells_by_cell)
+#define L2_BOSS_MOVE_PATHS_A BLOB_ADDR(Level2Blob, boss_move_paths_a)
+#define L2_BOSS_MOVE_PATHS_B BLOB_ADDR(Level2Blob, boss_move_paths_b)
+#define L2_BOSS_UPDATE_DATA BLOB_ADDR(Level2Blob, boss_update_data)
+#define L2_BOSS_UPDATE_DATA_2 BLOB_ADDR(Level2Blob, boss_update_data_2)
+#define L2_BLOCK_GROUP_OFFSETS BLOB_ADDR(Level2Blob, block_group_offsets)
+#define L2_BOSS_GRID BLOB_ADDR(Level2Blob, boss_grid)
+#define L2_BOSS_UPDATE_DATA_3 BLOB_ADDR(Level2Blob, boss_update_data_3)
+#define L2_BOSS_MOVE_SLOT_A BLOB_ADDR(Level2Blob, boss_move_slot_a)
+#define L2_BOSS_MOVE_SLOT_B BLOB_ADDR(Level2Blob, boss_move_slot_b)
+#define L2_ROAMER_PICTURE BLOB_ADDR(Level2Blob, roamer_picture)
+#define L2_LAUNCHER_SHOT_PICTURE BLOB_ADDR(Level2Blob, launcher_shot_picture)
 
 /* level 2: its parameter block at E42 (energies, fire rates, shot steps), by the object that reads them */
-#define L2_MARKER_F8_ENERGY 0x54e42
-#define L2_MARKER_FC_ENERGY 0x54e44
-#define L2_TURRET_CHANCE 0x54e47
-#define L2_TURRET_PARAM 0x54e48
-#define L2_TURRET_SHOT_STEPS 0x54e4a
-#define L2_LAUNCHER_SHOT_STEPS 0x54e4c
-#define L2_HOOK_ENERGY 0x54e4e
-#define L2_HOOK_ENERGY_2 0x54e50
-#define L2_DEBRIS_WALL_ENERGY 0x54e52
-#define L2_DEBRIS_WALL_STEPS 0x54e54
-#define L2_ROAMER_ENERGY 0x54e56
-#define L2_ROAMER_SHOT_FIRE_RATE 0x54e59
-#define L2_ROAMER_SHOT_PARAM 0x54e5a
-#define L2_ROAMER_SHOT_SHOT_STEPS 0x54e5c
-#define L2_INIT_ENERGY 0x54e5e
-#define L2_INIT_ENERGY_2 0x54e60
-#define L2_FRONT_PARAM 0x54e62
-#define L2_BOSS_FIRE_RATE 0x54e65
-#define L2_BOSS_SHOT_STEPS 0x54e66
+#define L2_MARKER_F8_ENERGY BLOB_ADDR(Level2Blob, marker_f8_energy)
+#define L2_MARKER_FC_ENERGY BLOB_ADDR(Level2Blob, marker_fc_energy)
+#define L2_TURRET_CHANCE BLOB_ADDR(Level2Blob, turret_chance)
+#define L2_TURRET_PARAM BLOB_ADDR(Level2Blob, turret_param)
+#define L2_TURRET_SHOT_STEPS BLOB_ADDR(Level2Blob, turret_shot_steps)
+#define L2_LAUNCHER_SHOT_STEPS BLOB_ADDR(Level2Blob, launcher_shot_steps)
+#define L2_HOOK_ENERGY BLOB_ADDR(Level2Blob, hook_energy)
+#define L2_HOOK_ENERGY_2 BLOB_ADDR(Level2Blob, hook_energy_2)
+#define L2_DEBRIS_WALL_ENERGY BLOB_ADDR(Level2Blob, debris_wall_energy)
+#define L2_DEBRIS_WALL_STEPS BLOB_ADDR(Level2Blob, debris_wall_steps)
+#define L2_ROAMER_ENERGY BLOB_ADDR(Level2Blob, roamer_energy)
+#define L2_ROAMER_SHOT_FIRE_RATE BLOB_ADDR(Level2Blob, roamer_shot_fire_rate)
+#define L2_ROAMER_SHOT_PARAM BLOB_ADDR(Level2Blob, roamer_shot_param)
+#define L2_ROAMER_SHOT_SHOT_STEPS BLOB_ADDR(Level2Blob, roamer_shot_shot_steps)
+#define L2_INIT_ENERGY BLOB_ADDR(Level2Blob, init_energy)
+#define L2_INIT_ENERGY_2 BLOB_ADDR(Level2Blob, init_energy_2)
+#define L2_FRONT_PARAM BLOB_ADDR(Level2Blob, front_param)
+#define L2_BOSS_FIRE_RATE BLOB_ADDR(Level2Blob, boss_fire_rate)
+#define L2_BOSS_SHOT_STEPS BLOB_ADDR(Level2Blob, boss_shot_steps)
 #define PIECE_DIR_HI(o) ((o)->v2a)
 #define PIECE_VAR(o)  ((o)->v2e)
 #define GATE_STEP(o) ((o)->v28)
