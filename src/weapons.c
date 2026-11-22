@@ -1928,7 +1928,7 @@ void weapon34_update(Object *a0)
         set_anim(a1, anim_pod_trail);
         a1->x = a0->x;
         a1->y = (int16_t)(a0->y - 0xb);
-        a1->v28 = 0;
+        a1->pod_trail.tick = 0;
         return;
     }
     if (fire_press && a0->gfx == (const void *)pic_weapon34_fire) {
