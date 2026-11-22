@@ -19,7 +19,6 @@
 /* the scratch fields of Object, by the kind that uses them */
 
 
-#define FN(f) ((obj_fn)(f))
 #define W(a) sh_r16(a)
 #define B(a) sh_r8(a)
 
@@ -213,7 +212,7 @@ void l4_tower_hit(Object *shot, Object *enemy, uint16_t damage)
 
     enemy->energy = (int16_t)(old - damage);
     if (old > damage) {
-        enemy->fn_draw = FN(l4_tower_draw);
+        enemy->fn_draw = (obj_fn)l4_tower_draw;
         return;
     }
     spawn_effect((int16_t)(enemy->x + 0x10), (int16_t)(enemy->y - xenon2.scroll_pos + 0x10), xenon2.big_explosion_anim, draw_bob_masked);
@@ -300,7 +299,7 @@ void l4_enemy_a(Object *obj)
             obj->shot_count = (uint8_t)(random_next() & 0x3f);
             part = alloc_in(LIST_B);
             part->type = gun->type;
-            part->fn_update = FN(l4_shot_a);
+            part->fn_update = (obj_fn)l4_shot_a;
             part->fn_draw = draw_bob_masked;
             part->x = (int16_t)gun->x;
             part->y = (int16_t)(obj->y - 0x1e);
@@ -361,7 +360,7 @@ void l4_shot_a(Object *obj)
     }
     drop = alloc_in(LIST_C);
     drop->type = 0xf8;
-    drop->fn_update = FN(l4_enemy_f8);
+    drop->fn_update = (obj_fn)l4_enemy_f8;
     drop->fn_draw = draw_bob_masked;
     drop->fn_hit = (void *)hit_enemy;
     drop->l4.angle = (uint16_t)(angle);
@@ -403,7 +402,7 @@ void l4_enemy_f8(Object *obj)
         const uint8_t *table;
 
         obj->type = 0xf8;
-        obj->fn_update = FN(l4_enemy_f8);
+        obj->fn_update = (obj_fn)l4_enemy_f8;
         obj->fn_hit = (void *)hit_enemy;
         obj->fn_draw = draw_bob_masked;
         index = (uint16_t)(random_next() & 8);
@@ -539,7 +538,7 @@ void l4_b1_core_hit(Object *shot, Object *enemy, uint16_t damage)
 {
     uint16_t old = (uint16_t)enemy->energy;
 
-    enemy->fn_draw = FN(l4_b1_core_flash);
+    enemy->fn_draw = (obj_fn)l4_b1_core_flash;
     enemy->energy = (int16_t)(old - damage);
     if (old > damage)
         return;
@@ -554,14 +553,14 @@ void l4_b1_gun_hit(Object *shot, Object *enemy, uint16_t damage)
 {
     uint16_t old = (uint16_t)enemy->energy;
 
-    enemy->fn_draw = FN(l4_b1_gun_flash);
+    enemy->fn_draw = (obj_fn)l4_b1_gun_flash;
     enemy->energy = (int16_t)(old - damage);
     if (old > damage)
         return;
     sh_w16(0xd6e, (uint16_t)(W(0xd6e) - 1));
     spawn_effect((int16_t)(enemy->x + 0x10), (int16_t)(enemy->y - xenon2.scroll_pos + 0x20), xenon2.big_explosion_anim, draw_bob_masked);
     enemy->b1_gun.dir = (enemy->b1_gun.dir & 0xffffu) | (uint32_t)(uint16_t)(-1) << 16;
-    enemy->fn_update = FN(l4_gun_dead);
+    enemy->fn_update = (obj_fn)l4_gun_dead;
     enemy->fn_hit = (void *)obj_nop_thunk;
 }
 
@@ -610,7 +609,7 @@ static void gun_cells(Object *obj, int flash)
 /* level4 $055B30: a gun's flash */
 void l4_b1_gun_flash(Object *obj)
 {
-    obj->fn_draw = FN(l4_b1_gun_draw);
+    obj->fn_draw = (obj_fn)l4_b1_gun_draw;
     gun_cells(obj, 1);
 }
 
@@ -644,7 +643,7 @@ void l4_b1_core_draw(Object *obj)
 /* level4 $055A86: the core's flash */
 void l4_b1_core_flash(Object *obj)
 {
-    obj->fn_draw = FN(l4_b1_core_draw);
+    obj->fn_draw = (obj_fn)l4_b1_core_draw;
     core_cells(obj, 1);
 }
 
@@ -1035,10 +1034,10 @@ void l4_b2_eye_hit(Object *shot, Object *enemy, uint16_t damage)
 void l4_spawn_bar(const uint8_t *record)
 {
     int right = rd16(record + 0xc) != 0;
-    Object *obj = spawn_marker_front(right ? 0x110 : 0x10c, record, (void (*)(void))FN(l4_bar_update));
+    Object *obj = spawn_marker_front(right ? 0x110 : 0x10c, record, (void (*)(void))(obj_fn)l4_bar_update);
 
     obj->y = (int16_t)(obj->y - xenon2.scroll_pos);
-    obj->fn_draw = FN(l4_bar_draw);
+    obj->fn_draw = (obj_fn)l4_bar_draw;
     set_anim(obj, obj->type == 0x10c ? xenon2.level4_data.bar_anim_10c : xenon2.level4_data.bar_anim_other);
 }
 
@@ -1110,13 +1109,13 @@ void l4_bar_draw(Object *obj)
 void l4_spawn_walker(const uint8_t *record)
 {
     int right = rd16(record + 0xc) != 0;
-    Object *obj = spawn_marker_enemy(right ? 0xe4 : 0xe0, record, (void (*)(void))FN(l4_walker_update));
+    Object *obj = spawn_marker_enemy(right ? 0xe4 : 0xe0, record, (void (*)(void))(obj_fn)l4_walker_update);
 
     obj->y = (int16_t)(obj->y + 0x1c);
     if (obj->type == 0xe0)
         obj->x = (int16_t)(obj->x + 0x10);
-    obj->fn_draw = FN(l4_walker_draw);
-    obj->fn_hit = FN(l4_walker_hit);
+    obj->fn_draw = (obj_fn)l4_walker_draw;
+    obj->fn_hit = (obj_fn)l4_walker_hit;
     obj->energy = (int16_t)xenon2.level4_data.walker_energy;
     obj->big = -1;
     obj->hit[0] = 0x3e8;
@@ -1195,7 +1194,7 @@ void l4_walker_hit(Object *shot, Object *enemy, uint16_t damage)
 
     enemy->energy = (int16_t)(old - damage);
     if (old > damage) {
-        enemy->fn_draw = FN(l4_walker_flash);
+        enemy->fn_draw = (obj_fn)l4_walker_flash;
         return;
     }
     frame = (const uint8_t *)enemy->gfx;
@@ -1231,7 +1230,7 @@ void l4_walker_flash(Object *obj)
 {
     int16_t y = (int16_t)(obj->y - xenon2.scroll_pos);
 
-    obj->fn_draw = FN(l4_walker_draw);
+    obj->fn_draw = (obj_fn)l4_walker_draw;
     if (y > 0xdc)
         return;
     draw_bob_or_at((uint16_t)obj->x, (uint16_t)y, (const uint8_t *)obj->gfx);

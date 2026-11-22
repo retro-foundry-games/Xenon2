@@ -23,7 +23,6 @@
 /* the scratch fields of Object, by the kind that uses them */
 
 
-#define FN(f) ((obj_fn)(f))
 #define W(a) sh_r16(a)
 #define B(a) sh_r8(a)
 #define PLAYER_X (PLAYER->x)
@@ -190,7 +189,7 @@ void l3_init(void)
     old->prev = end_obj;
     end_obj->type = 0x50;
     end_obj->fn_update = (obj_fn)obj_nop_thunk;
-    end_obj->fn_draw = FN(l3_end_draw);
+    end_obj->fn_draw = (obj_fn)l3_end_draw;
     end_obj->persists = -1;
     xenon2.unit_seed[0] = 0xe496aa8a;
     xenon2.unit_seed[1] = 0x5274b949;
@@ -417,11 +416,11 @@ void l3_spawn_snake(const uint8_t *rec)
         seg->shot_count = seg->shot_rate = 0;
         if (i == 0)
             set_anim(seg, flag ? xenon2.level3_data.snake_anim_a : xenon2.level3_data.snake_anim_b);
-        seg->fn_update = FN(l3_snake_body);
+        seg->fn_update = (obj_fn)l3_snake_body;
         if (i == 0)
-            seg->fn_update = FN(l3_snake_tail);
+            seg->fn_update = (obj_fn)l3_snake_tail;
         if (i == 7)
-            seg->fn_update = FN(l3_snake_head);
+            seg->fn_update = (obj_fn)l3_snake_head;
         seg->fn_draw = draw_bob_masked;
         seg->x = x;
         seg->snake.x = x;
@@ -461,7 +460,7 @@ void l3_spawn_snake(const uint8_t *rec)
     anchor->hit[2] = 0x3e8;
     anchor->chain = box;
     box->type = 0xbc;
-    box->fn_update = FN(group_box_update);
+    box->fn_update = (obj_fn)group_box_update;
     box->fn_draw = (obj_fn)obj_nop_thunk;
     box->fn_hit = (void *)obj_nop_thunk;
     box->hit[0] = 0x3e8;
@@ -547,7 +546,7 @@ void l3_diver_update(Object *obj)
             }
             shot = alloc_in(LIST_B);
             shot->type = 0x14;
-            shot->fn_update = FN(l3_diver_shot);
+            shot->fn_update = (obj_fn)l3_diver_shot;
             shot->fn_draw = draw_bob_masked;
             shot->gfx = (void *)gfx;
             shot->anim_delay = 0;
@@ -575,7 +574,7 @@ void l3_spawn_diver(const uint8_t *rec)
     const uint8_t *anim = xenon2.level3_data.diver_update_data;
 
     obj->type = 0xd0;
-    obj->fn_update = FN(l3_diver_update);
+    obj->fn_update = (obj_fn)l3_diver_update;
     obj->fn_draw = draw_bob_masked;
     obj->shot_count = obj->shot_rate = 0;
     obj->x = (int16_t)(rd16(rec + 8) - 8);
@@ -861,7 +860,7 @@ void l3_enemy_enter(Object *obj)
         anim_off = (int16_t)(y - 0xc0) < (int16_t)(x - 0x140) ? 8 : 0xc;
     }
     set_anim(obj, xenon2.level3_data.enemy_enter_anims[anim_off / 4]);
-    obj->fn_update = FN(enemy_update);
+    obj->fn_update = (obj_fn)enemy_update;
     bbox_from_frame(obj);
 }
 
@@ -1019,7 +1018,7 @@ void l3_boss_hit(Object *shot, Object *boss, uint16_t damage)
     (void)shot;
     boss->energy = (int16_t)(old - damage);
     if (old > damage) {
-        boss->fn_draw = FN(l3_boss_flash);
+        boss->fn_draw = (obj_fn)l3_boss_flash;
         return;
     }
     spawn_effect((int16_t)(boss->x + 0x20), (int16_t)(boss->y - xenon2.scroll_pos + 0x40), xenon2.big_explosion_anim, draw_bob_masked);
@@ -1031,7 +1030,7 @@ void l3_boss_hit(Object *shot, Object *boss, uint16_t damage)
     map[4 * MAP_COLS] = map[4 * MAP_COLS + 1] = (Cell){{0, 0}};
     map[4 * MAP_COLS + 2] = map[4 * MAP_COLS + 3] = (Cell){{0, 0}};
     map[5 * MAP_COLS + 1] = map[5 * MAP_COLS + 2] = (Cell){{0, 0}};
-    boss->fn_update = FN(l3_boss2_update);
+    boss->fn_update = (obj_fn)l3_boss2_update;
     boss->fn_draw = (obj_fn)obj_nop_thunk;
     boss->fn_hit = (void *)l3_boss2_hit;
     boss->energy = (int16_t)xenon2.level3_data.boss_energy_2;
@@ -1108,7 +1107,7 @@ void l3_boss2_hit(Object *shot, Object *boss, uint16_t damage)
     (void)shot;
     boss->energy = (int16_t)(old - damage);
     if (old > damage) {
-        boss->fn_draw = FN(l3_boss2_flash);
+        boss->fn_draw = (obj_fn)l3_boss2_flash;
         return;
     }
     spawn_effect((int16_t)(boss->x + 0x20), (int16_t)(boss->y - xenon2.scroll_pos + 0x10), xenon2.big_explosion_anim, draw_bob_masked);
@@ -1135,7 +1134,7 @@ void l3_spawn_walker(const uint8_t *rec)
     uint16_t i = rd16(rec + 6);
 
     obj->type = 0xdc;
-    obj->fn_update = FN(l3_walker_update);
+    obj->fn_update = (obj_fn)l3_walker_update;
     obj->fn_draw = draw_bob_masked;
     obj->walker.dir = (obj->walker.dir & 0xffffu) | (uint32_t)(uint16_t)((int16_t)i) << 16;
     obj->shot_count = obj->shot_rate = 0;

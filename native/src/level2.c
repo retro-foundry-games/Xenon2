@@ -15,7 +15,6 @@
 /* the scratch fields of Object, by the kind that uses them */
 
 
-#define FN(f) ((obj_fn)(f))
 #define W(a) sh_r16(a)
 #define B(a) sh_r8(a)
 #define PLAYER_X (PLAYER->x)
@@ -159,7 +158,7 @@ void l2_hook(uint16_t hook, const uint8_t *rec, uint16_t rec_scroll)
     case 3:
         obj = alloc_in(LIST_C);
         obj->type = flag ? 0x100 : 0x104;
-        obj->fn_update = FN(l2_launcher_update);
+        obj->fn_update = (obj_fn)l2_launcher_update;
         obj->fn_draw = draw_bob_masked;
         set_anim(obj, flag ? xenon2.level2_data.hook_fire_anim_a : xenon2.level2_data.hook_fire_anim_b);
         obj->shot_count = obj->shot_rate = 0;
@@ -240,8 +239,8 @@ void l2_init(void)
     xenon2.l2_first_fight_won = 0;
     obj = alloc_in(LIST_C);
     obj->type = 0x50;
-    obj->fn_update = FN(l2_boss_update);
-    obj->fn_draw = FN(l2_boss_draw);
+    obj->fn_update = (obj_fn)l2_boss_update;
+    obj->fn_draw = (obj_fn)l2_boss_draw;
     obj->fn_hit = (void *)l2_boss_hit;
     obj->shot_count = obj->shot_rate = 0;
     obj->persists = -1;
@@ -258,7 +257,7 @@ void l2_init(void)
 
         obj = alloc_in(LIST_C);
         obj->type = 0x54;
-        obj->fn_update = FN(l2_gate_update);
+        obj->fn_update = (obj_fn)l2_gate_update;
         obj->fn_draw = (obj_fn)obj_nop_thunk;
         obj->fn_hit = (void *)l2_gate_hit;
         obj->energy = (int16_t)xenon2.level2_data.init_energy_2;
@@ -904,7 +903,7 @@ static void l2_debris_wall(uint16_t side)
     for (k = xenon2.level2_data.wall_pieces.last; k != 0xffff; k--) {
         obj = alloc_in(LIST_C);
         obj->type = spec->type;
-        obj->fn_update = FN(l2_piece_update);
+        obj->fn_update = (obj_fn)l2_piece_update;
         obj->fn_draw = (obj_fn)obj_nop_thunk;
         obj->fn_hit = (void *)spec->hit;
         obj->gfx = (void *)spec->gfx;
@@ -1085,7 +1084,7 @@ void l2_gate_hit(Object *attacker, Object *gate, uint16_t damage)
 
     if (xenon2.l2_walls_made == 3)
         return;
-    gate->fn_draw = FN(l2_gate_flash);
+    gate->fn_draw = (obj_fn)l2_gate_flash;
     old = (uint16_t)gate->energy;
     gate->energy = (int16_t)(old - damage);
     if (old > damage)
@@ -1127,7 +1126,7 @@ void l2_boss_hit(Object *attacker, Object *boss, uint16_t damage)
 {
     uint16_t old;
 
-    boss->fn_draw = FN(l2_boss_flash);
+    boss->fn_draw = (obj_fn)l2_boss_flash;
     old = (uint16_t)boss->energy;
     boss->energy = (int16_t)(old - damage);
     if (old > damage)
@@ -1150,7 +1149,7 @@ void l2_boss_draw(Object *boss)
 /* level2 $056EF6: the draw of the boss for the frame after a hit */
 void l2_boss_flash(Object *boss)
 {
-    boss->fn_draw = FN(l2_boss_draw);
+    boss->fn_draw = (obj_fn)l2_boss_draw;
     if ((int16_t)xenon2.scroll_pos >= 0x160)
         return;
     draw_tile_grid_flash(xenon2.level2_data.boss_grid, 5, 8, (int16_t)(boss->y - xenon2.scroll_pos), 0x38);

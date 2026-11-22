@@ -5,7 +5,6 @@
 #include <string.h>
 
 
-#define FN(f) ((obj_fn)(f))
 void l5_unit_update(Object *obj);
 
 void l5_beam_draw(Object *obj);
@@ -224,7 +223,7 @@ void l5_spawn_gunners(const uint8_t *record)
         Object *obj = insert_head(LIST_C);
 
         obj->type = 0xdc;
-        obj->fn_update = FN(l5_gunner_update);
+        obj->fn_update = (obj_fn)l5_gunner_update;
         obj->fn_draw = (obj_fn)draw_bob_masked;
         obj->fn_hit = (void *)hit_enemy;
         obj->gfx = (void *)xenon2.level5_data.gunner_picture;
@@ -281,7 +280,7 @@ void l5_gunner_update(Object *obj)
 void l5_spawn_cannon(const uint8_t *record)
 {
     uint16_t type = rd16(record + 0xc) ? 0x104 : 0x100;
-    Object *obj = spawn_marker_enemy(type, record, (void (*)(void))FN(l5_cannon_update));
+    Object *obj = spawn_marker_enemy(type, record, (void (*)(void))(obj_fn)l5_cannon_update);
     const uint8_t *anim = xenon2.level5_data.cannon_anim_a;
 
     obj->y = (int16_t)(obj->y - xenon2.scroll_pos);
@@ -307,7 +306,7 @@ static void spawn_pellet(int16_t x, int16_t y, uint16_t dir)
     Object *pellet = alloc_in(LIST_C);
 
     pellet->type = 0xe4;
-    pellet->fn_update = FN(l5_pellet_update);
+    pellet->fn_update = (obj_fn)l5_pellet_update;
     pellet->fn_draw = (obj_fn)draw_bob_masked;
     pellet->fn_hit = (void *)hit_enemy;
     pellet->x = x;
@@ -475,7 +474,7 @@ void l5_spawn_boss1(uint16_t slot_value)
 /* level5 $055D1C: the flash of the boss, one frame */
 void l5_boss_flash(Object *obj)
 {
-    obj->fn_draw = FN(l5_boss_draw);
+    obj->fn_draw = (obj_fn)l5_boss_draw;
     draw_tile_grid_flash(xenon2.level5_data.boss1_cells, 0xe, 0x11, obj->y, (uint16_t)((uint16_t)obj->x >> 1));
 }
 
@@ -561,7 +560,7 @@ fire:
         y = (int16_t)(y + obj->y);
         missile = insert_head(LIST_C);
         missile->type = 0xec;
-        missile->fn_update = FN(l5_missile_update);
+        missile->fn_update = (obj_fn)l5_missile_update;
         missile->fn_draw = (obj_fn)draw_bob_masked;
         missile->fn_hit = (void *)hit_enemy;
         missile->x = x;
@@ -651,8 +650,8 @@ void l5_turret_update(Object *obj)
         Object *beam = alloc_in(LIST_B);
 
         beam->type = 0x110;
-        beam->fn_update = FN(l5_beam_update);
-        beam->fn_draw = FN(l5_beam_draw);
+        beam->fn_update = (obj_fn)l5_beam_update;
+        beam->fn_draw = (obj_fn)l5_beam_draw;
         beam->x = (int16_t)(obj->x - 2);
         beam->y = (int16_t)(obj->y - 0x18);
         beam->beam.length = 0;
@@ -678,7 +677,7 @@ void l5_piece_hit(Object *shot, Object *obj, uint16_t damage)
     if (obj->type != 0x114) {
         kill_thunk(obj);
     } else {
-        obj->fn_update = FN(l5_boss2_dead);
+        obj->fn_update = (obj_fn)l5_boss2_dead;
         obj->hit[0] = 0x3e8;
         obj->hit[2] = 0x3e8;
         obj->fn_hit = (void *)obj_nop_thunk;
@@ -691,7 +690,7 @@ void l5_heart_hit(Object *shot, Object *heart, uint16_t damage)
     Object *boss = heart->target;
 
     heart->fn_draw = (obj_fn)draw_bob_or_first;
-    boss->fn_draw = FN(l5_boss_flash);
+    boss->fn_draw = (obj_fn)l5_boss_flash;
     if (!dies(boss, damage)) {
         uint32_t index = ((uint32_t)(uint16_t)boss->energy * 0xb) / xenon2.level5_data.boss1_pieces[0].energy;
 
@@ -766,7 +765,7 @@ void l5_wheel_hit(Object *shot, Object *wheel, uint16_t damage)
     Object *boss = wheel->target;
     int i;
 
-    boss->fn_draw = FN(l5_boss2_flash);
+    boss->fn_draw = (obj_fn)l5_boss2_flash;
     if (!dies(wheel, damage))
         return;
     free_object_chain(LIST_C->prev);
@@ -809,7 +808,7 @@ void l5_boss2_turret_hit(Object *shot, Object *obj, uint16_t damage)
     obj->fn_draw = (obj_fn)draw_bob_or_first;
     if (!dies(obj, damage))
         return;
-    obj->fn_update = FN(l5_boss2_dead);
+    obj->fn_update = (obj_fn)l5_boss2_dead;
     obj->hit[0] = 0x3e8;
     obj->hit[2] = 0x3e8;
     obj->fn_hit = (void *)obj_nop_thunk;
@@ -872,8 +871,8 @@ void l5_boss2_mover(Object *obj)
         xenon2.sfx_cmd = 0x84;
         beam = alloc_in(LIST_B);
         beam->type = 0x110;
-        beam->fn_update = FN(l5_beam_update);
-        beam->fn_draw = FN(l5_beam_draw);
+        beam->fn_update = (obj_fn)l5_beam_update;
+        beam->fn_draw = (obj_fn)l5_beam_draw;
         beam->x = 0x96;
         beam->y = (int16_t)(obj->y + 0x30);
         beam->mover.tick = 0;
@@ -890,7 +889,7 @@ pellets:
 /* level5 $056840: the flash of the mover, one frame */
 void l5_boss2_flash(Object *obj)
 {
-    obj->fn_draw = FN(l5_boss2_draw);
+    obj->fn_draw = (obj_fn)l5_boss2_draw;
     draw_tile_grid_flash(xenon2.level5_data.boss2_flash_grid, 5, 5, obj->y, 0x38);
 }
 
@@ -1078,7 +1077,7 @@ void l5_wall_hit_a(Object *shot, Object *obj, uint16_t damage)
     Cell *c;
 
     (void)shot;
-    obj->fn_draw = FN(l5_wall_flash_a);
+    obj->fn_draw = (obj_fn)l5_wall_flash_a;
     if (!dies(obj, damage))
         return;
     spawn_effect((int16_t)(obj->x + 8), (int16_t)(obj->y - xenon2.scroll_pos + 8), xenon2.anim_explosion, draw_bob_masked);
@@ -1101,7 +1100,7 @@ void l5_wall_hit_b(Object *shot, Object *obj, uint16_t damage)
     Cell *c;
 
     (void)shot;
-    obj->fn_draw = FN(l5_wall_flash_b);
+    obj->fn_draw = (obj_fn)l5_wall_flash_b;
     if (!dies(obj, damage))
         return;
     spawn_effect((int16_t)(obj->x + 8), (int16_t)(obj->y - xenon2.scroll_pos + 8), xenon2.anim_explosion, draw_bob_masked);
@@ -1136,10 +1135,10 @@ void l5_wall_flash_b(Object *obj)
 /* level5 $056E40: a piece of the bridge */
 void l5_spawn_bridge(const uint8_t *record)
 {
-    Object *obj = spawn_marker_enemy(0xf8, record, (void (*)(void))FN(l5_bridge_update));
+    Object *obj = spawn_marker_enemy(0xf8, record, (void (*)(void))(obj_fn)l5_bridge_update);
     Cell *c;
 
-    obj->fn_hit = FN(l5_bridge_hit);
+    obj->fn_hit = (obj_fn)l5_bridge_hit;
     obj->energy = (int16_t)xenon2.level5_data.bridge_energy;
     obj->hit[0] = 0x3e8;
     obj->hit[2] = 0x3e8;
@@ -1198,7 +1197,7 @@ void l5_bridge_hit(Object *shot, Object *obj, uint16_t damage)
     Cell *c;
 
     (void)shot;
-    obj->fn_draw = FN(l5_bridge_flash);
+    obj->fn_draw = (obj_fn)l5_bridge_flash;
     if (!dies(obj, damage))
         return;
     spawn_effect((int16_t)(obj->x + 0x10), (int16_t)(obj->y - xenon2.scroll_pos + 0x10), xenon2.big_explosion_anim, draw_bob_masked);
@@ -1238,12 +1237,12 @@ void l5_spawn_group(const uint8_t *record)
 /* level5 $0570AA: a unit of eight directions made of cells */
 Object *l5_spawn_unit(const uint8_t *record)
 {
-    Object *obj = spawn_marker_enemy(0xf4, record, (void (*)(void))FN(l5_unit_update));
+    Object *obj = spawn_marker_enemy(0xf4, record, (void (*)(void))(obj_fn)l5_unit_update);
     Cell *c;
     const Cell *cells;
 
     obj->unit.dir = (obj->unit.dir & 0xffffu) | (uint32_t)(uint16_t)((int16_t)rd16(record + 0xc)) << 16;
-    obj->fn_hit = FN(l5_unit_hit);
+    obj->fn_hit = (obj_fn)l5_unit_hit;
     obj->energy = (int16_t)xenon2.level5_data.group_energy;
     obj->hit[0] = 0x3e8;
     obj->hit[2] = 0x3e8;
@@ -1326,7 +1325,7 @@ void l5_unit_hit(Object *shot, Object *obj, uint16_t damage)
     Cell *c;
 
     (void)shot;
-    obj->fn_draw = FN(l5_unit_flash);
+    obj->fn_draw = (obj_fn)l5_unit_flash;
     if (!dies(obj, damage))
         return;
     if (obj->unit.group >= 0)
@@ -1360,7 +1359,7 @@ void l5_unit_flash(Object *obj)
 void l5_spawn_gun(const uint8_t *record)
 {
     int right = rd16(record + 0xc) != 0;
-    Object *obj = spawn_marker_enemy(right ? 0x10c : 0x108, record, (void (*)(void))FN(l5_gun_update));
+    Object *obj = spawn_marker_enemy(right ? 0x10c : 0x108, record, (void (*)(void))(obj_fn)l5_gun_update);
     const Cell *cells = right ? xenon2.level5_data.gun_cells_a : xenon2.level5_data.gun_cells_b;
     const uint8_t *anim = right ? xenon2.level5_data.gun_anim_a : xenon2.level5_data.gun_anim_b;
 
