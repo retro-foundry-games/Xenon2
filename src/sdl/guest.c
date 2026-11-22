@@ -52,17 +52,18 @@ extern unsigned guest_record_size(const char *type);
 /* put the bytes of the original's memory at ADDRESS (as they are in the image: big endian) into the members that cover them, in this machine's byte
  * order; pointers (addresses of the original's memory) become pointers into the block */
 static int blob_raw;   /* 1: the shop's blob is in $54E00-$73E00 (it overlays the level's): the members of the level that lie there are not converted;
-                        * 2: the blob of a level after the first: the members of level 1 beyond the header ($54E40 on) are not converted */
+                        * 2 to 5: the blob of that level (after the first): the members of level 1 beyond the header ($54E40 on) are not converted, the
+                        * blob's own members (blobs.h, guest_blob.h) are */
 #define BLOB_LO 0x54e00u
 #define BLOB_HI 0x74000u
 #define BLOB_LEVEL_LO 0x54e40u
 
 static int blob_skips(uint32_t m)
 {
-    return (blob_raw == 1 && m >= BLOB_LO && m < BLOB_HI) || (blob_raw == 2 && m >= BLOB_LEVEL_LO && m < BLOB_HI);
+    return (blob_raw == 1 && m >= BLOB_LO && m < BLOB_HI) || (blob_raw >= 2 && m >= BLOB_LEVEL_LO && m < BLOB_HI);
 }
 
-int guest_level_table(void) { return blob_raw == 2 ? xenon2.level_number : 0; }
+int guest_level_table(void) { return blob_raw >= 2 ? blob_raw : 0; }
 extern void *guest_code(uint32_t address);
 
 static void missing_code(void) {}
@@ -85,13 +86,96 @@ void *guest_code_stub(uint32_t address)
 {
     void *f = guest_code(address);
 
-    if (!f && address >= BLOB_LO && address < BLOB_HI && blob_raw == 2)
+    if (!f && address >= BLOB_LO && address < BLOB_HI && blob_raw >= 2)
         return guest_missing_code(address);
     return f;
 }
 
 /* the shop (shop) switches it on when its blob is loaded over the level's and off when the level's is loaded back */
 void guest_blob_raw(int on) { blob_raw = on; }
+
+extern uint32_t guest_code_address(const void *function);
+struct blob_member { uint32_t offset, count, size, pointer; };
+#include "guest_blob.h"
+
+static const struct blob_member *blob_list(unsigned *n)
+{
+    switch (blob_raw) {
+    case 2: *n = sizeof blob_members_2 / sizeof blob_members_2[0]; return blob_members_2;
+    case 3: *n = sizeof blob_members_3 / sizeof blob_members_3[0]; return blob_members_3;
+    case 4: *n = sizeof blob_members_4 / sizeof blob_members_4[0]; return blob_members_4;
+    case 5: *n = sizeof blob_members_5 / sizeof blob_members_5[0]; return blob_members_5;
+    }
+    *n = 0;
+    return 0;
+}
+
+/* the members of the loaded level's blob that the load covers (the image holds ADDRESS.., big endian) into their own bytes of the block */
+static void blob_load(uint32_t address, const uint8_t *image, uint32_t length)
+{
+    unsigned n;
+    const struct blob_member *l = blob_list(&n);
+
+    for (unsigned i = 0; i < n; i++) {
+        uint32_t a = BLOB_LO + l[i].offset;
+
+        if (a < address || a + l[i].count * l[i].size > address + length)
+            continue;
+        for (uint32_t k = 0; k < l[i].count; k++) {
+            const uint8_t *src = image + (a - address) + k * l[i].size;
+            uint8_t *dst = (uint8_t *)&xenon2 + a + k * l[i].size;
+
+            if (l[i].size == 2) {
+                uint16_t v = be16(src);
+
+                memcpy(dst, &v, 2);
+            } else {
+                uint32_t v = be32(src);
+
+                if (l[i].pointer == 1 && v)
+                    v = (uint32_t)(uintptr_t)guest_ptr(v);
+                else if (l[i].pointer == 2 && v)
+                    v = (uint32_t)(uintptr_t)guest_code_stub(v);
+                memcpy(dst, &v, 4);
+            }
+        }
+    }
+}
+
+/* and back: the same members of the block into the original's memory ram */
+static void blob_save(uint8_t *ram)
+{
+    unsigned n;
+    const struct blob_member *l = blob_list(&n);
+
+    for (unsigned i = 0; i < n; i++) {
+        for (uint32_t k = 0; k < l[i].count; k++) {
+            uint32_t a = BLOB_LO + l[i].offset + k * l[i].size;
+            const uint8_t *src = (const uint8_t *)&xenon2 + a;
+            uint8_t *dst = ram + a;
+
+            if (l[i].size == 2) {
+                uint16_t v;
+
+                memcpy(&v, src, 2);
+                dst[0] = (uint8_t)(v >> 8);
+                dst[1] = (uint8_t)v;
+            } else {
+                uint32_t v;
+
+                memcpy(&v, src, 4);
+                if (l[i].pointer == 1 && v)
+                    v = guest_address((void *)(uintptr_t)v);
+                else if (l[i].pointer == 2 && v)
+                    v = guest_code_address((void *)(uintptr_t)v);
+                dst[0] = (uint8_t)(v >> 24);
+                dst[1] = (uint8_t)(v >> 16);
+                dst[2] = (uint8_t)(v >> 8);
+                dst[3] = (uint8_t)v;
+            }
+        }
+    }
+}
 
 void guest_load_range(uint32_t address, const uint8_t *image, uint32_t length)
 {
@@ -131,6 +215,8 @@ void guest_load_range(uint32_t address, const uint8_t *image, uint32_t length)
             }
         }
     }
+    if (blob_raw >= 2)
+        blob_load(address, image, length);
 }
 
 /* disk 1 from track 82 on is the game's program, data and variables, as the loader of disk 1 puts them at $400 ($6B400 bytes) */
@@ -291,6 +377,8 @@ void host_export_ram_buf(uint8_t *ram)   /* ram: 0x80000 bytes */
             }
         }
     }
+    if (blob_raw >= 2)
+        blob_save(ram);
 }
 
 /* the memory as the original had it (big endian, 0x80000 bytes) into the block: the raw bytes, then the named members converted (the dev build starts the port from the
@@ -298,6 +386,6 @@ void host_export_ram_buf(uint8_t *ram)   /* ram: 0x80000 bytes */
 void host_import_ram_buf(const uint8_t *ram)
 {
     memcpy(&xenon2, ram, sizeof xenon2);
-    blob_raw = be16(ram + 0xe04) > 1 ? 2 : 0;   /* (level_number: the level) */
+    blob_raw = be16(ram + 0xe04) > 1 ? be16(ram + 0xe04) : 0;   /* (level_number: the level) */
     guest_load_range(0, ram, 0x80000);
 }

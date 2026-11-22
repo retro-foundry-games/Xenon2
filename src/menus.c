@@ -425,7 +425,7 @@ void level_load(void)
     }
     irq_vectors[2] = irq_vblank_hooked;
     i = (uint16_t)((uint16_t)(level_number - 1) * 2);
-    guest_blob_raw(level > 1 ? 2 : 0);   /* (level 1's members at $54E40 on do not describe the blob of another level) */
+    guest_blob_raw(level > 1 ? level : 0);   /* (level 1's members at $54E40 on do not describe the blob of another level) */
     disk_read_sectors(level_sectors[i], level_sectors[i + 1], &map_image);
     irq_vectors[2] = irq_vblank;
     title_out_loading();
@@ -460,7 +460,7 @@ void shop_run(void)
     title_out_shop();
     clear_palette();
     shop_main();
-    guest_blob_raw(level_number > 1 ? 2 : 0);
+    guest_blob_raw(level_number > 1 ? level_number : 0);
     if (boss_dead != 0) {
         uint16_t other = cur_player ^ 1;
 
