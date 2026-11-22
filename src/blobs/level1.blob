@@ -21,7 +21,17 @@ record LevelSeg 12
 6 gfx ptr
 10 score u16
 end
-54e40 shot_params u8 24
+54e43 shot_1_rate u8 1
+54e44 shot_1_gfx u16
+54e46 shot_1_steps u16
+54e49 shot_2_rate u8 1
+54e4a shot_2_gfx u16
+54e4c shot_2_steps u16
+54e4f shot_3_rate u8 1
+54e50 shot_3_gfx u16
+54e52 shot_3_steps u16
+54e54 shot_4_gfx u16
+54e56 shot_4_steps u16
 54e58 boss_energy u16 2
 54e5c turret_energy u16 3
 54e62 boss_steps u16 1

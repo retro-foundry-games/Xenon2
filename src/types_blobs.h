@@ -291,7 +291,20 @@ struct ShopLight {
 _Static_assert(sizeof(struct ShopLight) == 8, "ShopLight");
 
 struct Level1Data {
-    uint8_t shot_params[24];   /* 54E40 */
+    BLOB_PAD(3)
+    uint8_t shot_1_rate;   /* 54E43 */
+    uint16_t shot_1_gfx;   /* 54E44 */
+    uint16_t shot_1_steps;   /* 54E46 */
+    BLOB_PAD(1)
+    uint8_t shot_2_rate;   /* 54E49 */
+    uint16_t shot_2_gfx;   /* 54E4A */
+    uint16_t shot_2_steps;   /* 54E4C */
+    BLOB_PAD(1)
+    uint8_t shot_3_rate;   /* 54E4F */
+    uint16_t shot_3_gfx;   /* 54E50 */
+    uint16_t shot_3_steps;   /* 54E52 */
+    uint16_t shot_4_gfx;   /* 54E54 */
+    uint16_t shot_4_steps;   /* 54E56 */
     uint16_t boss_energy[2];   /* 54E58 */
     uint16_t turret_energy[3];   /* 54E5C */
     uint16_t boss_steps;   /* 54E62 */
@@ -373,7 +386,17 @@ struct Level1Data {
     uint8_t data_src[12000];   /* 6E80A */
 };
 _Static_assert(sizeof(struct Level1Data) == 116906, "Level1Data");
-_Static_assert(offsetof(struct Level1Data, shot_params) == 0x54E40 - BLOB_BASE, "Level1Data.shot_params");
+_Static_assert(offsetof(struct Level1Data, shot_1_rate) == 0x54E43 - BLOB_BASE, "Level1Data.shot_1_rate");
+_Static_assert(offsetof(struct Level1Data, shot_1_gfx) == 0x54E44 - BLOB_BASE, "Level1Data.shot_1_gfx");
+_Static_assert(offsetof(struct Level1Data, shot_1_steps) == 0x54E46 - BLOB_BASE, "Level1Data.shot_1_steps");
+_Static_assert(offsetof(struct Level1Data, shot_2_rate) == 0x54E49 - BLOB_BASE, "Level1Data.shot_2_rate");
+_Static_assert(offsetof(struct Level1Data, shot_2_gfx) == 0x54E4A - BLOB_BASE, "Level1Data.shot_2_gfx");
+_Static_assert(offsetof(struct Level1Data, shot_2_steps) == 0x54E4C - BLOB_BASE, "Level1Data.shot_2_steps");
+_Static_assert(offsetof(struct Level1Data, shot_3_rate) == 0x54E4F - BLOB_BASE, "Level1Data.shot_3_rate");
+_Static_assert(offsetof(struct Level1Data, shot_3_gfx) == 0x54E50 - BLOB_BASE, "Level1Data.shot_3_gfx");
+_Static_assert(offsetof(struct Level1Data, shot_3_steps) == 0x54E52 - BLOB_BASE, "Level1Data.shot_3_steps");
+_Static_assert(offsetof(struct Level1Data, shot_4_gfx) == 0x54E54 - BLOB_BASE, "Level1Data.shot_4_gfx");
+_Static_assert(offsetof(struct Level1Data, shot_4_steps) == 0x54E56 - BLOB_BASE, "Level1Data.shot_4_steps");
 _Static_assert(offsetof(struct Level1Data, boss_energy) == 0x54E58 - BLOB_BASE, "Level1Data.boss_energy");
 _Static_assert(offsetof(struct Level1Data, turret_energy) == 0x54E5C - BLOB_BASE, "Level1Data.turret_energy");
 _Static_assert(offsetof(struct Level1Data, boss_steps) == 0x54E62 - BLOB_BASE, "Level1Data.boss_steps");

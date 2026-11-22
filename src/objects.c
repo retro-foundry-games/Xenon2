@@ -26,7 +26,7 @@ static Object *list_insert(int list)
 }
 
 /* long $4A of an object: a pointer */
-static void set_cursor(Object *o, const uint8_t *p)
+static void set_cursor(Object *o, const struct PathCmd *p)
 {
     o->cursor = p;
 }
@@ -411,7 +411,7 @@ Object *spawn_formation(Object *obj, const struct SpawnRec *rec, const uint8_t *
         struct SpawnDef def;
         const struct SpawnDef *def_ptr = &def;
         Object *leader;
-        const uint8_t *e;
+        const struct PathCmd *e;
         uint16_t rnd, spacing;
 
         obj = list_insert(LIST_ENEMY);
@@ -438,16 +438,16 @@ Object *spawn_formation(Object *obj, const struct SpawnRec *rec, const uint8_t *
             }
             if (leader != obj)
                 obj->path.wait = (int16_t)(obj->path.wait - (int16_t)def_ptr->score);
-            e = (const uint8_t *)GPTR(rd32(xenon2.level_formations + (int16_t)(uint16_t)((rec->index - 1) * 4)));
+            e = (const struct PathCmd *)GPTR(rd32(xenon2.level_formations + (int16_t)(uint16_t)((rec->index - 1) * 4)));
             if ((const void *)e < (const void *)xenon2.level_data_start || (const void *)e >= (const void *)xenon2.level_events_a)
                 return obj;
             obj->script = (uint8_t *)e;
-            if (rd16(e) == 0xa) {
-                obj->x = (int16_t)rd16(e + 2);
-                obj->y = (int16_t)rd16(e + 4);
+            if (rd16(e->op.b) == 0xa) {
+                obj->x = (int16_t)rd16(e->arg.pos.x.b);
+                obj->y = (int16_t)rd16(e->arg.pos.y.b);
                 if ((int16_t)rec->x >= 100)
                     obj->x = (int16_t)(obj->x + (int16_t)offset);
-                e += 6;
+                e = (const struct PathCmd *)(&e->arg.pos + 1);
             }
             set_cursor(obj, e);
             obj->steps = (int16_t)rec->steps;
@@ -513,14 +513,15 @@ Object *spawn_formation(Object *obj, const struct SpawnRec *rec, const uint8_t *
  * the two words of the picture the hot spot */
 void bbox_from_frame(Object *o)
 {
-    const uint8_t *f = (const uint8_t *)o->gfx;
-    int16_t x0 = (int16_t)((int16_t)rd16(f - 8) + o->x - (int16_t)rd16(f));
-    int16_t y0 = (int16_t)((int16_t)rd16(f - 6) + o->y - (int16_t)rd16(f + 2));
+    const struct Pic *f = o->gfx;
+    const struct PicBox *box = (const struct PicBox *)f - 1;
+    int16_t x0 = (int16_t)((int16_t)rd16(box->dx.b) + o->x - (int16_t)rd16(f->hot_x.b));
+    int16_t y0 = (int16_t)((int16_t)rd16(box->dy.b) + o->y - (int16_t)rd16(f->hot_y.b));
 
     o->hit[0] = x0;
     o->hit[1] = y0;
-    o->hit[2] = (int16_t)(x0 + (int16_t)rd16(f - 4) - 1);
-    o->hit[3] = (int16_t)(y0 + (int16_t)rd16(f - 2) - 1);
+    o->hit[2] = (int16_t)(x0 + (int16_t)rd16(box->w.b) - 1);
+    o->hit[3] = (int16_t)(y0 + (int16_t)rd16(box->h.b) - 1);
 }
 
 /* orig $F32, $0037B2: the update of the marker that ends a group (type $BC, its $56 the marker that starts it, type $B8): the box of the

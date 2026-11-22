@@ -330,13 +330,13 @@ void l4_shot_a(Object *obj)
     obj->y = (int16_t)(obj->y + xenon2.scroll_speed);
     anim_step(obj);
     if (obj->anim_delay == 0) {
-        const uint8_t *frame = (const uint8_t *)obj->gfx;
+        const struct Pic *frame = obj->gfx;
         int16_t x, y;
 
-        x = (int16_t)(obj->x - (int16_t)rd16(frame));
-        y = (int16_t)(obj->y - (int16_t)rd16(frame + 2));
-        x = (int16_t)(x * 2 + (int16_t)rd16(frame + 4));
-        y = (int16_t)(y * 2 + (int16_t)rd16(frame + 6));
+        x = (int16_t)(obj->x - (int16_t)rd16(frame->hot_x.b));
+        y = (int16_t)(obj->y - (int16_t)rd16(frame->hot_y.b));
+        x = (int16_t)(x * 2 + (int16_t)rd16(frame->width.b));
+        y = (int16_t)(y * 2 + (int16_t)rd16(frame->height.b));
         obj->type = 0xc;
         obj->fn_update = (obj_fn)animate_only;
         obj->x = (int16_t)(x >> 1);
@@ -384,7 +384,7 @@ void l4_shot_a(Object *obj)
     anim = xenon2.level4_data.anims_by_kind[kind / 4];
     set_anim(drop, anim);
     drop->script = (uint8_t *)cells;
-    drop->cursor = cells;
+    drop->cursor = (const struct PathCmd *)cells;
     drop->steps = (int16_t)xenon2.level4_data.shot_a_steps;
     drop->shot_count = drop->shot_rate = 0;
 }
@@ -407,7 +407,7 @@ void l4_enemy_f8(Object *obj)
             index = (uint16_t)(index + 4);
         table = xenon2.level4_data.enemy_f8_paths[index / 4];
         obj->script = (uint8_t *)table;
-        obj->cursor = table;
+        obj->cursor = (const struct PathCmd *)table;
         obj->path.wait = 0;
     }
     index = (uint16_t)((((uint16_t)(int16_t)obj->l4.angle + 0x10) >> 3) & 0x1c);
@@ -1185,7 +1185,7 @@ box:
 void l4_walker_hit(Object *shot, Object *enemy, uint16_t damage)
 {
     uint16_t old = (uint16_t)enemy->energy;
-    const uint8_t *frame;
+    const struct Pic *frame;
     int16_t x, y;
     Object *p;
 
@@ -1194,9 +1194,9 @@ void l4_walker_hit(Object *shot, Object *enemy, uint16_t damage)
         enemy->fn_draw = (obj_fn)l4_walker_flash;
         return;
     }
-    frame = (const uint8_t *)enemy->gfx;
-    x = (int16_t)(((int16_t)(enemy->x - (int16_t)rd16(frame)) * 2 + (int16_t)rd16(frame + 4)) >> 1);
-    y = (int16_t)(((int16_t)(enemy->y - (int16_t)rd16(frame + 2)) * 2 + (int16_t)rd16(frame + 6)) >> 1);
+    frame = enemy->gfx;
+    x = (int16_t)(((int16_t)(enemy->x - (int16_t)rd16(frame->hot_x.b)) * 2 + (int16_t)rd16(frame->width.b)) >> 1);
+    y = (int16_t)(((int16_t)(enemy->y - (int16_t)rd16(frame->hot_y.b)) * 2 + (int16_t)rd16(frame->height.b)) >> 1);
     y = (int16_t)(y - xenon2.scroll_pos);
     spawn_effect(x, y, xenon2.big_explosion_anim, draw_bob_masked);
     xenon2.player_score += (uint16_t)enemy->score;

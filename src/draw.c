@@ -44,16 +44,17 @@ static uint16_t lsr_w(uint16_t v, int16_t count)
  * (the clip; returns 0 where the original returns from its caller) */
 static int clip_bob(Clip *c, int16_t x, int16_t y, int with_map)
 {
-    const uint8_t *p = c->src;
+    const struct Pic *pic = (const struct Pic *)c->src;
+    const uint8_t *p;
     int16_t shift = x, row = y, col, width, xend, xstart, room, lines, top;
     int32_t sum;
 
-    shift = (int16_t)(shift - (int16_t)rd16(p)); p += 2;
+    shift = (int16_t)(shift - (int16_t)rd16(pic->hot_x.b));
     if (shift >= 0x140)
         return 0;
-    row = (int16_t)(row - (int16_t)rd16(p)); p += 2;
+    row = (int16_t)(row - (int16_t)rd16(pic->hot_y.b));
     if (with_map)   /* $105C: the masks of the map under the bob first (inlined: $2F66) */
-        map_tile_mask2((uint16_t)shift, (uint16_t)row, rd16(p + 2));
+        map_tile_mask2((uint16_t)shift, (uint16_t)row, rd16(pic->height.b));
     room = (int16_t)(xenon2.clip_bottom - row);
     if (room < 0)
         return 0;
@@ -67,13 +68,14 @@ static int clip_bob(Clip *c, int16_t x, int16_t y, int with_map)
     col = (int16_t)(col - shift);
     col >>= 3;
     c->dst += col;
-    width = (int16_t)rd16(p); p += 2;
+    width = (int16_t)rd16(pic->width.b);
     xstart = xend;
     sum = (int32_t)xend + width;
     xend = (int16_t)sum;
     if (sum <= 0)
         return 0;
-    lines = (int16_t)rd16(p); p += 2;
+    lines = (int16_t)rd16(pic->height.b);
+    p = (const uint8_t *)(pic + 1);
     if (lines > room)
         lines = room;
     if (-(int32_t)top > 0) {

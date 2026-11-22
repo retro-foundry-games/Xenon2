@@ -743,13 +743,13 @@ void shot_update(Object *obj)
 /* the centre of o's picture (the 16-bit arithmetic of the original) for an explosion */
 static void centre(const Object *o, int16_t *x, int16_t *y)
 {
-    const uint8_t *gfx = (const uint8_t *)o->gfx;
-    int16_t dx = (int16_t)(o->x - (int16_t)rd16(gfx)), dy = (int16_t)(o->y - (int16_t)rd16(gfx + 2));
+    const struct Pic *gfx = o->gfx;
+    int16_t dx = (int16_t)(o->x - (int16_t)rd16(gfx->hot_x.b)), dy = (int16_t)(o->y - (int16_t)rd16(gfx->hot_y.b));
 
     dx = (int16_t)(dx + dx);
     dy = (int16_t)(dy + dy);
-    *x = (int16_t)(dx + (int16_t)rd16(gfx + 4)) >> 1;
-    *y = (int16_t)(dy + (int16_t)rd16(gfx + 6)) >> 1;
+    *x = (int16_t)(dx + (int16_t)rd16(gfx->width.b)) >> 1;
+    *y = (int16_t)(dy + (int16_t)rd16(gfx->height.b)) >> 1;
 }
 
 /* orig $E1E, $00592A: hit routine of the parts of a big enemy (enemy is a part; its chain is $56/$5A) */
@@ -1438,7 +1438,7 @@ static void set_ptr_30(Object *o, Object *p)
  * becomes the player's centre plus the difference of the centres times respawn_shield (the centre of the picture, not its corner) */
 void weapon_shield_draw(Object *obj)
 {
-    const uint8_t *g;
+    const struct Pic *g;
     int16_t cx, cy, dx, dy;
 
     if (xenon2.respawn_shield == 0x10) {
@@ -1446,22 +1446,22 @@ void weapon_shield_draw(Object *obj)
         return;
     }
     obj->fn_draw = draw_bob_masked;
-    g = (const uint8_t *)obj->gfx;
-    cx = (int16_t)(obj->x - (int16_t)rd16(g));
-    cy = (int16_t)(obj->y - (int16_t)rd16(g + 2));
+    g = obj->gfx;
+    cx = (int16_t)(obj->x - (int16_t)rd16(g->hot_x.b));
+    cy = (int16_t)(obj->y - (int16_t)rd16(g->hot_y.b));
     cx = (int16_t)(cx + cx);
     cy = (int16_t)(cy + cy);
-    cx = (int16_t)(cx + (int16_t)rd16(g + 4));
-    cy = (int16_t)(cy + (int16_t)rd16(g + 6));
+    cx = (int16_t)(cx + (int16_t)rd16(g->width.b));
+    cy = (int16_t)(cy + (int16_t)rd16(g->height.b));
     dx = (int16_t)(cx >> 1);
     dy = (int16_t)(cy >> 1);
-    g = (const uint8_t *)PLAYER->gfx;
-    cx = (int16_t)(PLAYER->x - (int16_t)rd16(g));
-    cy = (int16_t)(PLAYER->y - (int16_t)rd16(g + 2));
+    g = PLAYER->gfx;
+    cx = (int16_t)(PLAYER->x - (int16_t)rd16(g->hot_x.b));
+    cy = (int16_t)(PLAYER->y - (int16_t)rd16(g->hot_y.b));
     cx = (int16_t)(cx + cx);
     cy = (int16_t)(cy + cy);
-    cx = (int16_t)(cx + (int16_t)rd16(g + 4));
-    cy = (int16_t)(cy + (int16_t)rd16(g + 6));
+    cx = (int16_t)(cx + (int16_t)rd16(g->width.b));
+    cy = (int16_t)(cy + (int16_t)rd16(g->height.b));
     cx = (int16_t)(cx >> 1);
     cy = (int16_t)(cy >> 1);
     dx = (int16_t)(dx - cx);

@@ -244,15 +244,17 @@ void shop_records_draw(void)
                 shop_sparkle(rec);
             } else {
                 const uint8_t *pic = xenon2.shop_data.tab_puff[cnt & 1];
+                const struct Pic *header;
                 uint16_t px, py, adj;
 
                 draw_bob_masked_at(rec->x, rec->y, pic);
                 pic = list_next(&rec->list);
-                px = (uint16_t)(rec->x + rd16(pic));
-                py = (uint16_t)(rec->y + rd16(pic + 2));
-                adj = (uint16_t)((rd16(pic + 4) >> 1) - 0x10);
+                header = (const struct Pic *)pic;
+                px = (uint16_t)(rec->x + rd16(header->hot_x.b));
+                py = (uint16_t)(rec->y + rd16(header->hot_y.b));
+                adj = (uint16_t)((rd16(header->width.b) >> 1) - 0x10);
                 px = (uint16_t)(px - adj);
-                adj = (uint16_t)(((uint16_t)(rd16(pic + 6) + 1) >> 1) - 0xe);
+                adj = (uint16_t)(((uint16_t)(rd16(header->height.b) + 1) >> 1) - 0xe);
                 py = (uint16_t)(py - adj);
                 draw_bob_masked_at(px, py, pic);
             }

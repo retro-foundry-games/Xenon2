@@ -102,14 +102,14 @@ static void follow_target_offset(Object *obj)
 /* the burst at the hot spot of the picture of o (the end of the hits: $55D1C... $561F4) */
 static void explode_at(const Object *o, const uint8_t *anim)
 {
-    const uint8_t *g = (const uint8_t *)o->gfx;
-    int16_t x = (int16_t)(o->x - (int16_t)rd16(g));
-    int16_t y = (int16_t)(o->y - (int16_t)rd16(g + 2));
+    const struct Pic *g = o->gfx;
+    int16_t x = (int16_t)(o->x - (int16_t)rd16(g->hot_x.b));
+    int16_t y = (int16_t)(o->y - (int16_t)rd16(g->hot_y.b));
 
     x = (int16_t)(x + x);
     y = (int16_t)(y + y);
-    x = (int16_t)(x + (int16_t)rd16(g + 4));
-    y = (int16_t)(y + (int16_t)rd16(g + 6));
+    x = (int16_t)(x + (int16_t)rd16(g->width.b));
+    y = (int16_t)(y + (int16_t)rd16(g->height.b));
     spawn_effect((int16_t)(x >> 1), (int16_t)(y >> 1), anim, draw_bob_masked);
 }
 
@@ -213,7 +213,7 @@ void l5_init(void)
 /* level5 $0551E8: a formation of ten that fly the path of the table by the record's type */
 void l5_spawn_gunners(const struct SpawnRec *record)
 {
-    const uint8_t *path = xenon2.level5_data.gunner_paths[record->index];
+    const struct PathCmd *path = (const struct PathCmd *)xenon2.level5_data.gunner_paths[record->index];
     int16_t wait = 0;
     int count;
 
@@ -226,15 +226,15 @@ void l5_spawn_gunners(const struct SpawnRec *record)
         obj->fn_hit = (void *)hit_enemy;
         obj->gfx = (void *)xenon2.level5_data.gunner_picture;
         obj->anim_delay = 0;
-        obj->x = (int16_t)rd16(path + 2);
-        obj->y = (int16_t)(rd16(path + 4) - xenon2.scroll_pos);
+        obj->x = (int16_t)rd16(path->arg.pos.x.b);
+        obj->y = (int16_t)(rd16(path->arg.pos.y.b) - xenon2.scroll_pos);
         obj->energy = (int16_t)xenon2.level5_data.gunners_energy;
         obj->big = 0;
         obj->path.angle = 0;
         obj->turn = 0;
         obj->turn_step = 0;
         obj->script = (uint8_t *)path;
-        obj->cursor = path + 6;
+        obj->cursor = (const struct PathCmd *)(&path->arg.pos + 1);
         obj->path.wait = wait;
         wait = (int16_t)(wait - (int16_t)xenon2.level5_data.gunners_param);
         obj->hit[0] = 0x3e8;

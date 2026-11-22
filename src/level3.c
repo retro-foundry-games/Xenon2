@@ -231,7 +231,7 @@ void l3_worm_spawn(uint16_t side)
 {
     uint16_t path_index;
     const struct Level3WormPiece *entry = xenon2.level3_data.worm_spawn.pieces;
-    const uint8_t *path;
+    const struct PathCmd *path;
     int16_t delay = 0, x, y;
     int n, count;
     Object *head = 0, *prev = 0;
@@ -247,9 +247,9 @@ void l3_worm_spawn(uint16_t side)
             path_index = (uint16_t)(*seed & 7);
         } while (path_index < 1 || path_index == 7);
     }
-    path = xenon2.level3_data.worm_paths[path_index];
-    x = (int16_t)rd16(path + 2);
-    y = (int16_t)(rd16(path + 4) - xenon2.scroll_pos - xenon2.scroll_step);
+    path = (const struct PathCmd *)xenon2.level3_data.worm_paths[path_index];
+    x = (int16_t)rd16(path->arg.pos.x.b);
+    y = (int16_t)(rd16(path->arg.pos.y.b) - xenon2.scroll_pos - xenon2.scroll_step);
     count = xenon2.level3_data.worm_spawn.last + 1;
     for (n = 0; n < count; n++) {
         Object *seg = alloc_in(LIST_C);
@@ -596,13 +596,13 @@ void l3_spawn_diver(const struct SpawnRec *rec)
 
 static void l3_centre(const Object *o, int16_t *x, int16_t *y)
 {
-    const uint8_t *frame = (const uint8_t *)o->gfx;
-    int16_t dx = (int16_t)(o->x - (int16_t)rd16(frame)), dy = (int16_t)(o->y - (int16_t)rd16(frame + 2));
+    const struct Pic *frame = o->gfx;
+    int16_t dx = (int16_t)(o->x - (int16_t)rd16(frame->hot_x.b)), dy = (int16_t)(o->y - (int16_t)rd16(frame->hot_y.b));
 
     dx = (int16_t)(dx + dx);
     dy = (int16_t)(dy + dy);
-    *x = (int16_t)(dx + (int16_t)rd16(frame + 4)) >> 1;
-    *y = (int16_t)(dy + (int16_t)rd16(frame + 6)) >> 1;
+    *x = (int16_t)(dx + (int16_t)rd16(frame->width.b)) >> 1;
+    *y = (int16_t)(dy + (int16_t)rd16(frame->height.b)) >> 1;
 }
 
 /* level3 $055DEC: the parts of the end, one object each from the table at $558F0 (update, hit, picture, offset x, offset y), put first in list C; the first
@@ -634,7 +634,7 @@ void l3_spawn_parts(void)
         part->y = (int16_t)(xenon2.level3_data.spawn_parts_words_2 - 0x28);
         part->x_frac = 0;
         part->y_frac = 0;
-        part->cursor = xenon2.level3_data.spawn_parts_data_3;
+        part->cursor = (const struct PathCmd *)xenon2.level3_data.spawn_parts_data_3;
         part->path.angle = 0;
         part->turn_step = 0;
         part->kind = 0;

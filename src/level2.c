@@ -52,13 +52,17 @@ static uint32_t ror5(uint32_t *seed)
     return *seed;
 }
 
+/* the table of blocks that break: four groups (by the quarter of the screen), each a count and that many entries (the words stay big endian) */
+struct L2Block { RawWord state, x, y, cell; };
+struct L2Group { RawWord count; struct L2Block entries[]; };
+
 /* ---- the entries the engine calls ($54E0C..$54E2C) ---- */
 
 /* level2 $054E0C, $056F54: a box (x0, y0)-(x1, y1) meets one of the blocks that break (l2_block_table: four groups by the quarter of the
  * screen the box is in, a count and entries of state, x, y, the cell that was there); returns l2_block_object with the entry in its $16, or 0 */
 Object *l2_collision_hook(int16_t box_x0, int16_t box_y0, int16_t box_x1, int16_t box_y1)
 {
-    const uint8_t *entry;
+    const struct L2Block *entry;
     uint16_t n;
     uint32_t quarter = 0;
 
@@ -70,18 +74,21 @@ Object *l2_collision_hook(int16_t box_x0, int16_t box_y0, int16_t box_x1, int16_
         quarter |= 4;
     if (box_x0 <= 0x80)
         quarter |= 8;
-    entry = xenon2.l2_block_table + xenon2.level2_data.block_group_offsets[quarter / 4];
-    n = rd16(entry);
-    entry += 2;
-    for (; n != 0; n--, entry += 8) {
+    {
+        const struct L2Group *group = (const struct L2Group *)(xenon2.l2_block_table + xenon2.level2_data.block_group_offsets[quarter / 4]);
+
+        n = rd16(group->count.b);
+        entry = group->entries;
+    }
+    for (; n != 0; n--, entry++) {
         int16_t x, y;
 
-        if (rd16(entry) == 0)
+        if (rd16(entry->state.b) == 0)
             continue;
-        x = (int16_t)rd16(entry + 2);
+        x = (int16_t)rd16(entry->x.b);
         if (x > box_x1)
             return 0;
-        y = (int16_t)rd16(entry + 4);
+        y = (int16_t)rd16(entry->y.b);
         if (box_overlap(box_x0, box_y0, box_x1, box_y1, x, y, (int16_t)(x + 0xf), (int16_t)(y + 0xf))) {
             xenon2.l2_block_object.gfx = entry;
             return &xenon2.l2_block_object;
@@ -93,11 +100,11 @@ Object *l2_collision_hook(int16_t box_x0, int16_t box_y0, int16_t box_x1, int16_
 /* level2 $056FA8: the hit routine of l2_block_object: the block is broken (its entry's state 0, its cell of the map cleared) and bursts */
 void l2_block_hit(Object *attacker, Object *target, uint16_t damage)
 {
-    uint8_t *e = (uint8_t *)xenon2.l2_block_object.gfx;
-    uint16_t x = rd16(e + 2), y = rd16(e + 4);
+    struct L2Block *e = (struct L2Block *)xenon2.l2_block_object.gfx;
+    uint16_t x = rd16(e->x.b), y = rd16(e->y.b);
     uint16_t cell;
 
-    wr16(e, 0);
+    wr16(e->state.b, 0);
     cell = (uint16_t)((uint16_t)(y >> 3) * 0x14 + (x >> 3));
     wr16(xenon2.level_init_src + cell, 0);
     spawn_effect((int16_t)(x + 8), (int16_t)(y - xenon2.scroll_pos + 8), xenon2.anim_explosion, draw_bob_masked);
@@ -348,9 +355,9 @@ void l2_front_piece_update(Object *part)
         }
     }
     if (burst) {
-        const uint8_t *f = (const uint8_t *)part->gfx;
-        int16_t ex = (int16_t)(((int16_t)(part->x - (int16_t)rd16(f)) * 2 + (int16_t)rd16(f + 4)) >> 1);
-        int16_t ey = (int16_t)(((int16_t)(part->y - (int16_t)rd16(f + 2)) * 2 + (int16_t)rd16(f + 6)) >> 1);
+        const struct Pic *f = part->gfx;
+        int16_t ex = (int16_t)(((int16_t)(part->x - (int16_t)rd16(f->hot_x.b)) * 2 + (int16_t)rd16(f->width.b)) >> 1);
+        int16_t ey = (int16_t)(((int16_t)(part->y - (int16_t)rd16(f->hot_y.b)) * 2 + (int16_t)rd16(f->height.b)) >> 1);
 
         spawn_effect(ex, ey, xenon2.anim_explosion, draw_bob_masked);
     }
@@ -522,28 +529,31 @@ static void l2_restore_blocks(Object *bolt)
 {
     int16_t box_x0 = bolt->hit[0], box_y0 = (int16_t)(bolt->hit[1] + xenon2.scroll_pos), box_x1 = bolt->hit[2], box_y1 = (int16_t)(bolt->hit[3] + xenon2.scroll_pos);
     uint32_t quarter = 0;
-    const uint8_t *entry;
+    struct L2Block *entry;
     uint16_t n;
 
     if (box_y0 <= 0x80)
         quarter |= 4;
     if (box_x0 <= 0x80)
         quarter |= 8;
-    entry = xenon2.l2_block_table + xenon2.level2_data.block_group_offsets[quarter / 4];
-    n = rd16(entry);
-    entry += 2;
-    for (; n != 0; n--, entry += 8) {
-        uint8_t *e = (uint8_t *)entry;
+    {
+        struct L2Group *group = (struct L2Group *)(xenon2.l2_block_table + xenon2.level2_data.block_group_offsets[quarter / 4]);
+
+        n = rd16(group->count.b);
+        entry = group->entries;
+    }
+    for (; n != 0; n--, entry++) {
+        struct L2Block *e = entry;
         int16_t x, y;
 
-        if (rd16(e) != 0)
+        if (rd16(e->state.b) != 0)
             continue;
-        x = (int16_t)rd16(e + 2);
-        y = (int16_t)rd16(e + 4);
+        x = (int16_t)rd16(e->x.b);
+        y = (int16_t)rd16(e->y.b);
         if (!box_overlap(box_x0, box_y0, box_x1, box_y1, x, y, (int16_t)(x + 0xf), (int16_t)(y + 0xf)))
             continue;
-        wr16(e, 1);
-        wr16(xenon2.level_init_src + (uint16_t)(((uint16_t)y >> 3) * 0x14 + ((uint16_t)x >> 3)), rd16(e + 6));
+        wr16(e->state.b, 1);
+        wr16(xenon2.level_init_src + (uint16_t)(((uint16_t)y >> 3) * 0x14 + ((uint16_t)x >> 3)), rd16(e->cell.b));
         return;
     }
 }
@@ -912,7 +922,7 @@ static void l2_debris_wall(uint16_t side)
         obj->big = 0;
         obj->anim_delay = 0;
         obj->script = (uint8_t *)path;
-        obj->cursor = path;
+        obj->cursor = (const struct PathCmd *)path;
         obj->x = (int16_t)x;
         obj->y = (int16_t)y;
         obj->kind = 0;
@@ -946,7 +956,7 @@ void l2_debris_walls(void)
  * it follows its path (a wait while v28 is negative), is drawn behind the map while the path is inside it, and its picture goes by the direction */
 void l2_piece_update(Object *part)
 {
-    const uint8_t *cursor;
+    const struct PathCmd *cursor;
     uint16_t angle, pic_index;
 
     if (part->piece.wait == (int16_t)0x8000) {
@@ -982,9 +992,9 @@ void l2_piece_update(Object *part)
             part->fn_draw = draw_bob_behind_map;
     } else if (part->fn_draw == draw_bob_behind_map) {
         cursor = part->cursor;
-        if (rd16(cursor) != 0 && cursor - 10 != part->script)
+        if (rd16(cursor->op.b) != 0 && cursor != (const struct PathCmd *)(&((const struct PathCmd *)part->script)->arg.move + 1))
             part->fn_draw = draw_bob_masked;
-    } else if (rd16(part->cursor) == 0) {
+    } else if (rd16(part->cursor->op.b) == 0) {
         part->fn_draw = draw_bob_behind_map;
     }
     pic_index = (uint16_t)(((uint16_t)((int16_t)part->piece.dir + 0x10) >> 3) & 0x1c);
