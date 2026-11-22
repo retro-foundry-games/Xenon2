@@ -258,10 +258,10 @@ void l5_gunner_update(Object *obj)
     }
     old = (uint16_t)(int16_t)obj->gunner.phase;
     obj_script_run(obj);
-    frame = (uint16_t)(((uint16_t)((int16_t)obj->gunner.phase + 0x10) >> 3) & 0x1c);
-    old_frame = (uint16_t)(((uint16_t)(old + 0x10) >> 3) & 0x1c);
+    frame = (uint16_t)(((uint16_t)((int16_t)obj->gunner.phase + 0x10) >> 5) & 7);
+    old_frame = (uint16_t)(((uint16_t)(old + 0x10) >> 5) & 7);
     if (frame != old_frame)
-        set_anim(obj, xenon2.level5_data.gunner_anims[frame / 4]);
+        set_anim(obj, xenon2.level5_data.gunner_anims[frame]);
     if (add_carry(&obj->shot_count, xenon2.level5_data.gunner_fire_rate)) {
         int dir;
 
@@ -1297,15 +1297,15 @@ void l5_unit_update(Object *obj)
     }
     if (add_carry(&obj->shot_count, xenon2.level5_data.unit_fire_rate)) {
         int16_t x = (int16_t)(obj->x + 0x10), y = (int16_t)(obj->y - xenon2.scroll_pos + 0x10);
-        uint16_t dir_offset = (uint16_t)(((int16_t)(obj->unit.dir >> 16) * 4) & 0x1c);
+        uint16_t dir_index = (uint16_t)((int16_t)(obj->unit.dir >> 16) & 7);
 
         obj->shot_count = (uint8_t)(random_next() & 0x3f);
-        x = (int16_t)(x + xenon2.level5_data.unit_dirs[dir_offset / 4].dx);
-        y = (int16_t)(y + xenon2.level5_data.unit_dirs[dir_offset / 4].dy);
-        dir_offset &= 0xc;
+        x = (int16_t)(x + xenon2.level5_data.unit_dirs[dir_index].dx);
+        y = (int16_t)(y + xenon2.level5_data.unit_dirs[dir_index].dy);
+        dir_index &= 3;
         if (!(xenon2.frame_tick & 1))
-            dir_offset += 0x10;
-        spawn_enemy_shot((uint16_t)x, (uint16_t)y, (uint16_t)(int16_t)(obj->unit.dir >> 16), xenon2.level5_data.unit_shot_steps, (void *)xenon2.level5_data.unit_shot_pictures[dir_offset / 4]);
+            dir_index += 4;
+        spawn_enemy_shot((uint16_t)x, (uint16_t)y, (uint16_t)(int16_t)(obj->unit.dir >> 16), xenon2.level5_data.unit_shot_steps, (void *)xenon2.level5_data.unit_shot_pictures[dir_index]);
     }
 cells:
     c = obj->map;

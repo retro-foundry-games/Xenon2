@@ -660,9 +660,9 @@ void level1_segment_update(Object *seg)
     seg->unit.wait = ahead->unit.wait;
     if (seg->fn_draw == obj_nop_thunk && seg->unit.wait >= 0)
         seg->fn_draw = draw_bob_masked;
-    offset = (uint16_t)(((uint16_t)((int16_t)seg->l1.angle + 0x10) >> 3) & 0x1c);
+    offset = (uint16_t)(((uint16_t)((int16_t)seg->l1.angle + 0x10) >> 5) & 7);
     tab = &xenon2.level1_data.piece_pictures[seg->type == 0x110 ? 8 : 0];
-    seg->gfx = tab[offset / 4];
+    seg->gfx = tab[offset];
     bbox_from_frame(seg);
 }
 

@@ -381,8 +381,8 @@ void l4_shot_a(Object *obj)
         }
     drop->hit[0] = 0x3e8;
     drop->hit[2] = 0x3e8;
-    kind = (uint16_t)((uint16_t)angle >> 3);
-    anim = xenon2.level4_data.anims_by_kind[kind / 4];
+    kind = (uint16_t)((uint16_t)angle >> 5);
+    anim = xenon2.level4_data.anims_by_kind[kind];
     set_anim(drop, anim);
     drop->script = (uint8_t *)cells;
     drop->cursor = (const struct PathCmd *)cells;
@@ -403,19 +403,19 @@ void l4_enemy_f8(Object *obj)
         obj->fn_update = (obj_fn)l4_enemy_f8;
         obj->fn_hit = (void *)hit_enemy;
         obj->fn_draw = draw_bob_masked;
-        index = (uint16_t)(random_next() & 8);
+        index = (uint16_t)((random_next() >> 3) & 1) * 2;
         if (obj->x >= 0xa0)
-            index = (uint16_t)(index + 4);
-        table = xenon2.level4_data.enemy_f8_paths[index / 4];
+            index++;
+        table = xenon2.level4_data.enemy_f8_paths[index];
         obj->script = (uint8_t *)table;
         obj->cursor = (const struct PathCmd *)table;
         obj->path.wait = 0;
     }
-    index = (uint16_t)((((uint16_t)(int16_t)obj->l4.angle + 0x10) >> 3) & 0x1c);
-    old_index = (uint16_t)(((old_angle + 0x10) >> 3) & 0x1c);
+    index = (uint16_t)((((uint16_t)(int16_t)obj->l4.angle + 0x10) >> 5) & 7);
+    old_index = (uint16_t)(((old_angle + 0x10) >> 5) & 7);
     if (index == old_index)
         return;
-    set_anim(obj, xenon2.level4_data.anims_by_kind[index / 4]);
+    set_anim(obj, xenon2.level4_data.anims_by_kind[index]);
     bbox_from_frame(obj);
 }
 

@@ -280,10 +280,9 @@ void option_update(Object *option)
     index = (uint16_t)xenon2.player_vx;
     if ((int16_t)index < 0)
         index = (uint16_t)-(int16_t)index;
-    index += index;
     if (option->option.index & 1)
-        index += 0xe;
-    x += (uint16_t)xenon2.option_offsets[index / 2];
+        index += 7;
+    x += (uint16_t)xenon2.option_offsets[index];
     option->x = x;
     option->y = xenon2.player.y;
     option->fn_draw = obj_nop;

@@ -829,11 +829,11 @@ void l3_part_arm_tip(Object *obj)
 
     l3_arm_follow(obj);
     obj_script_run(obj);
-    angle_bits = (uint16_t)(((uint16_t)(int16_t)obj->arm.angle >> 2) & 0x38);
+    angle_bits = (uint16_t)(((uint16_t)(int16_t)obj->arm.angle >> 4) & 0xe);
     if (obj->steps == 0xe)
         xenon2.sfx_cmd = 0xc;
-    tick_bits = (uint16_t)(xenon2.frame_tick & 4);
-    obj->gfx = (void *)xenon2.level3_data.arm_tip_pictures[(uint16_t)(angle_bits + tick_bits) / 4];
+    tick_bits = (uint16_t)((xenon2.frame_tick >> 2) & 1);
+    obj->gfx = (void *)xenon2.level3_data.arm_tip_pictures[(uint16_t)(angle_bits + tick_bits)];
     obj->anim_delay = 0;
     bbox_from_frame(obj);
 }
@@ -849,15 +849,15 @@ void l3_enemy_enter(Object *obj)
     y = obj->y;
     if (x < 0) {
         if (y < 0)
-            anim_off = y < x ? 4 : 0;
+            anim_off = y < x ? 1 : 0;
         else
-            anim_off = (int16_t)(0xc0 - y) < x ? 0xc : 0;
+            anim_off = (int16_t)(0xc0 - y) < x ? 3 : 0;
     } else if (y < 0) {
-        anim_off = y < (int16_t)(0x140 - x) ? 4 : 8;
+        anim_off = y < (int16_t)(0x140 - x) ? 1 : 2;
     } else {
-        anim_off = (int16_t)(y - 0xc0) < (int16_t)(x - 0x140) ? 8 : 0xc;
+        anim_off = (int16_t)(y - 0xc0) < (int16_t)(x - 0x140) ? 2 : 3;
     }
-    set_anim(obj, xenon2.level3_data.enemy_enter_anims[anim_off / 4]);
+    set_anim(obj, xenon2.level3_data.enemy_enter_anims[anim_off]);
     obj->fn_update = (obj_fn)enemy_update;
     bbox_from_frame(obj);
 }
@@ -1153,7 +1153,7 @@ void l3_spawn_walker(const struct SpawnRec *rec)
  * the cell ahead: a wall turns it by the tables at $56460, a free cell ahead lets it go on; now and then it fires at the player */
 void l3_walker_update(Object *obj)
 {
-    uint32_t dir_offset = 2 * (uint32_t)(uint16_t)(int16_t)(obj->walker.dir >> 16);
+    uint32_t dir = (uint32_t)(uint16_t)(int16_t)(obj->walker.dir >> 16);
     int16_t dx, map_y;
     int at_tile = 0, turn = 0;
 
@@ -1163,12 +1163,12 @@ void l3_walker_update(Object *obj)
         kill_thunk(obj);
         return;
     }
-    dx = xenon2.level3_data.walker_update_words[dir_offset / 2];
+    dx = xenon2.level3_data.walker_update_words[dir];
     if (dx != 0) {
         obj->x = (int16_t)(obj->x + dx);
         at_tile = dx < 0 ? (obj->x & 0xf) == 0xf : (obj->x & 0xf) == 0;
     } else {
-        int16_t step = xenon2.level3_data.walker_update_words_2[dir_offset / 2];
+        int16_t step = xenon2.level3_data.walker_update_words_2[dir];
 
         obj->y = (int16_t)(obj->y + step);
         map_y = (int16_t)(obj->y + xenon2.scroll_pos);
@@ -1184,11 +1184,11 @@ void l3_walker_update(Object *obj)
             const uint8_t *tile = xenon2.level_init_src + (int16_t)(uint16_t)MAP_ROW(row) + (((uint16_t)x >> 3) & 0xfe);
 
             if (*(const Cell *)tile != 0) {
-                obj->x = (int16_t)(obj->x - xenon2.level3_data.walker_update_words[dir_offset / 2]);
-                obj->y = (int16_t)(obj->y - xenon2.level3_data.walker_update_words_2[dir_offset / 2]);
+                obj->x = (int16_t)(obj->x - xenon2.level3_data.walker_update_words[dir]);
+                obj->y = (int16_t)(obj->y - xenon2.level3_data.walker_update_words_2[dir]);
                 turn = 1;
             } else {
-                int16_t offset = xenon2.level3_data.walker_update_words_3[dir_offset / 2];
+                int16_t offset = xenon2.level3_data.walker_update_words_3[dir];
 
                 turn = *(const Cell *)(tile + offset) == 0;
             }
@@ -1196,9 +1196,9 @@ void l3_walker_update(Object *obj)
         if (turn) {
             uint16_t ni;
 
-            obj->x = (int16_t)(obj->x + xenon2.level3_data.walker_update_words_4[dir_offset / 2]);
-            obj->y = (int16_t)(obj->y + xenon2.level3_data.walker_update_words_5[dir_offset / 2]);
-            ni = xenon2.level3_data.walker_update_words_6[dir_offset / 2];
+            obj->x = (int16_t)(obj->x + xenon2.level3_data.walker_update_words_4[dir]);
+            obj->y = (int16_t)(obj->y + xenon2.level3_data.walker_update_words_5[dir]);
+            ni = xenon2.level3_data.walker_update_words_6[dir];
             obj->walker.dir = (obj->walker.dir & 0xffffu) | (uint32_t)(uint16_t)((int16_t)ni) << 16;
             set_anim(obj, xenon2.level3_data.walker_spawn_anims[ni]);
         }
@@ -1238,10 +1238,10 @@ void l3_worm_head(Object *obj)
 
     obj->y = (int16_t)(obj->y + xenon2.scroll_speed);
     enemy_update(obj);
-    frame = (uint16_t)((((uint16_t)(int16_t)obj->worm.phase + 0x10) >> 3) & 0x1c);
-    old_frame = (uint16_t)(((old + 0x10) >> 3) & 0x1c);
+    frame = (uint16_t)((((uint16_t)(int16_t)obj->worm.phase + 0x10) >> 5) & 7);
+    old_frame = (uint16_t)(((old + 0x10) >> 5) & 7);
     if (old_frame != frame)
-        set_anim(obj, xenon2.level3_data.worm_head_anims[frame / 4]);
+        set_anim(obj, xenon2.level3_data.worm_head_anims[frame]);
     sum = (uint16_t)(obj->shot_count + xenon2.level3_data.worm_head_fire_rate);
     obj->shot_count = (uint8_t)sum;
     if (sum > 0xff) {
