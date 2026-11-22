@@ -101,7 +101,19 @@ struct Object {
     int16_t kind;               /* 44: the item or weapon kind (weapons, pickups, the shop's slots), 0 for most enemies */
     uint8_t *script;
     const uint8_t *cursor;      /* 4a: the next command of a path script (ObjMove cursor) */
-    uint16_t turn[3];           /* 4e: the angle change per step as two words (high, low), then the step (52): ObjMove turn_hi, turn_lo, turn_step */
+    union {
+        uint32_t turn_fixed;          /* 4e: the angle change per step, 8.24 (turn_hi is the high word) */
+        struct {
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+            uint16_t turn_lo;
+            uint16_t turn_hi;
+#else
+            uint16_t turn_hi;
+            uint16_t turn_lo;
+#endif
+        };
+    };
+    uint16_t turn_step;         /* 52 */
     int16_t steps;
     Object *target;             /* 56 */
     Object *chain;              /* 5a */

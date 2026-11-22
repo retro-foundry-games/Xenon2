@@ -69,16 +69,6 @@ static int add_carry(uint8_t *b, uint8_t add)
     return sum > 0xff;
 }
 
-static uint32_t get4e(const Object *o)
-{
-    return join32(o->turn[0], o->turn[1]);
-}
-
-static void put4e(Object *o, uint32_t v)
-{
-    split32(&o->turn[0], &o->turn[1], v);
-}
-
 /* the player's direction from the object (the eight of direction8), the offsets are the original's */
 static uint16_t aim_at_player(const Object *a0, int16_t dx, int16_t dy)
 {
@@ -381,7 +371,8 @@ void l4_shot_a(Object *a0)
     a1->fn_hit = (void *)hit_enemy;
     a1->l4.angle_hi = 0;
     a1->l4.angle_lo = d0;
-    a1->turn[0] = a1->turn[1] = a1->turn[2] = 0;
+    a1->turn_fixed = 0;
+    a1->turn_step = 0;
     a1->x = (int16_t)(a0->x + d1);
     a1->y = a0->y;
     a1->path.wait = 0;
@@ -489,7 +480,8 @@ void l4_spawn_boss1(void)
         a0->l4.size = 0;
         a0->l4.angle_hi = 0;
         a0->l4.angle_lo = 0;
-        a0->turn[0] = a0->turn[1] = a0->turn[2] = 0;
+        a0->turn_fixed = 0;
+        a0->turn_step = 0;
         a0->steps = 3;
         a0->energy = (int16_t)a1->energy;
         a0->big = -1;
@@ -683,11 +675,11 @@ static void l4_pose(Object *a0)
     if (d0 & 0x80)
         d0 = (uint16_t)((d0 & 0xff00) | (~d0 & 0xff));
     l = (int16_t)(d0 - 0x40);
-    put4e(a0, (uint32_t)l << 8);
+    a0->turn_fixed = (uint32_t)l << 8;
     d0 = (uint16_t)((frame_tick + 0xa0) & 0x1ff);
     if (d0 & 0x100)
         d0 ^= 0x1ff;
-    a0->turn[2] = (uint16_t)((d0 - 0x80) << 2);
+    a0->turn_step = (uint16_t)((d0 - 0x80) << 2);
     bbox_from_frame(a0);
 }
 
@@ -770,7 +762,8 @@ void l4_spawn_boss2(const uint8_t *a1_record, uint16_t d2)
         a0->l4.size = 0;
         a0->l4.angle_hi = 0;
         a0->l4.angle_lo = (int16_t)a1->angle;
-        a0->turn[0] = a0->turn[1] = a0->turn[2] = 0;
+        a0->turn_fixed = 0;
+        a0->turn_step = 0;
         a0->steps = 3;
         a0->energy = a1->energy;
         a0->big = (int8_t)a1->big;
@@ -792,9 +785,9 @@ static void follow_chain(Object *a0)
     a0->y_frac = a1->y_frac;
     a0->l4.angle_hi = a1->l4.angle_hi;
     a0->l4.angle_lo = a1->l4.angle_lo;
-    a0->turn[0] = a1->turn[0];
-    a0->turn[1] = a1->turn[1];
-    a0->turn[2] = a1->turn[2];
+    a0->turn_hi = a1->turn_hi;
+    a0->turn_lo = a1->turn_lo;
+    a0->turn_step = a1->turn_step;
     a0->steps = a1->steps;
     a0->l4.size = 0x64;
     obj_script_run(a0);
@@ -825,7 +818,8 @@ void l4_b2_head(Object *a0)
         d0 = (uint16_t)((d0 & 0xff00) | ((d0 - 0x40) & 0xff));
         a0->l4.angle_hi = 0;
         a0->head.angle = (int16_t)d0;
-        a0->turn[0] = a0->turn[1] = a0->turn[2] = 0;
+        a0->turn_fixed = 0;
+        a0->turn_step = 0;
         if ((uint8_t)random_next() >= level4_data.b2_head_chance) {
             head_picture(a0);
             return;
@@ -843,12 +837,12 @@ void l4_b2_head(Object *a0)
         {
             uint32_t r = ((random_next() & 0x1f) + 0x20) << 10;
 
-            put4e(a0, r);
-            a0->turn[2] = 0;
+            a0->turn_fixed = r;
+            a0->turn_step = 0;
         }
         if (a0->head.angle < 0x20 || !(a0->head.angle < 0xa0)) {
             a0->head.angle = (int16_t)((a0->head.angle & 0xff00) | ((a0->head.angle + 0x40) & 0xff));
-            put4e(a0, (uint32_t)(0 - get4e(a0)));
+            a0->turn_fixed = (uint32_t)(0 - a0->turn_fixed);
         }
     }
     a0->head.bend = (int16_t)(a0->head.bend + a0->head.dart);

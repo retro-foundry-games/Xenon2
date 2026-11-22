@@ -243,9 +243,9 @@ void l5_spawn_gunners(const uint8_t *a1)
         a0->big = 0;
         a0->path.angle_hi = 0;
         a0->path.angle_lo = 0;
-        a0->turn[0] = 0;
-        a0->turn[1] = 0;
-        a0->turn[2] = 0;
+        a0->turn_hi = 0;
+        a0->turn_lo = 0;
+        a0->turn_step = 0;
         a0->script = (uint8_t *)a2;
         a0->cursor = a2 + 6;
         a0->path.wait = d6;

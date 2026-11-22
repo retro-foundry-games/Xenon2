@@ -875,7 +875,7 @@ move:
     d0 = join32(o->x_hi, o->x_lo);
     d1 = join32(o->y_hi, o->y_lo);
     d3 = join32(o->angle_hi, o->angle_lo);
-    d4 = join32(o->turn_hi, o->turn_lo);
+    d4 = o->turn_fixed;
     d5 = o->turn_step;
     for (;;) {
         d7--;
@@ -883,7 +883,7 @@ move:
             split32(&o->x_hi, &o->x_lo, d0);
             split32(&o->y_hi, &o->y_lo, d1);
             split32(&o->angle_hi, &o->angle_lo, d3);
-            split32(&o->turn_hi, &o->turn_lo, d4);
+            o->turn_fixed = d4;
             return;
         }
         o->wait--;
@@ -892,7 +892,7 @@ move:
             split32(&o->x_hi, &o->x_lo, d0);
             split32(&o->y_hi, &o->y_lo, d1);
             split32(&o->angle_hi, &o->angle_lo, d3);
-            split32(&o->turn_hi, &o->turn_lo, d4);
+            o->turn_fixed = d4;
             goto next_command;
         }
         d1 += (uint32_t)((int32_t)((uint32_t)(int16_t)sine[(int16_t)d3] << 16) >> 6);
@@ -948,7 +948,7 @@ next_command:
         case 2:
             o->angle_hi = 0;
             o->angle_lo = rd16(cmd + 2);
-            split32(&o->turn_hi, &o->turn_lo, (uint32_t)((int32_t)((uint32_t)rd16(cmd + 4) << 16) >> 8));
+            o->turn_fixed = (uint32_t)((int32_t)((uint32_t)rd16(cmd + 4) << 16) >> 8);
             o->turn_step = (int16_t)rd16(cmd + 6);
             o->wait = (int16_t)rd16(cmd + 8);
             o->cursor = cmd + 10;
