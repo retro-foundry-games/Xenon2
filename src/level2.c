@@ -370,7 +370,7 @@ void l2_front_piece_update(Object *part)
 void l2_flyer_update(Object *enemy)
 {
     static const int16_t wobble[8] = { 0, -2, -4, -2, 0, 2, 4, 2 };
-    uint16_t phase = (uint16_t)(xenon2.frame_tick + (uint16_t)GADDR(enemy));
+    uint16_t phase = (uint16_t)(xenon2.frame_tick + offsetof(struct Xenon2, obj_pool) + (enemy - xenon2.obj_pool) * sizeof(Object));
     int16_t dist, new_y;
 
     anim_step(enemy);

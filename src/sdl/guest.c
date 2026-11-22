@@ -24,6 +24,19 @@ void guest_state(host_state_visit visit, void *arg)
     visit((void *)host_cia_raw, sizeof host_cia_raw, arg);
 }
 
+/* the words of an object that one kind keeps a pointer in: the loader converts the record's own pointer members, the kinds' words only here */
+static void object_pointers_to_host(Object *o)
+{
+    if (o->type == 0x40 && o->link.ptr)
+        o->link.ptr = guest_ptr((uint32_t)(uintptr_t)o->link.ptr);
+}
+
+static void object_pointers_to_guest(Object *o)
+{
+    if (o->type == 0x40 && o->link.ptr)
+        o->link.ptr = (Object *)(uintptr_t)guest_address(o->link.ptr);
+}
+
 void *guest_ptr(uint32_t address)
 {
     uint32_t base = (uint32_t)(uintptr_t)&xenon2;
@@ -199,7 +212,11 @@ void guest_load_range(uint32_t address, const uint8_t *image, uint32_t length)
 
             memcpy(dst, src, size);
             for (uint32_t o = 0; rsize && o + rsize <= size; o += rsize)
+{
                 guest_swap_record(guest_members[i].rec, dst + o);
+                if (!strcmp(guest_members[i].rec, "Object"))
+                    object_pointers_to_host((Object *)(dst + o));
+            }
         } else if (elem == 1) {
             memcpy(dst, src, size);
         } else {
@@ -347,7 +364,11 @@ void host_export_ram_buf(uint8_t *ram)   /* ram: 0x80000 bytes */
             unsigned rsize = guest_record_size(guest_members[i].rec);
 
             for (uint32_t o = 0; rsize && o + rsize <= size; o += rsize)
+{
+                if (!strcmp(guest_members[i].rec, "Object"))
+                    object_pointers_to_guest((Object *)(m + o));
                 guest_unswap_record(guest_members[i].rec, m + o);
+            }
         } else if (elem > 1) {
             for (uint32_t o = 0; o + elem <= size; o += elem) {
                 uint32_t v = 0;

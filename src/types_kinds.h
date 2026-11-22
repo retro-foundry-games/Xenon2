@@ -187,9 +187,10 @@ struct KindA_pod_trail {
     int16_t tick;
     uint8_t pad_end[8];
 };
+typedef struct Object Object;
 struct KindA_link {
     uint8_t pad28[2];
-    uint32_t ptr;
+    Object *ptr;
     uint8_t pad_end[4];
 };
 struct KindA_marker {
