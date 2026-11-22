@@ -19,21 +19,21 @@ arr player_pictures 0x60d0 uint16_t * 13                     ; the player's pict
 arr dive_pictures 0x614a uint16_t * 4                      ; the player's pictures while dive_phase is 1..4
 tab kill_scores 0x7970 uint16_t 2                      ; score added when a shot kills ($7972: when the pod shot does)
 arr player_shot_pictures 0x27c2 uint16_t * 12                     ; pictures of the player's shots (three each)
-tab anim_weaponb0 0x2540 uint16_t 3                   ; animation headers: picture (long), delay, then the script
-tab anim_spinner 0x25a0 uint16_t 3
+tab anim_weaponb0 0x2540 uint16_t 18                   ; animation headers: picture (long), delay, then the script
+tab anim_spinner 0x25a0 uint16_t 12
 tab anim_wave_326c 0x2564 uint16_t 30
-tab anim_debris_0 0x2abc uint16_t 9
-tab anim_debris_1 0x2a80 uint16_t 3
-tab anim_debris_2 0x251c uint16_t 3
-tab anim_debris_3 0x24f8 uint16_t 3
-tab anim_debris_4 0x2864 uint16_t 3
+tab anim_debris_0 0x2abc uint16_t 30
+tab anim_debris_1 0x2a80 uint16_t 30
+tab anim_debris_2 0x251c uint16_t 18
+tab anim_debris_3 0x24f8 uint16_t 18
+tab anim_debris_4 0x2864 uint16_t 21
 tab anim_debris_5 0x2b70 uint16_t 30
-tab anim_debris_6 0x2a44 uint16_t 3
-tab anim_debris_7 0x2810 uint16_t 3
-tab anim_debris_13 0x379a uint16_t 3
-tab anim_debris_17 0x2b34 uint16_t 3
-tab anim_weapon2c 0x25be uint16_t 3
-tab anim_shell_9c 0x25e2 uint16_t 3
+tab anim_debris_6 0x2a44 uint16_t 30
+tab anim_debris_7 0x2810 uint16_t 21
+tab anim_debris_13 0x379a uint16_t 12
+tab anim_debris_17 0x2b34 uint16_t 30
+tab anim_weapon2c 0x25be uint16_t 18
+tab anim_shell_9c 0x25e2 uint16_t 24
 tab anim_weapon20 0x2612 uint16_t 30
 tab anim_bonus_big 0x264e uint16_t 48
 tab anim_bonus_small 0x26ae uint16_t 48
@@ -42,8 +42,8 @@ tab anim_explosion_big 0x273a uint16_t 19
 tab anim_player_death 0x2760 uint16_t 27
 tab anim_weapon34 0x280a uint16_t 3
 tab anim_weapon44 0x283a uint16_t 21
-tab anim_weapon38 0x28b2 uint16_t 3
-tab anim_weapon3c 0x28d0 uint16_t 3
+tab anim_weapon38 0x28b2 uint16_t 15
+tab anim_weapon3c 0x28d0 uint16_t 15
 tab anim_pod_decoration 0x28ee uint16_t 18
 tab anim_drill_0 0x2912 uint16_t 3
 tab anim_drill_1 0x2930 uint16_t 3
@@ -53,13 +53,13 @@ tab anim_drill_4 0x298a uint16_t 3
 tab anim_drill_5 0x29a8 uint16_t 3
 tab anim_drill_6 0x29c6 uint16_t 3
 tab anim_drill_7 0x29e4 uint16_t 3
-tab anim_weapon4c 0x2a02 uint16_t 3
+tab anim_weapon4c 0x2a02 uint16_t 33
 tab anim_weapon90 0x2c24 uint16_t 27
 var player_vx_prev 0x5dd0 int16_t                         ; a copy of player_vx the code area holds
 tab weaponc0_picture 0x192ba uint16_t 1                    ; a picture
 arr level_data_dst 0x7d120 uint16_t 6000
 ; --- code that never ran in the recorded run ---
-tab anim_weaponb0_shot 0x2796 uint16_t 3
+tab anim_weaponb0_shot 0x2796 uint16_t 22
 tab anim_weapon34_fire 0x27f2 uint16_t 12
 tab anim_pod_trail 0x288e uint16_t 18
 tab anim_drill_head_0 0x2918 uint16_t 12

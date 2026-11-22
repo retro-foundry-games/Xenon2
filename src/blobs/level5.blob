@@ -122,3 +122,14 @@ end
 63026 pad_63026 u16 23538
 74326 pad_74326 u16 740
 75144 pad_75144 u16 7680
+; --- words reached by the scripts and pointers (tools/blob_gaps.py) ---
+54fc8 words_54fc8 u16 204
+55178 words_55178 u16 12
+5538c words_5538c u16 96
+55b64 words_55b64 u16 75
+5b3bc words_5b3bc u16 1815
+5f360 words_5f360 u16 176
+61328 words_61328 u16 306
+6158e words_6158e u16 3018
+73098 words_73098 u16 2375
+748ee words_748ee u16 23

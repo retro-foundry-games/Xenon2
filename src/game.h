@@ -214,40 +214,30 @@ struct Xenon2 {
     PAD(296)
     const int16_t weapon_slot_offsets[8];  /* $002404 tab */
     PAD(228)
-    const uint16_t anim_debris_3[3];  /* $0024F8 tab */
-    PAD(30)
-    const uint16_t anim_debris_2[3];  /* $00251C tab */
-    PAD(30)
-    const uint16_t anim_weaponb0[3];  /* $002540 tab */
-    PAD(30)
+    const uint16_t anim_debris_3[18];  /* $0024F8 tab */
+    const uint16_t anim_debris_2[18];  /* $00251C tab */
+    const uint16_t anim_weaponb0[18];  /* $002540 tab */
     const uint16_t anim_wave_326c[30];  /* $002564 tab */
-    const uint16_t anim_spinner[3];  /* $0025A0 tab */
-    PAD(24)
-    const uint16_t anim_weapon2c[3];  /* $0025BE tab */
-    PAD(30)
-    const uint16_t anim_shell_9c[3];  /* $0025E2 tab */
-    PAD(42)
+    const uint16_t anim_spinner[12];  /* $0025A0 tab */
+    uint16_t gfx_25b8[3];  /* $0025B8 arr */
+    const uint16_t anim_weapon2c[18];  /* $0025BE tab */
+    const uint16_t anim_shell_9c[24];  /* $0025E2 tab */
     const uint16_t anim_weapon20[30];  /* $002612 tab */
     const uint16_t anim_bonus_big[48];  /* $00264E tab */
     const uint16_t anim_bonus_small[48];  /* $0026AE tab */
     const uint16_t anim_explosion[22];  /* $00270E tab */
     const uint16_t anim_explosion_big[19];  /* $00273A tab */
     const uint16_t anim_player_death[27];  /* $002760 tab */
-    const uint16_t anim_weaponb0_shot[3];  /* $002796 tab */
-    PAD(38)
+    const uint16_t anim_weaponb0_shot[22];  /* $002796 tab */
     uint16_t * player_shot_pictures[12];  /* $0027C2 arr */
     const uint16_t anim_weapon34_fire[12];  /* $0027F2 tab */
     const uint16_t anim_weapon34[3];  /* $00280A tab */
-    const uint16_t anim_debris_7[3];  /* $002810 tab */
-    PAD(36)
+    const uint16_t anim_debris_7[21];  /* $002810 tab */
     const uint16_t anim_weapon44[21];  /* $00283A tab */
-    const uint16_t anim_debris_4[3];  /* $002864 tab */
-    PAD(36)
+    const uint16_t anim_debris_4[21];  /* $002864 tab */
     const uint16_t anim_pod_trail[18];  /* $00288E tab */
-    const uint16_t anim_weapon38[3];  /* $0028B2 tab */
-    PAD(24)
-    const uint16_t anim_weapon3c[3];  /* $0028D0 tab */
-    PAD(24)
+    const uint16_t anim_weapon38[15];  /* $0028B2 tab */
+    const uint16_t anim_weapon3c[15];  /* $0028D0 tab */
     const uint16_t anim_pod_decoration[18];  /* $0028EE tab */
     const uint16_t anim_drill_0[3];  /* $002912 tab */
     const uint16_t anim_drill_head_0[12];  /* $002918 tab */
@@ -265,18 +255,14 @@ struct Xenon2 {
     const uint16_t anim_drill_head_6[12];  /* $0029CC tab */
     const uint16_t anim_drill_7[3];  /* $0029E4 tab */
     const uint16_t anim_drill_head_7[12];  /* $0029EA tab */
-    const uint16_t anim_weapon4c[3];  /* $002A02 tab */
-    PAD(60)
-    const uint16_t anim_debris_6[3];  /* $002A44 tab */
-    PAD(54)
-    const uint16_t anim_debris_1[3];  /* $002A80 tab */
-    PAD(54)
-    const uint16_t anim_debris_0[9];  /* $002ABC tab */
-    PAD(102)
-    const uint16_t anim_debris_17[3];  /* $002B34 tab */
-    PAD(54)
+    const uint16_t anim_weapon4c[33];  /* $002A02 tab */
+    const uint16_t anim_debris_6[30];  /* $002A44 tab */
+    const uint16_t anim_debris_1[30];  /* $002A80 tab */
+    const uint16_t anim_debris_0[30];  /* $002ABC tab */
+    uint16_t gfx_2af8[30];  /* $002AF8 arr */
+    const uint16_t anim_debris_17[30];  /* $002B34 tab */
     const uint16_t anim_debris_5[30];  /* $002B70 tab */
-    PAD(120)
+    uint16_t gfx_2bac[60];  /* $002BAC arr */
     const uint16_t anim_weapon90[27];  /* $002C24 tab */
     PAD(396)
     const uint16_t mask_empty[80];  /* $002DE6 tab */
@@ -287,8 +273,8 @@ struct Xenon2 {
     PAD(1610)
     const struct SpawnKind spawn_kinds[18];  /* $003728 tab */
     PAD(6)
-    const uint16_t anim_debris_13[3];  /* $00379A tab */
-    PAD(306)
+    const uint16_t anim_debris_13[12];  /* $00379A tab */
+    PAD(288)
     const int16_t enemy_shot_dx[16];  /* $0038D2 tab */
     const int16_t enemy_shot_dy[16];  /* $0038F2 tab */
     PAD(432)
@@ -407,51 +393,51 @@ struct Xenon2 {
     const uint16_t title_gfx[2808];  /* $00C966 tab */
     PAD(40)
     uint16_t gfx_df7e[101];  /* $00DF7E arr */
-    PAD(168)
+    uint16_t gfx_e048[84];  /* $00E048 arr */
     uint16_t gfx_e0f0[45];  /* $00E0F0 arr */
-    PAD(92)
+    uint16_t gfx_e14a[46];  /* $00E14A arr */
     uint16_t gfx_e1a6[209];  /* $00E1A6 arr */
-    PAD(154)
+    uint16_t gfx_e348[77];  /* $00E348 arr */
     uint16_t gfx_e3e2[1024];  /* $00E3E2 arr */
     uint16_t player_gfx;  /* $00EBE2 var */
     uint16_t gfx_ebe4[4744];  /* $00EBE4 arr */
-    PAD(1326)
+    uint16_t gfx_110f4[663];  /* $0110F4 arr */
     uint16_t gfx_11622[89];  /* $011622 arr */
-    PAD(4470)
+    uint16_t gfx_116d4[2235];  /* $0116D4 arr */
     uint16_t gfx_1284a[883];  /* $01284A arr */
-    PAD(2278)
+    uint16_t gfx_12f30[1139];  /* $012F30 arr */
     uint16_t gfx_13816[441];  /* $013816 arr */
-    PAD(1758)
+    uint16_t gfx_13b88[879];  /* $013B88 arr */
     uint16_t gfx_14266[705];  /* $014266 arr */
-    PAD(1766)
+    uint16_t gfx_147e8[883];  /* $0147E8 arr */
     uint16_t gfx_14ece[261];  /* $014ECE arr */
-    PAD(1694)
+    uint16_t gfx_150d8[847];  /* $0150D8 arr */
     uint16_t gfx_15776[701];  /* $015776 arr */
-    PAD(1410)
+    uint16_t gfx_15cf0[705];  /* $015CF0 arr */
     uint16_t gfx_16272[234];  /* $016272 arr */
-    PAD(132)
+    uint16_t gfx_16446[66];  /* $016446 arr */
     uint16_t gfx_164ca[292];  /* $0164CA arr */
-    PAD(102)
+    uint16_t gfx_16712[51];  /* $016712 arr */
     uint16_t gfx_16778[367];  /* $016778 arr */
-    PAD(132)
+    uint16_t gfx_16a56[66];  /* $016A56 arr */
     uint16_t gfx_16ada[292];  /* $016ADA arr */
-    PAD(102)
+    uint16_t gfx_16d22[51];  /* $016D22 arr */
     uint16_t gfx_16d88[548];  /* $016D88 arr */
-    PAD(6)
+    uint16_t gfx_171d0[3];  /* $0171D0 arr */
     const uint16_t pic_weapon34_fire[1];  /* $0171D6 tab */
     uint16_t gfx_171d8[172];  /* $0171D8 arr */
-    PAD(6)
+    uint16_t gfx_17330[3];  /* $017330 arr */
     const uint16_t pic_weapon34_idle[1];  /* $017336 tab */
     uint16_t gfx_17338[215];  /* $017338 arr */
-    PAD(1998)
+    uint16_t gfx_174e6[999];  /* $0174E6 arr */
     uint16_t gfx_17cb4[785];  /* $017CB4 arr */
-    PAD(6)
+    uint16_t gfx_182d6[3];  /* $0182D6 arr */
     const uint16_t pic_weapon90_idle[1];  /* $0182DC tab */
     uint16_t gfx_182de[84];  /* $0182DE arr */
-    PAD(6)
+    uint16_t gfx_18386[3];  /* $018386 arr */
     const uint16_t pic_weapon90_twin[1];  /* $01838C tab */
     uint16_t gfx_1838e[419];  /* $01838E arr */
-    PAD(3046)
+    uint16_t gfx_186d4[1523];  /* $0186D4 arr */
     const uint16_t weaponc0_picture[1];  /* $0192BA tab */
     uint16_t gfx_192bc[54];  /* $0192BC arr */
     PAD(1270)
@@ -515,7 +501,7 @@ struct Xenon2 {
     uint16_t gfx_436a0[1200];  /* $0436A0 arr */
     uint16_t screen_a[15360];  /* $044000 arr */
     uint16_t panel_a[640];  /* $04B800 arr */
-    PAD(160)
+    uint16_t gfx_4bd00[80];  /* $04BD00 arr */
     uint16_t gfx_4bda0[1200];  /* $04BDA0 arr */
     uint16_t screen_b[15360];  /* $04C700 arr */
     uint16_t panel_b[640];  /* $053F00 arr */
@@ -711,6 +697,7 @@ LAYOUT_ASSERT(anim_debris_2, 0x251c);
 LAYOUT_ASSERT(anim_weaponb0, 0x2540);
 LAYOUT_ASSERT(anim_wave_326c, 0x2564);
 LAYOUT_ASSERT(anim_spinner, 0x25a0);
+LAYOUT_ASSERT(gfx_25b8, 0x25b8);
 LAYOUT_ASSERT(anim_weapon2c, 0x25be);
 LAYOUT_ASSERT(anim_shell_9c, 0x25e2);
 LAYOUT_ASSERT(anim_weapon20, 0x2612);
@@ -750,8 +737,10 @@ LAYOUT_ASSERT(anim_weapon4c, 0x2a02);
 LAYOUT_ASSERT(anim_debris_6, 0x2a44);
 LAYOUT_ASSERT(anim_debris_1, 0x2a80);
 LAYOUT_ASSERT(anim_debris_0, 0x2abc);
+LAYOUT_ASSERT(gfx_2af8, 0x2af8);
 LAYOUT_ASSERT(anim_debris_17, 0x2b34);
 LAYOUT_ASSERT(anim_debris_5, 0x2b70);
+LAYOUT_ASSERT(gfx_2bac, 0x2bac);
 LAYOUT_ASSERT(anim_weapon90, 0x2c24);
 LAYOUT_ASSERT(mask_empty, 0x2de6);
 LAYOUT_ASSERT(mask_full, 0x2ea6);
@@ -840,31 +829,51 @@ LAYOUT_ASSERT(title_font, 0x9a36);
 LAYOUT_ASSERT(font_gfx, 0xb666);
 LAYOUT_ASSERT(title_gfx, 0xc966);
 LAYOUT_ASSERT(gfx_df7e, 0xdf7e);
+LAYOUT_ASSERT(gfx_e048, 0xe048);
 LAYOUT_ASSERT(gfx_e0f0, 0xe0f0);
+LAYOUT_ASSERT(gfx_e14a, 0xe14a);
 LAYOUT_ASSERT(gfx_e1a6, 0xe1a6);
+LAYOUT_ASSERT(gfx_e348, 0xe348);
 LAYOUT_ASSERT(gfx_e3e2, 0xe3e2);
 LAYOUT_ASSERT(player_gfx, 0xebe2);
 LAYOUT_ASSERT(gfx_ebe4, 0xebe4);
+LAYOUT_ASSERT(gfx_110f4, 0x110f4);
 LAYOUT_ASSERT(gfx_11622, 0x11622);
+LAYOUT_ASSERT(gfx_116d4, 0x116d4);
 LAYOUT_ASSERT(gfx_1284a, 0x1284a);
+LAYOUT_ASSERT(gfx_12f30, 0x12f30);
 LAYOUT_ASSERT(gfx_13816, 0x13816);
+LAYOUT_ASSERT(gfx_13b88, 0x13b88);
 LAYOUT_ASSERT(gfx_14266, 0x14266);
+LAYOUT_ASSERT(gfx_147e8, 0x147e8);
 LAYOUT_ASSERT(gfx_14ece, 0x14ece);
+LAYOUT_ASSERT(gfx_150d8, 0x150d8);
 LAYOUT_ASSERT(gfx_15776, 0x15776);
+LAYOUT_ASSERT(gfx_15cf0, 0x15cf0);
 LAYOUT_ASSERT(gfx_16272, 0x16272);
+LAYOUT_ASSERT(gfx_16446, 0x16446);
 LAYOUT_ASSERT(gfx_164ca, 0x164ca);
+LAYOUT_ASSERT(gfx_16712, 0x16712);
 LAYOUT_ASSERT(gfx_16778, 0x16778);
+LAYOUT_ASSERT(gfx_16a56, 0x16a56);
 LAYOUT_ASSERT(gfx_16ada, 0x16ada);
+LAYOUT_ASSERT(gfx_16d22, 0x16d22);
 LAYOUT_ASSERT(gfx_16d88, 0x16d88);
+LAYOUT_ASSERT(gfx_171d0, 0x171d0);
 LAYOUT_ASSERT(pic_weapon34_fire, 0x171d6);
 LAYOUT_ASSERT(gfx_171d8, 0x171d8);
+LAYOUT_ASSERT(gfx_17330, 0x17330);
 LAYOUT_ASSERT(pic_weapon34_idle, 0x17336);
 LAYOUT_ASSERT(gfx_17338, 0x17338);
+LAYOUT_ASSERT(gfx_174e6, 0x174e6);
 LAYOUT_ASSERT(gfx_17cb4, 0x17cb4);
+LAYOUT_ASSERT(gfx_182d6, 0x182d6);
 LAYOUT_ASSERT(pic_weapon90_idle, 0x182dc);
 LAYOUT_ASSERT(gfx_182de, 0x182de);
+LAYOUT_ASSERT(gfx_18386, 0x18386);
 LAYOUT_ASSERT(pic_weapon90_twin, 0x1838c);
 LAYOUT_ASSERT(gfx_1838e, 0x1838e);
+LAYOUT_ASSERT(gfx_186d4, 0x186d4);
 LAYOUT_ASSERT(weaponc0_picture, 0x192ba);
 LAYOUT_ASSERT(gfx_192bc, 0x192bc);
 LAYOUT_ASSERT(digit_gfx, 0x1981e);
@@ -918,6 +927,7 @@ LAYOUT_ASSERT(tile_mask_buf, 0x433ac);
 LAYOUT_ASSERT(gfx_436a0, 0x436a0);
 LAYOUT_ASSERT(screen_a, 0x44000);
 LAYOUT_ASSERT(panel_a, 0x4b800);
+LAYOUT_ASSERT(gfx_4bd00, 0x4bd00);
 LAYOUT_ASSERT(gfx_4bda0, 0x4bda0);
 LAYOUT_ASSERT(screen_b, 0x4c700);
 LAYOUT_ASSERT(panel_b, 0x53f00);

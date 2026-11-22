@@ -276,12 +276,14 @@ static void *script_data(uint32_t v)
 
 extern void anim_op_jump(), anim_op_free();
 
-/* the script at A, and what follows it up to END (the member's end) */
+/* the script at A, and what follows it up to END (the member's end); END 0: the script alone, up to the step that ends it */
 static void script_walk(uint32_t a, uint32_t lo, uint32_t hi, uint32_t end)
 {
-    while (a >= lo && a + 6 <= hi && a + 6 <= end && !script_is_seen(a)) {
+    while (a >= lo && a + 6 <= hi && (!end || a + 6 <= end) && !script_is_seen(a)) {
         uint32_t pic = script_long(a);
 
+        if (pic && (pic < 0x400 || pic >= 0x80000 || (pic & 1)))
+            return;   /* (not a picture: the words that follow a script are data) */
         if (pic) {
             for (int k = 0; k < 6; k += 2)
                 script_mark(a + k);
@@ -289,7 +291,7 @@ static void script_walk(uint32_t a, uint32_t lo, uint32_t hi, uint32_t end)
             a += 6;
             continue;
         }
-        if (a + 8 > hi || a + 8 > end)
+        if (a + 8 > hi || (end && a + 8 > end))
             return;
         for (int k = 0; k < 8; k += 2)
             script_mark(a + k);
@@ -297,38 +299,18 @@ static void script_walk(uint32_t a, uint32_t lo, uint32_t hi, uint32_t end)
 
         script_put(a + 4, code, 2);
         a += 8;
-        if (code == (void *)anim_op_jump && a + 4 <= hi && a + 4 <= end) {
+        if (code == (void *)anim_op_jump && a + 4 <= hi && (!end || a + 4 <= end)) {
             uint32_t target = script_long(a);
 
             script_mark(a);
             script_mark(a + 2);
             script_put(a, script_data(target), 1);
             a += 4;
-            script_walk(target, lo, hi, hi);
+            script_walk(target, lo, hi, 0);
         }
-        if (a >= end)
+        if (!end || a >= end)
             return;
     }
-}
-
-/* the end of the words of the level's blob that run on from A (a script goes on to the end of the words it is in) */
-static uint32_t blob_words_end(uint32_t a)
-{
-    unsigned n;
-    const struct blob_member *l = blob_list(&n);
-    uint32_t end = 0;
-
-    for (unsigned i = 0; i < n; i++) {
-        uint32_t lo = BLOB_LEVEL_LO + l[i].offset, hi = lo + l[i].count * l[i].size;
-
-        if (l[i].size != 2 || l[i].pointer)
-            continue;
-        if (end == 0 && a >= lo && a < hi)
-            end = hi;
-        else if (end && lo == end)
-            end = hi;
-    }
-    return end ? end : a;
 }
 
 static void scripts_load(uint32_t address, uint32_t length)
@@ -348,7 +330,7 @@ static void scripts_load(uint32_t address, uint32_t length)
             uint32_t m = BLOB_LEVEL_LO + l[i].offset;
 
             if (m >= address && m < address + length)
-                script_walk(m, address, address + length, m + l[i].size);
+                script_walk(m, address, address + length, 0);
         }
         const struct blob_script_pointers *sp = blob_script_pointers(&n);
 
@@ -363,7 +345,7 @@ static void scripts_load(uint32_t address, uint32_t length)
                     {
                         uint32_t t = (uint32_t)(p - (const uint8_t *)&xenon2);
 
-                        script_walk(t, address, address + length, blob_words_end(t));
+                        script_walk(t, address, address + length, 0);
                     }
             }
     }
