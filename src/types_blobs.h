@@ -172,6 +172,88 @@ struct Level5UnitDir {
 };
 _Static_assert(sizeof(struct Level5UnitDir) == 4, "Level5UnitDir");
 
+struct ShopHead {
+    int16_t step;
+    uint16_t period_reset;
+    uint32_t pair_a;
+    uint16_t period;
+    uint32_t pair_b;
+    uint8_t reload_e;
+    uint8_t reload_f;
+    uint8_t rot_a;
+    uint8_t rot_b;
+    uint8_t timer;
+    uint8_t env_speed;
+    uint8_t env_index;
+    uint8_t sample_id;
+    uint16_t length;
+};
+_Static_assert(sizeof(struct ShopHead) == 24, "ShopHead");
+
+struct ShopChan {
+    struct ShopHead head;
+    uint8_t count_e;
+    uint8_t count_f;
+    uint8_t active;
+    uint8_t env_count;
+    const uint8_t *env_ptr;
+    uint16_t cur_period;
+    uint16_t slide_period;
+};
+_Static_assert(sizeof(struct ShopChan) == 36, "ShopChan");
+
+struct ShopMirror {
+    const uint8_t *lc;
+    uint16_t len;
+    uint16_t per;
+    uint16_t vol;
+    uint8_t had;
+    uint8_t has;
+};
+_Static_assert(sizeof(struct ShopMirror) == 12, "ShopMirror");
+
+struct ShopSample {
+    const uint8_t *lc;
+    uint32_t loop_off;
+    uint16_t len;
+    uint16_t period;
+    uint8_t steps;
+    uint8_t once;
+    uint16_t slide;
+};
+_Static_assert(sizeof(struct ShopSample) == 16, "ShopSample");
+
+struct ShopWave {
+    const uint8_t *lc;
+    BLOB_PAD(4)
+    uint16_t len;
+    uint16_t period;
+};
+_Static_assert(sizeof(struct ShopWave) == 12, "ShopWave");
+
+struct ShopSound {
+    BLOB_PAD(232)
+    uint8_t built1;
+    uint8_t running;
+    BLOB_PAD(2)
+    const uint8_t *silence;
+    BLOB_PAD(192)
+    struct ShopWave wave;
+    BLOB_PAD(154)
+    uint8_t built2;
+    BLOB_PAD(233)
+    struct ShopSample samples[4];
+    BLOB_PAD(606)
+    struct ShopChan chan[4];
+    uint16_t cmd;
+    struct ShopMirror mirror[4];
+    struct ShopHead synth[23];
+    const uint8_t *waves;
+    uint16_t env_off[11];
+    uint8_t env_data[138];
+};
+_Static_assert(sizeof(struct ShopSound) == 2412, "ShopSound");
+
 struct ShopRec {
     int16_t state;
     uint16_t x;
@@ -1206,10 +1288,10 @@ struct ShopData {
     uint8_t pic_slide[3808];   /* 6310E */
     uint8_t font[1888];   /* 63FEE */
     uint8_t palette_b[32];   /* 6474E */
-    BLOB_PAD(1523)
-    uint8_t ntsc;   /* 64D61 */
+    struct ShopSound snd;   /* 6476E */
+    uint8_t bank[98014];   /* 650DA */
 };
-_Static_assert(sizeof(struct ShopData) == 65314, "ShopData");
+_Static_assert(sizeof(struct ShopData) == 164216, "ShopData");
 _Static_assert(offsetof(struct ShopData, palette_a) == 0x55118 - BLOB_BASE, "ShopData.palette_a");
 _Static_assert(offsetof(struct ShopData, txt_thats_it) == 0x55138 - BLOB_BASE, "ShopData.txt_thats_it");
 _Static_assert(offsetof(struct ShopData, txt_forget) == 0x55153 - BLOB_BASE, "ShopData.txt_forget");
@@ -1288,6 +1370,7 @@ _Static_assert(offsetof(struct ShopData, pic_door2) == 0x6284E - BLOB_BASE, "Sho
 _Static_assert(offsetof(struct ShopData, pic_slide) == 0x6310E - BLOB_BASE, "ShopData.pic_slide");
 _Static_assert(offsetof(struct ShopData, font) == 0x63FEE - BLOB_BASE, "ShopData.font");
 _Static_assert(offsetof(struct ShopData, palette_b) == 0x6474E - BLOB_BASE, "ShopData.palette_b");
-_Static_assert(offsetof(struct ShopData, ntsc) == 0x64D61 - BLOB_BASE, "ShopData.ntsc");
+_Static_assert(offsetof(struct ShopData, snd) == 0x6476E - BLOB_BASE, "ShopData.snd");
+_Static_assert(offsetof(struct ShopData, bank) == 0x650DA - BLOB_BASE, "ShopData.bank");
 
 #endif

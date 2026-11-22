@@ -5,8 +5,6 @@
 #include "shop.h"
 #include "game_all.h"
 
-#define CIAA_CRA CIA_BYTE(0xbfe001, 0xe)   /* bit 7: the mains frequency */
-
 /* ---- drawing helpers ---- */
 
 /* shop $553F8: a picture on both screens (draw_bob_masked_at) */
@@ -1334,9 +1332,9 @@ void shop_main(void)
     work_area_save();
     xenon2.music_tick_fn = shop_irq_tick;
     xenon2.music_cmd_fn = (irq_fn)(void *)shop_sound_cmd;
-    xenon2.shop_data.ntsc = 0;
+    xenon2.shop_data.snd.chan[0].head.sample_id = 0;
     if (!(CIAA_CRA & 0x80))
-        xenon2.shop_data.ntsc = 0xff;
+        xenon2.shop_data.snd.chan[0].head.sample_id = 0xff;
     screen = xenon2.draw_screen;
     for (n = 0; n < 0x1f40; n++)
         wr32(screen + 4 * n, 0);

@@ -644,7 +644,7 @@ void l5_turret_update(Object *obj)
 {
     anim_step(obj);
     follow_target_offset(obj);
-    if (obj->gfx == GPTR(0x6158c) && obj->anim_delay == 1) {
+    if (obj->gfx == &xenon2.level5_data.turret_fire_picture && obj->anim_delay == 1) {
         Object *beam = alloc_in(LIST_B);
 
         beam->type = 0x110;

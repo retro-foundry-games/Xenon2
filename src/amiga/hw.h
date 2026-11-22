@@ -128,6 +128,10 @@ void host_idle(void);
 #define CIA_BYTE(base, reg) (*(volatile uint8_t *)((base) + 0x100 * (reg)))
 #endif
 #define CIAA_PRA  CIA_BYTE(0xbfe001, 0)   /* bits 6 and 7: the fire buttons, 0 when pressed */
+#define CIAA_SDR  CIA_BYTE(0xbfe001, 0xc) /* the serial data register: the keyboard's key code */
+#define CIAA_ICR  CIA_BYTE(0xbfe001, 0xd)
+#define CIAA_CRA  CIA_BYTE(0xbfe001, 0xe) /* bit 7: the mains frequency (50 Hz) */
+#define CIAB_ICR  CIA_BYTE(0xbfd000, 0xd)
 #define CIAB_PRB  CIA_BYTE(0xbfd100, 0)   /* the drive select / motor / side / step lines */
 
 #endif
