@@ -59,7 +59,7 @@ def parse_structs():
     for f in sorted(glob.glob(os.path.join(SRC, 'types_*.h'))) + [os.path.join(SRC, 'types.h')]:
         if f.endswith('types_blobs.h'): continue   # (the level blobs are converted by guest_blob.h)
         text = flatten_unions(strip_comments(open(f).read()))
-        for m in re.finditer(r'struct\s+(\w+)\s*\{(.*?)\}\s*;', text, re.S):
+        for m in re.finditer(r'struct\s+(\w+)\s*\{(.*?)\}\s*(?:\w+\s*)?;', text, re.S):
             fields = []
             for stmt in m.group(2).split(';'):
                 stmt = ' '.join(stmt.split())
