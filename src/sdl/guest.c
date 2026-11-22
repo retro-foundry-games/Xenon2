@@ -51,16 +51,15 @@ extern unsigned guest_record_size(const char *type);
 
 /* put the bytes of the original's memory at ADDRESS (as they are in the image: big endian) into the members that cover them, in this machine's byte
  * order; pointers (addresses of the original's memory) become pointers into the block */
-static int blob_raw;   /* 1: the shop's blob is in $54E00-$73E00 (it overlays the level's): the members of the level that lie there are not converted;
-                        * 2 to 5: the blob of that level (after the first): the members of level 1 beyond the header ($54E40 on) are not converted, the
-                        * blob's own members (blobs.h, guest_blob.h) are */
+static int blob_raw;   /* 1: the shop's blob is in $54E00-$73E00 (it overlays the level's): the members that lie there are not converted;
+                        * 0, 2 to 5: the blob of that level (0 is level 1): its members (types_blobs.h, guest_blob.h) are converted */
 #define BLOB_LO 0x54e00u
 #define BLOB_HI 0x74000u
 #define BLOB_LEVEL_LO 0x54e40u
 
 static int blob_skips(uint32_t m)
 {
-    return (blob_raw == 1 && m >= BLOB_LO && m < BLOB_HI) || (blob_raw >= 2 && m >= BLOB_LEVEL_LO && m < BLOB_HI);
+    return blob_raw == 1 && m >= BLOB_LO && m < BLOB_HI;
 }
 
 int guest_level_table(void) { return blob_raw >= 2 ? blob_raw : 0; }
@@ -101,6 +100,7 @@ struct blob_member { uint32_t offset, count, size, pointer; };
 static const struct blob_member *blob_list(unsigned *n)
 {
     switch (blob_raw) {
+    case 0: *n = sizeof blob_members_1 / sizeof blob_members_1[0]; return blob_members_1;
     case 2: *n = sizeof blob_members_2 / sizeof blob_members_2[0]; return blob_members_2;
     case 3: *n = sizeof blob_members_3 / sizeof blob_members_3[0]; return blob_members_3;
     case 4: *n = sizeof blob_members_4 / sizeof blob_members_4[0]; return blob_members_4;
@@ -117,7 +117,7 @@ static void blob_load(uint32_t address, const uint8_t *image, uint32_t length)
     const struct blob_member *l = blob_list(&n);
 
     for (unsigned i = 0; i < n; i++) {
-        uint32_t a = BLOB_LO + l[i].offset;
+        uint32_t a = BLOB_LEVEL_LO + l[i].offset;
 
         if (a < address || a + l[i].count * l[i].size > address + length)
             continue;
@@ -150,7 +150,7 @@ static void blob_save(uint8_t *ram)
 
     for (unsigned i = 0; i < n; i++) {
         for (uint32_t k = 0; k < l[i].count; k++) {
-            uint32_t a = BLOB_LO + l[i].offset + k * l[i].size;
+            uint32_t a = BLOB_LEVEL_LO + l[i].offset + k * l[i].size;
             const uint8_t *src = (const uint8_t *)&xenon2 + a;
             uint8_t *dst = ram + a;
 
@@ -215,7 +215,7 @@ void guest_load_range(uint32_t address, const uint8_t *image, uint32_t length)
             }
         }
     }
-    if (blob_raw >= 2)
+    if (blob_raw != 1)
         blob_load(address, image, length);
 }
 
@@ -377,7 +377,7 @@ void host_export_ram_buf(uint8_t *ram)   /* ram: 0x80000 bytes */
             }
         }
     }
-    if (blob_raw >= 2)
+    if (blob_raw != 1)
         blob_save(ram);
 }
 

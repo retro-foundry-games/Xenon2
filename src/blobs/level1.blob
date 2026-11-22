@@ -1,0 +1,63 @@
+; level 1: its blob at $54E40 (see tools/gen_blobs.py)
+record LevelSpawn 12
+0 x s16
+2 y s16
+4 index s16
+6 flag s16
+8 path ptr
+end
+record LevelSeg 12
+0 type u16
+2 hit code
+6 gfx ptr
+10 score u16
+end
+54e40 shot_params u8 24
+54e58 boss_energy u16 2
+54e5c turret_energy u16 3
+54e62 boss_steps u16 1
+54e66 formation_1 u8 26
+54e80 formation_2 u8 26
+54e9a formation_3 u8 26
+54eb4 formation_4 u8 26
+54ece formation_5 u8 26
+54ee8 formation_6 u8 26
+54f02 formation_7 u8 50
+54f34 formation_8 u8 26
+54f4e formation_9 u8 26
+54f68 formation_10 u8 26
+551d4 anim_launcher_d0 u8 6
+551f8 anim_launcher_d0_fire u8 6
+55212 anim_launcher_d4 u8 6
+55236 anim_launcher_d4_fire u8 6
+55250 anim_piece_a u8 6
+55274 anim_piece_b u8 6
+552b0 anim_shot u8 6
+553b2 turret_a_cells_e0 u8 32
+553d2 turret_a_cells_e4 u8 32
+553f2 turret_a_anim_e0 u8 8
+553fa turret_a_anim_e4 u8 8
+554fa turret_c_steps_dc u8 80
+5554a turret_c_steps_d8 u8 80
+5559a turret_c_anim u8 8
+5568c turret_b_cells_ec u8 32
+556ac turret_b_cells_e8 u8 32
+556cc turret_b_anim_e8 u8 8
+556d4 turret_b_anim_ec u8 8
+558a2 level_patches u16 80
+55ad4 turret_c_cells_dc u8 8
+55adc turret_c_cells_d8 u8 8
+55ce6 unit_pieces_less_one u16 1
+567bc boss_grid u8 2
+56810 boss_draw_sources u8 48
+59e28 boss_part_picture u8 2
+5c0e4 eyes_a u8 2
+5c194 eyes_b u8 2
+5c244 eyes_c u8 2
+55ce8 segs LevelSeg 11
+55d6c unit_starts LevelSpawn 16
+56174 piece_pictures ptr 16
+5638a boss_part_pictures ptr 8
+68f40 shot_gfx_table ptr 5
+6e80a data_src u8 12000
+567fa boss_draw_table u8 20
