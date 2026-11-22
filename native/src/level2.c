@@ -72,11 +72,11 @@ Object *l2_collision_hook(int16_t box_x0, int16_t box_y0, int16_t box_x1, int16_
     if (box_y0 >= 0x1b0)
         return 0;
     if (box_y0 <= 0x80)
-        quarter |= 4;
+        quarter |= 1;
     if (box_x0 <= 0x80)
-        quarter |= 8;
+        quarter |= 2;
     {
-        const struct L2Group *group = (const struct L2Group *)((const uint8_t *)xenon2.l2_block_table + xenon2.level2_data.block_group_offsets[quarter / 4]);
+        const struct L2Group *group = (const struct L2Group *)((const uint8_t *)xenon2.l2_block_table + xenon2.level2_data.block_group_offsets[quarter]);
 
         n = group->count;
         entry = group->entries;
@@ -531,11 +531,11 @@ static void l2_restore_blocks(Object *bolt)
     uint16_t n;
 
     if (box_y0 <= 0x80)
-        quarter |= 4;
+        quarter |= 1;
     if (box_x0 <= 0x80)
-        quarter |= 8;
+        quarter |= 2;
     {
-        struct L2Group *group = (struct L2Group *)((uint8_t *)xenon2.l2_block_table + xenon2.level2_data.block_group_offsets[quarter / 4]);
+        struct L2Group *group = (struct L2Group *)((uint8_t *)xenon2.l2_block_table + xenon2.level2_data.block_group_offsets[quarter]);
 
         n = group->count;
         entry = group->entries;
@@ -995,8 +995,8 @@ void l2_piece_update(Object *part)
     } else if (part->cursor->op == 0) {
         part->fn_draw = draw_bob_behind_map;
     }
-    pic_index = (uint16_t)(((uint16_t)((int16_t)part->piece.dir + 0x10) >> 3) & 0x1c);
-    part->gfx = (void *)(part->type == 0x118 ? xenon2.level2_data.piece_pictures_118 : part->type == 0x11c ? xenon2.level2_data.piece_pictures_11c : xenon2.level2_data.piece_pictures_other)[pic_index / 4];
+    pic_index = (uint16_t)(((uint16_t)((int16_t)part->piece.dir + 0x10) >> 5) & 7);
+    part->gfx = (void *)(part->type == 0x118 ? xenon2.level2_data.piece_pictures_118 : part->type == 0x11c ? xenon2.level2_data.piece_pictures_11c : xenon2.level2_data.piece_pictures_other)[pic_index];
     bbox_from_frame(part);
 }
 
@@ -1209,11 +1209,11 @@ static void l2_boss_move(Object *boss)
         boss->l2_boss.frames = 0;
     }
     boss->y = new_y;
-    phase = (int16_t)((xenon2.frame_tick & 1) * 4);
-    *(uint32_t *)(&xenon2.level2_data.boss_cells[4]) = *(const uint32_t *)(xenon2.level2_data.boss_move_paths_a[phase / 4]);
-    *(uint32_t *)(&xenon2.level2_data.boss_cells[0xa]) = *(const uint32_t *)(xenon2.level2_data.boss_move_paths_a[phase / 4] + 4);
-    *(uint32_t *)(&xenon2.level2_data.boss_cells[8]) = *(const uint32_t *)(xenon2.level2_data.boss_move_paths_b[phase / 4]);
-    *(uint32_t *)(&xenon2.level2_data.boss_cells[0xe]) = *(const uint32_t *)(xenon2.level2_data.boss_move_paths_b[phase / 4] + 4);
+    phase = (int16_t)(xenon2.frame_tick & 1);
+    *(uint32_t *)(&xenon2.level2_data.boss_cells[4]) = *(const uint32_t *)(xenon2.level2_data.boss_move_paths_a[phase]);
+    *(uint32_t *)(&xenon2.level2_data.boss_cells[0xa]) = *(const uint32_t *)(xenon2.level2_data.boss_move_paths_a[phase] + 4);
+    *(uint32_t *)(&xenon2.level2_data.boss_cells[8]) = *(const uint32_t *)(xenon2.level2_data.boss_move_paths_b[phase]);
+    *(uint32_t *)(&xenon2.level2_data.boss_cells[0xe]) = *(const uint32_t *)(xenon2.level2_data.boss_move_paths_b[phase] + 4);
 }
 
 
