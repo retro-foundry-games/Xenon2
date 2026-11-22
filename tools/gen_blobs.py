@@ -77,6 +77,16 @@ def conv_entries(base, t, cnt):
         return res
     return [(base, cnt, SIZE[t.split(':')[0]], KIND[t.split(':')[0]])] if t not in ('u8', 'cell') else []
 
+def script_pointers(base, t, cnt, name):
+    """the pointers to animation scripts in CNT elements of type T at offset BASE (a pointer to words whose name has anim)"""
+    if t in records:
+        res = []
+        for k in range(cnt):
+            for off, n, ft, c in sorted(records[t]['fields']):
+                res += script_pointers(base + k * records[t]['size'] + off, ft, c, n)
+        return res
+    return [(base, cnt)] if t == 'ptr:u16' and 'anim' in name else []
+
 for f in files:
     m = re.search(r'level(\d)|(shop)', f.name)
     if not m:
@@ -101,7 +111,7 @@ for f in files:
     name = f'Level{lv}Data' if lv.isdigit() else f'{lv.capitalize()}Data'
     out.append(f'struct {name} {{')
     pos = BASE
-    checks, members = [], []
+    checks, members, script_ptrs = [], [], []
     for i, (a, n, t, cnt) in enumerate(rows):
         esize = records[t]['size'] if t in records else SIZE[t.split(':')[0]]
         if a > pos:
@@ -121,6 +131,7 @@ for f in files:
         else:
             out.append(f'    {decl(t, n, cnt)}   /* {a:05X} */')
         members += [] if raw else conv_entries(a - BASE, t, cnt)
+        script_ptrs += [] if raw else script_pointers(a - BASE, t, cnt, n)
         pos = a + size
         checks.append((n, a))
     out.append('};')
@@ -132,6 +143,12 @@ for f in files:
     out.append('')
     conv.append(f'static const struct blob_member blob_members_{lv}[] = {{')
     conv += [f'    {{ 0x{o:X}, {c}, {s_}, {k} }},' for o, c, s_, k in members]
+    conv.append('};')
+    conv.append(f'static const struct {{ uint32_t offset, count; }} blob_script_pointers_{lv}[] = {{   /* the pointers to scripts */')
+    conv += [f'    {{ 0x{o:X}, {c} }},' for o, c in script_ptrs]
+    conv.append('};')
+    conv.append(f'static const struct {{ uint32_t offset, size; }} blob_scripts_{lv}[] = {{   /* the animation scripts: where the walk of the loader starts */')
+    conv += [f'    {{ 0x{x - BASE:X}, {c * 2} }},' for x, c in sorted((a, cnt or 1) for a, n, t, cnt in rows if t == 'u16' and 'anim' in n)]
     conv.append('};')
 out.append('#endif')
 (root / 'types_blobs.h').write_text('\n'.join(out) + '\n')

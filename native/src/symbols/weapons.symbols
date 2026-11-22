@@ -21,30 +21,30 @@ tab kill_scores 0x7970 uint16_t 2                      ; score added when a shot
 arr player_shot_pictures 0x27c2 uint16_t * 12                     ; pictures of the player's shots (three each)
 tab anim_weaponb0 0x2540 uint16_t 3                   ; animation headers: picture (long), delay, then the script
 tab anim_spinner 0x25a0 uint16_t 3
-tab anim_wave_326c 0x2564 uint16_t 3
-tab anim_debris_0 0x2abc uint16_t 3
+tab anim_wave_326c 0x2564 uint16_t 30
+tab anim_debris_0 0x2abc uint16_t 9
 tab anim_debris_1 0x2a80 uint16_t 3
 tab anim_debris_2 0x251c uint16_t 3
 tab anim_debris_3 0x24f8 uint16_t 3
 tab anim_debris_4 0x2864 uint16_t 3
-tab anim_debris_5 0x2b70 uint16_t 3
+tab anim_debris_5 0x2b70 uint16_t 30
 tab anim_debris_6 0x2a44 uint16_t 3
 tab anim_debris_7 0x2810 uint16_t 3
 tab anim_debris_13 0x379a uint16_t 3
 tab anim_debris_17 0x2b34 uint16_t 3
 tab anim_weapon2c 0x25be uint16_t 3
 tab anim_shell_9c 0x25e2 uint16_t 3
-tab anim_weapon20 0x2612 uint16_t 3
-tab anim_bonus_big 0x264e uint16_t 3
-tab anim_bonus_small 0x26ae uint16_t 3
-tab anim_explosion 0x270e uint16_t 3
-tab anim_explosion_big 0x273a uint16_t 3
-tab anim_player_death 0x2760 uint16_t 3
+tab anim_weapon20 0x2612 uint16_t 30
+tab anim_bonus_big 0x264e uint16_t 48
+tab anim_bonus_small 0x26ae uint16_t 48
+tab anim_explosion 0x270e uint16_t 22
+tab anim_explosion_big 0x273a uint16_t 19
+tab anim_player_death 0x2760 uint16_t 27
 tab anim_weapon34 0x280a uint16_t 3
-tab anim_weapon44 0x283a uint16_t 3
+tab anim_weapon44 0x283a uint16_t 21
 tab anim_weapon38 0x28b2 uint16_t 3
 tab anim_weapon3c 0x28d0 uint16_t 3
-tab anim_pod_decoration 0x28ee uint16_t 3
+tab anim_pod_decoration 0x28ee uint16_t 18
 tab anim_drill_0 0x2912 uint16_t 3
 tab anim_drill_1 0x2930 uint16_t 3
 tab anim_drill_2 0x294e uint16_t 3
@@ -54,15 +54,15 @@ tab anim_drill_5 0x29a8 uint16_t 3
 tab anim_drill_6 0x29c6 uint16_t 3
 tab anim_drill_7 0x29e4 uint16_t 3
 tab anim_weapon4c 0x2a02 uint16_t 3
-tab anim_weapon90 0x2c24 uint16_t 3
+tab anim_weapon90 0x2c24 uint16_t 27
 var player_vx_prev 0x5dd0 int16_t                         ; a copy of player_vx the code area holds
 tab weaponc0_picture 0x192ba uint16_t 1                    ; a picture
 arr level_data_dst 0x7d120 uint16_t 6000
 ; --- code that never ran in the recorded run ---
 tab anim_weaponb0_shot 0x2796 uint16_t 3
-tab anim_weapon34_fire 0x27f2 uint16_t 3
-tab anim_pod_trail 0x288e uint16_t 3
-tab anim_drill_head_0 0x2918 uint16_t 3
+tab anim_weapon34_fire 0x27f2 uint16_t 12
+tab anim_pod_trail 0x288e uint16_t 18
+tab anim_drill_head_0 0x2918 uint16_t 12
 tab pic_weapon34_idle 0x17336 uint16_t 1                   ; pictures of the pod ($34) the update tells apart
 tab pic_weapon34_fire 0x171d6 uint16_t 1
 tab pic_weapon90_twin 0x1838c uint16_t 1                   ; and of the twin gun ($90)
@@ -76,13 +76,13 @@ var piece_directions 0xf60 int8_t *                         ; table of the piece
 var shot_pic_a 0xf68 uint16_t *                         ; the picture of an enemy shot (a level's shot table points here)
 var explosion_anim_f70 0xf70 uint16_t *                    ; an explosion's animation header (level 3's part bursts)
 var big_explosion_anim 0xf64 uint16_t *                        ; the big explosion's animation header
-tab anim_drill_head_1 0x2936 uint16_t 3
-tab anim_drill_head_2 0x2954 uint16_t 3
-tab anim_drill_head_3 0x2972 uint16_t 3
-tab anim_drill_head_4 0x2990 uint16_t 3
-tab anim_drill_head_5 0x29ae uint16_t 3
-tab anim_drill_head_6 0x29cc uint16_t 3
-tab anim_drill_head_7 0x29ea uint16_t 3
+tab anim_drill_head_1 0x2936 uint16_t 12
+tab anim_drill_head_2 0x2954 uint16_t 12
+tab anim_drill_head_3 0x2972 uint16_t 12
+tab anim_drill_head_4 0x2990 uint16_t 12
+tab anim_drill_head_5 0x29ae uint16_t 12
+tab anim_drill_head_6 0x29cc uint16_t 12
+tab anim_drill_head_7 0x29ea uint16_t 12
 tab drill_dy 0x3ac2 int16_t 8                     ; step of a drill bit by direction
 tab drill_dx 0x3ad2 int16_t 8
 arr beam_state 0x6480 uint16_t 4                  ; the beam being drawn: x, y, length, level ($6480..$6486)
