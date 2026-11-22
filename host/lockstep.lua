@@ -452,6 +452,10 @@ local function compare_memory(snap, port_ram)
                         for start = i - 3, i do
                             if start >= 1 and same_function(a, b, start) then alias = true; break end
                         end
+                        if name == "obj_pool" then   -- (the drill's target in a slot that is not a drill any more: a long that the port keeps as a pointer, its words are stale there)
+                            local slot, off = (i - 1) // 98, (i - 1) % 98
+                            if off >= 48 and off < 52 and b:sub(slot * 98 + 1, slot * 98 + 2) ~= "\0\x48" then alias = true end
+                        end
                         if not alias then kept[#kept + 1] = i end
                     end
                 end

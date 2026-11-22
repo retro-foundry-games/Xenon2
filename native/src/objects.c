@@ -96,11 +96,6 @@ void anim_op_free(Object *o, const uint16_t *script)
 
 /* ---- the map under the player ---- */
 
-#ifdef GAME_SDL
-extern int guest_beyond(const void *p, size_t length);   /* sdl/guest.c */
-extern const uint16_t *guest_high_ptr(const void *p);
-#endif
-
 /* the three words of tile pointers for the next 16 pixel row of the map: 0 = empty tile mask, a negative word = a mask in
  * tile_gfx, else a full one */
 static const struct MaskRow *tile_mask_ptr(uint16_t w)
@@ -110,29 +105,13 @@ static const struct MaskRow *tile_mask_ptr(uint16_t w)
     if ((int16_t)w < 0) {
         const uint8_t *m = xenon2.tile_gfx + ((uint32_t)(w & 0x7fff) << 4);
 
-#ifdef GAME_SDL
-        if (guest_beyond(m, 0xa0)) {   /* the original's memory beyond 512 KB (the lockstep gives it) */
-            const uint16_t *high = guest_high_ptr(m);
-
-            return high ? (const struct MaskRow *)high : (const struct MaskRow *)xenon2.mask_empty;
-        }
-#endif
         return (const struct MaskRow *)m;
     }
     return (const struct MaskRow *)xenon2.mask_full;
 }
 
-/* A row of cells can lie past the end of the memory the port has (bobs above the screen read the original's memory beyond 512 KB: the lockstep supplies
- * it, otherwise it is zeros). */
-#ifdef GAME_SDL
-extern uint16_t guest_high_word(const void *p);   /* sdl/guest.c */
-#endif
 static const struct MaskRow *tile_mask_ptr_at(const Cell *cell)
 {
-#ifdef GAME_SDL
-    if (guest_beyond(cell, 2))
-        return tile_mask_ptr(guest_high_word(cell));
-#endif
     return tile_mask_ptr(*cell);
 }
 
