@@ -1,8 +1,7 @@
-/* level4: level 4's own code (the blob at $54E00 while level 4 is loaded), written like level3.c; a function has `level4 $ADDR` for its address. */
+/* level4: level 4's own code (the blob at $54E40 while level 4 is loaded), written like level3.c; a function has `level4 $ADDR` for its address. */
 #include "weapons.h"
 #include "shop.h"
 #include "game_all.h"
-#include "blobs.h"
 #include <string.h>
 
 

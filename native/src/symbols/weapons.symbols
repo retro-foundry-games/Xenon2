@@ -43,32 +43,10 @@ tab anim_drill_6 0x29c6 uint8_t 6
 tab anim_drill_7 0x29e4 uint8_t 6
 tab anim_weapon4c 0x2a02 uint8_t 6
 tab anim_weapon90 0x2c24 uint8_t 6
-tab l1_boss_energy 0x54e58 uint16_t 2                ; level 1: energy of the boss ($54E58) and of a second object ($54E5A)
 var player_vx_prev 0x5dd0 int16_t                         ; a copy of player_vx the code area holds
-tab l1_level_patches 0x558a2 uint16_t 80               ; level 1: sixteen records (offset, four words) the scroll patches the level data with
-tab l1_boss_grid 0x567bc uint8_t 2                ; level 1: table the boss is drawn from
-tab l1_eyes_a 0x5c0e4 uint8_t 2                ; level 1: pictures of the boss's eye
-tab l1_eyes_b 0x5c194 uint8_t 2
-tab l1_eyes_c 0x5c244 uint8_t 2
-tab l1_boss_draw_sources 0x56810 uint8_t 48               ; level 1: three sources (four longs each) of the boss draw table
-arr l1_boss_draw_table 0x567fa uint8_t 20                ; level 1: the boss draw table
 tab weaponc0_picture 0x192ba uint8_t 2                    ; a picture
-tab l1_boss_part_picture 0x59e28 uint8_t 2                ; level 1: picture of the boss's parts
-arr level_data_src 0x6e80a uint8_t 12000         ; level 1: data copied once to level_data_dst
 arr level_data_dst 0x7d120 uint8_t 12000
-tab l1_formation_1 0x54e66 uint8_t 2                ; level 1: tables the $54E10 dispatcher hands to the level engine
-tab l1_formation_2 0x54e80 uint8_t 2
-tab l1_formation_3 0x54e9a uint8_t 2
-tab l1_formation_4 0x54eb4 uint8_t 2
-tab l1_formation_5 0x54ece uint8_t 2
-tab l1_formation_6 0x54ee8 uint8_t 2
-tab l1_formation_7 0x54f02 uint8_t 2
-tab l1_formation_8 0x54f34 uint8_t 2
-tab l1_formation_9 0x54f4e uint8_t 2
-tab l1_formation_10 0x54f68 uint8_t 2
 ; --- code that never ran in the recorded run ---
-type LevelSpawn 12                                ; a record of the table at $55D6C (struct LevelSpawn in types_weapons.h)
-type LevelSeg 12                                  ; an entry of the table at $55CE8 (struct LevelSeg)
 tab anim_weaponb0_shot 0x2796 uint8_t 6
 tab anim_weapon34_fire 0x27f2 uint8_t 6
 tab anim_pod_trail 0x288e uint8_t 6
@@ -83,15 +61,6 @@ tab blast_damage 0x7974 uint16_t 3                ; $7974 per level of the $34 b
 var area_damage_kept 0x30dc uint16_t                        ; the damage $3096 keeps while it calls the hit routines
 var piece_directions 0xf60 int8_t *                         ; table of the pieces' directions (two bytes each, 64 apart)
 var big_explosion_anim 0xf64 uint8_t *                        ; the big explosion's animation header
-tab l1_boss_steps 0x54e62 uint16_t 1                ; level 1: word the units get as $54
-tab anim_l1_piece_a 0x55250 uint8_t 6
-tab anim_l1_piece_b 0x55274 uint8_t 6
-tab anim_l1_shot 0x552b0 uint8_t 6
-tab l1_unit_pieces_less_one 0x55ce6 uint16_t 1                ; level 1: pieces of a unit - 1
-arr level_segs 0x55ce8 LevelSeg 11                ; level 1: type, hit routine, picture and score of each piece of a unit
-arr l1_unit_starts 0x55d6c LevelSpawn 16            ; level 1: where and with which path a unit starts
-arr l1_piece_pictures 0x56174 uint8_t * 16              ; level 1: the pictures of the pieces by direction (8 for $10C-$110 pieces, 8 for the others)
-arr l1_boss_part_pictures 0x5638a uint8_t * 8               ; level 1: the pictures of the boss's parts by direction
 tab anim_drill_head_1 0x2936 uint8_t 6
 tab anim_drill_head_2 0x2954 uint8_t 6
 tab anim_drill_head_3 0x2972 uint8_t 6
@@ -106,23 +75,5 @@ arr beam_heads 0x6488 uint8_t * 3                 ; the pictures of the beam's h
 arr beam_bodies 0x6494 uint8_t * 3                ; the pictures of its tip
 tab beam_pattern 0x663a uint32_t 15               ; by level: the mask and the four planes of the beam's slice (a long each, shifted by x & 15)
 var trail_y 0x4ea uint16_t
-tab l1_shot_params 0x54e40 uint8_t 24                ; level 1: bytes and words (big endian) the turrets are tuned by: $54E43, $54E44, $54E46, $54E49, $54E4A, $54E4C, $54E4F, $54E50, $54E52, $54E54, $54E56
-tab l1_turret_energy 0x54e5c uint16_t 3                ; level 1: energy of the three turrets ($54E5C, $54E5E, $54E60)
-tab l1_turret_a_cells_e0 0x553b2 uint8_t 32                ; level 1: map cells of the turret $E0 / $E4, four steps of two longs
-tab l1_turret_a_cells_e4 0x553d2 uint8_t 32
-tab l1_turret_a_anim_e0 0x553f2 uint8_t 8                 ; and the cells it hides
-tab l1_turret_a_anim_e4 0x553fa uint8_t 8
-tab l1_turret_c_steps_dc 0x554fa uint8_t 80                ; level 1: map cells of the turret $D8 / $DC (twenty steps)
-tab l1_turret_c_steps_d8 0x5554a uint8_t 80
-tab l1_turret_c_anim 0x5559a uint8_t 8
-tab l1_turret_b_cells_ec 0x5568c uint8_t 32                ; level 1: map cells of the turret $E8 / $EC
-tab l1_turret_b_cells_e8 0x556ac uint8_t 32
-tab l1_turret_b_anim_e8 0x556cc uint8_t 8
-tab l1_turret_b_anim_ec 0x556d4 uint8_t 8
-tab l1_turret_c_cells_dc 0x55ad4 uint8_t 8
-tab l1_turret_c_cells_d8 0x55adc uint8_t 8
-tab anim_l1_launcher_d0 0x551d4 uint8_t 6
-tab anim_l1_launcher_d0_fire 0x551f8 uint8_t 6
-tab anim_l1_launcher_d4 0x55212 uint8_t 6
-tab anim_l1_launcher_d4_fire 0x55236 uint8_t 6
-arr level1_shot_gfx_table 0x68f40 uint8_t * 5               ; level 1: addresses of longs that hold the picture of an enemy shot
+type LevelBlobs 127424                              ; struct LevelBlobs in types_blobs.h: the level blobs of $54E40 on, one over the other
+var level_blobs 0x54e40 LevelBlobs                      ; the level's blob (level 1's: level1, then level2 .. level5; the shop's is raw bytes)

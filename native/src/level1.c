@@ -31,8 +31,8 @@ int level1_collision_hook(void)
 /* orig $054E10 (-> $055B94): level events by d0 (a1 = the record that fired): a table of the level engine ($E60) for each */
 void level1_event(uint16_t d0, const uint8_t *a1)
 {
-    static const uint8_t *const tabs[10] = { l1_formation_1, l1_formation_2, l1_formation_3, l1_formation_4, l1_formation_5,
-                                             l1_formation_6, l1_formation_7, l1_formation_8, l1_formation_9, l1_formation_10 };
+    static const uint8_t *const tabs[10] = { level1_blob.formation_1, level1_blob.formation_2, level1_blob.formation_3, level1_blob.formation_4, level1_blob.formation_5,
+                                             level1_blob.formation_6, level1_blob.formation_7, level1_blob.formation_8, level1_blob.formation_9, level1_blob.formation_10 };
 
     if (d0 == 0) {
         spawn_wave_326c(0, a1);   /* $E5A */
@@ -47,7 +47,7 @@ void level1_event(uint16_t d0, const uint8_t *a1)
 /* the picture of an enemy shot: the table at $68F40 has addresses of longs, the long is the picture */
 static const void *level1_shot_gfx(uint16_t idx)
 {
-    return GPTR(rd32(level1_shot_gfx_table[idx]));
+    return GPTR(rd32(level1_blob.shot_gfx_table[idx]));
 }
 
 static void copy4(uint8_t *dst, const uint8_t *src)
@@ -84,12 +84,12 @@ void level1_turret_a_update(Object *a0)
     a0->hit[1] = y;
     a0->hit[3] = (int16_t)(y + 0x18);
     d0 = (uint16_t)(a0->l1_turret.step << 3);
-    a2 = a0->type == 0xe0 ? l1_turret_a_cells_e0 : l1_turret_a_cells_e4;
+    a2 = a0->type == 0xe0 ? level1_blob.turret_a_cells_e0 : level1_blob.turret_a_cells_e4;
     a1 = a0->script;
     copy4(a1, a2 + d0);
     copy4(a1 + 0x28, a2 + d0 + 4);
     a0->l1_turret.step = (int16_t)((a0->l1_turret.step + 1) & 3);
-    sum = (uint16_t)(((ObjMove *)a0)->shot_count + l1_shot_params[3]);
+    sum = (uint16_t)(((ObjMove *)a0)->shot_count + level1_blob.shot_params[3]);
     ((ObjMove *)a0)->shot_count = (uint8_t)sum;
     if (!(sum & 0x100))
         return;
@@ -101,7 +101,7 @@ void level1_turret_a_update(Object *a0)
         d2 = 6;
         x = (int16_t)(x - 0x10);
     }
-    spawn_enemy_shot((uint16_t)x, (uint16_t)y, (uint16_t)d2, rd16(l1_shot_params + 6), level1_shot_gfx(rd16(l1_shot_params + 4)));
+    spawn_enemy_shot((uint16_t)x, (uint16_t)y, (uint16_t)d2, rd16(level1_blob.shot_params + 6), level1_shot_gfx(rd16(level1_blob.shot_params + 4)));
 }
 
 /* orig $0555A2: update of the turret $E8 / $EC (sixteen steps of cells) */
@@ -120,12 +120,12 @@ void level1_turret_b_update(Object *a0)
     a0->hit[1] = y;
     a0->hit[3] = (int16_t)(y + 0x18);
     d0 = (uint16_t)(((uint16_t)a0->l1_turret.step & 0xfffc) << 1);
-    a2 = a0->type == 0xe8 ? l1_turret_b_cells_e8 : l1_turret_b_cells_ec;
+    a2 = a0->type == 0xe8 ? level1_blob.turret_b_cells_e8 : level1_blob.turret_b_cells_ec;
     a1 = a0->script;
     copy4(a1, a2 + d0);
     copy4(a1 + 0x28, a2 + d0 + 4);
     a0->l1_turret.step = (int16_t)((a0->l1_turret.step + 1) & 0xf);
-    sum = (uint16_t)(((ObjMove *)a0)->shot_count + l1_shot_params[0xf]);
+    sum = (uint16_t)(((ObjMove *)a0)->shot_count + level1_blob.shot_params[0xf]);
     ((ObjMove *)a0)->shot_count = (uint8_t)sum;
     if (!(sum & 0x100))
         return;
@@ -137,7 +137,7 @@ void level1_turret_b_update(Object *a0)
         d2 = 6;
         x = (int16_t)(x - 0x20);
     }
-    spawn_enemy_shot((uint16_t)x, (uint16_t)y, (uint16_t)d2, rd16(l1_shot_params + 0x12), level1_shot_gfx(rd16(l1_shot_params + 0x10)));
+    spawn_enemy_shot((uint16_t)x, (uint16_t)y, (uint16_t)d2, rd16(level1_blob.shot_params + 0x12), level1_shot_gfx(rd16(level1_blob.shot_params + 0x10)));
 }
 
 /* orig $055402: update of the turret $D8 / $DC (twenty steps of cells, a shot every 40 steps) */
@@ -155,10 +155,10 @@ void level1_turret_c_update(Object *a0)
     a0->hit[1] = y;
     a0->hit[3] = (int16_t)(y + 0x10);
     d0 = (uint16_t)(((uint16_t)a0->l1_turret.step & 0xfffe) << 1);
-    a2 = a0->type == 0xd8 ? l1_turret_c_steps_d8 : l1_turret_c_steps_dc;
+    a2 = a0->type == 0xd8 ? level1_blob.turret_c_steps_d8 : level1_blob.turret_c_steps_dc;
     copy4(a0->script, a2 + d0);
     if (a0->l1_turret.step == 0) {
-        sum = (uint16_t)(((ObjMove *)a0)->shot_count + l1_shot_params[9]);
+        sum = (uint16_t)(((ObjMove *)a0)->shot_count + level1_blob.shot_params[9]);
         ((ObjMove *)a0)->shot_count = (uint8_t)sum;
         if (!(sum & 0x100))
             return;
@@ -178,7 +178,7 @@ void level1_turret_c_update(Object *a0)
         d2 = 6;
         x = (int16_t)(x - 0x1a);
     }
-    spawn_enemy_shot((uint16_t)x, (uint16_t)y, (uint16_t)d2, rd16(l1_shot_params + 0xc), level1_shot_gfx(rd16(l1_shot_params + 0xa)));
+    spawn_enemy_shot((uint16_t)x, (uint16_t)y, (uint16_t)d2, rd16(level1_blob.shot_params + 0xc), level1_shot_gfx(rd16(level1_blob.shot_params + 0xa)));
 }
 
 /* the launcher's use of the scratch fields of Object */
@@ -211,13 +211,13 @@ void level1_launcher_update(Object *a0)
         a0->prev = tail;
         a0->next = LIST_B;
         tail->next = a0;
-        a2 = a0->type == 0xd4 ? anim_l1_launcher_d4_fire : anim_l1_launcher_d0_fire;
+        a2 = a0->type == 0xd4 ? level1_blob.anim_launcher_d4_fire : level1_blob.anim_launcher_d0_fire;
         set_anim(a0, a2);
         for (d7 = 2; d7 >= 0; d7--) {
             int16_t d2 = a0->type == 0xd4 ? 5 : 1;
 
-            spawn_enemy_shot((uint16_t)a0->x, (uint16_t)(a0->y + 7), (uint16_t)(d2 + d7), rd16(l1_shot_params + 0x16),
-                             level1_shot_gfx(rd16(l1_shot_params + 0x14)));
+            spawn_enemy_shot((uint16_t)a0->x, (uint16_t)(a0->y + 7), (uint16_t)(d2 + d7), rd16(level1_blob.shot_params + 0x16),
+                             level1_shot_gfx(rd16(level1_blob.shot_params + 0x14)));
         }
         return;
     }
@@ -267,31 +267,31 @@ void level1_hook(uint16_t d0, const uint8_t *a1, uint16_t d2)
         note_spawn_record(a1, d2);   /* $EA2 */
         return;
     case 1:
-        a0 = level1_turret(flag ? 0xe8 : 0xec, a1, (void (*)(void))level1_turret_b_update, l1_turret_energy[0]);
-        level1_turret_cells(a0, flag ? l1_turret_b_cells_e8 : l1_turret_b_cells_ec, flag ? l1_turret_b_anim_e8 : l1_turret_b_anim_ec);
+        a0 = level1_turret(flag ? 0xe8 : 0xec, a1, (void (*)(void))level1_turret_b_update, level1_blob.turret_energy[0]);
+        level1_turret_cells(a0, flag ? level1_blob.turret_b_cells_e8 : level1_blob.turret_b_cells_ec, flag ? level1_blob.turret_b_anim_e8 : level1_blob.turret_b_anim_ec);
         return;
     case 2:
-        a0 = level1_turret(flag ? 0xe0 : 0xe4, a1, (void (*)(void))level1_turret_a_update, l1_boss_energy[1]);
+        a0 = level1_turret(flag ? 0xe0 : 0xe4, a1, (void (*)(void))level1_turret_a_update, level1_blob.boss_energy[1]);
         if (flag) {
             a0->script += 2;
             a0->x = (int16_t)(a0->x + 0x10);
         }
         a0->script -= 2;
         a0->x = (int16_t)(a0->x - 0x10);
-        level1_turret_cells(a0, flag ? l1_turret_a_cells_e0 : l1_turret_a_cells_e4, flag ? l1_turret_a_anim_e0 : l1_turret_a_anim_e4);
+        level1_turret_cells(a0, flag ? level1_blob.turret_a_cells_e0 : level1_blob.turret_a_cells_e4, flag ? level1_blob.turret_a_anim_e0 : level1_blob.turret_a_anim_e4);
         return;
     case 3:
-        a0 = level1_turret(flag ? 0xd8 : 0xdc, a1, (void (*)(void))level1_turret_c_update, l1_turret_energy[1]);
-        level1_turret_cells(a0, flag ? l1_turret_c_cells_d8 : l1_turret_c_cells_dc, l1_turret_c_anim);
+        a0 = level1_turret(flag ? 0xd8 : 0xdc, a1, (void (*)(void))level1_turret_c_update, level1_blob.turret_energy[1]);
+        level1_turret_cells(a0, flag ? level1_blob.turret_c_cells_d8 : level1_blob.turret_c_cells_dc, level1_blob.turret_c_anim);
         return;
     case 4:
         a0 = alloc_c();
         a0->type = flag ? 0xd4 : 0xd0;
-        set_anim(a0, flag ? anim_l1_launcher_d4 : anim_l1_launcher_d0);
+        set_anim(a0, flag ? level1_blob.anim_launcher_d4 : level1_blob.anim_launcher_d0);
         a0->fn_update = FN(level1_launcher_update);
         a0->fn_draw = draw_bob_masked;
         a0->fn_hit = (void *)hit_enemy;
-        a0->energy = (int16_t)l1_turret_energy[2];
+        a0->energy = (int16_t)level1_blob.turret_energy[2];
         a0->big = -1;
         a0->score = 0xfa;
         SET_V5E(a0, 0);
@@ -309,7 +309,7 @@ void level1_hook(uint16_t d0, const uint8_t *a1, uint16_t d2)
 /* orig $054E24 (-> $055806): the level's scroll events */
 void level1_scroll(void)
 {
-    const uint16_t *a1 = l1_level_patches;
+    const uint16_t *a1 = level1_blob.level_patches;
     uint16_t *a4 = level_vars;
     int d7, i;
 
@@ -348,7 +348,7 @@ void level1_boss_update(Object *a0)
     int16_t d0, d5;
     int32_t l;
     const uint8_t *src;
-    static const uint8_t *const sources[4] = { l1_boss_draw_sources, l1_boss_draw_sources + 16, l1_boss_draw_sources + 32, l1_boss_draw_sources + 16 };
+    static const uint8_t *const sources[4] = { level1_blob.boss_draw_sources, level1_blob.boss_draw_sources + 16, level1_blob.boss_draw_sources + 32, level1_blob.boss_draw_sources + 16 };
 
     if ((int16_t)scroll_pos > 0x1c0)
         goto hide;
@@ -376,7 +376,7 @@ void level1_boss_update(Object *a0)
             a1->fn_update = level1_boss_part_update;
             a1->fn_draw = draw_bob_masked;
             a1->fn_hit = (void *)hit_kill_shooter;
-            a1->gfx = l1_boss_part_picture;
+            a1->gfx = level1_blob.boss_part_picture;
             a1->anim_delay = 0;
             SET_V5E(a1, 0);
             a1->anim = (const uint8_t *)a2;
@@ -465,10 +465,10 @@ void level1_boss_update(Object *a0)
     l1_eyes_phase = (uint16_t)((l1_eyes_phase & 0xff00) | ((l1_eyes_phase + d0) & 0xff));
 draw_table:
     src = sources[(frame_tick & 0xc) >> 2];
-    copy_long(&l1_boss_draw_table[0], src);
-    copy_long(&l1_boss_draw_table[4], src + 4);
-    copy_long(&l1_boss_draw_table[12], src + 8);
-    copy_long(&l1_boss_draw_table[16], src + 12);
+    copy_long(&level1_blob.boss_draw_table[0], src);
+    copy_long(&level1_blob.boss_draw_table[4], src + 4);
+    copy_long(&level1_blob.boss_draw_table[12], src + 8);
+    copy_long(&level1_blob.boss_draw_table[16], src + 12);
     if (a0->l1_boss.phase != 0)
         return;
 hide:
@@ -479,12 +479,12 @@ hide:
 /* orig $05661A: draw routine of the level 1 boss */
 void level1_boss_draw(Object *a0)
 {
-    static const void *const eyes[4] = { l1_eyes_a, l1_eyes_b, l1_eyes_c, l1_eyes_b };
+    static const void *const eyes[4] = { level1_blob.eyes_a, level1_blob.eyes_b, level1_blob.eyes_c, level1_blob.eyes_b };
     uint16_t d7;
 
     if ((int16_t)scroll_pos >= 0x280)
         return;
-    draw_tile_grid(l1_boss_grid, 5, 6, (uint16_t)(a0->y - scroll_pos), 0x38);
+    draw_tile_grid(level1_blob.boss_grid, 5, 6, (uint16_t)(a0->y - scroll_pos), 0x38);
     d7 = (l1_eyes_phase >> 4) & 0xc;
     draw_bob_masked_at(0x98, (uint16_t)(a0->y - scroll_pos + 0x42), eyes[d7 >> 2]);
 }
@@ -495,9 +495,9 @@ void level1_init(void)
     Object *a0, *a5;
     int i;
 
-    if (level_init_src == level_data_src) {
+    if (level_init_src == level1_blob.data_src) {
         for (i = 11999; i >= 0; i--)
-            level_data_dst[i] = level_data_src[i];
+            level_data_dst[i] = level1_blob.data_src[i];
         level_init_src = level_data_dst;
     }
     scroll_min = 0;
@@ -517,7 +517,7 @@ void level1_init(void)
     a0->persists = -1;
     a0->screen_fixed = -1;
     a0->y = 0x10;
-    a0->energy = l1_boss_energy[0];
+    a0->energy = level1_blob.boss_energy[0];
     a0->l1_boss.phase = 0;
     a0->steps = 0;
     l1_boss_spawned = 0;
@@ -551,7 +551,7 @@ void level1_spawn_units(void)
 
 /* orig $055E50: unit d6 starts: a place of the table is picked from the random state of the unit (the five longs at $D46 rotate right by
  * 5), then objects are made: the first one and a marker pair around the unit's pieces (type $BC after the last piece, $B8 first), the
- * head (type $10C, it follows the path) and the pieces (level_segs, each follows the object before it) */
+ * head (type $10C, it follows the path) and the pieces (level1_blob.segs, each follows the object before it) */
 void level1_spawn_unit(uint16_t d6)
 {
     uint16_t *state = &level_vars[16 + 2 * d6];
@@ -563,14 +563,14 @@ void level1_spawn_unit(uint16_t d6)
     r = (r >> 5) | (r << 27);
     state[0] = (uint16_t)(r >> 16);
     state[1] = (uint16_t)r;
-    s = &l1_unit_starts[r & 0xf];
+    s = &level1_blob.unit_starts[r & 0xf];
     x = s->x;
     y = (int16_t)(s->y - scroll_step - scroll_pos);
     if (level_vars[(uint16_t)s->index] == 0)
         level_vars[(uint16_t)s->index] = 0x14;
     d3 = s->flag;
     d2 = 0;
-    n = (int16_t)l1_unit_pieces_less_one[0];
+    n = (int16_t)level1_blob.unit_pieces_less_one;
     first = alloc_c();
     a0 = alloc_c();
     a0->type = 0x10c;
@@ -579,18 +579,18 @@ void level1_spawn_unit(uint16_t d6)
     a0->fn_hit = (void *)level1_hit_free;
     a0->unit.counter = d3;
     SET_V5E(a0, 0);
-    a0->script = s->path;
+    a0->script = (uint8_t *)s->path;
     ((ObjMove *)a0)->cursor = s->path;
     a0->x = x;
     a0->y = y;
     a0->unit.wait = d2;
-    a0->steps = (int16_t)l1_boss_steps[0];
+    a0->steps = (int16_t)level1_blob.boss_steps;
     a0->unit.id = (int16_t)d6;
     a0->hit[0] = 0x3e8;
     a0->hit[2] = 0x3e8;
     a0->score = 0;
     for (i = 0; i <= n; i++) {
-        const struct LevelSeg *seg = &level_segs[i];
+        const struct LevelSeg *seg = &level1_blob.segs[i];
 
         a0 = alloc_c();
         a0->type = seg->type;
@@ -604,7 +604,7 @@ void level1_spawn_unit(uint16_t d6)
         a0->big = 0;
         SET_V5E(a0, 0);
         a0->anim_delay = 0;
-        a0->script = s->path;
+        a0->script = (uint8_t *)s->path;
         ((ObjMove *)a0)->cursor = s->path;
         a0->x = x;
         a0->y = y;
@@ -654,7 +654,7 @@ void level1_segment_update(Object *a0)
 {
     Object *a1;
     uint16_t d2;
-    uint8_t **tab;
+    const uint8_t *const *tab;
 
     unit_live[(uint16_t)a0->unit.id] = 0xff;
     a1 = OBJ_FWD(a0);
@@ -673,7 +673,7 @@ void level1_segment_update(Object *a0)
     if (a0->fn_draw == obj_nop_thunk && a0->unit.wait >= 0)
         a0->fn_draw = draw_bob_masked;
     d2 = (uint16_t)(((uint16_t)(a0->l1.angle_lo + 0x10) >> 3) & 0x1c);
-    tab = &l1_piece_pictures[a0->type == 0x110 ? 8 : 0];
+    tab = &level1_blob.piece_pictures[a0->type == 0x110 ? 8 : 0];
     a0->gfx = tab[d2 / 4];
     bbox_from_frame(a0);
 }
@@ -704,7 +704,7 @@ void level1_hit_piece_a(Object *a0, Object *a1, uint16_t d0)
     a1->energy = (int16_t)(old - d0);
     if (old > d0)
         return;
-    level1_piece_burst(a1, anim_l1_piece_a);
+    level1_piece_burst(a1, level1_blob.anim_piece_a);
 }
 
 /* orig $055C46: the same with the animation $55274 */
@@ -716,7 +716,7 @@ void level1_hit_piece_b(Object *a0, Object *a1, uint16_t d0)
     a1->energy = (int16_t)(old - d0);
     if (old > d0)
         return;
-    level1_piece_burst(a1, anim_l1_piece_b);
+    level1_piece_burst(a1, level1_blob.anim_piece_b);
 }
 
 /* orig $05605A: update of a burst piece: it moves by a fixed step from the table at piece_directions picked by its random byte ($2D) and goes when it
@@ -747,7 +747,7 @@ void level1_boss_flash(Object *a0)
     a0->fn_draw = FN(level1_boss_draw);
     if ((int16_t)scroll_pos >= 0x280)
         return;
-    draw_tile_grid_flash(l1_boss_grid, 5, 6, (int16_t)(a0->y - scroll_pos), 0x38);
+    draw_tile_grid_flash(level1_blob.boss_grid, 5, 6, (int16_t)(a0->y - scroll_pos), 0x38);
 }
 
 /* orig $0561DA: hit routine of the level 1 boss: when the shooter's box meets the part of the boss that can be hurt the boss flashes
@@ -815,7 +815,7 @@ void level1_boss_part_update(Object *a0)
         uint16_t dir = direction8((int16_t)(PLAYER->x - a0->x), (int16_t)(PLAYER->y - a0->y));
 
         a0->l1.angle_hi = (int16_t)dir;
-        a0->gfx = l1_boss_part_pictures[dir];
+        a0->gfx = level1_blob.boss_part_pictures[dir];
         if (a0->steps >= 0xb) {
             uint16_t sum = (uint16_t)(m->shot_count + 0xf);
 
@@ -825,7 +825,7 @@ void level1_boss_part_update(Object *a0)
 
                 m->shot_count = (uint8_t)(random_next() & 0x3f);
                 shot = spawn_enemy_shot((uint16_t)a0->x, (uint16_t)a0->y, (uint16_t)a0->l1.angle_hi, 4, 0);
-                set_anim(shot, anim_l1_shot);
+                set_anim(shot, level1_blob.anim_shot);
             }
         }
     }
