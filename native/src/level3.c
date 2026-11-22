@@ -872,7 +872,7 @@ void l3_enemy_enter(Object *obj)
 void l3_gun_update(Object *obj)
 {
     int16_t y;
-    const uint8_t *cells;
+    const Cell *cells;
 
     if ((int16_t)(xenon2.scroll_max + 0xd0) < obj->y) {
         kill_thunk(obj);
@@ -894,7 +894,7 @@ void l3_gun_update(Object *obj)
         return;
     }
     cells = obj->type == 0xf0 ? xenon2.level3_data.gun_cells_f0 : xenon2.level3_data.gun_cells_other;
-    *(uint16_t *)(obj->map[0]) = *(const uint16_t *)(cells + (uint16_t)(obj->l3_gun.open & ~1));
+    obj->map[0] = cells[(uint16_t)obj->l3_gun.open >> 1];
     obj->l3_gun.open++;
     if (obj->l3_gun.open == 8) {
         int16_t x = (int16_t)(obj->x + 8), y = (int16_t)(obj->y - xenon2.scroll_pos), angle = 0;
@@ -915,7 +915,7 @@ void l3_spawn_gun(const uint8_t *rec)
 {
     int flag = rd16(rec + 0xc) != 0;
     Object *obj = spawn_marker_enemy(flag ? 0xf4 : 0xf0, rec, (void (*)(void))l3_gun_update);
-    const uint8_t *cells = flag ? xenon2.level3_data.gun_cells_other : xenon2.level3_data.gun_cells_f0;
+    const Cell *cells = flag ? xenon2.level3_data.gun_cells_other : xenon2.level3_data.gun_cells_f0;
 
     obj->fn_hit = (void *)hit_tile;
     obj->energy = (int16_t)xenon2.level3_data.gun_energy;
@@ -923,7 +923,7 @@ void l3_spawn_gun(const uint8_t *rec)
     obj->hit[2] = 0x3e8;
     obj->gfx = (void *)cells;
     obj->anim = flag ? xenon2.level3_data.gun_anim_a : xenon2.level3_data.gun_anim_b;
-    *(uint16_t *)(obj->map[0]) = *(const uint16_t *)(cells);
+    obj->map[0] = cells[0];
     obj->score = 0x64;
     obj->tile.cols = 0;
     obj->tile.rows = 0;
@@ -933,7 +933,7 @@ void l3_spawn_gun(const uint8_t *rec)
 void l3_spawn_boss(const uint8_t *rec)
 {
     Object *obj = spawn_marker_enemy(0xf8, rec, (void (*)(void))l3_boss_update);
-    uint8_t (*row)[2] = obj->map;
+    Cell *row = obj->map;
     int i;
 
     obj->fn_draw = (obj_fn)obj_nop_thunk;
@@ -942,8 +942,10 @@ void l3_spawn_boss(const uint8_t *rec)
     obj->hit[0] = 0x3e8;
     obj->hit[2] = 0x3e8;
     for (i = 0; i < 6; i++) {
-        *(uint32_t *)(row[0]) = *(const uint32_t *)(xenon2.level3_data.spawn_boss_data + 8 * i);
-        *(uint32_t *)(row[2]) = *(const uint32_t *)(xenon2.level3_data.spawn_boss_data + 8 * i + 4);
+        row[0] = xenon2.level3_data.spawn_boss_data[4 * i];
+        row[1] = xenon2.level3_data.spawn_boss_data[4 * i + 1];
+        row[2] = xenon2.level3_data.spawn_boss_data[4 * i + 2];
+        row[3] = xenon2.level3_data.spawn_boss_data[4 * i + 3];
         row += MAP_COLS;
     }
 }
@@ -953,7 +955,7 @@ void l3_spawn_boss(const uint8_t *rec)
 void l3_boss_update(Object *obj)
 {
     uint16_t cell;
-    uint8_t (*map)[2];
+    Cell *map;
 
     if ((int16_t)(xenon2.scroll_max + 0xd0) < obj->y) {
         kill_thunk(obj);
@@ -970,8 +972,10 @@ void l3_boss_update(Object *obj)
             return;
     }
     map = obj->map;
-    *(uint32_t *)(map[4 * MAP_COLS + 1]) = *(const uint32_t *)(xenon2.level3_data.boss_update_data + 4 * (cell & ~1u));
-    *(uint32_t *)(map[5 * MAP_COLS + 1]) = *(const uint32_t *)(xenon2.level3_data.boss_update_data + 4 * (cell & ~1u) + 4);
+    map[4 * MAP_COLS + 1] = xenon2.level3_data.boss_update_data[2 * (cell & ~1u)];
+    map[4 * MAP_COLS + 2] = xenon2.level3_data.boss_update_data[2 * (cell & ~1u) + 1];
+    map[5 * MAP_COLS + 1] = xenon2.level3_data.boss_update_data[2 * (cell & ~1u) + 2];
+    map[5 * MAP_COLS + 2] = xenon2.level3_data.boss_update_data[2 * (cell & ~1u) + 3];
     obj->l3_boss.cell++;
     if (obj->l3_boss.cell == 0x12) {
         obj->l3_boss.cell = 0;
@@ -1010,7 +1014,7 @@ void l3_boss_update(Object *obj)
 void l3_boss_hit(Object *shot, Object *boss, uint16_t damage)
 {
     uint16_t old = (uint16_t)boss->energy;
-    uint8_t (*map)[2];
+    Cell *map;
 
     (void)shot;
     boss->energy = (int16_t)(old - damage);
@@ -1020,13 +1024,13 @@ void l3_boss_hit(Object *shot, Object *boss, uint16_t damage)
     }
     spawn_effect((int16_t)(boss->x + 0x20), (int16_t)(boss->y - xenon2.scroll_pos + 0x40), xenon2.big_explosion_anim, draw_bob_masked);
     map = boss->map;
-    wr32(map[2 * MAP_COLS], 0);
-    wr32(map[2 * MAP_COLS + 2], 0);
-    wr32(map[3 * MAP_COLS], 0);
-    wr32(map[3 * MAP_COLS + 2], 0);
-    wr32(map[4 * MAP_COLS], 0);
-    wr32(map[4 * MAP_COLS + 2], 0);
-    wr32(map[5 * MAP_COLS + 1], 0);
+    map[2 * MAP_COLS] = map[2 * MAP_COLS + 1] = (Cell){{0, 0}};
+    map[2 * MAP_COLS + 2] = map[2 * MAP_COLS + 3] = (Cell){{0, 0}};
+    map[3 * MAP_COLS] = map[3 * MAP_COLS + 1] = (Cell){{0, 0}};
+    map[3 * MAP_COLS + 2] = map[3 * MAP_COLS + 3] = (Cell){{0, 0}};
+    map[4 * MAP_COLS] = map[4 * MAP_COLS + 1] = (Cell){{0, 0}};
+    map[4 * MAP_COLS + 2] = map[4 * MAP_COLS + 3] = (Cell){{0, 0}};
+    map[5 * MAP_COLS + 1] = map[5 * MAP_COLS + 2] = (Cell){{0, 0}};
     boss->fn_update = FN(l3_boss2_update);
     boss->fn_draw = (obj_fn)obj_nop_thunk;
     boss->fn_hit = (void *)l3_boss2_hit;
@@ -1041,11 +1045,11 @@ void l3_boss_hit(Object *shot, Object *boss, uint16_t damage)
 void l3_boss_flash(Object *obj)
 {
     int16_t y = (int16_t)(obj->y - xenon2.scroll_pos);
-    const uint8_t *cells = xenon2.level3_data.boss_update_data + 4 * (uint32_t)(obj->l3_boss.cell & ~1);
+    const Cell *cells = xenon2.level3_data.boss_update_data + 2 * (uint32_t)(obj->l3_boss.cell & ~1);
 
     obj->fn_draw = (obj_fn)obj_nop_thunk;
     draw_tile_grid_flash(xenon2.level3_data.boss_flash_grid, 3, 2, (int16_t)(y + 0x20), (uint16_t)(((uint16_t)obj->x >> 1) & 0xfffc));
-    draw_tile_grid_flash(cells, 1, 1, (int16_t)(y + 0x40), (uint16_t)(((uint16_t)(obj->x + 0x10) >> 1) & 0xfffc));
+    draw_tile_grid_flash((const uint8_t *)cells, 1, 1, (int16_t)(y + 0x40), (uint16_t)(((uint16_t)(obj->x + 0x10) >> 1) & 0xfffc));
 }
 
 
@@ -1053,7 +1057,7 @@ void l3_boss_flash(Object *obj)
 void l3_boss2_update(Object *obj)
 {
     uint16_t cell;
-    uint8_t (*map)[2];
+    Cell *map;
 
     if ((int16_t)(xenon2.scroll_max + 0xd0) < obj->y) {
         kill_thunk(obj);
@@ -1074,8 +1078,10 @@ void l3_boss2_update(Object *obj)
         obj->v5e_b[0] = (uint8_t)(random_next() & 0x3f);
     }
     map = obj->map;
-    *(uint32_t *)(map[1]) = *(const uint32_t *)(xenon2.level3_data.boss2_update_data + 4 * (cell & ~1u));
-    *(uint32_t *)(map[MAP_COLS + 1]) = *(const uint32_t *)(xenon2.level3_data.boss2_update_data + 4 * (cell & ~1u) + 4);
+    map[1] = xenon2.level3_data.boss2_update_data[2 * (cell & ~1u)];
+    map[2] = xenon2.level3_data.boss2_update_data[2 * (cell & ~1u) + 1];
+    map[MAP_COLS + 1] = xenon2.level3_data.boss2_update_data[2 * (cell & ~1u) + 2];
+    map[MAP_COLS + 2] = xenon2.level3_data.boss2_update_data[2 * (cell & ~1u) + 3];
     obj->l3_boss2.cell++;
     if (obj->l3_boss2.cell == 0xa) {
         obj->l3_boss2.cell = 0;
@@ -1097,7 +1103,7 @@ void l3_boss2_update(Object *obj)
 void l3_boss2_hit(Object *shot, Object *boss, uint16_t damage)
 {
     uint16_t old = (uint16_t)boss->energy;
-    uint8_t (*map)[2];
+    Cell *map;
 
     (void)shot;
     boss->energy = (int16_t)(old - damage);
@@ -1107,10 +1113,10 @@ void l3_boss2_hit(Object *shot, Object *boss, uint16_t damage)
     }
     spawn_effect((int16_t)(boss->x + 0x20), (int16_t)(boss->y - xenon2.scroll_pos + 0x10), xenon2.big_explosion_anim, draw_bob_masked);
     map = boss->map;
-    wr32(map[0], 0);
-    wr32(map[2], 0);
-    wr32(map[MAP_COLS], 0);
-    wr32(map[MAP_COLS + 2], 0);
+    map[0] = map[1] = (Cell){{0, 0}};
+    map[2] = map[3] = (Cell){{0, 0}};
+    map[MAP_COLS] = map[MAP_COLS + 1] = (Cell){{0, 0}};
+    map[MAP_COLS + 2] = map[MAP_COLS + 3] = (Cell){{0, 0}};
     xenon2.player_score += 0x1f4;
     kill_thunk(boss);
 }
@@ -1119,7 +1125,7 @@ void l3_boss2_hit(Object *shot, Object *boss, uint16_t damage)
 void l3_boss2_flash(Object *obj)
 {
     obj->fn_draw = (obj_fn)obj_nop_thunk;
-    draw_tile_grid_flash(xenon2.level3_data.boss2_update_data, 1, 1, (int16_t)(obj->y - xenon2.scroll_pos), (uint16_t)(((uint16_t)(obj->x + 0x10) >> 1) & 0xfffc));
+    draw_tile_grid_flash((const uint8_t *)xenon2.level3_data.boss2_update_data, 1, 1, (int16_t)(obj->y - xenon2.scroll_pos), (uint16_t)(((uint16_t)(obj->x + 0x10) >> 1) & 0xfffc));
 }
 
 /* level3 $0556F6: a walker ($DC) from a record: the direction w6 of the record gives its first place and picture */

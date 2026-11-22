@@ -139,15 +139,22 @@ void l2_hook(uint16_t hook, const uint8_t *rec, uint16_t rec_scroll)
         obj->hit[2] = 0x3e8;
         obj->gfx = (void *)(flag ? xenon2.level2_data.hook_picture_a : xenon2.level2_data.hook_picture_b);
         obj->anim = flag ? xenon2.level2_data.hook_anim_a : xenon2.level2_data.hook_anim_b;
-        *(uint16_t *)(obj->map[0]) = *(const uint16_t *)((const uint8_t *)obj->gfx);
+        obj->map[0] = *(const Cell *)obj->gfx;
         obj->score = 0x64;
         obj->tile.cols = 0;
         obj->tile.rows = 0;
         return;
     case 2:
         obj = spawn_marker_front(flag ? 0xf0 : 0xf4, rec, (void (*)(void))l2_front_update);
-        *(uint32_t *)(obj->map[0]) = *(const uint32_t *)((flag ? xenon2.level2_data.hook_cells_a : xenon2.level2_data.hook_cells_b));
-        *(uint32_t *)(obj->map[MAP_COLS]) = *(const uint32_t *)((flag ? xenon2.level2_data.hook_cells2_a : xenon2.level2_data.hook_cells2_b));
+        {
+            const Cell *top = flag ? xenon2.level2_data.hook_cells_a : xenon2.level2_data.hook_cells_b;
+            const Cell *bottom = flag ? xenon2.level2_data.hook_cells2_a : xenon2.level2_data.hook_cells2_b;
+
+            obj->map[0] = top[0];
+            obj->map[1] = top[1];
+            obj->map[MAP_COLS] = bottom[0];
+            obj->map[MAP_COLS + 1] = bottom[1];
+        }
         return;
     case 3:
         obj = alloc_in(LIST_C);
@@ -171,7 +178,7 @@ void l2_hook(uint16_t hook, const uint8_t *rec, uint16_t rec_scroll)
     case 4:
         obj = spawn_marker_front(0xfc, rec, (void (*)(void))l2_marker_fc_update);
         obj->marker.launches = 1;
-        *(uint16_t *)(obj->map[0]) = *(const uint16_t *)(xenon2.level2_data.hook_words);
+        obj->map[0] = xenon2.level2_data.hook_words[0];
         return;
     case 5:
         obj = spawn_marker_front(0xf8, rec, (void (*)(void))l2_marker_f8_update);
@@ -400,7 +407,7 @@ void l2_flyer_update(Object *enemy)
 void l2_marker_f8_update(Object *marker)
 {
     int16_t rel_y;
-    const uint8_t *cells;
+    const Cell *cells;
 
     if ((int16_t)((int16_t)xenon2.scroll_max + 0xd0) <= marker->y) {
         kill_thunk(marker);
@@ -425,9 +432,11 @@ void l2_marker_f8_update(Object *marker)
         else if ((xenon2.frame_tick & 3) == 0)
             marker->marker_f8.blink ^= 1;
     }
-    cells = xenon2.level2_data.marker_f8_cells + ((uint16_t)marker->marker_f8.blink << 3);
-    *(uint32_t *)(marker->map[0]) = *(const uint32_t *)(cells);
-    *(uint32_t *)(marker->map[MAP_COLS]) = *(const uint32_t *)(cells + 4);
+    cells = xenon2.level2_data.marker_f8_cells + ((uint16_t)marker->marker_f8.blink << 2);
+    marker->map[0] = cells[0];
+    marker->map[1] = cells[1];
+    marker->map[MAP_COLS] = cells[2];
+    marker->map[MAP_COLS + 1] = cells[3];
     if ((uint16_t)marker->marker_f8.blink < 2)
         return;
     if (xenon2.frame_tick & 3)
@@ -484,7 +493,7 @@ void l2_marker_fc_update(Object *marker)
             return;
         marker->marker_fc.step = 2;
     }
-    *(uint16_t *)(marker->map[0]) = *(const uint16_t *)(xenon2.level2_data.hook_words + ((uint16_t)marker->marker_fc.step << 1));
+    marker->map[0] = xenon2.level2_data.hook_words[(uint16_t)marker->marker_fc.step];
     if (xenon2.frame_tick & 3)
         return;
     marker->marker_fc.step++;
@@ -693,10 +702,12 @@ void l2_front_update(Object *marker)
     }
     {
         const uint8_t *const *table = marker->type == 0xf0 ? xenon2.level2_data.front_table_f0 : xenon2.level2_data.front_table_other;
-        const uint8_t *cells = table[(uint16_t)marker->front.step];
+        const Cell *cells = (const Cell *)table[(uint16_t)marker->front.step];
 
-        *(uint32_t *)(marker->map[0]) = *(const uint32_t *)(cells);
-        *(uint32_t *)(marker->map[MAP_COLS]) = *(const uint32_t *)(cells + 4);
+        marker->map[0] = cells[0];
+        marker->map[1] = cells[1];
+        marker->map[MAP_COLS] = cells[2];
+        marker->map[MAP_COLS + 1] = cells[3];
     }
     marker->front.step++;
     if (marker->front.step < 0x15)
@@ -748,7 +759,7 @@ void l2_turret_update(Object *turret)
             turret->turret.step = 1;
         return;
     }
-    *(uint16_t *)(turret->map[0]) = *(const uint16_t *)(((turret->type == 0xe8 ? xenon2.level2_data.hook_picture_a : xenon2.level2_data.hook_picture_b) + 2 * (uint16_t)turret->turret.step));
+    turret->map[0] = ((const Cell *)(turret->type == 0xe8 ? xenon2.level2_data.hook_picture_a : xenon2.level2_data.hook_picture_b))[(uint16_t)turret->turret.step];
     turret->turret.step++;
     if (turret->turret.step != 7) {
         if (turret->turret.step == 0xf)

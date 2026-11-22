@@ -63,7 +63,7 @@ static int level1_turret_gone(Object *turret)
 /* orig $0552CE: update of the turret $E0 / $E4: its box, the map cells it shows (four steps), and now and then a shot */
 void level1_turret_a_update(Object *turret)
 {
-    const uint8_t *table;
+    const Cell *table;
     uint16_t offset, sum;
     int16_t x, y, dir;
 
@@ -74,10 +74,12 @@ void level1_turret_a_update(Object *turret)
     y = (int16_t)(turret->y - xenon2.scroll_pos + 4);
     turret->hit[1] = y;
     turret->hit[3] = (int16_t)(y + 0x18);
-    offset = (uint16_t)(turret->l1_turret.step << 3);
+    offset = (uint16_t)(turret->l1_turret.step << 2);
     table = turret->type == 0xe0 ? xenon2.level1_data.turret_a_cells_e0 : xenon2.level1_data.turret_a_cells_e4;
-    *(uint32_t *)(turret->map[0]) = *(const uint32_t *)(table + offset);
-    *(uint32_t *)(turret->map[MAP_COLS]) = *(const uint32_t *)(table + offset + 4);
+    turret->map[0] = table[offset];
+    turret->map[1] = table[offset + 1];
+    turret->map[MAP_COLS] = table[offset + 2];
+    turret->map[MAP_COLS + 1] = table[offset + 3];
     turret->l1_turret.step = (int16_t)((turret->l1_turret.step + 1) & 3);
     sum = (uint16_t)(((ObjMove *)turret)->shot_count + xenon2.level1_data.shot_params[3]);
     ((ObjMove *)turret)->shot_count = (uint8_t)sum;
@@ -97,7 +99,7 @@ void level1_turret_a_update(Object *turret)
 /* orig $0555A2: update of the turret $E8 / $EC (sixteen steps of cells) */
 void level1_turret_b_update(Object *turret)
 {
-    const uint8_t *table;
+    const Cell *table;
     uint16_t offset, sum;
     int16_t x, y, dir;
 
@@ -108,10 +110,12 @@ void level1_turret_b_update(Object *turret)
     y = (int16_t)(turret->y - xenon2.scroll_pos + 4);
     turret->hit[1] = y;
     turret->hit[3] = (int16_t)(y + 0x18);
-    offset = (uint16_t)(((uint16_t)turret->l1_turret.step & 0xfffc) << 1);
+    offset = (uint16_t)((uint16_t)turret->l1_turret.step & 0xfffc);
     table = turret->type == 0xe8 ? xenon2.level1_data.turret_b_cells_e8 : xenon2.level1_data.turret_b_cells_ec;
-    *(uint32_t *)(turret->map[0]) = *(const uint32_t *)(table + offset);
-    *(uint32_t *)(turret->map[MAP_COLS]) = *(const uint32_t *)(table + offset + 4);
+    turret->map[0] = table[offset];
+    turret->map[1] = table[offset + 1];
+    turret->map[MAP_COLS] = table[offset + 2];
+    turret->map[MAP_COLS + 1] = table[offset + 3];
     turret->l1_turret.step = (int16_t)((turret->l1_turret.step + 1) & 0xf);
     sum = (uint16_t)(((ObjMove *)turret)->shot_count + xenon2.level1_data.shot_params[0xf]);
     ((ObjMove *)turret)->shot_count = (uint8_t)sum;
@@ -131,7 +135,7 @@ void level1_turret_b_update(Object *turret)
 /* orig $055402: update of the turret $D8 / $DC (twenty steps of cells, a shot every 40 steps) */
 void level1_turret_c_update(Object *turret)
 {
-    const uint8_t *table;
+    const Cell *table;
     uint16_t offset, sum;
     int16_t x, y, dir;
 
@@ -142,9 +146,10 @@ void level1_turret_c_update(Object *turret)
     y = (int16_t)(turret->y - xenon2.scroll_pos + 8);
     turret->hit[1] = y;
     turret->hit[3] = (int16_t)(y + 0x10);
-    offset = (uint16_t)(((uint16_t)turret->l1_turret.step & 0xfffe) << 1);
+    offset = (uint16_t)((uint16_t)turret->l1_turret.step & 0xfffe);
     table = turret->type == 0xd8 ? xenon2.level1_data.turret_c_steps_d8 : xenon2.level1_data.turret_c_steps_dc;
-    *(uint32_t *)(turret->map[0]) = *(const uint32_t *)(table + offset);
+    turret->map[0] = table[offset];
+    turret->map[1] = table[offset + 1];
     if (turret->l1_turret.step == 0) {
         sum = (uint16_t)(((ObjMove *)turret)->shot_count + xenon2.level1_data.shot_params[9]);
         ((ObjMove *)turret)->shot_count = (uint8_t)sum;
@@ -230,12 +235,14 @@ static Object *level1_turret(uint16_t type, const uint8_t *rec, void (*update)(v
 }
 
 /* the end of the turrets' set-up: the first cells are written into the map ($46), the object hides them again when it is shot */
-static void level1_turret_cells(Object *turret, const uint8_t *cells, const uint8_t *anim)
+static void level1_turret_cells(Object *turret, const Cell *cells, const uint8_t *anim)
 {
     turret->gfx = cells;
     turret->anim = anim;
-    *(uint32_t *)(turret->map[0]) = *(const uint32_t *)(cells);
-    *(uint32_t *)(turret->map[MAP_COLS]) = *(const uint32_t *)(cells + 4);
+    turret->map[0] = cells[0];
+    turret->map[1] = cells[1];
+    turret->map[MAP_COLS] = cells[2];
+    turret->map[MAP_COLS + 1] = cells[3];
     turret->score = 0x64;
     turret->tile.cols = 1;
     turret->tile.rows = 1;

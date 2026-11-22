@@ -74,7 +74,7 @@ end
 55dac arm_tip_pictures ptr 16
 560b4 snake_anim_b u8 42
 560de snake_anim_a u8 274
-561f0 spawn_boss_data u8 160
+561f0 spawn_boss_data cell 80
 56290 walker_update_words s16 8
 562a0 walker_update_words_2 s16 8
 56450 walker_update_words_3 s16 8
@@ -85,12 +85,12 @@ end
 567f2 diver_update_data_3 u8 42
 5681c diver_update_data_2 u8 36
 56840 diver_update_data_4 u8 354
-569a2 boss_update_data u8 210
+569a2 boss_update_data cell 105
 56a74 boss_flash_grid u8 376
 56bec boss2_shot_anims ptr 8
-56d2c boss2_update_data u8 430
-56eda gun_cells_f0 u8 14
-56ee8 gun_cells_other u8 14
+56d2c boss2_update_data cell 215
+56eda gun_cells_f0 cell 7
+56ee8 gun_cells_other cell 7
 56ef6 gun_anim_b u8 2
 56ef8 gun_anim_a u8 162
 56f9a end_pieces Level3EndPiece 6
