@@ -1,4 +1,13 @@
 ; level 1: its blob at $54E40 (see tools/gen_blobs.py)
+record SpawnRec 14
+0 scroll s16
+2 arg u16
+4 count u16
+6 index u16
+8 x s16
+10 y s16
+12 steps u16
+end
 record LevelSpawn 12
 0 x s16
 2 y s16
@@ -61,3 +70,7 @@ end
 68f40 shot_gfx_table ptr 5
 6e80a data_src u8 12000
 567fa boss_draw_table u8 20
+6a5da events_a SpawnRec 113
+6ac08 events_a_end s16
+5c854 events_b SpawnRec 51
+5cb1e events_b_end s16

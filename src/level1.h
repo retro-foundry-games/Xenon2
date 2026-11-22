@@ -9,7 +9,7 @@ void level1_boss_hit(Object *shooter, Object *boss, uint16_t damage); void level
 void level1_swap_hook(void);
 void level1_turret_a_update(Object *turret); void level1_turret_b_update(Object *turret); void level1_turret_c_update(Object *turret);
 void level1_launcher_update(Object *launcher);
-void level1_hook(uint16_t id, const uint8_t *rec, uint16_t scroll);
-int level1_collision_hook(void); void level1_event(uint16_t id, const uint8_t *rec); void level1_scroll(void);
+void level1_hook(uint16_t id, const struct SpawnRec *rec, uint16_t scroll);
+int level1_collision_hook(void); void level1_event(uint16_t id, const struct SpawnRec *rec); void level1_scroll(void);
 void level1_boss_update(Object *boss); void level1_boss_draw(Object *boss); void level1_init(void);
 #endif

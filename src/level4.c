@@ -90,13 +90,13 @@ static void put_cells(Cell *cell, const Cell *table)
 void l4_tower_update(Object *obj);
 void l4_tower_hit(Object *shot, Object *enemy, uint16_t damage);
 void l4_tower_draw(Object *obj);
-void l4_spawn_boss2(const uint8_t *record, uint16_t slots);
-void l4_spawn_walker(const uint8_t *record);
+void l4_spawn_boss2(const struct SpawnRec *record, uint16_t slots);
+void l4_spawn_walker(const struct SpawnRec *record);
 void l4_spawn_boss1(void);
-void l4_spawn_bar(const uint8_t *record);
+void l4_spawn_bar(const struct SpawnRec *record);
 
 /* level4 $054E10, $057272: level events by which (record = the record that fired): 0 the wave of $326C, 1 to 6 formations */
-void l4_event(uint16_t which, const uint8_t *record)
+void l4_event(uint16_t which, const struct SpawnRec *record)
 {
     const uint8_t *tables[7] = { 0, xenon2.level4_data.formation_1, xenon2.level4_data.formation_2, xenon2.level4_data.formation_3, xenon2.level4_data.formation_4,
                                  xenon2.level4_data.formation_5, xenon2.level4_data.formation_6 };
@@ -108,7 +108,7 @@ void l4_event(uint16_t which, const uint8_t *record)
 }
 
 /* level4 $054E18, $05585E: the hooks by which */
-void l4_hook(uint16_t which, const uint8_t *record, uint16_t param)
+void l4_hook(uint16_t which, const struct SpawnRec *record, uint16_t param)
 {
     switch (which) {
     case 0:
@@ -226,9 +226,9 @@ void l4_tower_draw(Object *obj)
 }
 
 /* level4 $05700A: a marker makes a tower; the record's word at +$C says which of the two */
-void l4_spawn_tower(const uint8_t *record)
+void l4_spawn_tower(const struct SpawnRec *record)
 {
-    int flag = rd16(record + 0xc) != 0;
+    int flag = record->steps != 0;
     Object *obj = spawn_marker_enemy(flag ? 0xd0 : 0xd4, record, (void (*)(void))l4_tower_update);
 
     obj->fn_draw = (obj_fn)obj_nop_thunk;
@@ -724,7 +724,7 @@ void l4_b1_tail(Object *obj)
 /* ---- the second boss ($56976): twenty objects, a worm with a head, a gun and a ring of eyes ---- */
 
 /* level4 $056976: the pieces by the table at $5613A (the latch of the weapons first) */
-void l4_spawn_boss2(const uint8_t *record, uint16_t slots)
+void l4_spawn_boss2(const struct SpawnRec *record, uint16_t slots)
 {
     const struct Level4Boss2Piece *piece = xenon2.level4_data.boss2_pieces;
     int n;
@@ -1028,9 +1028,9 @@ void l4_b2_eye_hit(Object *shot, Object *enemy, uint16_t damage)
 /* ---- the bars ($56A2C) ---- */
 
 /* level4 $056A2C: a bar that swings out of the wall (the record's word at +$C says which side) */
-void l4_spawn_bar(const uint8_t *record)
+void l4_spawn_bar(const struct SpawnRec *record)
 {
-    int right = rd16(record + 0xc) != 0;
+    int right = record->steps != 0;
     Object *obj = spawn_marker_front(right ? 0x110 : 0x10c, record, (void (*)(void))(obj_fn)l4_bar_update);
 
     obj->y = (int16_t)(obj->y - xenon2.scroll_pos);
@@ -1103,9 +1103,9 @@ void l4_bar_draw(Object *obj)
 /* ---- the walker ($56C3E): it stands, then walks to the other side along the screen ---- */
 
 /* level4 $056C3E */
-void l4_spawn_walker(const uint8_t *record)
+void l4_spawn_walker(const struct SpawnRec *record)
 {
-    int right = rd16(record + 0xc) != 0;
+    int right = record->steps != 0;
     Object *obj = spawn_marker_enemy(right ? 0xe4 : 0xe0, record, (void (*)(void))(obj_fn)l4_walker_update);
 
     obj->y = (int16_t)(obj->y + 0x1c);
@@ -1118,7 +1118,7 @@ void l4_spawn_walker(const uint8_t *record)
     obj->hit[0] = 0x3e8;
     obj->hit[2] = 0x3e8;
     obj->score = 0xc8;
-    obj->walker.side = (int16_t)rd16(record + 6);
+    obj->walker.side = (int16_t)record->index;
     set_anim(obj, obj->type == 0xe0 ? xenon2.level4_data.walker_anim_e0 : xenon2.level4_data.walker_anim_other);
     obj->kind = 0;
     obj->shot_count = (uint8_t)(xenon2.level4_data.walker_v5e >> 8);

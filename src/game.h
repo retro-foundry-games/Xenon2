@@ -483,7 +483,7 @@ struct Xenon2 {
     uint8_t * level_init_src;  /* $054E04 var */
     uint8_t * tile_gfx;  /* $054E08 var */
     PAD(8)
-    uint8_t * level_events_b;  /* $054E14 var */
+    struct SpawnRec * level_events_b;  /* $054E14 var */
     PAD(4)
     uint32_t * level_palette;  /* $054E1C var */
     PAD(8)
@@ -491,7 +491,7 @@ struct Xenon2 {
     PAD(4)
     uint8_t * level_formations;  /* $054E30 var */
     uint8_t * level_data_start;  /* $054E34 var */
-    uint8_t * level_events_a;  /* $054E38 var */
+    struct SpawnRec * level_events_a;  /* $054E38 var */
     uint16_t shop_money_early;  /* $054E3C var */
     uint16_t shop_money_late;  /* $054E3E var */
     union {   /* $054E40: the blob of each level */

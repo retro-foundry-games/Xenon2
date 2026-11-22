@@ -104,7 +104,7 @@ void l2_block_hit(Object *attacker, Object *target, uint16_t damage)
 }
 
 /* level2 $054E10, $055D8A: level events by event (rec = the record that fired): event 0 is the wave of $326C, 1 to 6 formations */
-void l2_event(uint16_t event, const uint8_t *rec)
+void l2_event(uint16_t event, const struct SpawnRec *rec)
 {
     const uint8_t *forms[6] = { xenon2.level2_data.formation_1, xenon2.level2_data.formation_2, xenon2.level2_data.formation_3, xenon2.level2_data.formation_4,
                                 xenon2.level2_data.formation_5, xenon2.level2_data.formation_6 };
@@ -119,9 +119,9 @@ void l2_event(uint16_t event, const uint8_t *rec)
 
 /* level2 $054E18, $055B62: level hooks by hook (rec = the record that fired, rec_scroll its scroll value; w0c of the record says which side): 0 remembers the record,
  * 1 a turret $E8/$EC, 2 a marker $F0/$F4, 3 a launcher $100/$104, 4 and 5 markers $FC and $F8 */
-void l2_hook(uint16_t hook, const uint8_t *rec, uint16_t rec_scroll)
+void l2_hook(uint16_t hook, const struct SpawnRec *rec, uint16_t rec_scroll)
 {
-    int flag = rd16(rec + 0xc) != 0;
+    int flag = rec->steps != 0;
     Object *obj;
 
     switch (hook) {
@@ -164,10 +164,10 @@ void l2_hook(uint16_t hook, const uint8_t *rec, uint16_t rec_scroll)
         obj->energy = (int16_t)xenon2.level2_data.hook_energy_2;
         obj->big = 0;
         obj->score = 0xc8;
-        obj->x = (int16_t)(rd16(rec + 8) - 8);
-        obj->y = (int16_t)(rd16(rec + 10) - 8 - xenon2.scroll_pos);
+        obj->x = (int16_t)(rec->x - 8);
+        obj->y = (int16_t)(rec->y - 8 - xenon2.scroll_pos);
         obj->launcher.step = -1;
-        obj->launcher.range = (obj->launcher.range & 0xffffu) | (uint32_t)(uint16_t)((int16_t)(rd16(rec + 4) << 4)) << 16;
+        obj->launcher.range = (obj->launcher.range & 0xffffu) | (uint32_t)(uint16_t)((int16_t)(rec->count << 4)) << 16;
         obj->launcher.pos = (int16_t)(obj->launcher.range >> 16);
         obj->kind = 0;
         bbox_from_frame(obj);
