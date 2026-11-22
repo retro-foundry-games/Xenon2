@@ -15,7 +15,6 @@
 #include "types_weapons.h"
 _Static_assert(sizeof(struct HwMirror) == 12, "struct HwMirror has not the size game.symbols gives");
 _Static_assert(sizeof(struct Instrument) == 12, "struct Instrument has not the size game.symbols gives");
-_Static_assert(sizeof(struct LevelBlobs) == 127424, "struct LevelBlobs has not the size game.symbols gives");
 _Static_assert(sizeof(struct MusicChannel) == 48, "struct MusicChannel has not the size game.symbols gives");
 _Static_assert(sizeof(struct ObjMove) == 98, "struct ObjMove has not the size game.symbols gives");
 _Static_assert(sizeof(struct Object) == 98, "struct Object has not the size game.symbols gives");
@@ -471,8 +470,14 @@ struct Xenon2 {
     uint8_t * level_events_a;  /* $054E38 var */
     uint16_t shop_money_early;  /* $054E3C var */
     uint16_t shop_money_late;  /* $054E3E var */
-    struct LevelBlobs level_blobs;  /* $054E40 var */
-    PAD(37152)
+    union {   /* $054E40: the blob of each level */
+        struct Level1Data level1_data;
+        struct Level2Data level2_data;
+        struct Level3Data level3_data;
+        struct Level4Data level4_data;
+        struct Level5Data level5_data;
+    };
+    PAD(47670)
     uint8_t level_data_dst[12000];  /* $07D120 arr */
 };
 extern struct Xenon2 xenon2;
@@ -803,7 +808,11 @@ LAYOUT_ASSERT(level_data_start, 0x54e34);
 LAYOUT_ASSERT(level_events_a, 0x54e38);
 LAYOUT_ASSERT(shop_money_early, 0x54e3c);
 LAYOUT_ASSERT(shop_money_late, 0x54e3e);
-LAYOUT_ASSERT(level_blobs, 0x54e40);
+LAYOUT_ASSERT(level1_data, 0x54e40);
+LAYOUT_ASSERT(level2_data, 0x54e40);
+LAYOUT_ASSERT(level3_data, 0x54e40);
+LAYOUT_ASSERT(level4_data, 0x54e40);
+LAYOUT_ASSERT(level5_data, 0x54e40);
 LAYOUT_ASSERT(level_data_dst, 0x7d120);
 #ifndef GAME_NO_MEMBER_MACROS   /* (the host files that name the members themselves define it) */
 #define disk_retries (xenon2.disk_retries)
@@ -1133,7 +1142,11 @@ LAYOUT_ASSERT(level_data_dst, 0x7d120);
 #define level_events_a (xenon2.level_events_a)
 #define shop_money_early (xenon2.shop_money_early)
 #define shop_money_late (xenon2.shop_money_late)
-#define level_blobs (xenon2.level_blobs)
+#define level1_data (xenon2.level1_data)
+#define level2_data (xenon2.level2_data)
+#define level3_data (xenon2.level3_data)
+#define level4_data (xenon2.level4_data)
+#define level5_data (xenon2.level5_data)
 #define level_data_dst (xenon2.level_data_dst)
 #endif
 

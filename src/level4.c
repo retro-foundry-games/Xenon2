@@ -118,8 +118,8 @@ void l4_spawn_bar(const uint8_t *a1);
 /* level4 $054E10, $057272: level events by d0 (a1 = the record that fired): 0 the wave of $326C, 1 to 6 formations */
 void l4_event(uint16_t d0, const uint8_t *a1)
 {
-    const uint8_t *tables[7] = { 0, level4_blob.formation_1, level4_blob.formation_2, level4_blob.formation_3, level4_blob.formation_4,
-                                 level4_blob.formation_5, level4_blob.formation_6 };
+    const uint8_t *tables[7] = { 0, level4_data.formation_1, level4_data.formation_2, level4_data.formation_3, level4_data.formation_4,
+                                 level4_data.formation_5, level4_data.formation_6 };
 
     if (d0 == 0)
         spawn_wave_326c(0, a1);   /* $E5A */
@@ -166,15 +166,15 @@ void l4_init(void)
     scroll_max = 0x11ff;
     sh_w8(0xd97, 0);
     sh_w8(0xd98, 0);
-    level4_blob.boss1_pieces[1].energy = level4_blob.init_patch;
-    level4_blob.boss1_pieces[2].energy = level4_blob.init_patch;
-    level4_blob.boss1_pieces[0].energy = level4_blob.init_patch_2;
-    level4_blob.boss2_pieces[16].energy = level4_blob.init_patch_3;
-    level4_blob.boss2_pieces[17].energy = level4_blob.init_patch_3;
-    level4_blob.boss2_pieces[18].energy = level4_blob.init_patch_3;
-    level4_blob.boss2_pieces[19].energy = level4_blob.init_patch_3;
-    level4_blob.boss2_pieces[15].energy = level4_blob.init_patch_4;
-    level4_blob.boss2_pieces[4].energy = level4_blob.init_patch_5;
+    level4_data.boss1_pieces[1].energy = level4_data.init_patch;
+    level4_data.boss1_pieces[2].energy = level4_data.init_patch;
+    level4_data.boss1_pieces[0].energy = level4_data.init_patch_2;
+    level4_data.boss2_pieces[16].energy = level4_data.init_patch_3;
+    level4_data.boss2_pieces[17].energy = level4_data.init_patch_3;
+    level4_data.boss2_pieces[18].energy = level4_data.init_patch_3;
+    level4_data.boss2_pieces[19].energy = level4_data.init_patch_3;
+    level4_data.boss2_pieces[15].energy = level4_data.init_patch_4;
+    level4_data.boss2_pieces[4].energy = level4_data.init_patch_5;
     difficulty_x1 = (uint16_t)(difficulty * 6);
     difficulty_x2 = (uint16_t)(difficulty * 8);
 }
@@ -195,7 +195,7 @@ void l4_tower_update(Object *a0)
     a0->hit[1] = (int16_t)d0;
     a0->hit[3] = (int16_t)(d0 + 0x1c);
     if (a0->tower.phase == 0) {
-        uint16_t sum = (uint16_t)(a0->v5e_b[0] + level4_blob.tower_fire_rate);
+        uint16_t sum = (uint16_t)(a0->v5e_b[0] + level4_data.tower_fire_rate);
 
         a0->v5e_b[0] = (uint8_t)sum;
         if (sum > 0xff) {
@@ -204,19 +204,19 @@ void l4_tower_update(Object *a0)
         }
         return;
     }
-    cells = (a0->type == 0xd0 ? level4_blob.tower_cells_d0 : level4_blob.tower_cells_d4) + ((uint16_t)a0->tower.phase << 3);
+    cells = (a0->type == 0xd0 ? level4_data.tower_cells_d0 : level4_data.tower_cells_d4) + ((uint16_t)a0->tower.phase << 3);
     put_cells(a0->script, cells);
     a0->tower.phase++;
     if (a0->tower.phase == 4) {
         int16_t x = (int16_t)(a0->x + 0x12), y = (int16_t)(a0->y - scroll_pos + 0xe);
         uint16_t angle = 2;
-        uint32_t table = sh_r32(0x77b70 + 4 * (uint32_t)level4_blob.tower_param);
+        uint32_t table = sh_r32(0x77b70 + 4 * (uint32_t)level4_data.tower_param);
 
         if (a0->type != 0xd4) {
             angle = 6;
             x = (int16_t)(x - 8);
         }
-        spawn_enemy_shot((uint16_t)x, (uint16_t)y, angle, level4_blob.tower_shot_steps, GPTR(sh_r32(table)));
+        spawn_enemy_shot((uint16_t)x, (uint16_t)y, angle, level4_data.tower_shot_steps, GPTR(sh_r32(table)));
         return;
     }
     if (a0->tower.phase == 6)
@@ -234,7 +234,7 @@ void l4_tower_hit(Object *a0, Object *a1, uint16_t d0)
         return;
     }
     spawn_effect((int16_t)(a1->x + 0x10), (int16_t)(a1->y - scroll_pos + 0x10), big_explosion_anim, draw_bob_masked);
-    put_cells(a1->script, a1->type == 0xd0 ? level4_blob.tower_hit_cells_d0 : level4_blob.tower_hit_cells_d4);
+    put_cells(a1->script, a1->type == 0xd0 ? level4_data.tower_hit_cells_d0 : level4_data.tower_hit_cells_d4);
     player_score += 0x190;
     kill_thunk(a1);
 }
@@ -243,7 +243,7 @@ void l4_tower_hit(Object *a0, Object *a1, uint16_t d0)
 void l4_tower_draw(Object *a0)
 {
     a0->fn_draw = (obj_fn)obj_nop_thunk;
-    draw_tile_grid_flash((a0->type == 0xd0 ? level4_blob.tower_cells_d0 : level4_blob.tower_cells_d4), 1, 1, (int16_t)(a0->y - scroll_pos), (uint16_t)((uint16_t)a0->x >> 1));
+    draw_tile_grid_flash((a0->type == 0xd0 ? level4_data.tower_cells_d0 : level4_data.tower_cells_d4), 1, 1, (int16_t)(a0->y - scroll_pos), (uint16_t)((uint16_t)a0->x >> 1));
 }
 
 /* level4 $05700A: a marker makes a tower; the record's word at +$C says which of the two */
@@ -254,10 +254,10 @@ void l4_spawn_tower(const uint8_t *a1)
 
     a0->fn_draw = (obj_fn)obj_nop_thunk;
     a0->fn_hit = (void *)l4_tower_hit;
-    a0->energy = (int16_t)level4_blob.tower_energy;
+    a0->energy = (int16_t)level4_data.tower_energy;
     a0->hit[0] = 0x3e8;
     a0->hit[2] = 0x3e8;
-    put_cells(a0->script, flag ? level4_blob.tower_cells_d0 : level4_blob.tower_cells_d4);
+    put_cells(a0->script, flag ? level4_data.tower_cells_d0 : level4_data.tower_cells_d4);
 }
 
 /* level4 $055090: the scroll: the floor of the scroll ends at $DF0 and between $AE0 and $E50 an enemy comes every 16 pixels */
@@ -274,7 +274,7 @@ void l4_scroll(void)
 
         if (frame_tick & 0x20)
             d0 += 0x18;
-        a2 = &level4_blob.scroll_enemies[d0 / 12];
+        a2 = &level4_data.scroll_enemies[d0 / 12];
         a0->type = (int16_t)a2->type;
         a0->x = (int16_t)a2->x;
         a0->fn_update = (obj_fn)a2->update;
@@ -284,7 +284,7 @@ void l4_scroll(void)
         a0->v5e_b[0] = (uint8_t)random_next();
         a0->y = -0x20;
         a0->l4.size = 0;
-        a0->energy = (int16_t)level4_blob.scroll_energy;
+        a0->energy = (int16_t)level4_data.scroll_energy;
         a0->big = 0xff;
         a0->kind = 0;
         a0->score = 0x12c;
@@ -303,16 +303,16 @@ static void l4_kill(Object *a0)
 void l4_enemy_a(Object *a0)
 {
     anim_step(a0);
-    a0->y = (int16_t)(a0->y + scroll_speed + level4_blob.enemy_a_fall);
+    a0->y = (int16_t)(a0->y + scroll_speed + level4_data.enemy_a_fall);
     if (a0->y >= 0xc8) {
         l4_kill(a0);
         return;
     }
     a0->l4_gun.tick++;
     if (a0->l4_gun.tick == 8) {
-        if (add_carry(&a0->v5e_b[0], level4_blob.enemy_a_fire_rate)) {
+        if (add_carry(&a0->v5e_b[0], level4_data.enemy_a_fire_rate)) {
             Object *a1;
-            const struct Level4EnemyGun *a2 = &level4_blob.enemy_a_guns[a0->type == 0xc8 ? 0 : 1];
+            const struct Level4EnemyGun *a2 = &level4_data.enemy_a_guns[a0->type == 0xc8 ? 0 : 1];
 
             a0->v5e_b[0] = (uint8_t)(random_next() & 0x3f);
             a1 = alloc_in(LIST_B);
@@ -327,13 +327,13 @@ void l4_enemy_a(Object *a0)
     } else if (a0->l4_gun.tick == 0xc) {
         a0->l4_gun.tick = 0;
     }
-    if (add_carry(&a0->v5e_b[1], (uint8_t)level4_blob.tower_energy)) {
+    if (add_carry(&a0->v5e_b[1], (uint8_t)level4_data.tower_energy)) {
         int16_t x = (int16_t)(a0->x + 0x14);
 
         a0->v5e_b[1] = (uint8_t)(random_next() & 0x3f);
         if (a0->type != 0xc8)
             x = (int16_t)(x - 0x24);
-        spawn_enemy_shot((uint16_t)x, (uint16_t)a0->y, 4, level4_blob.enemy_a_shot_steps, GPTR(shot_picture(level4_blob.enemy_a_shot_picture)));
+        spawn_enemy_shot((uint16_t)x, (uint16_t)a0->y, 4, level4_data.enemy_a_shot_steps, GPTR(shot_picture(level4_data.enemy_a_shot_picture)));
     }
     bbox_from_frame(a0);
 }
@@ -364,14 +364,14 @@ void l4_shot_a(Object *a0)
         anim_header_set(a0, anim_explosion);
         return;
     }
-    if (a0->gfx == (void *)level4_blob.shot_a_picture) {
+    if (a0->gfx == (void *)level4_data.shot_a_picture) {
         d0 = 0x80;
         d1 = -10;
-        cells = level4_blob.shot_a_cells_2;
-    } else if (a0->gfx == (void *)level4_blob.shot_a_picture_3) {
+        cells = level4_data.shot_a_cells_2;
+    } else if (a0->gfx == (void *)level4_data.shot_a_picture_3) {
         d0 = 0;
         d1 = 10;
-        cells = level4_blob.shot_a_cells_4;
+        cells = level4_data.shot_a_cells_4;
     } else {
         return;
     }
@@ -387,7 +387,7 @@ void l4_shot_a(Object *a0)
     a1->y = a0->y;
     a1->path.wait = 0;
     a1->score = 0x64;
-    a1->energy = (int16_t)level4_blob.shot_a_energy;
+    a1->energy = (int16_t)level4_data.shot_a_energy;
     a1->big = 0;
     a1->kind = (int16_t)pickup_cycle;
     pickup_cycle++;
@@ -401,11 +401,11 @@ void l4_shot_a(Object *a0)
     a1->hit[0] = 0x3e8;
     a1->hit[2] = 0x3e8;
     kind = (uint16_t)((uint16_t)d0 >> 3);
-    anim = level4_blob.anims_by_kind[kind / 4];
+    anim = level4_data.anims_by_kind[kind / 4];
     set_anim(a1, anim);
     a1->script = (uint8_t *)cells;
     a1->cursor = cells;
-    a1->steps = (int16_t)level4_blob.shot_a_steps;
+    a1->steps = (int16_t)level4_data.shot_a_steps;
     SET_V5E(a1, 0);
 }
 
@@ -425,7 +425,7 @@ void l4_enemy_f8(Object *a0)
         d0 = (uint16_t)(random_next() & 8);
         if (a0->x >= 0xa0)
             d0 = (uint16_t)(d0 + 4);
-        table = level4_blob.enemy_f8_paths[d0 / 4];
+        table = level4_data.enemy_f8_paths[d0 / 4];
         a0->script = (uint8_t *)table;
         a0->cursor = table;
         a0->path.wait = 0;
@@ -434,7 +434,7 @@ void l4_enemy_f8(Object *a0)
     d1 = (uint16_t)(((old + 0x10) >> 3) & 0x1c);
     if (d0 == d1)
         return;
-    set_anim(a0, level4_blob.anims_by_kind[d0 / 4]);
+    set_anim(a0, level4_data.anims_by_kind[d0 / 4]);
     bbox_from_frame(a0);
 }
 
@@ -442,23 +442,23 @@ void l4_enemy_f8(Object *a0)
 void l4_enemy_b(Object *a0)
 {
     anim_step(a0);
-    a0->y = (int16_t)(a0->y + scroll_speed + level4_blob.enemy_b_fall);
+    a0->y = (int16_t)(a0->y + scroll_speed + level4_data.enemy_b_fall);
     if (a0->y >= 0xc8) {
         l4_kill(a0);
         return;
     }
-    if (add_carry(&a0->v5e_b[0], level4_blob.enemy_b_fire_rate)) {
+    if (add_carry(&a0->v5e_b[0], level4_data.enemy_b_fire_rate)) {
         int16_t x = (int16_t)(a0->x + 0x1a), y = (int16_t)(a0->y + 0x1a);
         uint16_t angle = 0xa;
-        const uint8_t *gfx = level4_blob.enemy_b_picture;
+        const uint8_t *gfx = level4_data.enemy_b_picture;
 
         a0->v5e_b[0] = (uint8_t)(random_next() & 0x3f);
         if (a0->type != 0xd8) {
             angle = 0xd;
             x = (int16_t)(x - 0x34);
-            gfx = level4_blob.enemy_b_picture_2;
+            gfx = level4_data.enemy_b_picture_2;
         }
-        spawn_enemy_shot((uint16_t)x, (uint16_t)y, angle, level4_blob.enemy_b_shot_steps, gfx);
+        spawn_enemy_shot((uint16_t)x, (uint16_t)y, angle, level4_data.enemy_b_shot_steps, gfx);
     }
     bbox_from_frame(a0);
 }
@@ -468,7 +468,7 @@ void l4_enemy_b(Object *a0)
 /* level4 $055F80: the core, two guns and a chain of sixteen pieces by the table at $55880 */
 void l4_spawn_boss1(void)
 {
-    const struct Level4Boss1Piece *a1 = level4_blob.boss1_pieces;
+    const struct Level4Boss1Piece *a1 = level4_data.boss1_pieces;
     Object *first = 0;
     int n;
 
@@ -519,7 +519,7 @@ void l4_b1_core(Object *a0)
 
     if ((int16_t)scroll_max < 0x10)
         scroll_max = 0x10;
-    d0 = (uint16_t)(scroll_speed + level4_blob.b1_core_sway[(frame_tick & 0xf)]);
+    d0 = (uint16_t)(scroll_speed + level4_data.b1_core_sway[(frame_tick & 0xf)]);
     sh_w16(0xd70, d0);
     a0->y = (int16_t)(a0->y + (int16_t)d0);
     if (W(0xd6e) != 0) {
@@ -532,7 +532,7 @@ void l4_b1_core(Object *a0)
         a0->hit[3] = (int16_t)(a0->hit[1] + 8);
     }
     if (a0->core.tick == 0) {
-        if (!add_carry(&a0->v5e_b[0], level4_blob.b1_core_fire_rate))
+        if (!add_carry(&a0->v5e_b[0], level4_data.b1_core_fire_rate))
             return;
         a0->v5e_b[0] = (uint8_t)(random_next() & 0x3f);
         sfx_cmd2 = 0xf;
@@ -592,29 +592,29 @@ void l4_gun_dead(Object *a0)
 void l4_b1_gun(Object *a0)
 {
     uint16_t d0;
-    const uint8_t *table = a0->x < 0xa0 ? level4_blob.b1_gun_dirs_left : level4_blob.b1_gun_dirs_right;
+    const uint8_t *table = a0->x < 0xa0 ? level4_data.b1_gun_dirs_left : level4_data.b1_gun_dirs_right;
 
     a0->y = (int16_t)(a0->y + W(0xd70));
     gun_box(a0);
     d0 = aim_at_player(a0, 0x10, 0x10);
     a0->b1_gun.dir = (int16_t)table[d0];
-    if (add_carry(&a0->v5e_b[0], level4_blob.b1_gun_fire_rate)) {
+    if (add_carry(&a0->v5e_b[0], level4_data.b1_gun_fire_rate)) {
         Object *s;
         uint16_t angle = (uint16_t)a0->b1_gun.dir;
-        const uint8_t *anim = level4_blob.b1_gun_anims_by_angle[angle];
+        const uint8_t *anim = level4_data.b1_gun_anims_by_angle[angle];
 
         a0->v5e_b[0] = (uint8_t)(random_next() & 0x3f);
-        s = spawn_enemy_shot((uint16_t)(a0->x + 0x10), (uint16_t)(a0->y + 0x10), angle, level4_blob.b1_gun_shot_steps, anim);
+        s = spawn_enemy_shot((uint16_t)(a0->x + 0x10), (uint16_t)(a0->y + 0x10), angle, level4_data.b1_gun_shot_steps, anim);
         set_anim(s, anim);
-        s->x = (int16_t)(s->x + (int16_t)level4_blob.b1_gun_dx_by_dir[(uint16_t)s->b1_gun.dir]);
-        s->y = (int16_t)(s->y + (int16_t)level4_blob.b1_gun_dy_by_dir[(uint16_t)s->b1_gun.dir]);
+        s->x = (int16_t)(s->x + (int16_t)level4_data.b1_gun_dx_by_dir[(uint16_t)s->b1_gun.dir]);
+        s->y = (int16_t)(s->y + (int16_t)level4_data.b1_gun_dy_by_dir[(uint16_t)s->b1_gun.dir]);
     }
 }
 
 /* the picture of a gun or the core by the cells of a table */
 static void gun_cells(Object *a0, int flash)
 {
-    const uint8_t *const *t = a0->x < 0xa0 ? level4_blob.gun_cells_left : level4_blob.gun_cells_right;
+    const uint8_t *const *t = a0->x < 0xa0 ? level4_data.gun_cells_left : level4_data.gun_cells_right;
     const uint8_t *cells = t[(int16_t)a0->b1_gun.dir];
 
     if (flash)
@@ -639,11 +639,11 @@ void l4_b1_gun_draw(Object *a0)
 static void core_cells(Object *a0, int flash)
 {
     uint16_t rows = 4;
-    const uint8_t *cells = level4_blob.core_cells;
+    const uint8_t *cells = level4_data.core_cells;
 
     if (a0->core.tick != 0) {
         rows = 5;
-        cells = level4_blob.core_cells_tall;
+        cells = level4_data.core_cells_tall;
     }
     if (flash)
         draw_tile_grid_flash(cells, 5, rows, a0->y, 0x38);
@@ -697,7 +697,7 @@ void l4_b1_head(Object *a0)
 {
     int16_t d0;
 
-    a0->gfx = (void *)level4_blob.b1_head_picture;
+    a0->gfx = (void *)level4_data.b1_head_picture;
     a0->anim_delay = 0;
     a0->y = (int16_t)(a0->y + W(0xd70));
     l4_pose(a0);
@@ -732,13 +732,13 @@ static void l4_b1_piece(Object *a0, const uint8_t *gfx)
 /* level4 $055F26: a piece of the chain */
 void l4_b1_body(Object *a0)
 {
-    l4_b1_piece(a0, level4_blob.b1_head_picture);
+    l4_b1_piece(a0, level4_data.b1_head_picture);
 }
 
 /* level4 $055F52: the last piece */
 void l4_b1_tail(Object *a0)
 {
-    l4_b1_piece(a0, level4_blob.b1_tail_picture);
+    l4_b1_piece(a0, level4_data.b1_tail_picture);
 }
 
 /* ---- the second boss ($56976): twenty objects, a worm with a head, a gun and a ring of eyes ---- */
@@ -746,7 +746,7 @@ void l4_b1_tail(Object *a0)
 /* level4 $056976: the pieces by the table at $5613A (the latch of the weapons first) */
 void l4_spawn_boss2(const uint8_t *a1_record, uint16_t d2)
 {
-    const struct Level4Boss2Piece *a1 = level4_blob.boss2_pieces;
+    const struct Level4Boss2Piece *a1 = level4_data.boss2_pieces;
     int n;
 
     (void)a1_record;
@@ -804,7 +804,7 @@ static void follow_chain(Object *a0)
 /* the head's picture by its angle (four), and its box */
 static void head_picture(Object *a0)
 {
-    a0->gfx = (void *)level4_blob.head_pictures[(((uint16_t)a0->head.angle + 0x10) >> 5) & 3];
+    a0->gfx = (void *)level4_data.head_pictures[(((uint16_t)a0->head.angle + 0x10) >> 5) & 3];
     bbox_from_frame(a0);
 }
 
@@ -827,7 +827,7 @@ void l4_b2_head(Object *a0)
         a0->l4.angle_hi = 0;
         a0->head.angle = (int16_t)d0;
         a0->turn[0] = a0->turn[1] = a0->turn[2] = 0;
-        if ((uint8_t)random_next() >= level4_blob.b2_head_chance) {
+        if ((uint8_t)random_next() >= level4_data.b2_head_chance) {
             head_picture(a0);
             return;
         }
@@ -882,7 +882,7 @@ void l4_b2_gun(Object *a0)
     if (d0 > 6)
         d0 = 6;
     a0->aim.dir = (int16_t)d0;
-    a0->gfx = (void *)level4_blob.b2_gun_pictures[d0];
+    a0->gfx = (void *)level4_data.b2_gun_pictures[d0];
     bbox_from_frame(a0);
 }
 
@@ -897,16 +897,16 @@ void l4_b2_barrel(Object *a0)
     a0->y = a1->y;
     if (a1->aim.dir != a0->aim.dir) {
         a0->aim.dir = a1->aim.dir;
-        set_anim(a0, level4_blob.b2_barrel_anims_by_dir[(uint16_t)a0->aim.dir]);
+        set_anim(a0, level4_data.b2_barrel_anims_by_dir[(uint16_t)a0->aim.dir]);
     }
-    if (add_carry(&a0->v5e_b[0], level4_blob.b2_barrel_fire_rate)) {
+    if (add_carry(&a0->v5e_b[0], level4_data.b2_barrel_fire_rate)) {
         uint16_t d2 = (uint16_t)a0->aim.dir;
         Object *s;
 
         a0->v5e_b[0] = (uint8_t)(random_next() & 0x3f);
-        s = spawn_enemy_shot((uint16_t)(a0->x + (int16_t)level4_blob.b2_muzzle_dx[d2]), (uint16_t)(a0->y + (int16_t)level4_blob.b2_muzzle_dy[d2]), d2, level4_blob.b2_barrel_shot_steps,
-                             (void *)level4_blob.b2_shot_anim);
-        set_anim(s, level4_blob.b2_shot_anim);
+        s = spawn_enemy_shot((uint16_t)(a0->x + (int16_t)level4_data.b2_muzzle_dx[d2]), (uint16_t)(a0->y + (int16_t)level4_data.b2_muzzle_dy[d2]), d2, level4_data.b2_barrel_shot_steps,
+                             (void *)level4_data.b2_shot_anim);
+        set_anim(s, level4_data.b2_shot_anim);
     }
     bbox_from_frame(a0);
 }
@@ -933,14 +933,14 @@ void l4_b2_ring(Object *a0)
     a0->y = (int16_t)(a0->y + scroll_speed);
     anim_step(a0);
     follow_chain(a0);
-    if (add_carry(&a0->v5e_b[0], level4_blob.b2_ring_fire_rate)) {
+    if (add_carry(&a0->v5e_b[0], level4_data.b2_ring_fire_rate)) {
         int d7;
 
         a0->v5e_b[0] = (uint8_t)(random_next() & 0x3f);
         for (d7 = 7; d7 >= 0; d7--) {
-            Object *s = spawn_enemy_shot((uint16_t)a0->x, (uint16_t)a0->y, (uint16_t)d7, level4_blob.b2_ring_shot_steps, GPTR(shot_picture(level4_blob.b2_ring_shot_picture)));
+            Object *s = spawn_enemy_shot((uint16_t)a0->x, (uint16_t)a0->y, (uint16_t)d7, level4_data.b2_ring_shot_steps, GPTR(shot_picture(level4_data.b2_ring_shot_picture)));
 
-            set_anim(s, level4_blob.b2_shot_anim);
+            set_anim(s, level4_data.b2_shot_anim);
         }
     }
     bbox_from_frame(a0);
@@ -956,11 +956,11 @@ void l4_b2_eye(Object *a0)
     d0 = aim_at_player(a0, 0, 0);
     if (d0 != (uint16_t)a0->aim.dir) {
         a0->aim.dir = (int16_t)d0;
-        set_anim(a0, level4_blob.b2_eye_anims[d0]);
+        set_anim(a0, level4_data.b2_eye_anims[d0]);
     }
-    if (add_carry(&a0->v5e_b[0], level4_blob.b2_eye_fire_rate)) {
+    if (add_carry(&a0->v5e_b[0], level4_data.b2_eye_fire_rate)) {
         a0->v5e_b[0] = (uint8_t)(random_next() & 0x3f);
-        spawn_enemy_shot((uint16_t)a0->x, (uint16_t)a0->y, (uint16_t)a0->aim.dir, level4_blob.b2_eye_shot_steps, (void *)level4_blob.b2_eye_shot_picture);
+        spawn_enemy_shot((uint16_t)a0->x, (uint16_t)a0->y, (uint16_t)a0->aim.dir, level4_data.b2_eye_shot_steps, (void *)level4_data.b2_eye_shot_picture);
     }
     bbox_from_frame(a0);
     a0->hit[1] = (int16_t)(a0->hit[1] - 8);
@@ -1056,7 +1056,7 @@ void l4_spawn_bar(const uint8_t *a1)
 
     a0->y = (int16_t)(a0->y - scroll_pos);
     a0->fn_draw = FN(l4_bar_draw);
-    set_anim(a0, a0->type == 0x10c ? level4_blob.bar_anim_10c : level4_blob.bar_anim_other);
+    set_anim(a0, a0->type == 0x10c ? level4_data.bar_anim_10c : level4_data.bar_anim_other);
 }
 
 /* level4 $056ABC: the bar: it swings out and back; it hurts the player */
@@ -1072,7 +1072,7 @@ void l4_bar_update(Object *a0)
     anim_step(a0);
     if (a0->bar.phase == 0) {
         a0->bar.step = 1;
-        if (!add_carry(&a0->v5e_b[0], level4_blob.bar_fire_rate))
+        if (!add_carry(&a0->v5e_b[0], level4_data.bar_fire_rate))
             goto box;
         a0->v5e_b[0] = (uint8_t)(random_next() & 0x3f);
     }
@@ -1108,12 +1108,12 @@ void l4_bar_draw(Object *a0)
 
     if (a0->type == 0x10c) {
         if (d0 != 0)
-            draw_tile_grid(level4_blob.bar_cells + sizeof level4_blob.bar_cells - 2 * d0, (uint16_t)(d0 - 1), 1, a0->y, (uint16_t)((uint16_t)a0->x >> 1));
+            draw_tile_grid(level4_data.bar_cells + sizeof level4_data.bar_cells - 2 * d0, (uint16_t)(d0 - 1), 1, a0->y, (uint16_t)((uint16_t)a0->x >> 1));
         x = (int16_t)((d0 << 4) + a0->x);
         y = (int16_t)(a0->y + 8);
     } else {
         if (d0 != 0)
-            draw_tile_grid(level4_blob.bar_cells + sizeof level4_blob.bar_cells - 2 * d0, (uint16_t)(d0 - 1), 1, a0->y,
+            draw_tile_grid(level4_data.bar_cells + sizeof level4_data.bar_cells - 2 * d0, (uint16_t)(d0 - 1), 1, a0->y,
                            (uint16_t)((uint16_t)((a0->x - (int16_t)(d0 << 4)) + 0x10) >> 1));
         x = (int16_t)(a0->x - (int16_t)(d0 << 4) + 0xf);
         y = (int16_t)(a0->y + 8);
@@ -1134,15 +1134,15 @@ void l4_spawn_walker(const uint8_t *a1)
         a0->x = (int16_t)(a0->x + 0x10);
     a0->fn_draw = FN(l4_walker_draw);
     a0->fn_hit = FN(l4_walker_hit);
-    a0->energy = (int16_t)level4_blob.walker_energy;
+    a0->energy = (int16_t)level4_data.walker_energy;
     a0->big = -1;
     a0->hit[0] = 0x3e8;
     a0->hit[2] = 0x3e8;
     a0->score = 0xc8;
     a0->walker.side = (int16_t)rd16(a1 + 6);
-    set_anim(a0, a0->type == 0xe0 ? level4_blob.walker_anim_e0 : level4_blob.walker_anim_other);
+    set_anim(a0, a0->type == 0xe0 ? level4_data.walker_anim_e0 : level4_data.walker_anim_other);
     a0->kind = 0;
-    SET_V5E(a0, level4_blob.walker_v5e);
+    SET_V5E(a0, level4_data.walker_v5e);
     a0->walker_b.home_x = a0->x;
     a0->walker_b.home_y = a0->y;
 }
@@ -1155,8 +1155,8 @@ static void walker_reset(Object *a0)
     a0->walker.state = 0;
     a0->hit[0] = 0x3e8;
     a0->hit[2] = 0x3e8;
-    set_anim(a0, a0->type == 0xe0 ? level4_blob.walker_anim_e0 : level4_blob.walker_anim_other);
-    a0->energy = (int16_t)level4_blob.walker_energy;
+    set_anim(a0, a0->type == 0xe0 ? level4_data.walker_anim_e0 : level4_data.walker_anim_other);
+    a0->energy = (int16_t)level4_data.walker_energy;
 }
 
 /* level4 $056D1C */
@@ -1168,16 +1168,16 @@ void l4_walker_update(Object *a0)
     }
     anim_step(a0);
     if (a0->walker.state == 0) {
-        if ((uint8_t)random_next() < level4_blob.walker_chance) {
+        if ((uint8_t)random_next() < level4_data.walker_chance) {
             a0->walker.state = 1;
             a0->anim_delay = 1;
         }
         return;
     }
     if (a0->type == 0xe0)
-        a0->x = (int16_t)(a0->x + level4_blob.walker_step_x);
+        a0->x = (int16_t)(a0->x + level4_data.walker_step_x);
     else
-        a0->x = (int16_t)(a0->x - level4_blob.walker_step_x);
+        a0->x = (int16_t)(a0->x - level4_data.walker_step_x);
     if (a0->walker.state == 1) {
         if (a0->anim_delay == 0) {
             a0->walker.state = 2;
@@ -1187,9 +1187,9 @@ void l4_walker_update(Object *a0)
     }
     if (a0->x >= 0x28 && a0->x <= 0x118) {
         if (a0->walker.dy >= 0)
-            a0->y = (int16_t)(a0->y + level4_blob.walker_step_x);
+            a0->y = (int16_t)(a0->y + level4_data.walker_step_x);
         else
-            a0->y = (int16_t)(a0->y - level4_blob.walker_step_x);
+            a0->y = (int16_t)(a0->y - level4_data.walker_step_x);
     }
     if (a0->x >= -0x20 && a0->x < 0x160)
         goto box;
@@ -1239,7 +1239,7 @@ static void walker_tiles(Object *a0)
 
     if (a0->walker.state >= 2)
         return;
-    draw_tile_grid(a0->type == 0xe0 ? level4_blob.walker_grid_e0 : level4_blob.walker_grid_e4, 0, 2, (int16_t)(level4_blob.walker_grid_y[d2 / 2] - scroll_pos), level4_blob.walker_grid_x[d2 / 2]);
+    draw_tile_grid(a0->type == 0xe0 ? level4_data.walker_grid_e0 : level4_data.walker_grid_e4, 0, 2, (int16_t)(level4_data.walker_grid_y[d2 / 2] - scroll_pos), level4_data.walker_grid_x[d2 / 2]);
 }
 
 /* level4 $056F3E: the walker's flash */
