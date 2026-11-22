@@ -38,20 +38,6 @@ static Object *alloc_a(Object *caller)
     return o;
 }
 
-static void set_ptr_2a(Object *o, Object *p)
-{
-    uint32_t v = p ? GADDR(p) : 0;   /* (the original's address: the two words are compared and exported as they are) */
-
-    o->link.ptr = v;
-}
-
-static Object *get_ptr_2a(const Object *o)
-{
-    uint32_t v = o->link.ptr;
-
-    return v ? (Object *)GPTR(v) : 0;
-}
-
 static void unlink_to_free(Object *o)
 {
     Object *n = o->next, *p = o->prev;
@@ -116,7 +102,7 @@ static Object *find_decoration(Object *pod)
     Object *deco = LIST_B->prev;
 
     while (deco->type != 0) {
-        if (deco->type == 0x40 && get_ptr_2a(deco) == pod)
+        if (deco->type == 0x40 && deco->link.ptr == pod)
             return deco;
         deco = deco->prev;
     }
@@ -521,7 +507,7 @@ Object *weapon_34(Object *caller, Object *last)
         d->fn_draw = draw_bob_masked;
         d->persists = -1;
         set_anim(d, xenon2.anim_pod_decoration);
-        set_ptr_2a(d, n);
+        d->link.ptr = n;
         d->x = n->x;
         d->y = n->y;
     }
@@ -1729,7 +1715,7 @@ void pod_decoration_update(Object *obj)
     Object *pod;
 
     anim_step(obj);
-    pod = get_ptr_2a(obj);
+    pod = obj->link.ptr;
     if (pod->type == 0x34) {
         obj->x = (int16_t)(PLAYER->x + pod->weapon.dx);
         obj->y = (int16_t)(PLAYER->y + pod->weapon.dy);
