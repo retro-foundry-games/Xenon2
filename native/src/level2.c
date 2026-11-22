@@ -43,20 +43,6 @@ static void kill_thunk(Object *o)
     o->persists = 0;
 }
 
-static void copy2(uint8_t *dst, const uint8_t *src)
-{
-    dst[0] = src[0];
-    dst[1] = src[1];
-}
-
-static void copy4(uint8_t *dst, const uint8_t *src)
-{
-    dst[0] = src[0];
-    dst[1] = src[1];
-    dst[2] = src[2];
-    dst[3] = src[3];
-}
-
 /* the animation header at an address of the blob */
 static void set_anim(Object *o, const uint8_t *anim)
 {
@@ -153,15 +139,15 @@ void l2_hook(uint16_t hook, const uint8_t *rec, uint16_t rec_scroll)
         obj->hit[2] = 0x3e8;
         obj->gfx = (void *)(flag ? xenon2.level2_data.hook_picture_a : xenon2.level2_data.hook_picture_b);
         obj->anim = flag ? xenon2.level2_data.hook_anim_a : xenon2.level2_data.hook_anim_b;
-        copy2(obj->script, (const uint8_t *)obj->gfx);
+        *(uint16_t *)(obj->map[0]) = *(const uint16_t *)((const uint8_t *)obj->gfx);
         obj->score = 0x64;
         obj->tile.cols = 0;
         obj->tile.rows = 0;
         return;
     case 2:
         obj = spawn_marker_front(flag ? 0xf0 : 0xf4, rec, (void (*)(void))l2_front_update);
-        copy4(obj->script, flag ? xenon2.level2_data.hook_cells_a : xenon2.level2_data.hook_cells_b);
-        copy4(obj->script + 0x28, flag ? xenon2.level2_data.hook_cells2_a : xenon2.level2_data.hook_cells2_b);
+        *(uint32_t *)(obj->map[0]) = *(const uint32_t *)((flag ? xenon2.level2_data.hook_cells_a : xenon2.level2_data.hook_cells_b));
+        *(uint32_t *)(obj->map[MAP_COLS]) = *(const uint32_t *)((flag ? xenon2.level2_data.hook_cells2_a : xenon2.level2_data.hook_cells2_b));
         return;
     case 3:
         obj = alloc_in(LIST_C);
@@ -185,7 +171,7 @@ void l2_hook(uint16_t hook, const uint8_t *rec, uint16_t rec_scroll)
     case 4:
         obj = spawn_marker_front(0xfc, rec, (void (*)(void))l2_marker_fc_update);
         obj->marker.launches = 1;
-        copy2(obj->script, xenon2.level2_data.hook_words);
+        *(uint16_t *)(obj->map[0]) = *(const uint16_t *)(xenon2.level2_data.hook_words);
         return;
     case 5:
         obj = spawn_marker_front(0xf8, rec, (void (*)(void))l2_marker_f8_update);
@@ -440,8 +426,8 @@ void l2_marker_f8_update(Object *marker)
             marker->marker_f8.blink ^= 1;
     }
     cells = xenon2.level2_data.marker_f8_cells + ((uint16_t)marker->marker_f8.blink << 3);
-    copy4(marker->script, cells);
-    copy4(marker->script + 0x28, cells + 4);
+    *(uint32_t *)(marker->map[0]) = *(const uint32_t *)(cells);
+    *(uint32_t *)(marker->map[MAP_COLS]) = *(const uint32_t *)(cells + 4);
     if ((uint16_t)marker->marker_f8.blink < 2)
         return;
     if (xenon2.frame_tick & 3)
@@ -498,7 +484,7 @@ void l2_marker_fc_update(Object *marker)
             return;
         marker->marker_fc.step = 2;
     }
-    copy2(marker->script, xenon2.level2_data.hook_words + ((uint16_t)marker->marker_fc.step << 1));
+    *(uint16_t *)(marker->map[0]) = *(const uint16_t *)(xenon2.level2_data.hook_words + ((uint16_t)marker->marker_fc.step << 1));
     if (xenon2.frame_tick & 3)
         return;
     marker->marker_fc.step++;
@@ -709,8 +695,8 @@ void l2_front_update(Object *marker)
         const uint8_t *const *table = marker->type == 0xf0 ? xenon2.level2_data.front_table_f0 : xenon2.level2_data.front_table_other;
         const uint8_t *cells = table[(uint16_t)marker->front.step];
 
-        copy4(marker->script, cells);
-        copy4(marker->script + 0x28, cells + 4);
+        *(uint32_t *)(marker->map[0]) = *(const uint32_t *)(cells);
+        *(uint32_t *)(marker->map[MAP_COLS]) = *(const uint32_t *)(cells + 4);
     }
     marker->front.step++;
     if (marker->front.step < 0x15)
@@ -762,7 +748,7 @@ void l2_turret_update(Object *turret)
             turret->turret.step = 1;
         return;
     }
-    copy2(turret->script, (turret->type == 0xe8 ? xenon2.level2_data.hook_picture_a : xenon2.level2_data.hook_picture_b) + 2 * (uint16_t)turret->turret.step);
+    *(uint16_t *)(turret->map[0]) = *(const uint16_t *)(((turret->type == 0xe8 ? xenon2.level2_data.hook_picture_a : xenon2.level2_data.hook_picture_b) + 2 * (uint16_t)turret->turret.step));
     turret->turret.step++;
     if (turret->turret.step != 7) {
         if (turret->turret.step == 0xf)
@@ -1035,7 +1021,7 @@ void l2_gate_update(Object *gate)
     frame = gate->gate.step;
     if (frame > 4)
         frame = (int16_t)(8 - frame);
-    copy2((uint8_t *)gate->gfx, xenon2.level2_data.gate_number_cells + 2 * frame);
+    *(uint16_t *)((uint8_t *)gate->gfx) = *(const uint16_t *)(xenon2.level2_data.gate_number_cells + 2 * frame);
     if (gate->gate.number == 2) {
         const uint8_t *cells = xenon2.level2_data.gate_cells;
         uint16_t *counter = xenon2.level_vars;
@@ -1050,8 +1036,8 @@ void l2_gate_update(Object *gate)
             dst = xenon2.level_init_src + (int16_t)rd16(cells);
             (*counter)--;
             src = cells + ((*counter & 2) ? 0xa : 2);
-            copy4(dst, src);
-            copy4(dst + 0x28, src + 4);
+            *(uint32_t *)(dst) = *(const uint32_t *)(src);
+            *(uint32_t *)(dst + 0x28) = *(const uint32_t *)(src + 4);
         }
     }
 }
@@ -1209,10 +1195,10 @@ static void l2_boss_move(Object *boss)
     }
     boss->y = new_y;
     phase = (int16_t)((xenon2.frame_tick & 1) * 4);
-    copy4(&xenon2.level2_data.boss_cells[0x8], xenon2.level2_data.boss_move_paths_a[phase / 4]);
-    copy4(&xenon2.level2_data.boss_cells[0x14], xenon2.level2_data.boss_move_paths_a[phase / 4] + 4);
-    copy4(&xenon2.level2_data.boss_cells[0x10], xenon2.level2_data.boss_move_paths_b[phase / 4]);
-    copy4(&xenon2.level2_data.boss_cells[0x1c], xenon2.level2_data.boss_move_paths_b[phase / 4] + 4);
+    *(uint32_t *)(&xenon2.level2_data.boss_cells[0x8]) = *(const uint32_t *)(xenon2.level2_data.boss_move_paths_a[phase / 4]);
+    *(uint32_t *)(&xenon2.level2_data.boss_cells[0x14]) = *(const uint32_t *)(xenon2.level2_data.boss_move_paths_a[phase / 4] + 4);
+    *(uint32_t *)(&xenon2.level2_data.boss_cells[0x10]) = *(const uint32_t *)(xenon2.level2_data.boss_move_paths_b[phase / 4]);
+    *(uint32_t *)(&xenon2.level2_data.boss_cells[0x1c]) = *(const uint32_t *)(xenon2.level2_data.boss_move_paths_b[phase / 4] + 4);
 }
 
 
@@ -1279,8 +1265,8 @@ void l2_boss_update(Object *boss)
 
         boss->l2_boss.cell = (int16_t)((boss->l2_boss.cell + 4) & 0xc);
         cells = xenon2.level2_data.boss_cells_by_cell[(uint16_t)boss->l2_boss.cell / 4];
-        copy4(&xenon2.level2_data.boss_cells[0], cells);
-        copy4(&xenon2.level2_data.boss_cells[0xc], cells + 4);
+        *(uint32_t *)(&xenon2.level2_data.boss_cells[0]) = *(const uint32_t *)(cells);
+        *(uint32_t *)(&xenon2.level2_data.boss_cells[0xc]) = *(const uint32_t *)(cells + 4);
         boss->l2_boss_b.flash--;
         if (boss->l2_boss_b.flash != 0)
             return;
