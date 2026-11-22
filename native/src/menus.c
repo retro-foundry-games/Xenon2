@@ -909,9 +909,9 @@ move:
     }
 next_command:
     for (;;) {
-        const uint8_t *cmd = o->cursor;
+        const struct PathCmd *cmd = o->cursor;
 
-        switch (rd16(cmd)) {
+        switch (rd16(cmd->op.b)) {
         case 0: {
             int i;
             ObjMove *e;
@@ -950,16 +950,16 @@ next_command:
             }
         }
         case 2:
-            o->angle = rd16(cmd + 2);
-            o->turn = (uint32_t)((int32_t)((uint32_t)rd16(cmd + 4) << 16) >> 8);
-            o->turn_step = (int16_t)rd16(cmd + 6);
-            o->wait = (int16_t)rd16(cmd + 8);
-            o->cursor = cmd + 10;
+            o->angle = rd16(cmd->arg.move.angle.b);
+            o->turn = (uint32_t)((int32_t)((uint32_t)rd16(cmd->arg.move.turn.b) << 16) >> 8);
+            o->turn_step = (int16_t)rd16(cmd->arg.move.turn_step.b);
+            o->wait = (int16_t)rd16(cmd->arg.move.wait.b);
+            o->cursor = (const struct PathCmd *)(&cmd->arg.move + 1);
             goto move;
         case 4: {
-            uint16_t t = rd16(cmd + 2);
+            uint16_t t = rd16(cmd->arg.pause.steps.b);
 
-            o->cursor = cmd + 4;
+            o->cursor = (const struct PathCmd *)(&cmd->arg.pause + 1);
             steps = (uint16_t)(steps - t);
             if ((int16_t)steps > 0)
                 continue;
@@ -970,16 +970,16 @@ next_command:
             int16_t t;
 
             do {
-                t = (int16_t)rd16(cmd + 2 + (random_next() & 0xe));
+                t = (int16_t)rd16(cmd->arg.pick[(random_next() & 0xe) / 2].b);
             } while (t < 0);
-            o->cursor = o->script + t;
+            o->cursor = (const struct PathCmd *)(o->script + t);
             continue;
         }
         case 8:
-            o->cursor = o->script + (int16_t)rd16(cmd + 2);
+            o->cursor = (const struct PathCmd *)(o->script + (int16_t)rd16(cmd->arg.jump.offset.b));
             continue;
         case 10:
-            o->cursor = cmd + 6;
+            o->cursor = (const struct PathCmd *)(&cmd->arg.pos + 1);
             continue;
         default:
             return;

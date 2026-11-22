@@ -20,7 +20,7 @@ struct ObjMove {
     uint8_t pad35[15];          /* 35 */
     uint16_t id;                /* 44 */
     const uint8_t *script;      /* 46: the script's start */
-    const uint8_t *cursor;      /* 4a: the next command */
+    const struct PathCmd *cursor;      /* 4a: the next command */
     uint32_t turn;              /* 4e: added to the angle with its words swapped: the high word steps the integer (low byte counts), the low word the fraction */
     int16_t turn_step;          /* 52: added to the low word of turn each step */
     uint16_t steps;             /* 54: steps per call */

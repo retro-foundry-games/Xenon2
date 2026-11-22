@@ -80,7 +80,7 @@ void level1_turret_a_update(Object *turret)
     turret->map[MAP_COLS] = table[offset + 2];
     turret->map[MAP_COLS + 1] = table[offset + 3];
     turret->l1_turret.step = (int16_t)((turret->l1_turret.step + 1) & 3);
-    sum = (uint16_t)(((ObjMove *)turret)->shot_count + xenon2.level1_data.shot_params[3]);
+    sum = (uint16_t)(((ObjMove *)turret)->shot_count + xenon2.level1_data.shot_1_rate);
     ((ObjMove *)turret)->shot_count = (uint8_t)sum;
     if (!(sum & 0x100))
         return;
@@ -92,7 +92,7 @@ void level1_turret_a_update(Object *turret)
         dir = 6;
         x = (int16_t)(x - 0x10);
     }
-    spawn_enemy_shot((uint16_t)x, (uint16_t)y, (uint16_t)dir, rd16(xenon2.level1_data.shot_params + 6), level1_shot_gfx(rd16(xenon2.level1_data.shot_params + 4)));
+    spawn_enemy_shot((uint16_t)x, (uint16_t)y, (uint16_t)dir, xenon2.level1_data.shot_1_steps, level1_shot_gfx(xenon2.level1_data.shot_1_gfx));
 }
 
 /* orig $0555A2: update of the turret $E8 / $EC (sixteen steps of cells) */
@@ -116,7 +116,7 @@ void level1_turret_b_update(Object *turret)
     turret->map[MAP_COLS] = table[offset + 2];
     turret->map[MAP_COLS + 1] = table[offset + 3];
     turret->l1_turret.step = (int16_t)((turret->l1_turret.step + 1) & 0xf);
-    sum = (uint16_t)(((ObjMove *)turret)->shot_count + xenon2.level1_data.shot_params[0xf]);
+    sum = (uint16_t)(((ObjMove *)turret)->shot_count + xenon2.level1_data.shot_3_rate);
     ((ObjMove *)turret)->shot_count = (uint8_t)sum;
     if (!(sum & 0x100))
         return;
@@ -128,7 +128,7 @@ void level1_turret_b_update(Object *turret)
         dir = 6;
         x = (int16_t)(x - 0x20);
     }
-    spawn_enemy_shot((uint16_t)x, (uint16_t)y, (uint16_t)dir, rd16(xenon2.level1_data.shot_params + 0x12), level1_shot_gfx(rd16(xenon2.level1_data.shot_params + 0x10)));
+    spawn_enemy_shot((uint16_t)x, (uint16_t)y, (uint16_t)dir, xenon2.level1_data.shot_3_steps, level1_shot_gfx(xenon2.level1_data.shot_3_gfx));
 }
 
 /* orig $055402: update of the turret $D8 / $DC (twenty steps of cells, a shot every 40 steps) */
@@ -150,7 +150,7 @@ void level1_turret_c_update(Object *turret)
     turret->map[0] = table[offset];
     turret->map[1] = table[offset + 1];
     if (turret->l1_turret.step == 0) {
-        sum = (uint16_t)(((ObjMove *)turret)->shot_count + xenon2.level1_data.shot_params[9]);
+        sum = (uint16_t)(((ObjMove *)turret)->shot_count + xenon2.level1_data.shot_2_rate);
         ((ObjMove *)turret)->shot_count = (uint8_t)sum;
         if (!(sum & 0x100))
             return;
@@ -170,7 +170,7 @@ void level1_turret_c_update(Object *turret)
         dir = 6;
         x = (int16_t)(x - 0x1a);
     }
-    spawn_enemy_shot((uint16_t)x, (uint16_t)y, (uint16_t)dir, rd16(xenon2.level1_data.shot_params + 0xc), level1_shot_gfx(rd16(xenon2.level1_data.shot_params + 0xa)));
+    spawn_enemy_shot((uint16_t)x, (uint16_t)y, (uint16_t)dir, xenon2.level1_data.shot_2_steps, level1_shot_gfx(xenon2.level1_data.shot_2_gfx));
 }
 
 /* the launcher's use of the scratch fields of Object */
@@ -208,8 +208,8 @@ void level1_launcher_update(Object *launcher)
         for (i = 2; i >= 0; i--) {
             int16_t angle = launcher->type == 0xd4 ? 5 : 1;
 
-            spawn_enemy_shot((uint16_t)launcher->x, (uint16_t)(launcher->y + 7), (uint16_t)(angle + i), rd16(xenon2.level1_data.shot_params + 0x16),
-                             level1_shot_gfx(rd16(xenon2.level1_data.shot_params + 0x14)));
+            spawn_enemy_shot((uint16_t)launcher->x, (uint16_t)(launcher->y + 7), (uint16_t)(angle + i), xenon2.level1_data.shot_4_steps,
+                             level1_shot_gfx(xenon2.level1_data.shot_4_gfx));
         }
         return;
     }
@@ -567,7 +567,7 @@ void level1_spawn_unit(uint16_t unit)
     obj->unit.counter = counter;
     obj->shot_count = obj->shot_rate = 0;
     obj->script = (uint8_t *)s->path;
-    ((ObjMove *)obj)->cursor = s->path;
+    ((ObjMove *)obj)->cursor = (const struct PathCmd *)s->path;
     obj->x = x;
     obj->y = y;
     obj->unit.wait = wait;
@@ -592,7 +592,7 @@ void level1_spawn_unit(uint16_t unit)
         obj->shot_count = obj->shot_rate = 0;
         obj->anim_delay = 0;
         obj->script = (uint8_t *)s->path;
-        ((ObjMove *)obj)->cursor = s->path;
+        ((ObjMove *)obj)->cursor = (const struct PathCmd *)s->path;
         obj->x = x;
         obj->y = y;
         obj->kind = 0;

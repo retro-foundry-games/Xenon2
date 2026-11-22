@@ -29,16 +29,20 @@ void shop_sound_tables(void)
 {
     struct ShopSound *snd = &xenon2.shop_data.snd;
     const uint8_t *src = xenon2.shop_data.bank;
+    const struct BankSample *bank;
     struct ShopWave *wave = &snd->wave;
     int16_t n;
 
     if (snd->built1 != 0)
         return;
     for (n = 0; n >= 0; n--) {
-        uint32_t size = rd32(src);
-        uint16_t rate = rd16(src + 4);
+        uint32_t size;
+        uint16_t rate;
 
-        src += 6;
+        bank = (const struct BankSample *)src;
+        size = rd32(bank->size_hi.b);
+        rate = rd16(bank->rate.b);
+        src = (const uint8_t *)(bank + 1);
         wave->lc = src;
         src += size;
         size >>= 1;
@@ -57,20 +61,22 @@ void shop_sound_tables2(void)
 {
     struct ShopSound *snd = &xenon2.shop_data.snd;
     const uint8_t *src = xenon2.shop_data.bank + 0xf42;
+    const struct BankSample *bank;
     struct ShopSample *sample = snd->samples;
     int16_t n;
 
     if (snd->built2 != 0)
         return;
     for (n = 3; n >= 0; n--) {
-        uint32_t steps = (uint32_t)rd16(src + 2) * 0x32, size;
+        uint32_t steps, size;
         uint16_t rate;
 
-        steps = divu(steps, rd16(src + 4));
+        bank = (const struct BankSample *)src;
+        steps = divu((uint32_t)rd16(bank->size_lo.b) * 0x32, rd16(bank->rate.b));
         sample->steps = (uint8_t)(steps + 1);
-        size = rd32(src);
-        rate = rd16(src + 4);
-        src += 6;
+        size = rd32(bank->size_hi.b);
+        rate = rd16(bank->rate.b);
+        src = (const uint8_t *)(bank + 1);
         sample->lc = src;
         src += size;
         size >>= 1;
