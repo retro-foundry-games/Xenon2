@@ -22,7 +22,7 @@ struct Object {
     int16_t y;                  /* 24 */
     uint16_t y_frac;            /* 26 */
     union {
-        struct { int16_t v28, v2a, v2c, v2e, v30; };
+        int16_t raw_a[5];   /* the layout the loader byte-swaps; the kinds below name the words */
         struct KindA_aim aim;
         struct KindA_arm arm;
         struct KindA_b1_gun b1_gun;
@@ -58,6 +58,7 @@ struct Object {
         struct KindA_l5_turret l5_turret;
         struct KindA_launcher launcher;
         struct KindA_link link;
+        struct KindA_pod_trail pod_trail;
         struct KindA_marker marker;
         struct KindA_marker_f8 marker_f8;
         struct KindA_marker_fc marker_fc;
@@ -88,7 +89,7 @@ struct Object {
     int8_t big;
     int16_t hit[4];             /* 36: the box x0 y0 x1 y1 */
     union {
-        struct { int16_t v3e, v40; };
+        int16_t raw_b[2];
         struct KindB_arm arm_b;
         struct KindB_l2_boss l2_boss_b;
         struct KindB_part part_b;

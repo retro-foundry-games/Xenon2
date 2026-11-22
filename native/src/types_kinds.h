@@ -115,7 +115,7 @@ struct KindA_head {
     uint8_t pad_end[2];
 };
 struct KindA_l1 {
-    uint8_t pad2[2];
+    int16_t wait;
     int16_t angle_hi;
     int16_t angle_lo;
     uint8_t pad_end[4];
@@ -162,7 +162,8 @@ struct KindA_l4 {
     int16_t size;
     int16_t angle_hi;
     int16_t angle_lo;
-    uint8_t pad_end[4];
+    int16_t extra;
+    uint8_t pad_end[2];
 };
 struct KindA_l4_gun {
     int16_t tick;
@@ -186,6 +187,10 @@ struct KindA_launcher {
     int16_t range;
     uint8_t pad8[4];
     int16_t pos;
+};
+struct KindA_pod_trail {
+    int16_t tick;
+    uint8_t pad_end[8];
 };
 struct KindA_link {
     uint8_t pad28[2];

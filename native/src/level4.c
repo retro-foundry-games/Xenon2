@@ -495,7 +495,7 @@ void l4_spawn_boss1(void)
         a0->steps = 3;
         a0->energy = (int16_t)a1->energy;
         a0->big = -1;
-        a0->v2e = 0;
+        a0->l4.extra = 0;
         a0->hit[0] = 0x3e8;
         a0->hit[2] = 0x3e8;
         a0->target = first;
@@ -776,7 +776,7 @@ void l4_spawn_boss2(const uint8_t *a1_record, uint16_t d2)
         a0->steps = 3;
         a0->energy = a1->energy;
         a0->big = (int8_t)a1->big;
-        a0->v2e = 0;
+        a0->l4.extra = 0;
         bbox_from_frame(a0);
         a1++;
     }

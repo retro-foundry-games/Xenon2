@@ -804,7 +804,7 @@ void level1_boss_part_update(Object *a0)
         a0->y_frac = 0;
         a0->y = (int16_t)(a0->y - scroll_pos);
     }
-    a0->v28 = 0x64;
+    a0->l1.wait = 0x64;
     enemy_update_no_anim(a0);
     if (a0->steps == 0) {
         a0->hit[0] = 0x3e8;
