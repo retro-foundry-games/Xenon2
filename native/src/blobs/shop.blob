@@ -1,0 +1,99 @@
+; the shop: its blob at $54E00 (see tools/gen_blobs.py)
+record ShopRec 16
+0 state s16
+2 x u16
+4 y u16
+6 kind u16
+8 list ptr
+12 weapon ptr:Object
+end
+record ShopPic 10
+0 gfx ptr
+4 offset u16
+6 width_m1 u16
+8 height_m1 u16
+end
+record ShopLight 8
+0 x u16
+2 y u16
+4 list ptr
+end
+55118 palette_a u8 32
+55138 txt_thats_it u8
+55153 txt_forget u8
+5517a txt_good_enough u8
+55224 tab_pics ShopPic 7
+55422 page u16
+55590 last_x u16
+55592 last_y u16
+5579e tab_flags u8 22
+557b8 tab_names ptr 25
+5581c tab_anim ptr 27
+55888 tab_price u16 25
+558ba txt_no_room u8
+55aa6 txt_out_of_stock u8
+55acd txt_give_cash u8
+55ae2 txt_what_else u8
+55c2e txt_here_cash u8
+55dc2 price u16
+55dc4 rec ptr:ShopRec
+55dc8 txt_pay u8
+55dd6 txt_cost u8
+55f56 txt_power u8
+55f5e repeat u16
+560a2 selling u8 1
+560a3 no_blink u8 1
+560a4 blink_a u8 1
+560a5 blink_b u8 1
+56108 lists ptr 223
+56484 kx u16
+56486 ky u16
+56488 kgfx ptr
+56a96 tab_spark ptr 9
+56aba tab_puff ptr 2
+56ac2 recs ShopRec 20
+56e50 txt_sell u8
+56e6e txt_buy u8
+56eb8 tab_lights ShopLight 7
+56ef0 light_lists ptr 58
+56fd8 txt_welcome_a u8
+56ffc txt_welcome_b u8
+5700f txt_last_chance u8
+5702c tab_advice ptr 30
+5721c gfx_bar_1 u8
+5731c gfx_bar_2 u8
+573cc gfx_bar_3 u8
+574cc gfx_bar_4 u8
+575cc gfx_bar_5 u8
+5767c gfx_bar_6 u8
+5777c gfx_pillar_a u8
+577e6 gfx_pillar_b u8
+57850 gfx_cursor_on_b u8
+578ba gfx_cursor_on_a u8
+5ab58 gfx_exit_on_a u8
+5ad98 gfx_exit_on_c u8
+5afd8 gfx_exit_on_b u8
+5b218 gfx_exit_off_a u8
+5b458 gfx_exit_off_c u8
+5b698 gfx_exit_off_b u8
+5b8d8 gfx_eyes_b u8
+5b97e gfx_eyes_a u8
+5ba24 gfx_mouth_b u8
+5bb60 gfx_mouth_a u8
+5bdbc gfx_bedroom u8
+5c0ec gfx_bedroom2 u8
+5c59c gfx_keeper_b u8
+5c82c gfx_keeper_a u8
+5cabc gfx_keeper_c u8
+5cd4c gfx_player2 u8
+5df76 pic_lamp_a u8
+5e1b6 pic_lamp_b u8
+5f43e pic_top u8
+5ff9e pic_mid u8
+601ce pic_low u8
+61f8e pic_door u8
+6284e pic_door2 u8
+6310e pic_slide u8
+63fee font u8
+6474e palette_b u8 32
+64d61 ntsc u8 1
