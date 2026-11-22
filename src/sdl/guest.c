@@ -123,6 +123,33 @@ static const struct blob_member *blob_list(unsigned *n)
     return 0;
 }
 
+struct blob_script { uint32_t offset, size; };
+struct blob_script_pointers { uint32_t offset, count; };
+static const struct blob_script_pointers *blob_script_pointers(unsigned *n)
+{
+    switch (blob_raw) {
+    case 0: *n = sizeof blob_script_pointers_1 / sizeof blob_script_pointers_1[0]; return (const struct blob_script_pointers *)blob_script_pointers_1;
+    case 2: *n = sizeof blob_script_pointers_2 / sizeof blob_script_pointers_2[0]; return (const struct blob_script_pointers *)blob_script_pointers_2;
+    case 3: *n = sizeof blob_script_pointers_3 / sizeof blob_script_pointers_3[0]; return (const struct blob_script_pointers *)blob_script_pointers_3;
+    case 4: *n = sizeof blob_script_pointers_4 / sizeof blob_script_pointers_4[0]; return (const struct blob_script_pointers *)blob_script_pointers_4;
+    case 5: *n = sizeof blob_script_pointers_5 / sizeof blob_script_pointers_5[0]; return (const struct blob_script_pointers *)blob_script_pointers_5;
+    }
+    *n = 0;
+    return 0;
+}
+static const struct blob_script *blob_scripts(unsigned *n)
+{
+    switch (blob_raw) {
+    case 0: *n = sizeof blob_scripts_1 / sizeof blob_scripts_1[0]; return (const struct blob_script *)blob_scripts_1;
+    case 2: *n = sizeof blob_scripts_2 / sizeof blob_scripts_2[0]; return (const struct blob_script *)blob_scripts_2;
+    case 3: *n = sizeof blob_scripts_3 / sizeof blob_scripts_3[0]; return (const struct blob_script *)blob_scripts_3;
+    case 4: *n = sizeof blob_scripts_4 / sizeof blob_scripts_4[0]; return (const struct blob_script *)blob_scripts_4;
+    case 5: *n = sizeof blob_scripts_5 / sizeof blob_scripts_5[0]; return (const struct blob_script *)blob_scripts_5;
+    }
+    *n = 0;
+    return 0;
+}
+
 /* the members of the loaded level's blob that the load covers (the image holds ADDRESS.., big endian) into their own bytes of the block */
 static void blob_load(uint32_t address, const uint8_t *image, uint32_t length)
 {
@@ -190,6 +217,162 @@ static void blob_save(uint8_t *ram)
     }
 }
 
+/* ---- the animation scripts: steps of a picture (a long) and a delay; the picture 0 then a routine (a long): "jump" (a long, the script to go on with) and
+ * "free" end it.  The longs become pointers when the words that hold them are loaded (the sites are kept to put the addresses back on export). ---- */
+#define SCRIPT_SITES 20000
+static uint32_t script_site[SCRIPT_SITES];   /* the address of the long, shifted left by 2, with the kind: 1 data, 2 code */
+static unsigned script_sites;
+static uint8_t script_seen[0x80000 / 16];   /* a bit per word of the block: part of a script already made */
+
+static int script_is_seen(uint32_t a) { return script_seen[a >> 4] >> ((a >> 1) & 7) & 1; }
+static void script_mark(uint32_t a) { script_seen[a >> 4] |= (uint8_t)(1u << ((a >> 1) & 7)); }
+
+static void script_forget(uint32_t address, uint32_t length)
+{
+    unsigned keep = 0;
+
+    for (uint32_t a = address & ~1u; a < address + length && a < 0x80000; a += 2)
+        script_seen[a >> 4] &= (uint8_t)~(1u << ((a >> 1) & 7));
+    for (unsigned i = 0; i < script_sites; i++) {
+        uint32_t a = script_site[i] >> 2;
+
+        if (a + 4 <= address || a >= address + length)
+            script_site[keep++] = script_site[i];
+    }
+    script_sites = keep;
+}
+
+static uint32_t script_long(uint32_t a)
+{
+    const uint16_t *w = (const uint16_t *)((const uint8_t *)&xenon2 + a);
+
+    return (uint32_t)w[0] << 16 | w[1];
+}
+
+static void script_put(uint32_t a, void *pointer, unsigned kind)
+{
+    memcpy((uint8_t *)&xenon2 + a, &pointer, 4);
+    if (script_sites < SCRIPT_SITES)
+        script_site[script_sites++] = a << 2 | kind;
+}
+
+static void *script_data(uint32_t v)
+{
+    void *p = guest_ptr(v);
+
+    return p ? p : (uint8_t *)&xenon2 + v;   /* (the original's memory beyond the block) */
+}
+
+extern void anim_op_jump(), anim_op_free();
+
+/* the script at A, and what follows it up to END (the member's end) */
+static void script_walk(uint32_t a, uint32_t lo, uint32_t hi, uint32_t end)
+{
+    while (a >= lo && a + 6 <= hi && a + 6 <= end && !script_is_seen(a)) {
+        uint32_t pic = script_long(a);
+
+        if (pic) {
+            for (int k = 0; k < 6; k += 2)
+                script_mark(a + k);
+            script_put(a, script_data(pic), 1);
+            a += 6;
+            continue;
+        }
+        if (a + 8 > hi || a + 8 > end)
+            return;
+        for (int k = 0; k < 8; k += 2)
+            script_mark(a + k);
+        void *code = guest_code_stub(script_long(a + 4));
+
+        script_put(a + 4, code, 2);
+        a += 8;
+        if (code == (void *)anim_op_jump && a + 4 <= hi && a + 4 <= end) {
+            uint32_t target = script_long(a);
+
+            script_mark(a);
+            script_mark(a + 2);
+            script_put(a, script_data(target), 1);
+            a += 4;
+            script_walk(target, lo, hi, hi);
+        }
+        if (a >= end)
+            return;
+    }
+}
+
+/* the end of the words of the level's blob that run on from A (a script goes on to the end of the words it is in) */
+static uint32_t blob_words_end(uint32_t a)
+{
+    unsigned n;
+    const struct blob_member *l = blob_list(&n);
+    uint32_t end = 0;
+
+    for (unsigned i = 0; i < n; i++) {
+        uint32_t lo = BLOB_LEVEL_LO + l[i].offset, hi = lo + l[i].count * l[i].size;
+
+        if (l[i].size != 2 || l[i].pointer)
+            continue;
+        if (end == 0 && a >= lo && a < hi)
+            end = hi;
+        else if (end && lo == end)
+            end = hi;
+    }
+    return end ? end : a;
+}
+
+static void scripts_load(uint32_t address, uint32_t length)
+{
+    script_forget(address, length);
+    for (unsigned i = 0; i < sizeof guest_members / sizeof guest_members[0]; i++) {
+        uint32_t m = guest_members[i].address;
+
+        if (guest_members[i].elem == 2 && !guest_members[i].ptr && (!strncmp(guest_members[i].name, "anim_", 5) || !strcmp(guest_members[i].name, "option_anims")) && m >= address && m < address + length && !blob_skips(m))
+            script_walk(m, address, address + length, m + guest_members[i].size);
+    }
+    if (blob_raw != 1) {
+        unsigned n;
+        const struct blob_script *l = blob_scripts(&n);
+
+        for (unsigned i = 0; i < n; i++) {
+            uint32_t m = BLOB_LEVEL_LO + l[i].offset;
+
+            if (m >= address && m < address + length)
+                script_walk(m, address, address + length, m + l[i].size);
+        }
+        const struct blob_script_pointers *sp = blob_script_pointers(&n);
+
+        for (unsigned i = 0; i < n; i++)
+            for (uint32_t k = 0; k < sp[i].count; k++) {
+                const uint8_t *site = (const uint8_t *)&xenon2 + BLOB_LEVEL_LO + sp[i].offset + 4 * k;
+                const uint8_t *p;
+
+                memcpy(&p, site, 4);
+                if (p >= (const uint8_t *)&xenon2 && p < (const uint8_t *)&xenon2 + sizeof xenon2 && (uint32_t)(site - (const uint8_t *)&xenon2) >= address
+                    && (uint32_t)(site - (const uint8_t *)&xenon2) < address + length)
+                    {
+                        uint32_t t = (uint32_t)(p - (const uint8_t *)&xenon2);
+
+                        script_walk(t, address, address + length, blob_words_end(t));
+                    }
+            }
+    }
+}
+
+static void scripts_save(uint8_t *ram)
+{
+    for (unsigned i = 0; i < script_sites; i++) {
+        uint32_t a = script_site[i] >> 2, v;
+        void *p;
+
+        memcpy(&p, (const uint8_t *)&xenon2 + a, 4);
+        v = (script_site[i] & 3) == 2 ? guest_code_address(p) : (uint32_t)((const uint8_t *)p - (const uint8_t *)&xenon2);
+        ram[a] = (uint8_t)(v >> 24);
+        ram[a + 1] = (uint8_t)(v >> 16);
+        ram[a + 2] = (uint8_t)(v >> 8);
+        ram[a + 3] = (uint8_t)v;
+    }
+}
+
 void guest_load_range(uint32_t address, const uint8_t *image, uint32_t length)
 {
     for (unsigned i = 0; i < sizeof guest_members / sizeof guest_members[0]; i++) {
@@ -237,6 +420,7 @@ void guest_load_range(uint32_t address, const uint8_t *image, uint32_t length)
         }
     }
     blob_load(address, image, length);
+    scripts_load(address, length);
 }
 
 /* disk 1 from track 82 on is the game's program, data and variables, as the loader of disk 1 puts them at $400 ($6B400 bytes) */
@@ -414,6 +598,7 @@ void host_export_ram_buf(uint8_t *ram)   /* ram: 0x80000 bytes */
         }
     }
     blob_save(ram);
+    scripts_save(ram);
 }
 
 /* the memory as the original had it (big endian, 0x80000 bytes) into the block: the raw bytes, then the named members converted (the dev build starts the port from the

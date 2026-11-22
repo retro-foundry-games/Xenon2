@@ -59,14 +59,13 @@ void anim_step(Object *o)
     if (t != 0)
         return;
     step = (const struct AnimStep *)o->anim;
-    if (FIXED_16_16(step->gfx_hi, step->gfx_lo) == 0) {
+    if (step->gfx == 0) {
         const struct AnimCall *call = (const struct AnimCall *)step;
-        AnimOp op = (AnimOp)GFN(FIXED_16_16(call->code_hi, call->code_lo));
 
-        op(o, (const uint16_t *)(call + 1));
+        call->code(o, (const uint16_t *)(call + 1));
         return;
     }
-    o->gfx = GPTR(FIXED_16_16(step->gfx_hi, step->gfx_lo));
+    o->gfx = step->gfx;
     o->anim_delay = (int16_t)step->delay;
     o->anim = (const uint16_t *)(step + 1);
 }
@@ -74,7 +73,7 @@ void anim_step(Object *o)
 /* orig $E2A, $002C82: script step "jump": the next longword is the address of the script to go on with */
 void anim_op_jump(Object *o, const uint16_t *script)
 {
-    anim_header_set(o, (const uint16_t *)GPTR(FIXED_16_16(((const struct AnimJump *)script)->script_hi, ((const struct AnimJump *)script)->script_lo)));
+    anim_header_set(o, ((const struct AnimJump *)script)->script);
 }
 
 /* orig $E30, $002C92: script step "end": the object (and the pieces chained to it, if it is one of a group) goes dead */

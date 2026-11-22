@@ -40,7 +40,7 @@ static inline void anim_header_set(Object *o, const uint16_t *header)
 {
     const struct AnimStep *h = (const struct AnimStep *)header;
 
-    o->gfx = GPTR(FIXED_16_16(h->gfx_hi, h->gfx_lo));
+    o->gfx = h->gfx;
     o->anim_delay = (int16_t)h->delay;
     o->anim = (const uint16_t *)(h + 1);
 }

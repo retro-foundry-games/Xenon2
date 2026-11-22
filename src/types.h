@@ -5,11 +5,12 @@
 /* a cell of the tile map */
 typedef uint16_t Cell;
 
-/* the steps of an animation script: a picture (a long: its high and its low word) and a delay; the picture 0 and the code to call (it takes the
- * position after it); the header of a script is its first step; the script "jump" has the address of the script to go on with */
-struct AnimStep { uint16_t gfx_hi, gfx_lo, delay; };
-struct AnimCall { uint16_t zero_hi, zero_lo, code_hi, code_lo; };
-struct AnimJump { uint16_t script_hi, script_lo; };
+/* the steps of an animation script: a picture and a delay; the picture 0 and the code to call (it takes the position after it); the header of a script
+ * is its first step; the script "jump" has the script to go on with.  The loader makes the longs pointers (sdl/guest.c). */
+struct Object;
+struct AnimStep { const uint16_t *gfx; uint16_t delay; };
+struct AnimCall { const void *zero; void (*code)(struct Object *, const uint16_t *); };
+struct AnimJump { const uint16_t *script; };
 
 /* a row of a tile mask (16 of them, 160 bytes): the words of the row; the map's masks are read by the first one or two */
 struct MaskRow { uint16_t w[5]; };
