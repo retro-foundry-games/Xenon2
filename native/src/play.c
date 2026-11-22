@@ -318,7 +318,7 @@ void spawn_shot_object(Object *owner, uint16_t dx, uint16_t dy, uint16_t off_x, 
     }
     shot_obj = obj_free_pop();
     list_append(&xenon2.obj_list[3], shot_obj);
-    shot_obj->shot.dx = dx;
+    shot_obj->shot.speed = (shot_obj->shot.speed & 0xffffu) | (uint32_t)(uint16_t)(dx) << 16;
     shot_obj->shot.dy = dy;
     shot_obj->x = (uint16_t)(off_x + xenon2.player.x);
     shot_obj->y = (uint16_t)(off_y + xenon2.player.y);

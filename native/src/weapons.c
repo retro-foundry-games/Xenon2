@@ -43,13 +43,12 @@ static void set_ptr_2a(Object *o, Object *p)
 {
     uint32_t v = p ? GADDR(p) : 0;   /* (the original's address: the two words are compared and exported as they are) */
 
-    o->link.ptr_hi = (uint16_t)(v >> 16);
-    o->link.ptr_lo = (uint16_t)v;
+    o->link.ptr = v;
 }
 
 static Object *get_ptr_2a(const Object *o)
 {
-    uint32_t v = ((uint32_t)(uint16_t)o->link.ptr_hi << 16) | (uint16_t)o->link.ptr_lo;
+    uint32_t v = o->link.ptr;
 
     return v ? (Object *)GPTR(v) : 0;
 }
@@ -648,7 +647,7 @@ void weaponA0_update(Object *obj)
         set_anim(cur, drill_anim[cnt]);
         cur->x = PLAYER->x;
         cur->y = PLAYER->y;
-        cur->drill.dir = cnt;
+        cur->drill.dir = (cur->drill.dir & 0xffffu) | (uint32_t)(uint16_t)(cnt) << 16;
         cur->drill.target_hi = 0;
         cur->energy = 0;
         cur->drill.state = 0xd;
@@ -676,7 +675,7 @@ void shot_fixed_update(Object *obj)
     anim_step(obj);
     if (obj->type == 4)
         return;
-    speed = (int32_t)(((uint32_t)(uint16_t)obj->shot.speed_hi << 16) | (uint16_t)obj->shot.speed_lo) >> 6;
+    speed = (int32_t)obj->shot.speed >> 6;
     pos = ((uint32_t)(uint16_t)obj->x << 16) | obj->x_frac;
     pos += (uint32_t)speed;
     obj->x = (uint16_t)(pos >> 16);
@@ -711,7 +710,7 @@ void shot_update(Object *obj)
         return;
     }
     anim_step(obj);
-    obj->x += obj->shot.dx;
+    obj->x += (int16_t)(obj->shot.speed >> 16);
     if ((uint16_t)obj->x >= 0x138) {
         shot_gone(obj);
         return;
@@ -844,7 +843,7 @@ void enemy_killed(Object *shooter, Object *enemy)
             set_anim(n, bonus_anim);
             n->x = enemy->x;
             n->y = enemy->y;
-            n->pickup.dir = (int16_t)random_next();
+            n->pickup.dir = (n->pickup.dir & 0xffffu) | (uint32_t)(uint16_t)((int16_t)random_next()) << 16;
         }
     }
     xenon2.player_score += (uint16_t)enemy->score;
@@ -1134,7 +1133,7 @@ void pickup_update(Object *obj)
         if (obj->pickup.mode > 0) {
             obj->pickup.mode &= 7;
             if (obj->pickup.mode == 0)
-                obj->pickup.dir = (int16_t)direction8((int16_t)(0xa0 - obj->x), (int16_t)(0x64 - obj->y));
+                obj->pickup.dir = (obj->pickup.dir & 0xffffu) | (uint32_t)(uint16_t)((int16_t)direction8((int16_t)(0xa0 - obj->x), (int16_t)(0x64 - obj->y))) << 16;
             obj->pickup.mode++;
             dx = (int16_t)(0xa0 - obj->x);
             dy = (int16_t)(0x64 - obj->y);
@@ -1143,11 +1142,11 @@ void pickup_update(Object *obj)
         } else {
             obj->pickup.mode++;
             if ((obj->pickup.mode & 3) == 0) {
-                obj->pickup.dir++;
-                obj->pickup.dir &= 7;
+                obj->pickup.dir = (obj->pickup.dir & 0xffffu) | (uint32_t)(uint16_t)((int16_t)(obj->pickup.dir >> 16) + 1) << 16;
+                obj->pickup.dir = (obj->pickup.dir & 0xffffu) | (uint32_t)(uint16_t)((int16_t)(obj->pickup.dir >> 16) & (7)) << 16;
             }
         }
-        idx = (obj->pickup.dir << 2) & 0x1c;
+        idx = ((int16_t)(obj->pickup.dir >> 16) << 2) & 0x1c;
         obj->x += xenon2.pickup_circle_steps[idx >> 1];
         obj->y += xenon2.pickup_circle_steps[(idx >> 1) + 1];
     }
@@ -1619,26 +1618,26 @@ have:
     }
     dx = (int16_t)(target->hit[0] + 2 - obj->x);
     dy = (int16_t)(target->hit[1] + 2 - obj->y);
-    turn = (int16_t)(direction8(dx, dy) - obj->drill.dir);
+    turn = (int16_t)(direction8(dx, dy) - (int16_t)(obj->drill.dir >> 16));
     if (turn != 0) {
         if (turn < 0)
             turn = (int16_t)(turn + 8);
         if (turn < 4)
-            obj->drill.dir++;
+            obj->drill.dir = (obj->drill.dir & 0xffffu) | (uint32_t)(uint16_t)((int16_t)(obj->drill.dir >> 16) + 1) << 16;
         else
-            obj->drill.dir--;
-        obj->drill.dir &= 7;
+            obj->drill.dir = (obj->drill.dir & 0xffffu) | (uint32_t)(uint16_t)((int16_t)(obj->drill.dir >> 16) - 1) << 16;
+        obj->drill.dir = (obj->drill.dir & 0xffffu) | (uint32_t)(uint16_t)((int16_t)(obj->drill.dir >> 16) & (7)) << 16;
         obj->drill.state = -3;
-        set_anim(obj, heads[obj->drill.dir]);
+        set_anim(obj, heads[(int16_t)(obj->drill.dir >> 16)]);
     }
 fly:
-    y = (int16_t)(xenon2.drill_dy[obj->drill.dir] + obj->y);
+    y = (int16_t)(xenon2.drill_dy[(int16_t)(obj->drill.dir >> 16)] + obj->y);
     if ((uint16_t)y >= 0xc0) {
         kill_object(obj);
         return;
     }
     obj->y = y;
-    x = (int16_t)(xenon2.drill_dx[obj->drill.dir] + obj->x);
+    x = (int16_t)(xenon2.drill_dx[(int16_t)(obj->drill.dir >> 16)] + obj->x);
     if ((uint16_t)x >= 0x140) {
         kill_object(obj);
         return;
@@ -1708,7 +1707,7 @@ void weaponb0_update(Object *obj)
         set_anim(shot, xenon2.anim_weaponb0_shot);
         shot->score = obj->score;
         shot->shot.hits = i;
-        shot->shot.speed_hi = (int8_t)random_next();
+        shot->shot.speed = (shot->shot.speed & 0xffffu) | (uint32_t)(uint16_t)((int8_t)random_next()) << 16;
     }
 }
 
@@ -1977,7 +1976,7 @@ void weapon90_update(Object *obj)
         for (i = 1; i >= 0; i--) {
             Object *shot = alloc_b(obj);
 
-            shot->shot.dx = 0;
+            shot->shot.speed = (shot->shot.speed & 0xffffu) | (uint32_t)(uint16_t)(0) << 16;
             shot->shot.dy = -9;
             dx = (int16_t)(dx + obj->x);
             shot->x = dx;

@@ -177,8 +177,8 @@ void l2_hook(uint16_t hook, const uint8_t *rec, uint16_t rec_scroll)
         obj->x = (int16_t)(rd16(rec + 8) - 8);
         obj->y = (int16_t)(rd16(rec + 10) - 8 - xenon2.scroll_pos);
         obj->launcher.step = -1;
-        obj->launcher.range = (int16_t)(rd16(rec + 4) << 4);
-        obj->launcher.pos = obj->launcher.range;
+        obj->launcher.range = (obj->launcher.range & 0xffffu) | (uint32_t)(uint16_t)((int16_t)(rd16(rec + 4) << 4)) << 16;
+        obj->launcher.pos = (int16_t)(obj->launcher.range >> 16);
         obj->kind = 0;
         bbox_from_frame(obj);
         return;
@@ -330,16 +330,16 @@ void l2_front_piece_update(Object *part)
         if ((part->front.tick & 0xf) == 0) {
             uint16_t d = direction8((int16_t)(PLAYER_X - part->x), (int16_t)(PLAYER_Y - part->y));
 
-            part->front.dir = (int16_t)(~d & 7);
-            set_anim(part, xenon2.level2_data.front_anims_by_dir[(uint16_t)part->front.dir]);
+            part->front.dir = (part->front.dir & 0xffffu) | (uint32_t)(uint16_t)((int16_t)(~d & 7)) << 16;
+            set_anim(part, xenon2.level2_data.front_anims_by_dir[(uint16_t)(int16_t)(part->front.dir >> 16)]);
         }
-        x = (int16_t)(dx[part->front.dir] + part->x);
+        x = (int16_t)(dx[(int16_t)(part->front.dir >> 16)] + part->x);
         if ((uint16_t)x >= 0x140) {
             kill_thunk(part);
             return;
         }
         part->x = x;
-        y = (int16_t)(dy[part->front.dir] + part->y + xenon2.scroll_speed);
+        y = (int16_t)(dy[(int16_t)(part->front.dir >> 16)] + part->y + xenon2.scroll_speed);
         if ((uint16_t)y >= 0xc0) {
             kill_thunk(part);
             return;
@@ -575,12 +575,12 @@ void l2_roamer_shot_update(Object *bolt)
             bbox_from_frame(bolt);
             return;
         }
-        diff = (int16_t)(bolt->bolt.target - bolt->bolt.dir);
+        diff = (int16_t)(bolt->bolt.target - (int16_t)(bolt->bolt.dir >> 16));
         if (diff != 0) {
             if (diff < 0)
                 diff += 8;
-            bolt->bolt.dir = (int16_t)((bolt->bolt.dir + (diff > 4 ? -1 : 1)) & 7);
-            set_anim(bolt, xenon2.level2_data.bolt_anims_by_dir[(uint16_t)bolt->bolt.dir]);
+            bolt->bolt.dir = (bolt->bolt.dir & 0xffffu) | (uint32_t)(uint16_t)((int16_t)(((int16_t)(bolt->bolt.dir >> 16) + (diff > 4 ? -1 : 1)) & 7)) << 16;
+            set_anim(bolt, xenon2.level2_data.bolt_anims_by_dir[(uint16_t)(int16_t)(bolt->bolt.dir >> 16)]);
             bbox_from_frame(bolt);
             return;
         }
@@ -602,8 +602,8 @@ void l2_roamer_shot_update(Object *bolt)
             spawn_enemy_shot((uint16_t)bolt->x, (uint16_t)bolt->y, angle, xenon2.level2_data.roamer_shot_shot_steps, gfx);
         }
     }
-    x = (int16_t)(bolt->x + dx[bolt->bolt.dir]);
-    y = (int16_t)(bolt->y + dy[bolt->bolt.dir]);
+    x = (int16_t)(bolt->x + dx[(int16_t)(bolt->bolt.dir >> 16)]);
+    y = (int16_t)(bolt->y + dy[(int16_t)(bolt->bolt.dir >> 16)]);
     bolt->x = x;
     bolt->y = y;
     y = (int16_t)(y + xenon2.scroll_pos);
@@ -636,29 +636,29 @@ void l2_roamer_update(Object *roamer)
     anim_step(roamer);
     roamer->y = (int16_t)(roamer->y + xenon2.scroll_speed);
     if (roamer->roamer.state == 0) {
-        int16_t x = (int16_t)(roamer->x + dx[roamer->roamer.dir]);
-        int16_t y = (int16_t)(roamer->y + dy[roamer->roamer.dir]);
+        int16_t x = (int16_t)(roamer->x + dx[(int16_t)(roamer->roamer.dir >> 16)]);
+        int16_t y = (int16_t)(roamer->y + dy[(int16_t)(roamer->roamer.dir >> 16)]);
 
         if (x <= 0x74) {
             x = 0x74;
             roamer->roamer.state = 1;
-            roamer->roamer.dir = 4;
+            roamer->roamer.dir = (roamer->roamer.dir & 0xffffu) | (uint32_t)(uint16_t)(4) << 16;
         }
         if (x >= 0xcc) {
             x = 0xcc;
             roamer->roamer.state = 1;
-            roamer->roamer.dir = 0;
+            roamer->roamer.dir = (roamer->roamer.dir & 0xffffu) | (uint32_t)(uint16_t)(0) << 16;
         }
         y = (int16_t)(y + xenon2.scroll_pos);
         if (y <= 0x6c) {
             y = 0x6c;
             roamer->roamer.state = 1;
-            roamer->roamer.dir = 6;
+            roamer->roamer.dir = (roamer->roamer.dir & 0xffffu) | (uint32_t)(uint16_t)(6) << 16;
         }
         if (y >= 0x154) {
             y = 0x154;
             roamer->roamer.state = 1;
-            roamer->roamer.dir = 2;
+            roamer->roamer.dir = (roamer->roamer.dir & 0xffffu) | (uint32_t)(uint16_t)(2) << 16;
         }
         roamer->x = x;
         roamer->y = (int16_t)(y - xenon2.scroll_pos);
@@ -683,10 +683,10 @@ void l2_roamer_update(Object *roamer)
         SET_V5E(bolt, 0);
         bolt->score = 0x1e;
         bolt->kind = 0;
-        set_anim(bolt, xenon2.level2_data.bolt_anims_by_dir[(uint16_t)roamer->roamer.dir]);
+        set_anim(bolt, xenon2.level2_data.bolt_anims_by_dir[(uint16_t)(int16_t)(roamer->roamer.dir >> 16)]);
         bolt->x = roamer->x;
         bolt->y = roamer->y;
-        bolt->roamer.dir = roamer->roamer.dir;
+        bolt->roamer.dir = (bolt->roamer.dir & 0xffffu) | (uint32_t)(uint16_t)((int16_t)(roamer->roamer.dir >> 16)) << 16;
         bolt->roamer.state = -1;
         bbox_from_frame(bolt);
         kill_thunk(roamer);
@@ -727,7 +727,7 @@ void l2_front_update(Object *marker)
         SET_V5E(part, 0);
         part->x = (int16_t)(marker->x + 0x10 + entry->dx);
         part->y = (int16_t)(marker->y - xenon2.scroll_pos + 0x10 + entry->dy);
-        part->front.dir = (int16_t)i;
+        part->front.dir = (part->front.dir & 0xffffu) | (uint32_t)(uint16_t)((int16_t)i) << 16;
         part->energy = 1;
         part->big = 0;
         part->score = 0x14;
@@ -818,7 +818,7 @@ void l2_launcher_update(Object *launcher)
     step = launcher->launcher.step;
     launcher->y = (int16_t)(launcher->y + step);
     launcher->launcher.pos = (int16_t)(launcher->launcher.pos + step);
-    if (launcher->launcher.pos == 0 || launcher->launcher.pos == launcher->launcher.range)
+    if (launcher->launcher.pos == 0 || launcher->launcher.pos == (int16_t)(launcher->launcher.range >> 16))
         launcher->launcher.step = (int16_t)-launcher->launcher.step;
     bbox_from_frame(launcher);
 }
@@ -835,8 +835,7 @@ static void l2_wreck(Object *obj, const uint8_t *anim)
     wreck->y = obj->y;
     set_anim(wreck, anim);
     wreck->piece.wait = (int16_t)0x8000;
-    wreck->piece.dir_hi = 0;
-    wreck->piece.dir = (int16_t)(random_next() & 0xff);
+    wreck->piece.dir = (uint16_t)((int16_t)(random_next() & 0xff));
     kill_thunk(obj);
 }
 
@@ -960,7 +959,7 @@ void l2_piece_update(Object *part)
         int16_t new_x, new_y;
 
         anim_step(part);
-        angle = (uint16_t)part->piece.dir;
+        angle = (uint16_t)(int16_t)part->piece.dir;
         new_y = (int16_t)(xenon2.piece_directions[angle] >> 2);
         new_x = (int16_t)(xenon2.piece_directions[(uint16_t)(angle + 0x40)] >> 2);
         new_x = (int16_t)(new_x + part->x);
@@ -994,7 +993,7 @@ void l2_piece_update(Object *part)
     } else if (rd16(part->cursor) == 0) {
         part->fn_draw = draw_bob_behind_map;
     }
-    pic_index = (uint16_t)(((uint16_t)(part->piece.dir + 0x10) >> 3) & 0x1c);
+    pic_index = (uint16_t)(((uint16_t)((int16_t)part->piece.dir + 0x10) >> 3) & 0x1c);
     part->gfx = (void *)(part->type == 0x118 ? xenon2.level2_data.piece_pictures_118 : part->type == 0x11c ? xenon2.level2_data.piece_pictures_11c : xenon2.level2_data.piece_pictures_other)[pic_index / 4];
     bbox_from_frame(part);
 }
@@ -1182,7 +1181,7 @@ void l2_boss_rest(Object *boss)
     }
     step = (r & 0x4000) ? -3 : 3;
     boss->l2_boss.frames = (int16_t)((r & 7) + 8);
-    boss->l2_boss.step = step;
+    boss->l2_boss.step = (boss->l2_boss.step & 0xffffu) | (uint32_t)(uint16_t)(step) << 16;
 }
 
 /* the boss's use of the scratch fields of Object */
@@ -1199,7 +1198,7 @@ static void l2_boss_move(Object *boss)
     if (B(0x19f9e + 0x1794) == 0)
         xenon2.sfx_cmd = 3;
     boss->l2_boss.frames--;
-    new_y = (int16_t)(boss->l2_boss.step + boss->y);
+    new_y = (int16_t)((int16_t)(boss->l2_boss.step >> 16) + boss->y);
     if (new_y < 0x60) {
         new_y = 0x60;
         boss->l2_boss.frames = 0;
@@ -1239,7 +1238,7 @@ void l2_boss_update(Object *boss)
             if (player_x < 0 || player_x > 0x13f)
                 return;
             boss->l2_boss.frames = 0x3e8;
-            boss->l2_boss.step = 3;
+            boss->l2_boss.step = (boss->l2_boss.step & 0xffffu) | (uint32_t)(uint16_t)(3) << 16;
             boss->l2_boss.wait = 0x154;
             return;
         }
@@ -1247,7 +1246,7 @@ void l2_boss_update(Object *boss)
         if (boss->l2_boss.wait < 0) {
             boss->l2_boss_b.flash = 0;
             boss->l2_boss.frames = 0x3e8;
-            boss->l2_boss.step = -3;
+            boss->l2_boss.step = (boss->l2_boss.step & 0xffffu) | (uint32_t)(uint16_t)(-3) << 16;
         }
     }
     sum = (uint16_t)(boss->v5e_b[0] + xenon2.level2_data.boss_fire_rate);
@@ -1296,7 +1295,7 @@ void l2_boss_update(Object *boss)
         shot->y = (int16_t)(boss->y - xenon2.scroll_pos + 0x80);
         set_anim(shot, xenon2.level2_data.boss_update_data_4);
         shot->l2_boss.wait = 0;
-        shot->l2_boss.step = (int16_t)(random_next() & 7);
+        shot->l2_boss.step = (shot->l2_boss.step & 0xffffu) | (uint32_t)(uint16_t)((int16_t)(random_next() & 7)) << 16;
         return;
     }
     l2_boss_move(boss);

@@ -22,7 +22,11 @@ struct Object {
     int16_t y;                  /* 24 */
     uint16_t y_frac;            /* 26: as x_frac */
     union {
-        int16_t raw_a[5];   /* the layout the loader byte-swaps; the kinds below name the words */
+        struct {            /* the layout the loader byte-swaps; the kinds below name the words, the long at 2a is the high word first */
+            int16_t w28;
+            uint32_t w2a;
+            int16_t w2e, w30;
+        } raw_a;
         struct KindA_aim aim;
         struct KindA_arm arm;
         struct KindA_b1_gun b1_gun;

@@ -442,8 +442,7 @@ Object *spawn_formation(Object *obj, const uint8_t *rec_raw, const uint8_t *form
             obj->x_frac = 0;
             obj->y = 0;
             obj->y_frac = 0;
-            obj->path.angle_hi = 0;
-            obj->path.angle_lo = 0;
+            obj->path.angle = 0;
             obj->score = (int16_t)def_ptr->score;
             obj->path.wait = 0;
             if ((int16_t)rec->x < 100) {
@@ -805,7 +804,7 @@ void enemy_shot_update(Object *shot)
     int32_t step;
 
     anim_step(shot);
-    dir = (uint16_t)shot->enemy_shot.dir;
+    dir = (uint16_t)(int16_t)(shot->enemy_shot.dir >> 16);
     x_fixed = ((uint32_t)(uint16_t)shot->x << 16) | shot->x_frac;
     y_fixed = ((uint32_t)(uint16_t)shot->y << 16) | shot->y_frac;
     step = (int32_t)xenon2.enemy_shot_dx[dir] * (int16_t)shot->steps;
@@ -842,7 +841,7 @@ Object *spawn_enemy_shot(uint16_t x, uint16_t y, uint16_t angle, uint16_t steps,
     shot->anim_delay = 0;
     shot->x = (int16_t)x;
     shot->y = (int16_t)y;
-    shot->enemy_shot.dir = (int16_t)angle;
+    shot->enemy_shot.dir = (shot->enemy_shot.dir & 0xffffu) | (uint32_t)(uint16_t)((int16_t)angle) << 16;
     shot->steps = (int16_t)steps;
     shot->hit[0] = 0x3e8;
     shot->hit[2] = 0x3e8;

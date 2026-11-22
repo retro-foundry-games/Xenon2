@@ -275,7 +275,7 @@ void l3_worm_spawn(uint16_t side)
         seg->anim_delay = 0;
         seg->script = (uint8_t *)GPTR(path);
         seg->cursor = (const uint8_t *)GPTR(path);
-        seg->worm.phase = 0xc0;
+        seg->worm.phase = (seg->worm.phase & 0xffff0000u) | (uint16_t)(0xc0);
         seg->x = x;
         seg->y = y;
         seg->kind = 0;
@@ -292,7 +292,7 @@ void l3_worm_spawn(uint16_t side)
 static void l3_enemy(Object *obj, const uint8_t *const *table)
 {
     enemy_update_no_anim(obj);
-    obj->gfx = (void *)table[(((uint16_t)obj->l3_picture.phase + 0x10) >> 5) & 7];
+    obj->gfx = (void *)table[(((uint16_t)(int16_t)obj->l3_picture.phase + 0x10) >> 5) & 7];
     bbox_from_frame(obj);
 }
 
@@ -332,7 +332,7 @@ void l3_snake_head(Object *obj)
     if (l3_snake_off(obj))
         return;
     obj->fn_draw = (obj_fn)obj_nop_thunk;
-    if (obj->snake.step == 0) {
+    if ((int16_t)(obj->snake.step >> 16) == 0) {
         int16_t dy;
 
         if (obj->snake.limit < 0) {
@@ -347,16 +347,16 @@ void l3_snake_head(Object *obj)
             bbox_from_frame(obj);
             return;
         }
-        obj->snake.step = 2;
+        obj->snake.step = (obj->snake.step & 0xffffu) | (uint32_t)(uint16_t)(2) << 16;
         obj->snake.limit = (int16_t)((random_next() & 6) + 0xa);
     }
     obj->fn_draw = draw_bob_masked;
-    obj->snake.swing = (int16_t)(obj->snake.step + obj->snake.swing);
+    obj->snake.swing = (int16_t)((int16_t)(obj->snake.step >> 16) + obj->snake.swing);
     if (obj->snake.swing == 0) {
-        obj->snake.step = 0;
+        obj->snake.step = (obj->snake.step & 0xffffu) | (uint32_t)(uint16_t)(0) << 16;
         obj->snake.limit = -5;
     } else if (obj->snake.swing == obj->snake.limit) {
-        obj->snake.step = (int16_t)-obj->snake.step;
+        obj->snake.step = (obj->snake.step & 0xffffu) | (uint32_t)(uint16_t)((int16_t)-(int16_t)(obj->snake.step >> 16)) << 16;
     }
     bbox_from_frame(obj);
 }
@@ -371,7 +371,7 @@ void l3_snake_tail(Object *obj)
     anim_step(obj);
     head = obj->target;
     obj->x = (int16_t)((uint16_t)((uint16_t)obj->snake.limit * (uint16_t)head->snake.swing) + (uint16_t)obj->snake.x);
-    if (head->snake.step == 2 && head->snake.swing == 2) {
+    if ((int16_t)(head->snake.step >> 16) == 2 && head->snake.swing == 2) {
         obj->anim_delay = 1;
     } else if (head->snake.limit > 0 && head->snake.limit == head->snake.swing) {
         obj->anim_delay = 1;
@@ -389,7 +389,7 @@ void l3_snake_body(Object *obj)
     obj->fn_draw = (obj_fn)obj_nop_thunk;
     head = obj->target;
     obj->x = (int16_t)((uint16_t)((uint16_t)obj->snake.limit * (uint16_t)head->snake.swing) + (uint16_t)obj->snake.x);
-    if (head->snake.step != 0)
+    if ((int16_t)(head->snake.step >> 16) != 0)
         obj->fn_draw = draw_bob_masked;
     bbox_from_frame(obj);
 }
@@ -433,7 +433,7 @@ void l3_spawn_snake(const uint8_t *rec)
         seg->score = 0x190;
         seg->snake.swing = 0;
         seg->kind = 0;
-        seg->snake.step = 0;
+        seg->snake.step = (seg->snake.step & 0xffffu) | (uint32_t)(uint16_t)(0) << 16;
         offset = (int16_t)(7 - i);
         if (flag)
             offset = (int16_t)-offset;
@@ -476,11 +476,11 @@ void l3_diver_shot(Object *obj)
     if (obj->type != 0x14)
         return;
     if (obj->x < 0x80) {
-        obj->diver.side = 3;
+        obj->diver.side = (obj->diver.side & 0xffffu) | (uint32_t)(uint16_t)(3) << 16;
         obj->gfx = (void *)xenon2.level3_data.diver_shot_picture_a;
     }
     if (obj->x >= 0xc0) {
-        obj->diver.side = 5;
+        obj->diver.side = (obj->diver.side & 0xffffu) | (uint32_t)(uint16_t)(5) << 16;
         obj->gfx = (void *)xenon2.level3_data.diver_shot_picture_b;
     }
 }
@@ -502,7 +502,7 @@ void l3_diver_update(Object *obj)
     }
     anim_step(obj);
     if (obj->diver.state == 0) {
-        x = (int16_t)(obj->diver.side + obj->x);
+        x = (int16_t)((int16_t)(obj->diver.side >> 16) + obj->x);
         obj->x = x;
         if (x <= -0x20) {
             obj->x = 0;
@@ -555,15 +555,15 @@ void l3_diver_update(Object *obj)
             shot->y = sy;
             shot->diver.state = 0;
             shot->steps = (int16_t)xenon2.level3_data.diver_steps;
-            shot->diver.side = 3;
+            shot->diver.side = (shot->diver.side & 0xffffu) | (uint32_t)(uint16_t)(3) << 16;
             if (obj->x >= 0xa0)
-                shot->diver.side = 5;
+                shot->diver.side = (shot->diver.side & 0xffffu) | (uint32_t)(uint16_t)(5) << 16;
         }
         bbox_from_frame(obj);
         return;
     }
     if (flip)
-        obj->diver.side = (int16_t)-obj->diver.side;
+        obj->diver.side = (obj->diver.side & 0xffffu) | (uint32_t)(uint16_t)((int16_t)-(int16_t)(obj->diver.side >> 16)) << 16;
     set_anim(obj, anim);
     bbox_from_frame(obj);
 }
@@ -580,10 +580,10 @@ void l3_spawn_diver(const uint8_t *rec)
     SET_V5E(obj, 0);
     obj->x = (int16_t)(rd16(rec + 8) - 8);
     obj->y = (int16_t)(rd16(rec + 0xa) + 8 - xenon2.scroll_pos);
-    obj->diver.side = 2;
+    obj->diver.side = (obj->diver.side & 0xffffu) | (uint32_t)(uint16_t)(2) << 16;
     if (obj->x > 0xa0) {
         anim = xenon2.level3_data.diver_update_data_2;
-        obj->diver.side = -2;
+        obj->diver.side = (obj->diver.side & 0xffffu) | (uint32_t)(uint16_t)(-2) << 16;
     }
     set_anim(obj, anim);
     obj->fn_hit = (void *)hit_enemy;
@@ -638,8 +638,7 @@ void l3_spawn_parts(void)
         part->x_frac = 0;
         part->y_frac = 0;
         part->cursor = xenon2.level3_data.spawn_parts_data_3;
-        part->path.angle_hi = 0;
-        part->path.angle_lo = 0;
+        part->path.angle = 0;
         part->turn_step = 0;
         part->kind = 0;
         part->steps = (int16_t)xenon2.level3_data.parts_steps;
@@ -764,7 +763,7 @@ void l3_part_arm(Object *obj)
     }
     if ((random_next() & 0xff) >= 3) {
         piece->steps = 0;
-        piece->arm.angle_lo = 0x40;
+        piece->arm.angle = (piece->arm.angle & 0xffff0000u) | (uint16_t)(0x40);
         bbox_from_frame(obj);
         return;
     }
@@ -776,14 +775,13 @@ void l3_part_arm(Object *obj)
         uint32_t r;
 
         aim = (uint16_t)((aim & 0xff00) | (uint8_t)((aim & 0xff) - 0x60));
-        piece->arm.angle_hi = 0;
-        piece->arm.angle_lo = (int16_t)aim;
+        piece->arm.angle = (uint16_t)((int16_t)aim);
         r = (((random_next() & 0x1f) + 0x20) << 8) << 2;
         piece->turn = r;
         piece->turn_step = 0;
         piece->steps = 1;
         if (obj->part.slot == 0x60) {
-            piece->arm.angle_lo = (int16_t)((piece->arm.angle_lo & 0xff00) | (uint8_t)(piece->arm.angle_lo + 0x40));
+            piece->arm.angle = (piece->arm.angle & 0xffff0000u) | (uint16_t)((int16_t)(((int16_t)piece->arm.angle & 0xff00) | (uint8_t)((int16_t)piece->arm.angle + 0x40)));
             r = -r;
             piece->turn = r;
         }
@@ -807,26 +805,24 @@ static void l3_arm_follow(Object *obj)
 /* level3 $055D12: a piece of an arm: it moves after the next piece by its own path (angle v2a:v2c, speed pad4e), and hands that state to the piece before it */
 void l3_part_arm_piece(Object *obj)
 {
-    int16_t saved_angle_hi, saved_angle_lo, saved_turn_step;
+    int16_t saved_turn_step;
+    uint32_t saved_angle;
     uint32_t saved_turn;
     Object *tip;
 
     l3_arm_follow(obj);
-    saved_angle_hi = obj->arm.angle_hi;
-    saved_angle_lo = obj->arm.angle_lo;
+    saved_angle = obj->arm.angle;
     saved_turn = obj->turn;
     saved_turn_step = (int16_t)obj->turn_step;
     obj_script_run(obj);
     tip = obj->prev;
-    tip->arm.angle_hi = obj->arm.angle_hi;
-    tip->arm.angle_lo = obj->arm.angle_lo;
+    tip->arm.angle = obj->arm.angle;
     tip->turn = obj->turn;
     tip->turn_step = obj->turn_step;
     tip->steps = obj->steps;
     obj->turn_step = (uint16_t)saved_turn_step;
     obj->turn = saved_turn;
-    obj->arm.angle_lo = saved_angle_lo;
-    obj->arm.angle_hi = saved_angle_hi;
+    obj->arm.angle = saved_angle;
 }
 
 /* level3 $055D62: the tip of an arm: it takes its place and path like the pieces, and its picture follows the angle */
@@ -836,7 +832,7 @@ void l3_part_arm_tip(Object *obj)
 
     l3_arm_follow(obj);
     obj_script_run(obj);
-    angle_bits = (uint16_t)(((uint16_t)obj->arm.angle_lo >> 2) & 0x38);
+    angle_bits = (uint16_t)(((uint16_t)(int16_t)obj->arm.angle >> 2) & 0x38);
     if (obj->steps == 0xe)
         xenon2.sfx_cmd = 0xc;
     tick_bits = (uint16_t)(xenon2.frame_tick & 4);
@@ -1147,7 +1143,7 @@ void l3_spawn_walker(const uint8_t *rec)
     obj->type = 0xdc;
     obj->fn_update = FN(l3_walker_update);
     obj->fn_draw = draw_bob_masked;
-    obj->walker.dir = (int16_t)i;
+    obj->walker.dir = (obj->walker.dir & 0xffffu) | (uint32_t)(uint16_t)((int16_t)i) << 16;
     SET_V5E(obj, 0);
     obj->x = (int16_t)(rd16(rec + 8) - 8 + xenon2.level3_data.walker_spawn_dx[i]);
     obj->y = (int16_t)(rd16(rec + 10) - 8 - xenon2.scroll_pos + xenon2.level3_data.walker_spawn_dy[i]);
@@ -1166,7 +1162,7 @@ void l3_spawn_walker(const uint8_t *rec)
  * the cell ahead: a wall turns it by the tables at $56460, a free cell ahead lets it go on; now and then it fires at the player */
 void l3_walker_update(Object *obj)
 {
-    uint32_t dir_offset = 2 * (uint32_t)(uint16_t)obj->walker.dir;
+    uint32_t dir_offset = 2 * (uint32_t)(uint16_t)(int16_t)(obj->walker.dir >> 16);
     int16_t dx, map_y;
     int at_tile = 0, turn = 0;
 
@@ -1212,7 +1208,7 @@ void l3_walker_update(Object *obj)
             obj->x = (int16_t)(obj->x + xenon2.level3_data.walker_update_words_4[dir_offset / 2]);
             obj->y = (int16_t)(obj->y + xenon2.level3_data.walker_update_words_5[dir_offset / 2]);
             ni = xenon2.level3_data.walker_update_words_6[dir_offset / 2];
-            obj->walker.dir = (int16_t)ni;
+            obj->walker.dir = (obj->walker.dir & 0xffffu) | (uint32_t)(uint16_t)((int16_t)ni) << 16;
             set_anim(obj, xenon2.level3_data.walker_spawn_anims[ni]);
         }
     }
@@ -1239,19 +1235,19 @@ static void l3_worm_follow(Object *obj, const uint8_t *const *table)
     if (table == xenon2.level3_data.worm_follow_pictures)
         sh_w8(0xd94 + (uint16_t)obj->worm.side, 0xff);
     enemy_update_no_anim(obj);
-    obj->gfx = (void *)table[(((uint16_t)obj->worm.phase + 0x10) >> 5) & 7];
+    obj->gfx = (void *)table[(((uint16_t)(int16_t)obj->worm.phase + 0x10) >> 5) & 7];
     bbox_from_frame(obj);
 }
 
 /* level3 $055420: the worm'shot head: its picture follows its phase and now and then it fires eight shots round it */
 void l3_worm_head(Object *obj)
 {
-    uint16_t old = (uint16_t)obj->worm.phase;
+    uint16_t old = (uint16_t)(int16_t)obj->worm.phase;
     uint16_t frame, old_frame, sum;
 
     obj->y = (int16_t)(obj->y + xenon2.scroll_speed);
     enemy_update(obj);
-    frame = (uint16_t)((((uint16_t)obj->worm.phase + 0x10) >> 3) & 0x1c);
+    frame = (uint16_t)((((uint16_t)(int16_t)obj->worm.phase + 0x10) >> 3) & 0x1c);
     old_frame = (uint16_t)(((old + 0x10) >> 3) & 0x1c);
     if (old_frame != frame)
         set_anim(obj, xenon2.level3_data.worm_head_anims[frame / 4]);

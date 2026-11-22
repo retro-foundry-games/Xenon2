@@ -874,7 +874,7 @@ void obj_script_step(Object *obj)
 move:
     x_fixed = ((uint32_t)o->x_hi << 16) | o->x_lo;
     y_fixed = ((uint32_t)o->y_hi << 16) | o->y_lo;
-    angle_fixed = ((uint32_t)o->angle_hi << 16) | o->angle_lo;
+    angle_fixed = o->angle;
     turn = o->turn;
     turn_delta = o->turn_step;
     for (;;) {
@@ -884,8 +884,7 @@ move:
             o->x_lo = (uint16_t)x_fixed;
             o->y_hi = (uint16_t)(y_fixed >> 16);
             o->y_lo = (uint16_t)y_fixed;
-            o->angle_hi = (uint16_t)(angle_fixed >> 16);
-            o->angle_lo = (uint16_t)angle_fixed;
+            o->angle = angle_fixed;
             o->turn = turn;
             return;
         }
@@ -896,8 +895,7 @@ move:
             o->x_lo = (uint16_t)x_fixed;
             o->y_hi = (uint16_t)(y_fixed >> 16);
             o->y_lo = (uint16_t)y_fixed;
-            o->angle_hi = (uint16_t)(angle_fixed >> 16);
-            o->angle_lo = (uint16_t)angle_fixed;
+            o->angle = angle_fixed;
             o->turn = turn;
             goto next_command;
         }
@@ -952,8 +950,7 @@ next_command:
             }
         }
         case 2:
-            o->angle_hi = 0;
-            o->angle_lo = rd16(cmd + 2);
+            o->angle = rd16(cmd + 2);
             o->turn = (uint32_t)((int32_t)((uint32_t)rd16(cmd + 4) << 16) >> 8);
             o->turn_step = (int16_t)rd16(cmd + 6);
             o->wait = (int16_t)rd16(cmd + 8);

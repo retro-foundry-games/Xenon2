@@ -224,7 +224,7 @@ void level1_launcher_update(Object *launcher)
     step = launcher->launcher.step;
     launcher->y = (int16_t)(launcher->y + step);
     launcher->launcher.pos = (int16_t)(launcher->launcher.pos + step);
-    if (launcher->launcher.pos == 0 || launcher->launcher.pos == launcher->launcher.range)
+    if (launcher->launcher.pos == 0 || launcher->launcher.pos == (int16_t)(launcher->launcher.range >> 16))
         launcher->launcher.step = (int16_t)-launcher->launcher.step;
     bbox_from_frame(launcher);
 }
@@ -298,8 +298,8 @@ void level1_hook(uint16_t id, const uint8_t *rec, uint16_t scroll)
         obj->x = (int16_t)(rd16(rec + 8) - 8 + (flag ? 0x10 : 0));
         obj->y = (int16_t)(rd16(rec + 10) - 8 - xenon2.scroll_pos);
         obj->launcher.step = -1;
-        obj->launcher.range = (int16_t)(rd16(rec + 6) << 4);
-        obj->launcher.pos = obj->launcher.range;
+        obj->launcher.range = (obj->launcher.range & 0xffffu) | (uint32_t)(uint16_t)((int16_t)(rd16(rec + 6) << 4)) << 16;
+        obj->launcher.pos = (int16_t)(obj->launcher.range >> 16);
         obj->kind = 0;
         bbox_from_frame(obj);
         return;
@@ -387,8 +387,7 @@ void level1_boss_update(Object *boss)
             part->hit[0] = 0x3e8;
             part->hit[2] = 0x3e8;
         }
-        boss->l1.angle_hi = 0;
-        boss->l1.angle_lo = 0;
+        boss->l1.angle = 0;
         boss->turn = 0;
         boss->turn_step = 0;
     }
@@ -423,7 +422,7 @@ void level1_boss_update(Object *boss)
     if (wave & 0x40)
         wave = (int16_t)-(wave - 0x7f);
     wave = (int8_t)wave;
-    boss->l1.angle_lo = (int16_t)(wave + 0x20);
+    boss->l1.angle = (boss->l1.angle & 0xffff0000u) | (uint16_t)((int16_t)(wave + 0x20));
     wave = (int16_t)((xenon2.frame_tick + 0x50) & 0xff);
     if (wave & 0x80)
         wave = (~wave) & 0xff;
@@ -663,12 +662,11 @@ void level1_segment_update(Object *seg)
     }
     seg->x = ahead->x;
     seg->y = (int16_t)(ahead->y + xenon2.scroll_speed);
-    seg->l1.angle_hi = ahead->l1.angle_hi;
-    seg->l1.angle_lo = ahead->l1.angle_lo;
+    seg->l1.angle = ahead->l1.angle;
     seg->unit.wait = ahead->unit.wait;
     if (seg->fn_draw == obj_nop_thunk && seg->unit.wait >= 0)
         seg->fn_draw = draw_bob_masked;
-    offset = (uint16_t)(((uint16_t)(seg->l1.angle_lo + 0x10) >> 3) & 0x1c);
+    offset = (uint16_t)(((uint16_t)((int16_t)seg->l1.angle + 0x10) >> 3) & 0x1c);
     tab = &xenon2.level1_data.piece_pictures[seg->type == 0x110 ? 8 : 0];
     seg->gfx = tab[offset / 4];
     bbox_from_frame(seg);
@@ -685,8 +683,7 @@ static void level1_piece_burst(Object *piece, const uint8_t *anim)
     n->x = piece->x;
     n->y = piece->y;
     set_anim(n, anim);
-    n->l1.angle_hi = 0;
-    n->l1.angle_lo = (int16_t)(random_next() & 0xff);
+    n->l1.angle = (uint16_t)((int16_t)(random_next() & 0xff));
     xenon2.player_score += (uint16_t)piece->score;
     kill_object_thunk(piece);
 }
@@ -723,7 +720,7 @@ void level1_debris_update(Object *debris)
     int16_t x, y;
 
     anim_step(debris);
-    angle = (uint16_t)debris->l1.angle_lo;
+    angle = (uint16_t)(int16_t)debris->l1.angle;
     y = (int16_t)(xenon2.piece_directions[angle] >> 2);
     x = (int16_t)(xenon2.piece_directions[(uint16_t)(angle + 0x40)] >> 2);
     x = (int16_t)(x + debris->x);
@@ -787,8 +784,7 @@ void level1_boss_part_update(Object *part)
     part->x_frac = prev->x_frac;
     part->y = prev->y;
     part->y_frac = prev->y_frac;
-    part->l1.angle_hi = prev->l1.angle_hi;
-    part->l1.angle_lo = prev->l1.angle_lo;
+    part->l1.angle = prev->l1.angle;
     part->turn = prev->turn;
     part->turn_step = prev->turn_step;
     part->steps = prev->steps;
@@ -809,7 +805,7 @@ void level1_boss_part_update(Object *part)
     if (part->type == 0x100) {
         uint16_t dir = direction8((int16_t)(PLAYER->x - part->x), (int16_t)(PLAYER->y - part->y));
 
-        part->l1.angle_hi = (int16_t)dir;
+        part->l1.angle = (part->l1.angle & 0xffffu) | (uint32_t)(uint16_t)((int16_t)dir) << 16;
         part->gfx = xenon2.level1_data.boss_part_pictures[dir];
         if (part->steps >= 0xb) {
             uint16_t sum = (uint16_t)(part_move->shot_count + 0xf);
@@ -819,7 +815,7 @@ void level1_boss_part_update(Object *part)
                 Object *shot;
 
                 part_move->shot_count = (uint8_t)(random_next() & 0x3f);
-                shot = spawn_enemy_shot((uint16_t)part->x, (uint16_t)part->y, (uint16_t)part->l1.angle_hi, 4, 0);
+                shot = spawn_enemy_shot((uint16_t)part->x, (uint16_t)part->y, (uint16_t)(int16_t)(part->l1.angle >> 16), 4, 0);
                 set_anim(shot, xenon2.level1_data.anim_shot);
             }
         }

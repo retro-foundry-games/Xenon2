@@ -5,14 +5,13 @@
 #include <stdint.h>
 
 struct KindA_aim {
-    uint8_t pad2[2];
-    int16_t dir;
-    uint8_t pad_end[6];
+    uint8_t pad28[2];
+    uint32_t dir;
+    uint8_t pad_end[4];
 };
 struct KindA_arm {
-    uint8_t pad2[2];
-    int16_t angle_hi;
-    int16_t angle_lo;
+    uint8_t pad28[2];
+    uint32_t angle;
     int16_t swing_step;
     uint8_t pad_end[2];
 };
@@ -21,41 +20,41 @@ struct KindB_arm {
     uint8_t pad_end[2];
 };
 struct KindA_b1_gun {
-    uint8_t pad2[2];
-    int16_t dir;
-    uint8_t pad_end[6];
+    uint8_t pad28[2];
+    uint32_t dir;
+    uint8_t pad_end[4];
 };
 struct KindA_bar {
     int16_t phase;
-    int16_t step;
-    uint8_t pad_end[6];
+    uint32_t step;
+    uint8_t pad_end[4];
 };
 struct KindA_beam {
     union {
         int16_t growth;
         int16_t length;
     };
-    int16_t dy;
-    uint8_t pad_end[6];
+    uint32_t dy;
+    uint8_t pad_end[4];
 };
 struct KindA_bolt {
     int16_t target;
-    int16_t dir;
-    uint8_t pad_end[6];
+    uint32_t dir;
+    uint8_t pad_end[4];
 };
 struct KindA_boss {
     int16_t phase;
-    int16_t step;
-    uint8_t pad_end[6];
+    uint32_t step;
+    uint8_t pad_end[4];
 };
 struct KindA_bridge {
     int16_t cell;
     uint8_t pad_end[8];
 };
 struct KindA_cannon {
-    uint8_t pad2[2];
-    int16_t bob;
-    uint8_t pad_end[6];
+    uint8_t pad28[2];
+    uint32_t bob;
+    uint8_t pad_end[4];
 };
 struct KindA_core {
     int16_t tick;
@@ -67,19 +66,19 @@ struct KindA_debris {
 };
 struct KindA_diver {
     int16_t state;
-    int16_t side;
-    uint8_t pad_end[6];
+    uint32_t side;
+    uint8_t pad_end[4];
 };
 struct KindA_drill {
     int16_t state;
-    int16_t dir;
-    uint8_t pad2c[4];
+    uint32_t dir;
+    uint8_t pad2e[2];
     int16_t target_hi;
 };
 struct KindA_enemy_shot {
-    uint8_t pad2[2];
-    int16_t dir;
-    uint8_t pad_end[6];
+    uint8_t pad28[2];
+    uint32_t dir;
+    uint8_t pad_end[4];
 };
 struct KindA_flyer {
     int16_t dive;
@@ -90,8 +89,8 @@ struct KindA_front {
         int16_t step;
         int16_t tick;
     };
-    int16_t dir;
-    uint8_t pad_end[6];
+    uint32_t dir;
+    uint8_t pad_end[4];
 };
 struct KindA_gate {
     int16_t step;
@@ -103,21 +102,19 @@ struct KindA_gun {
     int16_t side;
 };
 struct KindA_gunner {
-    uint8_t pad4[4];
-    int16_t phase;
+    uint8_t pad28[2];
+    uint32_t phase;
     uint8_t pad_end[4];
 };
 struct KindA_head {
     int16_t bend;
-    uint8_t pad4[2];
-    int16_t angle;
+    uint32_t angle;
     int16_t dart;
     uint8_t pad_end[2];
 };
 struct KindA_l1 {
     int16_t wait;
-    int16_t angle_hi;
-    int16_t angle_lo;
+    uint32_t angle;
     uint8_t pad_end[4];
 };
 struct KindA_l1_boss {
@@ -132,8 +129,7 @@ struct KindA_l1_turret {
 };
 struct KindA_l2_boss {
     int16_t wait;
-    int16_t step;
-    uint8_t pad6[2];
+    uint32_t step;
     int16_t frames;
     int16_t cell;
 };
@@ -154,14 +150,13 @@ struct KindA_l3_gun {
     uint8_t pad_end[8];
 };
 struct KindA_l3_picture {
-    uint8_t pad4[4];
-    int16_t phase;
+    uint8_t pad28[2];
+    uint32_t phase;
     uint8_t pad_end[4];
 };
 struct KindA_l4 {
     int16_t size;
-    int16_t angle_hi;
-    int16_t angle_lo;
+    uint32_t angle;
     int16_t extra;
     uint8_t pad_end[2];
 };
@@ -178,14 +173,14 @@ struct KindA_l5_arm {
     uint8_t pad_end[8];
 };
 struct KindA_l5_turret {
-    uint8_t pad2[2];
-    int16_t dir;
-    uint8_t pad_end[6];
+    uint8_t pad28[2];
+    uint32_t dir;
+    uint8_t pad_end[4];
 };
 struct KindA_launcher {
     int16_t step;
-    int16_t range;
-    uint8_t pad8[4];
+    uint32_t range;
+    uint8_t pad2e[2];
     int16_t pos;
 };
 struct KindA_pod_trail {
@@ -194,8 +189,7 @@ struct KindA_pod_trail {
 };
 struct KindA_link {
     uint8_t pad28[2];
-    int16_t ptr_hi;
-    int16_t ptr_lo;
+    uint32_t ptr;
     uint8_t pad_end[4];
 };
 struct KindA_marker {
@@ -214,16 +208,16 @@ struct KindA_marker_fc {
 };
 struct KindA_missile {
     int16_t tick;
-    int16_t dir;
-    uint8_t pad_end[6];
+    uint32_t dir;
+    uint8_t pad_end[4];
 };
 struct KindA_mover {
     union {
         int16_t cell;
         int16_t tick;
     };
-    int16_t step;
-    uint8_t pad_end[6];
+    uint32_t step;
+    uint8_t pad_end[4];
 };
 struct KindA_option {
     uint8_t pad8[8];
@@ -239,32 +233,30 @@ struct KindB_part {
 };
 struct KindA_path {
     int16_t wait;
-    int16_t angle_hi;
-    int16_t angle_lo;
+    uint32_t angle;
     uint8_t pad_end[4];
 };
 struct KindA_pellet {
     int16_t tick;
-    int16_t dir;
-    uint8_t pad_end[6];
+    uint32_t dir;
+    uint8_t pad_end[4];
 };
 struct KindA_pickup {
     int16_t mode;
-    int16_t dir;
-    uint8_t pad8[4];
+    uint32_t dir;
+    uint8_t pad2e[2];
     int16_t kind;
 };
 struct KindA_piece {
     int16_t wait;
-    int16_t dir_hi;
-    int16_t dir;
+    uint32_t dir;
     int16_t var;
     int16_t wall;
 };
 struct KindA_roamer {
     int16_t state;
-    int16_t dir;
-    uint8_t pad_end[6];
+    uint32_t dir;
+    uint8_t pad_end[4];
 };
 struct KindA_shell {
     int16_t phase;
@@ -272,18 +264,13 @@ struct KindA_shell {
 };
 struct KindA_shot {
     int16_t phase;
-    union {
-        int16_t dx;
-        int16_t speed_hi;
-    };
-    int16_t speed_lo;
+    uint32_t speed;
     int16_t dy;
     int16_t hits;
 };
 struct KindA_snake {
     int16_t swing;
-    int16_t step;
-    uint8_t pad6[2];
+    uint32_t step;
     int16_t x;
     int16_t limit;
 };
@@ -304,8 +291,7 @@ struct KindA_unit {
         int16_t tick;
         int16_t wait;
     };
-    int16_t dir;
-    uint8_t pad6[2];
+    uint32_t dir;
     int16_t counter;
     union {
         int16_t group;
@@ -322,8 +308,7 @@ struct KindA_w2c {
 };
 struct KindA_walker {
     int16_t state;
-    int16_t dir;
-    uint8_t pad6[2];
+    uint32_t dir;
     int16_t dy;
     int16_t side;
 };
@@ -345,9 +330,8 @@ struct KindA_wheel {
 };
 struct KindA_worm {
     int16_t delay;
-    uint8_t pad4[2];
-    int16_t phase;
-    uint8_t pad8[2];
+    uint32_t phase;
+    uint8_t pad2e[2];
     int16_t side;
 };
 #endif
