@@ -628,8 +628,7 @@ void l3_spawn_parts(void)
         part->fn_hit = (void *)entry->hit;
         part->path.wait = 0;
         set_anim(part, entry->anim);
-        part->turn_hi = entry->x;
-        part->turn_lo = entry->y;
+        part->turn = ((uint32_t)(uint16_t)entry->x << 16) | (uint16_t)entry->y;
         SET_V5E(part, 0);
         part->score = 0x3e8;
         part->big = -1;
@@ -683,8 +682,8 @@ void l3_part_follow(Object *obj)
 
     anim_step(obj);
     core = obj->target;
-    obj->x = (int16_t)(core->x + (int16_t)obj->turn_hi);
-    obj->y = (int16_t)(core->y + (int16_t)obj->turn_lo);
+    obj->x = (int16_t)(core->x + (int16_t)(obj->turn >> 16));
+    obj->y = (int16_t)(core->y + (int16_t)obj->turn);
     bbox_from_frame(obj);
 }
 
@@ -780,13 +779,13 @@ void l3_part_arm(Object *obj)
         piece->arm.angle_hi = 0;
         piece->arm.angle_lo = (int16_t)aim;
         r = (((random_next() & 0x1f) + 0x20) << 8) << 2;
-        piece->turn_fixed = r;
+        piece->turn = r;
         piece->turn_step = 0;
         piece->steps = 1;
         if (obj->part.slot == 0x60) {
             piece->arm.angle_lo = (int16_t)((piece->arm.angle_lo & 0xff00) | (uint8_t)(piece->arm.angle_lo + 0x40));
             r = -r;
-            piece->turn_fixed = r;
+            piece->turn = r;
         }
     }
     bbox_from_frame(obj);
@@ -808,26 +807,24 @@ static void l3_arm_follow(Object *obj)
 /* level3 $055D12: a piece of an arm: it moves after the next piece by its own path (angle v2a:v2c, speed pad4e), and hands that state to the piece before it */
 void l3_part_arm_piece(Object *obj)
 {
-    int16_t saved_angle_hi, saved_angle_lo, saved_turn_hi, saved_turn_lo, saved_turn_step;
+    int16_t saved_angle_hi, saved_angle_lo, saved_turn_step;
+    uint32_t saved_turn;
     Object *tip;
 
     l3_arm_follow(obj);
     saved_angle_hi = obj->arm.angle_hi;
     saved_angle_lo = obj->arm.angle_lo;
-    saved_turn_hi = (int16_t)obj->turn_hi;
-    saved_turn_lo = (int16_t)obj->turn_lo;
+    saved_turn = obj->turn;
     saved_turn_step = (int16_t)obj->turn_step;
     obj_script_run(obj);
     tip = obj->prev;
     tip->arm.angle_hi = obj->arm.angle_hi;
     tip->arm.angle_lo = obj->arm.angle_lo;
-    tip->turn_hi = obj->turn_hi;
-    tip->turn_lo = obj->turn_lo;
+    tip->turn = obj->turn;
     tip->turn_step = obj->turn_step;
     tip->steps = obj->steps;
     obj->turn_step = (uint16_t)saved_turn_step;
-    obj->turn_lo = (uint16_t)saved_turn_lo;
-    obj->turn_hi = (uint16_t)saved_turn_hi;
+    obj->turn = saved_turn;
     obj->arm.angle_lo = saved_angle_lo;
     obj->arm.angle_hi = saved_angle_hi;
 }

@@ -243,8 +243,7 @@ void l5_spawn_gunners(const uint8_t *record)
         obj->big = 0;
         obj->path.angle_hi = 0;
         obj->path.angle_lo = 0;
-        obj->turn_hi = 0;
-        obj->turn_lo = 0;
+        obj->turn = 0;
         obj->turn_step = 0;
         obj->script = (uint8_t *)path;
         obj->cursor = path + 6;

@@ -21,19 +21,8 @@ struct ObjMove {
     uint16_t id;                /* 44 */
     const uint8_t *script;      /* 46: the script's start */
     const uint8_t *cursor;      /* 4a: the next command */
-    union {
-        uint32_t turn_fixed;          /* 4e: angle change per step, 8.24 */
-        struct {
-#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
-            uint16_t turn_lo;
-            uint16_t turn_hi;
-#else
-            uint16_t turn_hi;
-            uint16_t turn_lo;
-#endif
-        };
-    };
-    int16_t turn_step;          /* 52 */
+    uint32_t turn;              /* 4e: added to the angle with its words swapped: the high word steps the integer (low byte counts), the low word the fraction */
+    int16_t turn_step;          /* 52: added to the low word of turn each step */
     uint16_t steps;             /* 54: steps per call */
     ObjMove *target;            /* 56 */
     ObjMove *chain;             /* 5a */

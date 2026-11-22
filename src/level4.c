@@ -372,7 +372,7 @@ void l4_shot_a(Object *obj)
     drop->fn_hit = (void *)hit_enemy;
     drop->l4.angle_hi = 0;
     drop->l4.angle_lo = angle;
-    drop->turn_fixed = 0;
+    drop->turn = 0;
     drop->turn_step = 0;
     drop->x = (int16_t)(obj->x + dx);
     drop->y = obj->y;
@@ -481,7 +481,7 @@ void l4_spawn_boss1(void)
         obj->l4.size = 0;
         obj->l4.angle_hi = 0;
         obj->l4.angle_lo = 0;
-        obj->turn_fixed = 0;
+        obj->turn = 0;
         obj->turn_step = 0;
         obj->steps = 3;
         obj->energy = (int16_t)piece->energy;
@@ -676,7 +676,7 @@ static void l4_pose(Object *obj)
     if (phase & 0x80)
         phase = (uint16_t)((phase & 0xff00) | (~phase & 0xff));
     offset = (int16_t)(phase - 0x40);
-    obj->turn_fixed = (uint32_t)offset << 8;
+    obj->turn = (uint32_t)offset << 8;
     phase = (uint16_t)((xenon2.frame_tick + 0xa0) & 0x1ff);
     if (phase & 0x100)
         phase ^= 0x1ff;
@@ -763,7 +763,7 @@ void l4_spawn_boss2(const uint8_t *record, uint16_t slots)
         obj->l4.size = 0;
         obj->l4.angle_hi = 0;
         obj->l4.angle_lo = (int16_t)piece->angle;
-        obj->turn_fixed = 0;
+        obj->turn = 0;
         obj->turn_step = 0;
         obj->steps = 3;
         obj->energy = piece->energy;
@@ -786,8 +786,7 @@ static void follow_chain(Object *obj)
     obj->y_frac = lead->y_frac;
     obj->l4.angle_hi = lead->l4.angle_hi;
     obj->l4.angle_lo = lead->l4.angle_lo;
-    obj->turn_hi = lead->turn_hi;
-    obj->turn_lo = lead->turn_lo;
+    obj->turn = lead->turn;
     obj->turn_step = lead->turn_step;
     obj->steps = lead->steps;
     obj->l4.size = 0x64;
@@ -819,7 +818,7 @@ void l4_b2_head(Object *obj)
         angle = (uint16_t)((angle & 0xff00) | ((angle - 0x40) & 0xff));
         obj->l4.angle_hi = 0;
         obj->head.angle = (int16_t)angle;
-        obj->turn_fixed = 0;
+        obj->turn = 0;
         obj->turn_step = 0;
         if ((uint8_t)random_next() >= xenon2.level4_data.b2_head_chance) {
             head_picture(obj);
@@ -838,12 +837,12 @@ void l4_b2_head(Object *obj)
         {
             uint32_t turn = ((random_next() & 0x1f) + 0x20) << 10;
 
-            obj->turn_fixed = turn;
+            obj->turn = turn;
             obj->turn_step = 0;
         }
         if (obj->head.angle < 0x20 || !(obj->head.angle < 0xa0)) {
             obj->head.angle = (int16_t)((obj->head.angle & 0xff00) | ((obj->head.angle + 0x40) & 0xff));
-            obj->turn_fixed = (uint32_t)(0 - obj->turn_fixed);
+            obj->turn = (uint32_t)(0 - obj->turn);
         }
     }
     obj->head.bend = (int16_t)(obj->head.bend + obj->head.dart);
