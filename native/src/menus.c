@@ -875,7 +875,7 @@ move:
     x_fixed = ((uint32_t)o->x_hi << 16) | o->x_lo;
     y_fixed = ((uint32_t)o->y_hi << 16) | o->y_lo;
     angle_fixed = ((uint32_t)o->angle_hi << 16) | o->angle_lo;
-    turn = o->turn_fixed;
+    turn = o->turn;
     turn_delta = o->turn_step;
     for (;;) {
         steps--;
@@ -886,7 +886,7 @@ move:
             o->y_lo = (uint16_t)y_fixed;
             o->angle_hi = (uint16_t)(angle_fixed >> 16);
             o->angle_lo = (uint16_t)angle_fixed;
-            o->turn_fixed = turn;
+            o->turn = turn;
             return;
         }
         o->wait--;
@@ -898,7 +898,7 @@ move:
             o->y_lo = (uint16_t)y_fixed;
             o->angle_hi = (uint16_t)(angle_fixed >> 16);
             o->angle_lo = (uint16_t)angle_fixed;
-            o->turn_fixed = turn;
+            o->turn = turn;
             goto next_command;
         }
         y_fixed += (uint32_t)((int32_t)((uint32_t)(int16_t)sine[(int16_t)angle_fixed] << 16) >> 6);
@@ -954,7 +954,7 @@ next_command:
         case 2:
             o->angle_hi = 0;
             o->angle_lo = rd16(cmd + 2);
-            o->turn_fixed = (uint32_t)((int32_t)((uint32_t)rd16(cmd + 4) << 16) >> 8);
+            o->turn = (uint32_t)((int32_t)((uint32_t)rd16(cmd + 4) << 16) >> 8);
             o->turn_step = (int16_t)rd16(cmd + 6);
             o->wait = (int16_t)rd16(cmd + 8);
             o->cursor = cmd + 10;

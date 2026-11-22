@@ -389,8 +389,7 @@ void level1_boss_update(Object *boss)
         }
         boss->l1.angle_hi = 0;
         boss->l1.angle_lo = 0;
-        boss->turn_hi = 0;
-        boss->turn_lo = 0;
+        boss->turn = 0;
         boss->turn_step = 0;
     }
     if ((int16_t)xenon2.scroll_max <= 0x1c0)
@@ -429,7 +428,7 @@ void level1_boss_update(Object *boss)
     if (wave & 0x80)
         wave = (~wave) & 0xff;
     turn = (int32_t)(int16_t)(wave - 0x40) << 10;
-    boss->turn_fixed = (uint32_t)turn;
+    boss->turn = (uint32_t)turn;
     wave = (int16_t)((xenon2.frame_tick + 0xa0) & 0x1ff);
     if (wave & 0x100)
         wave ^= 0x1ff;
@@ -790,8 +789,7 @@ void level1_boss_part_update(Object *part)
     part->y_frac = prev->y_frac;
     part->l1.angle_hi = prev->l1.angle_hi;
     part->l1.angle_lo = prev->l1.angle_lo;
-    part->turn_hi = prev->turn_hi;
-    part->turn_lo = prev->turn_lo;
+    part->turn = prev->turn;
     part->turn_step = prev->turn_step;
     part->steps = prev->steps;
     if (prev->type == 0x50) {
