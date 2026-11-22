@@ -370,8 +370,7 @@ void l4_shot_a(Object *obj)
     drop->fn_update = FN(l4_enemy_f8);
     drop->fn_draw = draw_bob_masked;
     drop->fn_hit = (void *)hit_enemy;
-    drop->l4.angle_hi = 0;
-    drop->l4.angle_lo = angle;
+    drop->l4.angle = (uint16_t)(angle);
     drop->turn = 0;
     drop->turn_step = 0;
     drop->x = (int16_t)(obj->x + dx);
@@ -403,7 +402,7 @@ void l4_shot_a(Object *obj)
 /* level4 $055724: the flying enemy: it follows its script and shows the picture of its direction */
 void l4_enemy_f8(Object *obj)
 {
-    uint16_t old_angle = (uint16_t)obj->l4.angle_lo, index, old_index;
+    uint16_t old_angle = (uint16_t)(int16_t)obj->l4.angle, index, old_index;
 
     enemy_update(obj);
     if (obj->type != 0xf8) {
@@ -421,7 +420,7 @@ void l4_enemy_f8(Object *obj)
         obj->cursor = table;
         obj->path.wait = 0;
     }
-    index = (uint16_t)((((uint16_t)obj->l4.angle_lo + 0x10) >> 3) & 0x1c);
+    index = (uint16_t)((((uint16_t)(int16_t)obj->l4.angle + 0x10) >> 3) & 0x1c);
     old_index = (uint16_t)(((old_angle + 0x10) >> 3) & 0x1c);
     if (index == old_index)
         return;
@@ -479,8 +478,7 @@ void l4_spawn_boss1(void)
         obj->persists = -1;
         obj->y = (int16_t)(piece->y - xenon2.scroll_pos);
         obj->l4.size = 0;
-        obj->l4.angle_hi = 0;
-        obj->l4.angle_lo = 0;
+        obj->l4.angle = 0;
         obj->turn = 0;
         obj->turn_step = 0;
         obj->steps = 3;
@@ -568,7 +566,7 @@ void l4_b1_gun_hit(Object *shot, Object *enemy, uint16_t damage)
         return;
     sh_w16(0xd6e, (uint16_t)(W(0xd6e) - 1));
     spawn_effect((int16_t)(enemy->x + 0x10), (int16_t)(enemy->y - xenon2.scroll_pos + 0x20), xenon2.big_explosion_anim, draw_bob_masked);
-    enemy->b1_gun.dir = -1;
+    enemy->b1_gun.dir = (enemy->b1_gun.dir & 0xffffu) | (uint32_t)(uint16_t)(-1) << 16;
     enemy->fn_update = FN(l4_gun_dead);
     enemy->fn_hit = (void *)obj_nop_thunk;
 }
@@ -589,17 +587,17 @@ void l4_b1_gun(Object *obj)
     obj->y = (int16_t)(obj->y + W(0xd70));
     gun_box(obj);
     aim = aim_at_player(obj, 0x10, 0x10);
-    obj->b1_gun.dir = (int16_t)table[aim];
+    obj->b1_gun.dir = (obj->b1_gun.dir & 0xffffu) | (uint32_t)(uint16_t)((int16_t)table[aim]) << 16;
     if (add_carry(&obj->v5e_b[0], xenon2.level4_data.b1_gun_fire_rate)) {
         Object *s;
-        uint16_t angle = (uint16_t)obj->b1_gun.dir;
+        uint16_t angle = (uint16_t)(int16_t)(obj->b1_gun.dir >> 16);
         const uint8_t *anim = xenon2.level4_data.b1_gun_anims_by_angle[angle];
 
         obj->v5e_b[0] = (uint8_t)(random_next() & 0x3f);
         s = spawn_enemy_shot((uint16_t)(obj->x + 0x10), (uint16_t)(obj->y + 0x10), angle, xenon2.level4_data.b1_gun_shot_steps, anim);
         set_anim(s, anim);
-        s->x = (int16_t)(s->x + (int16_t)xenon2.level4_data.b1_gun_dx_by_dir[(uint16_t)s->b1_gun.dir]);
-        s->y = (int16_t)(s->y + (int16_t)xenon2.level4_data.b1_gun_dy_by_dir[(uint16_t)s->b1_gun.dir]);
+        s->x = (int16_t)(s->x + (int16_t)xenon2.level4_data.b1_gun_dx_by_dir[(uint16_t)(int16_t)(s->b1_gun.dir >> 16)]);
+        s->y = (int16_t)(s->y + (int16_t)xenon2.level4_data.b1_gun_dy_by_dir[(uint16_t)(int16_t)(s->b1_gun.dir >> 16)]);
     }
 }
 
@@ -607,7 +605,7 @@ void l4_b1_gun(Object *obj)
 static void gun_cells(Object *obj, int flash)
 {
     const uint8_t *const *grid = obj->x < 0xa0 ? xenon2.level4_data.gun_cells_left : xenon2.level4_data.gun_cells_right;
-    const uint8_t *cells = grid[(int16_t)obj->b1_gun.dir];
+    const uint8_t *cells = grid[(int16_t)(int16_t)(obj->b1_gun.dir >> 16)];
 
     if (flash)
         draw_tile_grid_flash(cells, 1, 1, obj->y, (uint16_t)((uint16_t)obj->x >> 1));
@@ -671,7 +669,7 @@ static void l4_pose(Object *obj)
 
     if (phase & 0x40)
         phase = (uint16_t)(0x7f - phase);
-    obj->l4.angle_lo = (int16_t)(phase + 0xa0);
+    obj->l4.angle = (obj->l4.angle & 0xffff0000u) | (uint16_t)((int16_t)(phase + 0xa0));
     phase = (uint16_t)((xenon2.frame_tick * 2 + 0x50) & 0xff);
     if (phase & 0x80)
         phase = (uint16_t)((phase & 0xff00) | (~phase & 0xff));
@@ -693,7 +691,7 @@ void l4_b1_head(Object *obj)
     obj->anim_delay = 0;
     obj->y = (int16_t)(obj->y + W(0xd70));
     l4_pose(obj);
-    obj->l4.angle_lo = (int16_t)(obj->l4.angle_lo ^ 0x80);
+    obj->l4.angle = (obj->l4.angle & 0xffff0000u) | (uint16_t)((int16_t)((int16_t)obj->l4.angle ^ 0x80));
     size = obj->target->l4.size;
     if (size > 8) {
         size = (int16_t)(0x80 - size);
@@ -761,8 +759,7 @@ void l4_spawn_boss2(const uint8_t *record, uint16_t slots)
         obj->x = (int16_t)piece->x;
         obj->y = (int16_t)(piece->y - xenon2.scroll_pos);
         obj->l4.size = 0;
-        obj->l4.angle_hi = 0;
-        obj->l4.angle_lo = (int16_t)piece->angle;
+        obj->l4.angle = (uint16_t)((int16_t)piece->angle);
         obj->turn = 0;
         obj->turn_step = 0;
         obj->steps = 3;
@@ -784,8 +781,7 @@ static void follow_chain(Object *obj)
     obj->x_frac = lead->x_frac;
     obj->y = lead->y;
     obj->y_frac = lead->y_frac;
-    obj->l4.angle_hi = lead->l4.angle_hi;
-    obj->l4.angle_lo = lead->l4.angle_lo;
+    obj->l4.angle = lead->l4.angle;
     obj->turn = lead->turn;
     obj->turn_step = lead->turn_step;
     obj->steps = lead->steps;
@@ -796,7 +792,7 @@ static void follow_chain(Object *obj)
 /* the head's picture by its angle (four), and its box */
 static void head_picture(Object *obj)
 {
-    obj->gfx = (void *)xenon2.level4_data.head_pictures[(((uint16_t)obj->head.angle + 0x10) >> 5) & 3];
+    obj->gfx = (void *)xenon2.level4_data.head_pictures[(((uint16_t)(int16_t)obj->head.angle + 0x10) >> 5) & 3];
     bbox_from_frame(obj);
 }
 
@@ -816,8 +812,8 @@ void l4_b2_head(Object *obj)
             angle = 6;
         angle = (uint16_t)(angle << 5);
         angle = (uint16_t)((angle & 0xff00) | ((angle - 0x40) & 0xff));
-        obj->l4.angle_hi = 0;
-        obj->head.angle = (int16_t)angle;
+        obj->l4.angle = (obj->l4.angle & 0xffffu) | (uint32_t)(uint16_t)(0) << 16;
+        obj->head.angle = (obj->head.angle & 0xffff0000u) | (uint16_t)((int16_t)angle);
         obj->turn = 0;
         obj->turn_step = 0;
         if ((uint8_t)random_next() >= xenon2.level4_data.b2_head_chance) {
@@ -832,16 +828,16 @@ void l4_b2_head(Object *obj)
             angle = 6;
         angle = (uint16_t)(angle << 5);
         angle = (uint16_t)((angle & 0xff00) | ((angle - 0x60) & 0xff));
-        obj->l4.angle_hi = 0;
-        obj->head.angle = (int16_t)angle;
+        obj->l4.angle = (obj->l4.angle & 0xffffu) | (uint32_t)(uint16_t)(0) << 16;
+        obj->head.angle = (obj->head.angle & 0xffff0000u) | (uint16_t)((int16_t)angle);
         {
             uint32_t turn = ((random_next() & 0x1f) + 0x20) << 10;
 
             obj->turn = turn;
             obj->turn_step = 0;
         }
-        if (obj->head.angle < 0x20 || !(obj->head.angle < 0xa0)) {
-            obj->head.angle = (int16_t)((obj->head.angle & 0xff00) | ((obj->head.angle + 0x40) & 0xff));
+        if ((int16_t)obj->head.angle < 0x20 || !((int16_t)obj->head.angle < 0xa0)) {
+            obj->head.angle = (obj->head.angle & 0xffff0000u) | (uint16_t)((int16_t)(((int16_t)obj->head.angle & 0xff00) | (((int16_t)obj->head.angle + 0x40) & 0xff)));
             obj->turn = (uint32_t)(0 - obj->turn);
         }
     }
@@ -874,7 +870,7 @@ void l4_b2_gun(Object *obj)
         dir = 2;
     if (dir > 6)
         dir = 6;
-    obj->aim.dir = (int16_t)dir;
+    obj->aim.dir = (obj->aim.dir & 0xffffu) | (uint32_t)(uint16_t)((int16_t)dir) << 16;
     obj->gfx = (void *)xenon2.level4_data.b2_gun_pictures[dir];
     bbox_from_frame(obj);
 }
@@ -888,12 +884,12 @@ void l4_b2_barrel(Object *obj)
     gun = obj->next;
     obj->x = gun->x;
     obj->y = gun->y;
-    if (gun->aim.dir != obj->aim.dir) {
-        obj->aim.dir = gun->aim.dir;
-        set_anim(obj, xenon2.level4_data.b2_barrel_anims_by_dir[(uint16_t)obj->aim.dir]);
+    if ((int16_t)(gun->aim.dir >> 16) != (int16_t)(obj->aim.dir >> 16)) {
+        obj->aim.dir = (obj->aim.dir & 0xffffu) | (uint32_t)(uint16_t)((int16_t)(gun->aim.dir >> 16)) << 16;
+        set_anim(obj, xenon2.level4_data.b2_barrel_anims_by_dir[(uint16_t)(int16_t)(obj->aim.dir >> 16)]);
     }
     if (add_carry(&obj->v5e_b[0], xenon2.level4_data.b2_barrel_fire_rate)) {
-        uint16_t dir = (uint16_t)obj->aim.dir;
+        uint16_t dir = (uint16_t)(int16_t)(obj->aim.dir >> 16);
         Object *s;
 
         obj->v5e_b[0] = (uint8_t)(random_next() & 0x3f);
@@ -947,13 +943,13 @@ void l4_b2_eye(Object *obj)
     obj->y = (int16_t)(obj->y + xenon2.scroll_speed);
     anim_step(obj);
     dir = aim_at_player(obj, 0, 0);
-    if (dir != (uint16_t)obj->aim.dir) {
-        obj->aim.dir = (int16_t)dir;
+    if (dir != (uint16_t)(int16_t)(obj->aim.dir >> 16)) {
+        obj->aim.dir = (obj->aim.dir & 0xffffu) | (uint32_t)(uint16_t)((int16_t)dir) << 16;
         set_anim(obj, xenon2.level4_data.b2_eye_anims[dir]);
     }
     if (add_carry(&obj->v5e_b[0], xenon2.level4_data.b2_eye_fire_rate)) {
         obj->v5e_b[0] = (uint8_t)(random_next() & 0x3f);
-        spawn_enemy_shot((uint16_t)obj->x, (uint16_t)obj->y, (uint16_t)obj->aim.dir, xenon2.level4_data.b2_eye_shot_steps, (void *)xenon2.level4_data.b2_eye_shot_picture);
+        spawn_enemy_shot((uint16_t)obj->x, (uint16_t)obj->y, (uint16_t)(int16_t)(obj->aim.dir >> 16), xenon2.level4_data.b2_eye_shot_steps, (void *)xenon2.level4_data.b2_eye_shot_picture);
     }
     bbox_from_frame(obj);
     obj->hit[1] = (int16_t)(obj->hit[1] - 8);
@@ -1064,14 +1060,14 @@ void l4_bar_update(Object *obj)
     }
     anim_step(obj);
     if (obj->bar.phase == 0) {
-        obj->bar.step = 1;
+        obj->bar.step = (obj->bar.step & 0xffffu) | (uint32_t)(uint16_t)(1) << 16;
         if (!add_carry(&obj->v5e_b[0], xenon2.level4_data.bar_fire_rate))
             goto box;
         obj->v5e_b[0] = (uint8_t)(random_next() & 0x3f);
     }
-    obj->bar.phase = (int16_t)(obj->bar.phase + obj->bar.step);
+    obj->bar.phase = (int16_t)(obj->bar.phase + (int16_t)(obj->bar.step >> 16));
     if (obj->bar.phase == 6)
-        obj->bar.step = (int16_t)-obj->bar.step;
+        obj->bar.step = (obj->bar.step & 0xffffu) | (uint32_t)(uint16_t)((int16_t)-(int16_t)(obj->bar.step >> 16)) << 16;
 box:
     if (obj->type == 0x10c) {
         left = obj->x;
@@ -1221,7 +1217,7 @@ void l4_walker_hit(Object *shot, Object *enemy, uint16_t damage)
     anim_header_set(p, xenon2.anim_bonus_big);
     p->x = enemy->x;
     p->y = (int16_t)(enemy->y - xenon2.scroll_pos);
-    p->pickup.dir = (int16_t)random_next();
+    p->pickup.dir = (p->pickup.dir & 0xffffu) | (uint32_t)(uint16_t)((int16_t)random_next()) << 16;
     walker_reset(enemy);
 }
 

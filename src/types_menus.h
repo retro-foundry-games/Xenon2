@@ -14,7 +14,7 @@ struct ObjMove {
     uint16_t x_hi, x_lo;        /* 20: 16.16 as a long: the high word (the x of Object) then the fraction */
     uint16_t y_hi, y_lo;        /* 24 */
     int16_t wait;               /* 28: steps left of the running command (negative: a wait) */
-    uint16_t angle_hi, angle_lo; /* 2a: the angle is the low word (at 2c), the high word a fraction */
+    uint32_t angle;             /* 2a: the angle is the low word (at 2c), the high word a fraction */
     uint8_t pad2e[6];           /* 2e */
     uint8_t is_part;             /* 34 */
     uint8_t pad35[15];          /* 35 */
