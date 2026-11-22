@@ -18,9 +18,9 @@ struct Object {
     int16_t anim_delay;         /* 1a */
     const uint8_t *anim;        /* 1c: the animation script (raw bytes) */
     int16_t x;                  /* 20 */
-    uint16_t x_frac;            /* 22 */
+    uint16_t x_frac;            /* 22: not cleared when the slot is reused; only some kinds set it */
     int16_t y;                  /* 24 */
-    uint16_t y_frac;            /* 26 */
+    uint16_t y_frac;            /* 26: as x_frac */
     union {
         int16_t raw_a[5];   /* the layout the loader byte-swaps; the kinds below name the words */
         struct KindA_aim aim;
