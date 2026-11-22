@@ -121,18 +121,18 @@ static int dies(Object *obj, uint16_t damage)
     return old <= damage;
 }
 
-void l5_spawn_gunners(const uint8_t *record);
-void l5_spawn_cannon(const uint8_t *record);
+void l5_spawn_gunners(const struct SpawnRec *record);
+void l5_spawn_cannon(const struct SpawnRec *record);
 void l5_spawn_boss1(uint16_t slot_value);
-void l5_spawn_boss2(const uint8_t *record);
-void l5_spawn_gates(const uint8_t *record);
-void l5_spawn_gun(const uint8_t *record);
-void l5_spawn_bridge(const uint8_t *record);
-void l5_spawn_group(const uint8_t *record);
-Object *l5_spawn_unit(const uint8_t *record);
+void l5_spawn_boss2(const struct SpawnRec *record);
+void l5_spawn_gates(const struct SpawnRec *record);
+void l5_spawn_gun(const struct SpawnRec *record);
+void l5_spawn_bridge(const struct SpawnRec *record);
+void l5_spawn_group(const struct SpawnRec *record);
+Object *l5_spawn_unit(const struct SpawnRec *record);
 
 /* level5 $054E10, $057568: level events by event: 0 the wave of $326C, 1 to 8 formations */
-void l5_event(uint16_t event, const uint8_t *record)
+void l5_event(uint16_t event, const struct SpawnRec *record)
 {
     if (event == 0)
         spawn_wave_326c(0, record);   /* $E5A */
@@ -141,7 +141,7 @@ void l5_event(uint16_t event, const uint8_t *record)
 }
 
 /* level5 $054E18, $0551AA: the hooks by hook */
-void l5_hook(uint16_t hook, const uint8_t *record, uint16_t slot_value)
+void l5_hook(uint16_t hook, const struct SpawnRec *record, uint16_t slot_value)
 {
     switch (hook) {
     case 0:
@@ -180,8 +180,8 @@ void l5_hook(uint16_t hook, const uint8_t *record, uint16_t slot_value)
 /* level5 $054E2C, $054E80: the two limits are kept for the swap */
 void l5_swap_hook(void)
 {
-    wr16(xenon2.level5_data.swap_limit_a.b, xenon2.l5_limit_a);
-    wr16(xenon2.level5_data.swap_limit_b.b, xenon2.l5_limit_b);
+    xenon2.level5_data.events_b[0].scroll = (int16_t)xenon2.l5_limit_a;
+    xenon2.level5_data.events_a[0].scroll = (int16_t)xenon2.l5_limit_b;
 }
 
 /* level5 $054E20, $0575EA: the data is copied once (backwards: the copy lies above its source) */
@@ -211,9 +211,9 @@ void l5_init(void)
 /* ---- the gunners ($551E8): ten of them from a formation table ---- */
 
 /* level5 $0551E8: a formation of ten that fly the path of the table by the record's type */
-void l5_spawn_gunners(const uint8_t *record)
+void l5_spawn_gunners(const struct SpawnRec *record)
 {
-    const uint8_t *path = xenon2.level5_data.gunner_paths[rd16(record + 6)];
+    const uint8_t *path = xenon2.level5_data.gunner_paths[record->index];
     int16_t wait = 0;
     int count;
 
@@ -275,9 +275,9 @@ void l5_gunner_update(Object *obj)
 /* ---- the cannons ($55498) ---- */
 
 /* level5 $055498: a cannon at the side that goes up and down; the record's $C tells the side */
-void l5_spawn_cannon(const uint8_t *record)
+void l5_spawn_cannon(const struct SpawnRec *record)
 {
-    uint16_t type = rd16(record + 0xc) ? 0x104 : 0x100;
+    uint16_t type = record->steps ? 0x104 : 0x100;
     Object *obj = spawn_marker_enemy(type, record, (void (*)(void))(obj_fn)l5_cannon_update);
     const uint8_t *anim = xenon2.level5_data.cannon_anim_a;
 
@@ -420,8 +420,8 @@ void l5_spawn_boss1(uint16_t slot_value)
     xenon2.player_x_saved = 0xa0;
     xenon2.player_y_saved = 0xb0;
     latch_slots(slot_value);
-    wr16(xenon2.level5_data.swap_limit_a.b, 0xffff);
-    wr16(xenon2.level5_data.swap_limit_b.b, 0xffff);
+    xenon2.level5_data.events_b[0].scroll = (int16_t)0xffff;
+    xenon2.level5_data.events_a[0].scroll = (int16_t)0xffff;
     xenon2.l5_limit_a = 0xffff;
     xenon2.l5_limit_b = 0xffff;
     p = xenon2.level_init_src;
@@ -706,7 +706,7 @@ void l5_heart_hit(Object *shot, Object *heart, uint16_t damage)
 /* ---- the second boss of ten pieces ($5642A) ---- */
 
 /* level5 $05642A: the second boss */
-void l5_spawn_boss2(const uint8_t *record)
+void l5_spawn_boss2(const struct SpawnRec *record)
 {
     const struct Level5Boss2Piece *rec = xenon2.level5_data.boss2_pieces;
     Object *root = 0;
@@ -716,7 +716,7 @@ void l5_spawn_boss2(const uint8_t *record)
     if (xenon2.l5_gunners_spawned)
         return;
     xenon2.l5_gunners_spawned = 0xff;
-    y = (int16_t)(rd16(record + 0xa) - 8 - xenon2.scroll_pos);
+    y = (int16_t)(record->y - 8 - xenon2.scroll_pos);
     for (count = 9; count >= 0; count--, rec++) {
         Object *obj = insert_head(LIST_C);
 
@@ -1008,9 +1008,9 @@ void l5_beam_draw(Object *obj)
 /* ---- the gates and the guns of tiles ---- */
 
 /* level5 $056B50: three tiles that open and close (the record's position is the cell) */
-void l5_spawn_gates(const uint8_t *record)
+void l5_spawn_gates(const struct SpawnRec *record)
 {
-    int16_t x = (int16_t)(rd16(record + 8) - 8), y = (int16_t)(rd16(record + 0xa) - 8);
+    int16_t x = (int16_t)(record->x - 8), y = (int16_t)(record->y - 8);
     Cell *cells = (Cell *)(xenon2.level_init_src + (uint16_t)(((uint16_t)x >> 3) & 0xfe) + (int16_t)(uint16_t)((uint32_t)((uint16_t)y >> 4) * 0x28));
     const struct Level5Gate *rec = xenon2.level5_data.gates;
     int count;
@@ -1131,7 +1131,7 @@ void l5_wall_flash_b(Object *obj)
 /* ---- the bridge pieces ($56E40) ---- */
 
 /* level5 $056E40: a piece of the bridge */
-void l5_spawn_bridge(const uint8_t *record)
+void l5_spawn_bridge(const struct SpawnRec *record)
 {
     Object *obj = spawn_marker_enemy(0xf8, record, (void (*)(void))(obj_fn)l5_bridge_update);
     Cell *c;
@@ -1224,22 +1224,22 @@ void l5_bridge_flash(Object *obj)
 /* ---- the units of eight directions ($570AA) ---- */
 
 /* level5 $057090: the unit of the record's group, once (a flag by the group) */
-void l5_spawn_group(const uint8_t *record)
+void l5_spawn_group(const struct SpawnRec *record)
 {
-    uint16_t group = rd16(record + 6);
+    uint16_t group = record->index;
 
     if (xenon2.l5_group_done[group] == 0)
         (l5_spawn_unit(record))->unit.group = (int16_t)group;
 }
 
 /* level5 $0570AA: a unit of eight directions made of cells */
-Object *l5_spawn_unit(const uint8_t *record)
+Object *l5_spawn_unit(const struct SpawnRec *record)
 {
     Object *obj = spawn_marker_enemy(0xf4, record, (void (*)(void))(obj_fn)l5_unit_update);
     Cell *c;
     const Cell *cells;
 
-    obj->unit.dir = (obj->unit.dir & 0xffffu) | (uint32_t)(uint16_t)((int16_t)rd16(record + 0xc)) << 16;
+    obj->unit.dir = (obj->unit.dir & 0xffffu) | (uint32_t)(uint16_t)((int16_t)record->steps) << 16;
     obj->fn_hit = (obj_fn)l5_unit_hit;
     obj->energy = (int16_t)xenon2.level5_data.group_energy;
     obj->hit[0] = 0x3e8;
@@ -1354,9 +1354,9 @@ void l5_unit_flash(Object *obj)
 /* ---- the guns of cells ($573AC) ---- */
 
 /* level5 $0573AC: a gun in the wall that fires out */
-void l5_spawn_gun(const uint8_t *record)
+void l5_spawn_gun(const struct SpawnRec *record)
 {
-    int right = rd16(record + 0xc) != 0;
+    int right = record->steps != 0;
     Object *obj = spawn_marker_enemy(right ? 0x10c : 0x108, record, (void (*)(void))(obj_fn)l5_gun_update);
     const Cell *cells = right ? xenon2.level5_data.gun_cells_a : xenon2.level5_data.gun_cells_b;
     const uint8_t *anim = right ? xenon2.level5_data.gun_anim_a : xenon2.level5_data.gun_anim_b;

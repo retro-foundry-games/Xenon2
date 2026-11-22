@@ -102,3 +102,7 @@ end
 5ccf6 launcher_shot_picture u8 32
 6c89c shot_gfx_table ptr 5
 6c8b0 shot_gfx_cells u8 12
+6d7e6 events_a SpawnRec 87
+6dca8 events_a_end s16
+5e108 events_b SpawnRec 47
+5e39a events_b_end s16

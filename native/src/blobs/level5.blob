@@ -109,6 +109,8 @@ end
 5f340 beam_end_picture u8 32
 72ec8 shot_gfx_table ptr 4
 72ed8 shot_gfx_cells u8 8
-62d22 swap_limit_a cell
-7491c swap_limit_b cell
 6158c turret_fire_picture u8 1
+7491c events_a SpawnRec 149
+75142 events_a_end s16
+62d22 events_b SpawnRec 55
+63024 events_b_end s16

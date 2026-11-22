@@ -13,7 +13,7 @@ Object *level_collision(int16_t x0, int16_t y0, int16_t x1, int16_t y1, Object *
     return 0;   /* (level 3: $56FEA, no block) */
 }
 
-void level_event(uint16_t event, const uint8_t *record)
+void level_event(uint16_t event, const struct SpawnRec *record)
 {
     if (xenon2.level_number == 2)
         l2_event(event, record);
@@ -27,7 +27,7 @@ void level_event(uint16_t event, const uint8_t *record)
         level1_event(event, record);
 }
 
-void level_hook(uint16_t hook, const uint8_t *record, uint16_t slot_value)
+void level_hook(uint16_t hook, const struct SpawnRec *record, uint16_t slot_value)
 {
     if (xenon2.level_number == 2)
         l2_hook(hook, record, slot_value);

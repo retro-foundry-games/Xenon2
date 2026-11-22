@@ -28,7 +28,7 @@ int level1_collision_hook(void)
 }
 
 /* orig $054E10 (-> $055B94): level events by id (rec = the record that fired): a table of the level engine ($E60) for each */
-void level1_event(uint16_t id, const uint8_t *rec)
+void level1_event(uint16_t id, const struct SpawnRec *rec)
 {
     static const uint8_t *const tabs[10] = { xenon2.level1_data.formation_1, xenon2.level1_data.formation_2, xenon2.level1_data.formation_3, xenon2.level1_data.formation_4, xenon2.level1_data.formation_5,
                                              xenon2.level1_data.formation_6, xenon2.level1_data.formation_7, xenon2.level1_data.formation_8, xenon2.level1_data.formation_9, xenon2.level1_data.formation_10 };
@@ -222,7 +222,7 @@ void level1_launcher_update(Object *launcher)
 }
 
 /* a turret marker (spawn_marker_enemy with the update routine), hit by hit_tile, energy, no box yet */
-static Object *level1_turret(uint16_t type, const uint8_t *rec, void (*update)(void), uint16_t energy)
+static Object *level1_turret(uint16_t type, const struct SpawnRec *rec, void (*update)(void), uint16_t energy)
 {
     Object *turret = spawn_marker_enemy(type, rec, update);
 
@@ -249,9 +249,9 @@ static void level1_turret_cells(Object *turret, const Cell *cells, const uint8_t
 
 /* orig $054E18 (-> $055942): level hooks by id (rec = the record that fired, scroll its scroll value): 0 remembers the record, 1 to 3 put
  * a turret (type $E8/$EC, $E0/$E4, $D8/$DC; w0c of the record says which side) into the map, 4 a launcher ($D0/$D4) */
-void level1_hook(uint16_t id, const uint8_t *rec, uint16_t scroll)
+void level1_hook(uint16_t id, const struct SpawnRec *rec, uint16_t scroll)
 {
-    int flag = rd16(rec + 0xc) != 0;
+    int flag = rec->steps != 0;
     Object *obj;
 
     switch (id) {
@@ -287,10 +287,10 @@ void level1_hook(uint16_t id, const uint8_t *rec, uint16_t scroll)
         obj->big = -1;
         obj->score = 0xfa;
         obj->shot_count = obj->shot_rate = 0;
-        obj->x = (int16_t)(rd16(rec + 8) - 8 + (flag ? 0x10 : 0));
-        obj->y = (int16_t)(rd16(rec + 10) - 8 - xenon2.scroll_pos);
+        obj->x = (int16_t)(rec->x - 8 + (flag ? 0x10 : 0));
+        obj->y = (int16_t)(rec->y - 8 - xenon2.scroll_pos);
         obj->launcher.step = -1;
-        obj->launcher.range = (obj->launcher.range & 0xffffu) | (uint32_t)(uint16_t)((int16_t)(rd16(rec + 6) << 4)) << 16;
+        obj->launcher.range = (obj->launcher.range & 0xffffu) | (uint32_t)(uint16_t)((int16_t)(rec->index << 4)) << 16;
         obj->launcher.pos = (int16_t)(obj->launcher.range >> 16);
         obj->kind = 0;
         bbox_from_frame(obj);

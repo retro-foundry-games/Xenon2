@@ -63,20 +63,20 @@ static void set_anim(Object *o, const uint8_t *anim)
     anim_header_set(o, anim);
 }
 
-void l3_spawn_snake(const uint8_t *rec);
-void l3_spawn_diver(const uint8_t *rec);
+void l3_spawn_snake(const struct SpawnRec *rec);
+void l3_spawn_diver(const struct SpawnRec *rec);
 void l3_worm_spawn(uint16_t side);
 void l3_worm_hit(Object *shot, Object *worm, uint16_t damage);
 void l3_end_draw(Object *obj);
-void l3_spawn_gun(const uint8_t *rec);
-void l3_spawn_boss(const uint8_t *rec);
-void l3_spawn_walker(const uint8_t *rec);
+void l3_spawn_gun(const struct SpawnRec *rec);
+void l3_spawn_boss(const struct SpawnRec *rec);
+void l3_spawn_walker(const struct SpawnRec *rec);
 
 
 /* ---- the entries the engine calls ($54E0C..$54E2C) ---- */
 
 /* level3 $054E10, $056EFA: level events by event (rec = the record that fired): 0 the wave of $326C, 1 to 5 formations */
-void l3_event(uint16_t event, const uint8_t *rec)
+void l3_event(uint16_t event, const struct SpawnRec *rec)
 {
     uint16_t saved;
 
@@ -107,7 +107,7 @@ void l3_event(uint16_t event, const uint8_t *rec)
 
 /* level3 $054E18, $0556D0: level hooks by hook (rec = the record that fired, scroll_value its scroll value; w0c of the record says which side): 0 remembers
  * the record, 1 the snake, 2 the diver; 3 to 6 are not written */
-void l3_hook(uint16_t hook, const uint8_t *rec, uint16_t scroll_value)
+void l3_hook(uint16_t hook, const struct SpawnRec *rec, uint16_t scroll_value)
 {
     switch (hook) {
     case 0:
@@ -393,16 +393,16 @@ void l3_snake_body(Object *obj)
 
 /* level3 $055EEA: a snake of eight pieces ($C8, $CC when w0c of the record is set): the pieces are chained, each follows the first, and a pair of
  * markers ($B8 and $BC) holds the box of the group */
-void l3_spawn_snake(const uint8_t *rec)
+void l3_spawn_snake(const struct SpawnRec *rec)
 {
     Object *box = alloc_in(LIST_C), *head, *seg, *anchor;
-    int flag = rd16(rec + 0xc) != 0;
-    int16_t x = (int16_t)(rd16(rec + 8) - 8), y;
+    int flag = rec->steps != 0;
+    int16_t x = (int16_t)(rec->x - 8), y;
     int i;
 
     if (flag)
         x = (int16_t)(x + 0x20);
-    y = (int16_t)(rd16(rec + 0xa) - xenon2.scroll_pos);
+    y = (int16_t)(rec->y - xenon2.scroll_pos);
     seg = alloc_in(LIST_C);
     head = seg;
     for (i = 7; i >= 0; i--) {
@@ -566,7 +566,7 @@ void l3_diver_update(Object *obj)
 }
 
 /* level3 $056108: a diver ($D0) from a record: it flies towards the middle from the side it is on */
-void l3_spawn_diver(const uint8_t *rec)
+void l3_spawn_diver(const struct SpawnRec *rec)
 {
     Object *obj = alloc_in(LIST_C);
     const uint8_t *anim = xenon2.level3_data.diver_update_data;
@@ -575,8 +575,8 @@ void l3_spawn_diver(const uint8_t *rec)
     obj->fn_update = (obj_fn)l3_diver_update;
     obj->fn_draw = draw_bob_masked;
     obj->shot_count = obj->shot_rate = 0;
-    obj->x = (int16_t)(rd16(rec + 8) - 8);
-    obj->y = (int16_t)(rd16(rec + 0xa) + 8 - xenon2.scroll_pos);
+    obj->x = (int16_t)(rec->x - 8);
+    obj->y = (int16_t)(rec->y + 8 - xenon2.scroll_pos);
     obj->diver.side = (obj->diver.side & 0xffffu) | (uint32_t)(uint16_t)(2) << 16;
     if (obj->x > 0xa0) {
         anim = xenon2.level3_data.diver_update_data_2;
@@ -908,9 +908,9 @@ void l3_gun_update(Object *obj)
 }
 
 /* level3 $056220: a gun of tiles from a record ($F0, $F4 when w0c is set) */
-void l3_spawn_gun(const uint8_t *rec)
+void l3_spawn_gun(const struct SpawnRec *rec)
 {
-    int flag = rd16(rec + 0xc) != 0;
+    int flag = rec->steps != 0;
     Object *obj = spawn_marker_enemy(flag ? 0xf4 : 0xf0, rec, (void (*)(void))l3_gun_update);
     const Cell *cells = flag ? xenon2.level3_data.gun_cells_other : xenon2.level3_data.gun_cells_f0;
 
@@ -927,7 +927,7 @@ void l3_spawn_gun(const uint8_t *rec)
 }
 
 /* level3 $0561A6: the boss of tiles ($F8) from a record: six rows of its tiles are put into the map */
-void l3_spawn_boss(const uint8_t *rec)
+void l3_spawn_boss(const struct SpawnRec *rec)
 {
     Object *obj = spawn_marker_enemy(0xf8, rec, (void (*)(void))l3_boss_update);
     Cell *row = obj->map;
@@ -1126,18 +1126,18 @@ void l3_boss2_flash(Object *obj)
 }
 
 /* level3 $0556F6: a walker ($DC) from a record: the direction w6 of the record gives its first place and picture */
-void l3_spawn_walker(const uint8_t *rec)
+void l3_spawn_walker(const struct SpawnRec *rec)
 {
     Object *obj = alloc_in(LIST_C);
-    uint16_t i = rd16(rec + 6);
+    uint16_t i = rec->index;
 
     obj->type = 0xdc;
     obj->fn_update = (obj_fn)l3_walker_update;
     obj->fn_draw = draw_bob_masked;
     obj->walker.dir = (obj->walker.dir & 0xffffu) | (uint32_t)(uint16_t)((int16_t)i) << 16;
     obj->shot_count = obj->shot_rate = 0;
-    obj->x = (int16_t)(rd16(rec + 8) - 8 + xenon2.level3_data.walker_spawn_dx[i]);
-    obj->y = (int16_t)(rd16(rec + 10) - 8 - xenon2.scroll_pos + xenon2.level3_data.walker_spawn_dy[i]);
+    obj->x = (int16_t)(rec->x - 8 + xenon2.level3_data.walker_spawn_dx[i]);
+    obj->y = (int16_t)(rec->y - 8 - xenon2.scroll_pos + xenon2.level3_data.walker_spawn_dy[i]);
     set_anim(obj, xenon2.level3_data.walker_spawn_anims[i]);
     obj->fn_hit = (void *)hit_enemy;
     obj->energy = (int16_t)xenon2.level3_data.walker_energy;

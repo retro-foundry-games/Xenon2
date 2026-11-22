@@ -31,18 +31,6 @@ static void set_cursor(Object *o, const uint8_t *p)
     o->cursor = p;
 }
 
-/* the records of the level's data are raw bytes (big endian): read into a record of this machine */
-static void spawnrec_load(struct SpawnRec *r, const uint8_t *p)
-{
-    r->scroll = (int16_t)rd16(p);
-    r->arg = rd16(p + 2);
-    r->count = rd16(p + 4);
-    r->index = rd16(p + 6);
-    r->x = (int16_t)rd16(p + 8);
-    r->y = (int16_t)rd16(p + 10);
-    r->steps = rd16(p + 12);
-}
-
 static void spawndef_load(struct SpawnDef *d, const uint8_t *p)
 {
     d->kind = rd16(p);
@@ -406,17 +394,14 @@ Object *owner_chain_next(Object *obj)
 
 /* orig $E60, $0032AA: spawn rec->count copies of the formation (a chain of objects, one for each definition), the copies
  * rec->x apart; at the end the kind is recorded in the table at $43C.  Returns the last object made (obj itself when none). */
-Object *spawn_formation(Object *obj, const uint8_t *rec_raw, const uint8_t *formation)
+Object *spawn_formation(Object *obj, const struct SpawnRec *rec, const uint8_t *formation)
 {
-    struct SpawnRec rec_data;
-    const struct SpawnRec *rec = &rec_data;
     uint16_t remaining;
     uint16_t offset = 0;
     uint16_t *slot;
     uint16_t kind;
     int i;
 
-    spawnrec_load(&rec_data, rec_raw);
     remaining = rec->count;
     if (remaining == 0)
         return obj;
@@ -602,11 +587,11 @@ void spawn_effect(int16_t x, int16_t y, const uint8_t *anim, ObjFn draw)
 }
 
 /* orig $EA2, $003518 (reached by a jump; goes on in $352E): remember the record of a spawn */
-void note_spawn_record(const uint8_t *rec, uint16_t score)
+void note_spawn_record(const struct SpawnRec *rec, uint16_t score)
 {
-    xenon2.player_x_saved = rd16(rec + 8);
-    xenon2.player_y_saved = rd16(rec + 10);
-    xenon2.scroll_y = rd16(rec);
+    xenon2.player_x_saved = rec->x;
+    xenon2.player_y_saved = rec->y;
+    xenon2.scroll_y = rec->scroll;
     xenon2.player_money_saved = xenon2.player_money;
     latch_slots(score);
 }
@@ -633,17 +618,17 @@ void latch_slots(uint16_t score)
  * position (scroll_pos) and the old one calls the level's routine ($54E10 for the first list, $54E18 for the second) */
 void scroll_events(void)
 {
-    const uint8_t *rec = xenon2.level_events_a;
+    const struct SpawnRec *rec = xenon2.level_events_a;
     int16_t old_pos = (int16_t)xenon2.next_event_a;
     int16_t new_pos = (int16_t)xenon2.scroll_pos;
 
-    for (;; rec += 14) {
-        int16_t rec_scroll = (int16_t)rd16(rec);
+    for (;; rec++) {
+        int16_t rec_scroll = (int16_t)rec->scroll;
 
         if (rec_scroll < 0)
             break;
         if (old_pos > rec_scroll && new_pos <= rec_scroll) {
-            level_event(rd16(rec + 2), rec);
+            level_event(rec->arg, rec);
             old_pos = (int16_t)xenon2.next_event_a;
             new_pos = (int16_t)xenon2.scroll_pos;
         }
@@ -654,13 +639,13 @@ void scroll_events(void)
     rec = xenon2.level_events_b;
     old_pos = (int16_t)xenon2.next_event_b;
     new_pos = (int16_t)xenon2.scroll_pos;
-    for (;; rec += 14) {
-        int16_t rec_scroll = (int16_t)rd16(rec);
+    for (;; rec++) {
+        int16_t rec_scroll = (int16_t)rec->scroll;
 
         if (rec_scroll < 0)
             break;
         if (old_pos > rec_scroll && new_pos <= rec_scroll) {
-            level_hook(rd16(rec + 2), rec, (uint16_t)rec_scroll);
+            level_hook(rec->arg, rec, (uint16_t)rec_scroll);
             old_pos = (int16_t)xenon2.next_event_b;
             new_pos = (int16_t)xenon2.scroll_pos;
         }
@@ -754,7 +739,7 @@ void spawn_debris(Object *shooter_unused, Object *target, uint16_t damage_unused
 /* ---- entries the recorded run did not reach ---- */
 
 /* orig $E5A, $003252: spawn the formation at $326C for record rec, then remember its word $54 in $30 */
-Object *spawn_wave_326c(Object *obj, const uint8_t *rec)
+Object *spawn_wave_326c(Object *obj, const struct SpawnRec *rec)
 {
     obj = spawn_formation(obj, rec, xenon2.spawn_def_326c);
     obj->marker.launches = obj->steps;
@@ -764,7 +749,7 @@ Object *spawn_wave_326c(Object *obj, const uint8_t *rec)
 }
 
 /* the end of $345E and $3480: a marker object that sits on the map cell under the record's position */
-static Object *marker_tail(Object *marker, uint16_t type, const uint8_t *rec, void (*update)(void))
+static Object *marker_tail(Object *marker, uint16_t type, const struct SpawnRec *rec, void (*update)(void))
 {
     uint16_t x, y;
 
@@ -772,9 +757,9 @@ static Object *marker_tail(Object *marker, uint16_t type, const uint8_t *rec, vo
     marker->fn_update = (obj_fn)update;
     marker->fn_draw = (obj_fn)obj_nop;
     marker->shot_count = marker->shot_rate = 0;
-    x = (uint16_t)(rd16(rec + 8) - 8);
+    x = (uint16_t)(rec->x - 8);
     marker->x = (int16_t)x;
-    y = (uint16_t)(rd16(rec + 10) - 8);
+    y = (uint16_t)(rec->y - 8);
     marker->y = (int16_t)y;
     marker->map = (Cell *)(xenon2.level_init_src + (uint16_t)((x >> 3) & 0xfe) + (int16_t)(uint16_t)((uint32_t)(y >> 4) * 0x28));
     marker->marker.step = 0;
@@ -783,13 +768,13 @@ static Object *marker_tail(Object *marker, uint16_t type, const uint8_t *rec, vo
 }
 
 /* orig $F56, $00345E: a marker in the list of enemies */
-Object *spawn_marker_enemy(uint16_t type, const uint8_t *rec, void (*update)(void))
+Object *spawn_marker_enemy(uint16_t type, const struct SpawnRec *rec, void (*update)(void))
 {
     return marker_tail(list_insert(LIST_ENEMY), type, rec, update);
 }
 
 /* orig $F50, $003480: a marker in the list at the front */
-Object *spawn_marker_front(uint16_t type, const uint8_t *rec, void (*update)(void))
+Object *spawn_marker_front(uint16_t type, const struct SpawnRec *rec, void (*update)(void))
 {
     return marker_tail(list_insert(LIST_FRONT), type, rec, update);
 }

@@ -63,14 +63,14 @@ void player_dies(Object *ship); void player_damage(Object *ship, uint16_t damage
 /* level 2's blob (level2.c) and the entries that choose by the level in level_number */
 Object *l2_collision_hook(int16_t box_x0, int16_t box_y0, int16_t box_x1, int16_t box_y1);
 void l2_block_hit(Object *attacker, Object *target, uint16_t damage);
-void l2_event(uint16_t event, const uint8_t *rec); void l2_hook(uint16_t hook, const uint8_t *rec, uint16_t rec_scroll);
+void l2_event(uint16_t event, const struct SpawnRec *rec); void l2_hook(uint16_t hook, const struct SpawnRec *rec, uint16_t rec_scroll);
 void l2_scroll(void); void l2_swap_hook(void); void l2_init(void); void l2_debris_walls(void);
 void l2_turret_update(Object *turret); void l2_front_update(Object *marker); void l2_boss_rest(Object *boss) __attribute__((noinline)); void l2_roamer_update(Object *roamer); void l2_roamer_shot_update(Object *bolt); void l2_marker_f8_update(Object *marker); void l2_marker_fc_update(Object *marker); void l2_flyer_update(Object *enemy); void l2_front_piece_update(Object *part); void l2_launcher_update(Object *launcher); void l2_piece_update(Object *part); void l2_gate_update(Object *gate);
 void l2_gate_flash(Object *gate); void l2_boss_update(Object *boss); void l2_boss_draw(Object *boss); void l2_boss_flash(Object *boss);
 void l2_hit_a(Object *attacker, Object *target, uint16_t damage); void l2_hit_b(Object *attacker, Object *target, uint16_t damage); void l2_hit_c(Object *attacker, Object *target, uint16_t damage);
 void l2_gate_hit(Object *attacker, Object *gate, uint16_t damage); void l2_boss_hit(Object *attacker, Object *boss, uint16_t damage);
 /* level 3's blob (level3.c) */
-void l3_event(uint16_t event, const uint8_t *rec); void l3_hook(uint16_t hook, const uint8_t *rec, uint16_t scroll_value);
+void l3_event(uint16_t event, const struct SpawnRec *rec); void l3_hook(uint16_t hook, const struct SpawnRec *rec, uint16_t scroll_value);
 void l3_scroll(void); void l3_init(void); void l3_end_draw(Object *obj);
 void l3_enemy_a(Object *obj); void l3_enemy_b(Object *obj); void l3_enemy_c(Object *obj);
 void l3_snake_head(Object *obj); void l3_snake_tail(Object *obj); void l3_snake_body(Object *obj);
@@ -82,10 +82,10 @@ void l3_gun_update(Object *obj); void l3_boss_update(Object *obj); void l3_boss_
 void l3_boss2_update(Object *obj); void l3_boss2_hit(Object *shot, Object *boss, uint16_t damage); void l3_boss2_flash(Object *obj); void l3_walker_update(Object *obj);
 void l3_diver_update(Object *obj); void l3_diver_shot(Object *obj);
 Object *level_collision(int16_t x0, int16_t y0, int16_t x1, int16_t y1, Object *miss);
-void level_event(uint16_t event, const uint8_t *record); void level_hook(uint16_t hook, const uint8_t *record, uint16_t slot_value);
+void level_event(uint16_t event, const struct SpawnRec *record); void level_hook(uint16_t hook, const struct SpawnRec *record, uint16_t slot_value);
 void level_scroll(void); void level_swap_hook(void); void level_init(void);
-void l4_event(uint16_t which, const uint8_t *record); void l4_hook(uint16_t which, const uint8_t *record, uint16_t param);
-void l4_scroll(void); void l4_init(void); void l4_spawn_tower(const uint8_t *record);
+void l4_event(uint16_t which, const struct SpawnRec *record); void l4_hook(uint16_t which, const struct SpawnRec *record, uint16_t param);
+void l4_scroll(void); void l4_init(void); void l4_spawn_tower(const struct SpawnRec *record);
 void l4_enemy_a(Object *obj); void l4_shot_a(Object *obj); void l4_enemy_f8(Object *obj); void l4_enemy_b(Object *obj);
 void l4_b1_core(Object *obj); void l4_b1_gun(Object *obj); void l4_b1_head(Object *obj); void l4_b1_body(Object *obj); void l4_b1_tail(Object *obj);
 void l4_b1_core_hit(Object *shot, Object *enemy, uint16_t damage); void l4_b1_gun_hit(Object *shot, Object *enemy, uint16_t damage); void l4_gun_dead(Object *obj);
@@ -96,5 +96,5 @@ void l4_b2_gun_hit(Object *shot, Object *enemy, uint16_t damage); void l4_b2_bar
 void l4_b2_ring_hit(Object *shot, Object *enemy, uint16_t damage); void l4_b2_eye_hit(Object *shot, Object *enemy, uint16_t damage);
 void l4_bar_update(Object *obj); void l4_bar_draw(Object *obj);
 void l4_walker_update(Object *obj); void l4_walker_hit(Object *shot, Object *enemy, uint16_t damage); void l4_walker_flash(Object *obj); void l4_walker_draw(Object *obj);
-void l5_event(uint16_t event, const uint8_t *record); void l5_hook(uint16_t hook, const uint8_t *record, uint16_t slot_value); void l5_init(void); void l5_swap_hook(void);
+void l5_event(uint16_t event, const struct SpawnRec *record); void l5_hook(uint16_t hook, const struct SpawnRec *record, uint16_t slot_value); void l5_init(void); void l5_swap_hook(void);
 #endif
