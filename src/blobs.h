@@ -49,6 +49,37 @@ struct Level2WallPieces {
 };
 _Static_assert(sizeof(struct Level2WallPieces) == 146, "Level2WallPieces");
 
+struct Level3EndPiece {
+    const uint8_t *cells;
+    uint16_t w;
+    uint16_t h;
+    uint16_t y;
+    uint16_t x;
+};
+_Static_assert(sizeof(struct Level3EndPiece) == 12, "Level3EndPiece");
+
+struct Level3WormPiece {
+    uint16_t delay;
+    void (*update)(void);
+    const uint8_t *gfx;
+};
+_Static_assert(sizeof(struct Level3WormPiece) == 10, "Level3WormPiece");
+
+struct Level3WormSpawn {
+    uint16_t last;
+    struct Level3WormPiece pieces[11];
+};
+_Static_assert(sizeof(struct Level3WormSpawn) == 112, "Level3WormSpawn");
+
+struct Level3Part {
+    void (*update)(void);
+    void (*hit)(void);
+    const uint8_t *anim;
+    uint16_t x;
+    uint16_t y;
+};
+_Static_assert(sizeof(struct Level3Part) == 16, "Level3Part");
+
 struct Level4ScrollEnemy {
     uint16_t type;
     uint16_t x;
@@ -266,8 +297,10 @@ struct Level3Blob {
     uint16_t walker_shot_steps;   /* 54E52 */
     uint16_t diver_steps;   /* 54E54 */
     BLOB_PAD(1)
-    uint8_t boss_chance[2];   /* 54E57 */
-    uint8_t boss_chance_2[2];   /* 54E59 */
+    uint8_t boss_chance;   /* 54E57 */
+    BLOB_PAD(1)
+    uint8_t boss_chance_2;   /* 54E59 */
+    BLOB_PAD(1)
     uint8_t boss_fire_rate;   /* 54E5B */
     uint16_t boss_param;   /* 54E5C */
     uint16_t gun_energy;   /* 54E5E */
@@ -289,59 +322,67 @@ struct Level3Blob {
     BLOB_PAD(1)
     uint8_t part_gun_fire_rate;   /* 54E79 */
     uint16_t event_param;   /* 54E7A */
-    BLOB_PAD(508)
-    uint8_t enemy_a_data[32];   /* 55078 */
-    uint8_t enemy_b_data[32];   /* 55098 */
-    uint8_t enemy_c_data[134];   /* 550B8 */
-    uint32_t enemy_enter_anims;   /* 5513E */
-    BLOB_PAD(302)
-    uint8_t worm_spawn_data[400];   /* 55270 */
-    uint32_t worm_head_anims;   /* 55400 */
-    BLOB_PAD(154)
+    BLOB_PAD(2)
+    uint8_t formation_1[26];   /* 54E7E */
+    uint8_t formation_2[26];   /* 54E98 */
+    uint8_t formation_3[26];   /* 54EB2 */
+    BLOB_PAD(144)
+    uint8_t formation_4[26];   /* 54F5C */
+    uint8_t formation_5[26];   /* 54F76 */
+    BLOB_PAD(232)
+    const uint8_t *enemy_a_pictures[8];   /* 55078 */
+    const uint8_t *enemy_b_pictures[8];   /* 55098 */
+    const uint8_t *enemy_c_pictures[8];   /* 550B8 */
+    BLOB_PAD(102)
+    const uint8_t *enemy_enter_anims[4];   /* 5513E */
+    BLOB_PAD(290)
+    struct Level3WormSpawn worm_spawn;   /* 55270 */
+    BLOB_PAD(288)
+    const uint8_t *worm_head_anims[8];   /* 55400 */
+    BLOB_PAD(126)
     uint8_t worm_head_data[240];   /* 5549E */
-    uint8_t worm_a_data[68];   /* 5558E */
-    uint8_t worm_b_data[80];   /* 555D2 */
-    uint8_t worm_follow_data[366];   /* 55622 */
-    uint16_t walker_spawn_dx;   /* 55790 */
-    BLOB_PAD(14)
-    uint16_t walker_spawn_dy;   /* 557A0 */
-    BLOB_PAD(14)
-    uint32_t walker_spawn_anims;   /* 557B0 */
-    BLOB_PAD(316)
-    uint8_t spawn_parts_data[336];   /* 558F0 */
+    const uint8_t *worm_a_pictures[8];   /* 5558E */
+    BLOB_PAD(36)
+    const uint8_t *worm_b_pictures[8];   /* 555D2 */
+    BLOB_PAD(48)
+    const uint8_t *worm_follow_pictures[8];   /* 55622 */
+    BLOB_PAD(334)
+    int16_t walker_spawn_dx[8];   /* 55790 */
+    int16_t walker_spawn_dy[8];   /* 557A0 */
+    const uint8_t *walker_spawn_anims[8];   /* 557B0 */
+    BLOB_PAD(288)
+    struct Level3Part parts[18];   /* 558F0 */
+    BLOB_PAD(48)
     uint8_t part_gun_data_3[212];   /* 55A40 */
     uint8_t part_core_data[664];   /* 55B14 */
-    uint32_t arm_tip_pictures;   /* 55DAC */
-    BLOB_PAD(772)
+    const uint8_t *arm_tip_pictures[16];   /* 55DAC */
+    BLOB_PAD(712)
     uint8_t snake_anim_b[42];   /* 560B4 */
     uint8_t snake_anim_a[274];   /* 560DE */
     uint8_t spawn_boss_data[160];   /* 561F0 */
-    uint16_t walker_update_words;   /* 56290 */
-    BLOB_PAD(14)
-    uint16_t walker_update_words_2;   /* 562A0 */
-    BLOB_PAD(430)
-    uint16_t walker_update_words_3;   /* 56450 */
-    BLOB_PAD(14)
-    uint16_t walker_update_words_4;   /* 56460 */
-    BLOB_PAD(14)
-    uint16_t walker_update_words_5;   /* 56470 */
-    BLOB_PAD(14)
-    uint16_t walker_update_words_6;   /* 56480 */
-    BLOB_PAD(844)
+    int16_t walker_update_words[8];   /* 56290 */
+    int16_t walker_update_words_2[8];   /* 562A0 */
+    BLOB_PAD(416)
+    int16_t walker_update_words_3[8];   /* 56450 */
+    int16_t walker_update_words_4[8];   /* 56460 */
+    int16_t walker_update_words_5[8];   /* 56470 */
+    uint16_t walker_update_words_6[8];   /* 56480 */
+    BLOB_PAD(830)
     uint8_t diver_update_data[36];   /* 567CE */
     uint8_t diver_update_data_3[42];   /* 567F2 */
     uint8_t diver_update_data_2[36];   /* 5681C */
     uint8_t diver_update_data_4[354];   /* 56840 */
     uint8_t boss_update_data[210];   /* 569A2 */
     uint8_t boss_flash_grid[376];   /* 56A74 */
-    uint32_t boss2_shot_anims;   /* 56BEC */
-    BLOB_PAD(316)
+    const uint8_t *boss2_shot_anims[8];   /* 56BEC */
+    BLOB_PAD(288)
     uint8_t boss2_update_data[430];   /* 56D2C */
     uint8_t gun_cells_f0[14];   /* 56EDA */
     uint8_t gun_cells_other[14];   /* 56EE8 */
     uint8_t gun_anim_b[2];   /* 56EF6 */
     uint8_t gun_anim_a[162];   /* 56EF8 */
-    uint8_t end_draw_data[296];   /* 56F9A */
+    struct Level3EndPiece end_pieces[6];   /* 56F9A */
+    BLOB_PAD(224)
     uint8_t spawn_parts_data_2[2];   /* 570C2 */
     uint16_t spawn_parts_words;   /* 570C4 */
     uint16_t spawn_parts_words_2;   /* 570C6 */
@@ -352,7 +393,7 @@ struct Level3Blob {
     uint8_t diver_shot_picture_b[13080];   /* 5B386 */
     uint8_t gun_shot_picture[2496];   /* 5E69E */
     uint8_t part_gun_picture_side_40[146];   /* 5F05E */
-    uint8_t part_gun_picture_other;   /* 5F0F0 */
+    uint8_t part_gun_picture_other[32];   /* 5F0F0 */
 };
 _Static_assert(offsetof(struct Level3Blob, worm_spawn_steps) == 0x54E42 - BLOB_BASE, "Level3Blob.worm_spawn_steps");
 _Static_assert(offsetof(struct Level3Blob, walker_energy) == 0x54E44 - BLOB_BASE, "Level3Blob.walker_energy");
@@ -382,20 +423,25 @@ _Static_assert(offsetof(struct Level3Blob, part_core_fire_rate) == 0x54E75 - BLO
 _Static_assert(offsetof(struct Level3Blob, part_core_shot_steps) == 0x54E76 - BLOB_BASE, "Level3Blob.part_core_shot_steps");
 _Static_assert(offsetof(struct Level3Blob, part_gun_fire_rate) == 0x54E79 - BLOB_BASE, "Level3Blob.part_gun_fire_rate");
 _Static_assert(offsetof(struct Level3Blob, event_param) == 0x54E7A - BLOB_BASE, "Level3Blob.event_param");
-_Static_assert(offsetof(struct Level3Blob, enemy_a_data) == 0x55078 - BLOB_BASE, "Level3Blob.enemy_a_data");
-_Static_assert(offsetof(struct Level3Blob, enemy_b_data) == 0x55098 - BLOB_BASE, "Level3Blob.enemy_b_data");
-_Static_assert(offsetof(struct Level3Blob, enemy_c_data) == 0x550B8 - BLOB_BASE, "Level3Blob.enemy_c_data");
+_Static_assert(offsetof(struct Level3Blob, formation_1) == 0x54E7E - BLOB_BASE, "Level3Blob.formation_1");
+_Static_assert(offsetof(struct Level3Blob, formation_2) == 0x54E98 - BLOB_BASE, "Level3Blob.formation_2");
+_Static_assert(offsetof(struct Level3Blob, formation_3) == 0x54EB2 - BLOB_BASE, "Level3Blob.formation_3");
+_Static_assert(offsetof(struct Level3Blob, formation_4) == 0x54F5C - BLOB_BASE, "Level3Blob.formation_4");
+_Static_assert(offsetof(struct Level3Blob, formation_5) == 0x54F76 - BLOB_BASE, "Level3Blob.formation_5");
+_Static_assert(offsetof(struct Level3Blob, enemy_a_pictures) == 0x55078 - BLOB_BASE, "Level3Blob.enemy_a_pictures");
+_Static_assert(offsetof(struct Level3Blob, enemy_b_pictures) == 0x55098 - BLOB_BASE, "Level3Blob.enemy_b_pictures");
+_Static_assert(offsetof(struct Level3Blob, enemy_c_pictures) == 0x550B8 - BLOB_BASE, "Level3Blob.enemy_c_pictures");
 _Static_assert(offsetof(struct Level3Blob, enemy_enter_anims) == 0x5513E - BLOB_BASE, "Level3Blob.enemy_enter_anims");
-_Static_assert(offsetof(struct Level3Blob, worm_spawn_data) == 0x55270 - BLOB_BASE, "Level3Blob.worm_spawn_data");
+_Static_assert(offsetof(struct Level3Blob, worm_spawn) == 0x55270 - BLOB_BASE, "Level3Blob.worm_spawn");
 _Static_assert(offsetof(struct Level3Blob, worm_head_anims) == 0x55400 - BLOB_BASE, "Level3Blob.worm_head_anims");
 _Static_assert(offsetof(struct Level3Blob, worm_head_data) == 0x5549E - BLOB_BASE, "Level3Blob.worm_head_data");
-_Static_assert(offsetof(struct Level3Blob, worm_a_data) == 0x5558E - BLOB_BASE, "Level3Blob.worm_a_data");
-_Static_assert(offsetof(struct Level3Blob, worm_b_data) == 0x555D2 - BLOB_BASE, "Level3Blob.worm_b_data");
-_Static_assert(offsetof(struct Level3Blob, worm_follow_data) == 0x55622 - BLOB_BASE, "Level3Blob.worm_follow_data");
+_Static_assert(offsetof(struct Level3Blob, worm_a_pictures) == 0x5558E - BLOB_BASE, "Level3Blob.worm_a_pictures");
+_Static_assert(offsetof(struct Level3Blob, worm_b_pictures) == 0x555D2 - BLOB_BASE, "Level3Blob.worm_b_pictures");
+_Static_assert(offsetof(struct Level3Blob, worm_follow_pictures) == 0x55622 - BLOB_BASE, "Level3Blob.worm_follow_pictures");
 _Static_assert(offsetof(struct Level3Blob, walker_spawn_dx) == 0x55790 - BLOB_BASE, "Level3Blob.walker_spawn_dx");
 _Static_assert(offsetof(struct Level3Blob, walker_spawn_dy) == 0x557A0 - BLOB_BASE, "Level3Blob.walker_spawn_dy");
 _Static_assert(offsetof(struct Level3Blob, walker_spawn_anims) == 0x557B0 - BLOB_BASE, "Level3Blob.walker_spawn_anims");
-_Static_assert(offsetof(struct Level3Blob, spawn_parts_data) == 0x558F0 - BLOB_BASE, "Level3Blob.spawn_parts_data");
+_Static_assert(offsetof(struct Level3Blob, parts) == 0x558F0 - BLOB_BASE, "Level3Blob.parts");
 _Static_assert(offsetof(struct Level3Blob, part_gun_data_3) == 0x55A40 - BLOB_BASE, "Level3Blob.part_gun_data_3");
 _Static_assert(offsetof(struct Level3Blob, part_core_data) == 0x55B14 - BLOB_BASE, "Level3Blob.part_core_data");
 _Static_assert(offsetof(struct Level3Blob, arm_tip_pictures) == 0x55DAC - BLOB_BASE, "Level3Blob.arm_tip_pictures");
@@ -420,7 +466,7 @@ _Static_assert(offsetof(struct Level3Blob, gun_cells_f0) == 0x56EDA - BLOB_BASE,
 _Static_assert(offsetof(struct Level3Blob, gun_cells_other) == 0x56EE8 - BLOB_BASE, "Level3Blob.gun_cells_other");
 _Static_assert(offsetof(struct Level3Blob, gun_anim_b) == 0x56EF6 - BLOB_BASE, "Level3Blob.gun_anim_b");
 _Static_assert(offsetof(struct Level3Blob, gun_anim_a) == 0x56EF8 - BLOB_BASE, "Level3Blob.gun_anim_a");
-_Static_assert(offsetof(struct Level3Blob, end_draw_data) == 0x56F9A - BLOB_BASE, "Level3Blob.end_draw_data");
+_Static_assert(offsetof(struct Level3Blob, end_pieces) == 0x56F9A - BLOB_BASE, "Level3Blob.end_pieces");
 _Static_assert(offsetof(struct Level3Blob, spawn_parts_data_2) == 0x570C2 - BLOB_BASE, "Level3Blob.spawn_parts_data_2");
 _Static_assert(offsetof(struct Level3Blob, spawn_parts_words) == 0x570C4 - BLOB_BASE, "Level3Blob.spawn_parts_words");
 _Static_assert(offsetof(struct Level3Blob, spawn_parts_words_2) == 0x570C6 - BLOB_BASE, "Level3Blob.spawn_parts_words_2");
