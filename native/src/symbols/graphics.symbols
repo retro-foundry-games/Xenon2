@@ -24,3 +24,27 @@ arr gfx_192bc 0x192bc uint16_t 54
 arr gfx_436a0 0x436a0 uint16_t 1200
 arr gfx_4bda0 0x4bda0 uint16_t 1200
 arr beyond_512k 0x80000 uint16_t 262144   ; the original's memory from $80000 to $FFFFF (bobs above the screen read it; the lockstep gives it, zeros otherwise)
+arr gfx_e048 0xe048 uint16_t 84
+arr gfx_e14a 0xe14a uint16_t 46
+arr gfx_e348 0xe348 uint16_t 77
+arr gfx_110f4 0x110f4 uint16_t 663
+arr gfx_116d4 0x116d4 uint16_t 2235
+arr gfx_12f30 0x12f30 uint16_t 1139
+arr gfx_13b88 0x13b88 uint16_t 879
+arr gfx_147e8 0x147e8 uint16_t 883
+arr gfx_150d8 0x150d8 uint16_t 847
+arr gfx_15cf0 0x15cf0 uint16_t 705
+arr gfx_16446 0x16446 uint16_t 66
+arr gfx_16712 0x16712 uint16_t 51
+arr gfx_16a56 0x16a56 uint16_t 66
+arr gfx_16d22 0x16d22 uint16_t 51
+arr gfx_171d0 0x171d0 uint16_t 3
+arr gfx_17330 0x17330 uint16_t 3
+arr gfx_174e6 0x174e6 uint16_t 999
+arr gfx_182d6 0x182d6 uint16_t 3
+arr gfx_18386 0x18386 uint16_t 3
+arr gfx_186d4 0x186d4 uint16_t 1523
+arr gfx_4bd00 0x4bd00 uint16_t 80
+arr gfx_25b8 0x25b8 uint16_t 3
+arr gfx_2af8 0x2af8 uint16_t 30
+arr gfx_2bac 0x2bac uint16_t 60

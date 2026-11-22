@@ -111,11 +111,12 @@ for f in files:
     name = f'Level{lv}Data' if lv.isdigit() else f'{lv.capitalize()}Data'
     out.append(f'struct {name} {{')
     pos = BASE
-    checks, members, script_ptrs = [], [], []
+    checks, members, script_ptrs, pads = [], [], [], []
     for i, (a, n, t, cnt) in enumerate(rows):
         esize = records[t]['size'] if t in records else SIZE[t.split(':')[0]]
         if a > pos:
             out.append(f'    BLOB_PAD({a - pos})')
+            pads.append((pos - BASE, a - pos))
             pos = a
         nxt = rows[i + 1][0] if i + 1 < len(rows) else a + esize
         if cnt is None:
@@ -143,6 +144,9 @@ for f in files:
     out.append('')
     conv.append(f'static const struct blob_member blob_members_{lv}[] = {{')
     conv += [f'    {{ 0x{o:X}, {c}, {s_}, {k} }},' for o, c, s_, k in members]
+    conv.append('};')
+    conv.append(f'static const struct {{ uint32_t offset, size; }} blob_pads_{lv}[] = {{   /* the bytes no member names (tools/blob_gaps.py reads them) */')
+    conv += [f'    {{ 0x{o:X}, {z} }},' for o, z in pads]
     conv.append('};')
     conv.append(f'static const struct {{ uint32_t offset, count; }} blob_script_pointers_{lv}[] = {{   /* the pointers to scripts */')
     conv += [f'    {{ 0x{o:X}, {c} }},' for o, c in script_ptrs]

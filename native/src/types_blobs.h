@@ -356,23 +356,24 @@ struct Level1Data {
     struct Formation1 formation_8;   /* 54F34 */
     struct Formation1 formation_9;   /* 54F4E */
     struct Formation1 formation_10;   /* 54F68 */
-    BLOB_PAD(360)
+    uint16_t words_54f82[180];   /* 54F82 */
     uint16_t pad_550ea[57];   /* 550EA */
-    BLOB_PAD(120)
+    uint16_t words_5515c[60];   /* 5515C */
     uint16_t anim_launcher_d0[3];   /* 551D4 */
-    BLOB_PAD(30)
+    uint16_t words_551da[15];   /* 551DA */
     uint16_t anim_launcher_d0_fire[3];   /* 551F8 */
-    BLOB_PAD(20)
+    uint16_t words_551fe[10];   /* 551FE */
     uint16_t anim_launcher_d4[3];   /* 55212 */
-    BLOB_PAD(30)
+    uint16_t words_55218[15];   /* 55218 */
     uint16_t anim_launcher_d4_fire[3];   /* 55236 */
-    BLOB_PAD(20)
+    uint16_t words_5523c[10];   /* 5523C */
     uint16_t anim_piece_a[3];   /* 55250 */
-    BLOB_PAD(30)
+    uint16_t words_55256[15];   /* 55256 */
     uint16_t anim_piece_b[3];   /* 55274 */
-    BLOB_PAD(54)
+    uint16_t words_5527a[27];   /* 5527A */
     uint16_t anim_shot[3];   /* 552B0 */
-    BLOB_PAD(252)
+    uint16_t words_552b6[12];   /* 552B6 */
+    BLOB_PAD(228)
     uint16_t turret_a_cells_e0[16];   /* 553B2 */
     uint16_t turret_a_cells_e4[16];   /* 553D2 */
     uint16_t turret_a_anim_e0[4];   /* 553F2 */
@@ -405,26 +406,26 @@ struct Level1Data {
     uint16_t boss_draw_table[10];   /* 567FA */
     BLOB_PAD(2)
     uint16_t boss_draw_sources[24];   /* 56810 */
-    BLOB_PAD(13800)
+    uint16_t words_56840[6900];   /* 56840 */
     uint16_t boss_part_picture;   /* 59E28 */
-    BLOB_PAD(4034)
+    uint16_t words_59e2a[2017];   /* 59E2A */
     uint16_t pad_5adec[1307];   /* 5ADEC */
-    BLOB_PAD(2242)
+    uint16_t words_5b822[1121];   /* 5B822 */
     uint16_t eyes_a;   /* 5C0E4 */
     BLOB_PAD(174)
     uint16_t eyes_b;   /* 5C194 */
     BLOB_PAD(174)
     uint16_t eyes_c;   /* 5C244 */
-    BLOB_PAD(1550)
+    uint16_t words_5c246[775];   /* 5C246 */
     struct SpawnRec events_b[51];   /* 5C854 */
     int16_t events_b_end;   /* 5CB1E */
     uint16_t pad_5cb20[7824];   /* 5CB20 */
-    BLOB_PAD(34560)
+    uint16_t words_60840[17280];   /* 60840 */
     struct ShotPic *shot_gfx_table[5];   /* 68F40 */
     struct ShotPic shot_gfx_cells[3];   /* 68F54 */
     struct PathCmd *formation_paths[87];   /* 68F60 */
     uint16_t pad_690bc[327];   /* 690BC */
-    BLOB_PAD(4752)
+    uint16_t words_6934a[2376];   /* 6934A */
     struct SpawnRec events_a[113];   /* 6A5DA */
     int16_t events_a_end;   /* 6AC08 */
     uint16_t pad_6ac0a[7680];   /* 6AC0A */
@@ -455,14 +456,23 @@ _Static_assert(offsetof(struct Level1Data, formation_7) == 0x54F02 - BLOB_BASE, 
 _Static_assert(offsetof(struct Level1Data, formation_8) == 0x54F34 - BLOB_BASE, "Level1Data.formation_8");
 _Static_assert(offsetof(struct Level1Data, formation_9) == 0x54F4E - BLOB_BASE, "Level1Data.formation_9");
 _Static_assert(offsetof(struct Level1Data, formation_10) == 0x54F68 - BLOB_BASE, "Level1Data.formation_10");
+_Static_assert(offsetof(struct Level1Data, words_54f82) == 0x54F82 - BLOB_BASE, "Level1Data.words_54f82");
 _Static_assert(offsetof(struct Level1Data, pad_550ea) == 0x550EA - BLOB_BASE, "Level1Data.pad_550ea");
+_Static_assert(offsetof(struct Level1Data, words_5515c) == 0x5515C - BLOB_BASE, "Level1Data.words_5515c");
 _Static_assert(offsetof(struct Level1Data, anim_launcher_d0) == 0x551D4 - BLOB_BASE, "Level1Data.anim_launcher_d0");
+_Static_assert(offsetof(struct Level1Data, words_551da) == 0x551DA - BLOB_BASE, "Level1Data.words_551da");
 _Static_assert(offsetof(struct Level1Data, anim_launcher_d0_fire) == 0x551F8 - BLOB_BASE, "Level1Data.anim_launcher_d0_fire");
+_Static_assert(offsetof(struct Level1Data, words_551fe) == 0x551FE - BLOB_BASE, "Level1Data.words_551fe");
 _Static_assert(offsetof(struct Level1Data, anim_launcher_d4) == 0x55212 - BLOB_BASE, "Level1Data.anim_launcher_d4");
+_Static_assert(offsetof(struct Level1Data, words_55218) == 0x55218 - BLOB_BASE, "Level1Data.words_55218");
 _Static_assert(offsetof(struct Level1Data, anim_launcher_d4_fire) == 0x55236 - BLOB_BASE, "Level1Data.anim_launcher_d4_fire");
+_Static_assert(offsetof(struct Level1Data, words_5523c) == 0x5523C - BLOB_BASE, "Level1Data.words_5523c");
 _Static_assert(offsetof(struct Level1Data, anim_piece_a) == 0x55250 - BLOB_BASE, "Level1Data.anim_piece_a");
+_Static_assert(offsetof(struct Level1Data, words_55256) == 0x55256 - BLOB_BASE, "Level1Data.words_55256");
 _Static_assert(offsetof(struct Level1Data, anim_piece_b) == 0x55274 - BLOB_BASE, "Level1Data.anim_piece_b");
+_Static_assert(offsetof(struct Level1Data, words_5527a) == 0x5527A - BLOB_BASE, "Level1Data.words_5527a");
 _Static_assert(offsetof(struct Level1Data, anim_shot) == 0x552B0 - BLOB_BASE, "Level1Data.anim_shot");
+_Static_assert(offsetof(struct Level1Data, words_552b6) == 0x552B6 - BLOB_BASE, "Level1Data.words_552b6");
 _Static_assert(offsetof(struct Level1Data, turret_a_cells_e0) == 0x553B2 - BLOB_BASE, "Level1Data.turret_a_cells_e0");
 _Static_assert(offsetof(struct Level1Data, turret_a_cells_e4) == 0x553D2 - BLOB_BASE, "Level1Data.turret_a_cells_e4");
 _Static_assert(offsetof(struct Level1Data, turret_a_anim_e0) == 0x553F2 - BLOB_BASE, "Level1Data.turret_a_anim_e0");
@@ -485,18 +495,24 @@ _Static_assert(offsetof(struct Level1Data, boss_part_pictures) == 0x5638A - BLOB
 _Static_assert(offsetof(struct Level1Data, boss_grid) == 0x567BC - BLOB_BASE, "Level1Data.boss_grid");
 _Static_assert(offsetof(struct Level1Data, boss_draw_table) == 0x567FA - BLOB_BASE, "Level1Data.boss_draw_table");
 _Static_assert(offsetof(struct Level1Data, boss_draw_sources) == 0x56810 - BLOB_BASE, "Level1Data.boss_draw_sources");
+_Static_assert(offsetof(struct Level1Data, words_56840) == 0x56840 - BLOB_BASE, "Level1Data.words_56840");
 _Static_assert(offsetof(struct Level1Data, boss_part_picture) == 0x59E28 - BLOB_BASE, "Level1Data.boss_part_picture");
+_Static_assert(offsetof(struct Level1Data, words_59e2a) == 0x59E2A - BLOB_BASE, "Level1Data.words_59e2a");
 _Static_assert(offsetof(struct Level1Data, pad_5adec) == 0x5ADEC - BLOB_BASE, "Level1Data.pad_5adec");
+_Static_assert(offsetof(struct Level1Data, words_5b822) == 0x5B822 - BLOB_BASE, "Level1Data.words_5b822");
 _Static_assert(offsetof(struct Level1Data, eyes_a) == 0x5C0E4 - BLOB_BASE, "Level1Data.eyes_a");
 _Static_assert(offsetof(struct Level1Data, eyes_b) == 0x5C194 - BLOB_BASE, "Level1Data.eyes_b");
 _Static_assert(offsetof(struct Level1Data, eyes_c) == 0x5C244 - BLOB_BASE, "Level1Data.eyes_c");
+_Static_assert(offsetof(struct Level1Data, words_5c246) == 0x5C246 - BLOB_BASE, "Level1Data.words_5c246");
 _Static_assert(offsetof(struct Level1Data, events_b) == 0x5C854 - BLOB_BASE, "Level1Data.events_b");
 _Static_assert(offsetof(struct Level1Data, events_b_end) == 0x5CB1E - BLOB_BASE, "Level1Data.events_b_end");
 _Static_assert(offsetof(struct Level1Data, pad_5cb20) == 0x5CB20 - BLOB_BASE, "Level1Data.pad_5cb20");
+_Static_assert(offsetof(struct Level1Data, words_60840) == 0x60840 - BLOB_BASE, "Level1Data.words_60840");
 _Static_assert(offsetof(struct Level1Data, shot_gfx_table) == 0x68F40 - BLOB_BASE, "Level1Data.shot_gfx_table");
 _Static_assert(offsetof(struct Level1Data, shot_gfx_cells) == 0x68F54 - BLOB_BASE, "Level1Data.shot_gfx_cells");
 _Static_assert(offsetof(struct Level1Data, formation_paths) == 0x68F60 - BLOB_BASE, "Level1Data.formation_paths");
 _Static_assert(offsetof(struct Level1Data, pad_690bc) == 0x690BC - BLOB_BASE, "Level1Data.pad_690bc");
+_Static_assert(offsetof(struct Level1Data, words_6934a) == 0x6934A - BLOB_BASE, "Level1Data.words_6934a");
 _Static_assert(offsetof(struct Level1Data, events_a) == 0x6A5DA - BLOB_BASE, "Level1Data.events_a");
 _Static_assert(offsetof(struct Level1Data, events_a_end) == 0x6AC08 - BLOB_BASE, "Level1Data.events_a_end");
 _Static_assert(offsetof(struct Level1Data, pad_6ac0a) == 0x6AC0A - BLOB_BASE, "Level1Data.pad_6ac0a");
@@ -534,7 +550,7 @@ struct Level2Data {
     struct Formation1 formation_5;   /* 54EEA */
     struct Formation1 formation_6;   /* 54F04 */
     uint16_t pad_54f1e[78];   /* 54F1E */
-    BLOB_PAD(96)
+    uint16_t words_54fba[48];   /* 54FBA */
     uint16_t flyer_anim2_e0[12];   /* 5501A */
     uint16_t flyer_anim_e0[12];   /* 55032 */
     uint16_t flyer_anim2_other[3];   /* 5504A */
@@ -589,12 +605,12 @@ struct Level2Data {
     BLOB_PAD(810)
     uint16_t boss_grid[38];   /* 5725E */
     uint16_t boss_cells[16];   /* 572AA */
-    BLOB_PAD(7382)
+    uint16_t words_572ca[3691];   /* 572CA */
     uint16_t pad_58fa0[705];   /* 58FA0 */
-    BLOB_PAD(8372)
+    uint16_t words_59522[4186];   /* 59522 */
     uint16_t roamer_picture[2960];   /* 5B5D6 */
     uint16_t launcher_shot_picture[16];   /* 5CCF6 */
-    BLOB_PAD(682)
+    uint16_t words_5cd16[341];   /* 5CD16 */
     uint16_t pad_5cfc0[1824];   /* 5CFC0 */
     BLOB_PAD(776)
     struct SpawnRec events_b[47];   /* 5E108 */
@@ -639,6 +655,7 @@ _Static_assert(offsetof(struct Level2Data, formation_4) == 0x54ED0 - BLOB_BASE, 
 _Static_assert(offsetof(struct Level2Data, formation_5) == 0x54EEA - BLOB_BASE, "Level2Data.formation_5");
 _Static_assert(offsetof(struct Level2Data, formation_6) == 0x54F04 - BLOB_BASE, "Level2Data.formation_6");
 _Static_assert(offsetof(struct Level2Data, pad_54f1e) == 0x54F1E - BLOB_BASE, "Level2Data.pad_54f1e");
+_Static_assert(offsetof(struct Level2Data, words_54fba) == 0x54FBA - BLOB_BASE, "Level2Data.words_54fba");
 _Static_assert(offsetof(struct Level2Data, flyer_anim2_e0) == 0x5501A - BLOB_BASE, "Level2Data.flyer_anim2_e0");
 _Static_assert(offsetof(struct Level2Data, flyer_anim_e0) == 0x55032 - BLOB_BASE, "Level2Data.flyer_anim_e0");
 _Static_assert(offsetof(struct Level2Data, flyer_anim2_other) == 0x5504A - BLOB_BASE, "Level2Data.flyer_anim2_other");
@@ -686,9 +703,12 @@ _Static_assert(offsetof(struct Level2Data, boss_update_data_2) == 0x56EAC - BLOB
 _Static_assert(offsetof(struct Level2Data, block_group_offsets) == 0x56F24 - BLOB_BASE, "Level2Data.block_group_offsets");
 _Static_assert(offsetof(struct Level2Data, boss_grid) == 0x5725E - BLOB_BASE, "Level2Data.boss_grid");
 _Static_assert(offsetof(struct Level2Data, boss_cells) == 0x572AA - BLOB_BASE, "Level2Data.boss_cells");
+_Static_assert(offsetof(struct Level2Data, words_572ca) == 0x572CA - BLOB_BASE, "Level2Data.words_572ca");
 _Static_assert(offsetof(struct Level2Data, pad_58fa0) == 0x58FA0 - BLOB_BASE, "Level2Data.pad_58fa0");
+_Static_assert(offsetof(struct Level2Data, words_59522) == 0x59522 - BLOB_BASE, "Level2Data.words_59522");
 _Static_assert(offsetof(struct Level2Data, roamer_picture) == 0x5B5D6 - BLOB_BASE, "Level2Data.roamer_picture");
 _Static_assert(offsetof(struct Level2Data, launcher_shot_picture) == 0x5CCF6 - BLOB_BASE, "Level2Data.launcher_shot_picture");
+_Static_assert(offsetof(struct Level2Data, words_5cd16) == 0x5CD16 - BLOB_BASE, "Level2Data.words_5cd16");
 _Static_assert(offsetof(struct Level2Data, pad_5cfc0) == 0x5CFC0 - BLOB_BASE, "Level2Data.pad_5cfc0");
 _Static_assert(offsetof(struct Level2Data, events_b) == 0x5E108 - BLOB_BASE, "Level2Data.events_b");
 _Static_assert(offsetof(struct Level2Data, events_b_end) == 0x5E39A - BLOB_BASE, "Level2Data.events_b_end");
@@ -750,15 +770,17 @@ struct Level3Data {
     BLOB_PAD(144)
     struct Formation1 formation_4;   /* 54F5C */
     struct Formation1 formation_5;   /* 54F76 */
-    BLOB_PAD(60)
+    uint16_t words_54f90[30];   /* 54F90 */
     uint16_t pad_54fcc[18];   /* 54FCC */
-    BLOB_PAD(136)
+    uint16_t words_54ff0[42];   /* 54FF0 */
+    BLOB_PAD(52)
     const uint16_t *enemy_a_pictures[8];   /* 55078 */
     const uint16_t *enemy_b_pictures[8];   /* 55098 */
     const uint16_t *enemy_c_pictures[8];   /* 550B8 */
     BLOB_PAD(102)
     const uint16_t *enemy_enter_anims[4];   /* 5513E */
-    BLOB_PAD(290)
+    uint16_t words_5514e[72];   /* 5514E */
+    BLOB_PAD(146)
     struct Level3WormSpawn worm_spawn;   /* 55270 */
     BLOB_PAD(288)
     const uint16_t *worm_head_anims[8];   /* 55400 */
@@ -773,10 +795,10 @@ struct Level3Data {
     int16_t walker_spawn_dx[8];   /* 55790 */
     int16_t walker_spawn_dy[8];   /* 557A0 */
     const uint16_t *walker_spawn_anims[8];   /* 557B0 */
-    BLOB_PAD(72)
+    uint16_t words_557d0[36];   /* 557D0 */
     uint16_t pad_55818[108];   /* 55818 */
     struct Level3Part parts[18];   /* 558F0 */
-    BLOB_PAD(48)
+    uint16_t words_55a10[24];   /* 55A10 */
     uint16_t part_gun_data_3[106];   /* 55A40 */
     uint16_t part_core_data[332];   /* 55B14 */
     const uint16_t *arm_tip_pictures[16];   /* 55DAC */
@@ -799,7 +821,7 @@ struct Level3Data {
     uint16_t boss_update_data[105];   /* 569A2 */
     uint16_t boss_flash_grid[188];   /* 56A74 */
     const uint16_t *boss2_shot_anims[8];   /* 56BEC */
-    BLOB_PAD(288)
+    uint16_t words_56c0c[144];   /* 56C0C */
     uint16_t boss2_update_data[215];   /* 56D2C */
     uint16_t gun_cells_f0[7];   /* 56EDA */
     uint16_t gun_cells_other[7];   /* 56EE8 */
@@ -829,9 +851,9 @@ struct Level3Data {
     struct PathCmd *formation_paths[60];   /* 6EE46 */
     struct PathCmd *worm_paths[12];   /* 6EF36 */
     struct PathCmd *formation_paths_end[11];   /* 6EF66 */
-    BLOB_PAD(1964)
+    uint16_t words_6ef92[982];   /* 6EF92 */
     uint16_t pad_6f73e[12];   /* 6F73E */
-    BLOB_PAD(2056)
+    uint16_t words_6f756[1028];   /* 6F756 */
     struct SpawnRec events_a[149];   /* 6FF5E */
     int16_t events_a_end;   /* 70784 */
     uint16_t pad_70786[7680];   /* 70786 */
@@ -871,11 +893,14 @@ _Static_assert(offsetof(struct Level3Data, formation_2) == 0x54E98 - BLOB_BASE, 
 _Static_assert(offsetof(struct Level3Data, formation_3) == 0x54EB2 - BLOB_BASE, "Level3Data.formation_3");
 _Static_assert(offsetof(struct Level3Data, formation_4) == 0x54F5C - BLOB_BASE, "Level3Data.formation_4");
 _Static_assert(offsetof(struct Level3Data, formation_5) == 0x54F76 - BLOB_BASE, "Level3Data.formation_5");
+_Static_assert(offsetof(struct Level3Data, words_54f90) == 0x54F90 - BLOB_BASE, "Level3Data.words_54f90");
 _Static_assert(offsetof(struct Level3Data, pad_54fcc) == 0x54FCC - BLOB_BASE, "Level3Data.pad_54fcc");
+_Static_assert(offsetof(struct Level3Data, words_54ff0) == 0x54FF0 - BLOB_BASE, "Level3Data.words_54ff0");
 _Static_assert(offsetof(struct Level3Data, enemy_a_pictures) == 0x55078 - BLOB_BASE, "Level3Data.enemy_a_pictures");
 _Static_assert(offsetof(struct Level3Data, enemy_b_pictures) == 0x55098 - BLOB_BASE, "Level3Data.enemy_b_pictures");
 _Static_assert(offsetof(struct Level3Data, enemy_c_pictures) == 0x550B8 - BLOB_BASE, "Level3Data.enemy_c_pictures");
 _Static_assert(offsetof(struct Level3Data, enemy_enter_anims) == 0x5513E - BLOB_BASE, "Level3Data.enemy_enter_anims");
+_Static_assert(offsetof(struct Level3Data, words_5514e) == 0x5514E - BLOB_BASE, "Level3Data.words_5514e");
 _Static_assert(offsetof(struct Level3Data, worm_spawn) == 0x55270 - BLOB_BASE, "Level3Data.worm_spawn");
 _Static_assert(offsetof(struct Level3Data, worm_head_anims) == 0x55400 - BLOB_BASE, "Level3Data.worm_head_anims");
 _Static_assert(offsetof(struct Level3Data, worm_head_data) == 0x5549E - BLOB_BASE, "Level3Data.worm_head_data");
@@ -885,8 +910,10 @@ _Static_assert(offsetof(struct Level3Data, worm_follow_pictures) == 0x55622 - BL
 _Static_assert(offsetof(struct Level3Data, walker_spawn_dx) == 0x55790 - BLOB_BASE, "Level3Data.walker_spawn_dx");
 _Static_assert(offsetof(struct Level3Data, walker_spawn_dy) == 0x557A0 - BLOB_BASE, "Level3Data.walker_spawn_dy");
 _Static_assert(offsetof(struct Level3Data, walker_spawn_anims) == 0x557B0 - BLOB_BASE, "Level3Data.walker_spawn_anims");
+_Static_assert(offsetof(struct Level3Data, words_557d0) == 0x557D0 - BLOB_BASE, "Level3Data.words_557d0");
 _Static_assert(offsetof(struct Level3Data, pad_55818) == 0x55818 - BLOB_BASE, "Level3Data.pad_55818");
 _Static_assert(offsetof(struct Level3Data, parts) == 0x558F0 - BLOB_BASE, "Level3Data.parts");
+_Static_assert(offsetof(struct Level3Data, words_55a10) == 0x55A10 - BLOB_BASE, "Level3Data.words_55a10");
 _Static_assert(offsetof(struct Level3Data, part_gun_data_3) == 0x55A40 - BLOB_BASE, "Level3Data.part_gun_data_3");
 _Static_assert(offsetof(struct Level3Data, part_core_data) == 0x55B14 - BLOB_BASE, "Level3Data.part_core_data");
 _Static_assert(offsetof(struct Level3Data, arm_tip_pictures) == 0x55DAC - BLOB_BASE, "Level3Data.arm_tip_pictures");
@@ -906,6 +933,7 @@ _Static_assert(offsetof(struct Level3Data, diver_update_data_4) == 0x56840 - BLO
 _Static_assert(offsetof(struct Level3Data, boss_update_data) == 0x569A2 - BLOB_BASE, "Level3Data.boss_update_data");
 _Static_assert(offsetof(struct Level3Data, boss_flash_grid) == 0x56A74 - BLOB_BASE, "Level3Data.boss_flash_grid");
 _Static_assert(offsetof(struct Level3Data, boss2_shot_anims) == 0x56BEC - BLOB_BASE, "Level3Data.boss2_shot_anims");
+_Static_assert(offsetof(struct Level3Data, words_56c0c) == 0x56C0C - BLOB_BASE, "Level3Data.words_56c0c");
 _Static_assert(offsetof(struct Level3Data, boss2_update_data) == 0x56D2C - BLOB_BASE, "Level3Data.boss2_update_data");
 _Static_assert(offsetof(struct Level3Data, gun_cells_f0) == 0x56EDA - BLOB_BASE, "Level3Data.gun_cells_f0");
 _Static_assert(offsetof(struct Level3Data, gun_cells_other) == 0x56EE8 - BLOB_BASE, "Level3Data.gun_cells_other");
@@ -932,7 +960,9 @@ _Static_assert(offsetof(struct Level3Data, shot_gfx_cells) == 0x6EE3A - BLOB_BAS
 _Static_assert(offsetof(struct Level3Data, formation_paths) == 0x6EE46 - BLOB_BASE, "Level3Data.formation_paths");
 _Static_assert(offsetof(struct Level3Data, worm_paths) == 0x6EF36 - BLOB_BASE, "Level3Data.worm_paths");
 _Static_assert(offsetof(struct Level3Data, formation_paths_end) == 0x6EF66 - BLOB_BASE, "Level3Data.formation_paths_end");
+_Static_assert(offsetof(struct Level3Data, words_6ef92) == 0x6EF92 - BLOB_BASE, "Level3Data.words_6ef92");
 _Static_assert(offsetof(struct Level3Data, pad_6f73e) == 0x6F73E - BLOB_BASE, "Level3Data.pad_6f73e");
+_Static_assert(offsetof(struct Level3Data, words_6f756) == 0x6F756 - BLOB_BASE, "Level3Data.words_6f756");
 _Static_assert(offsetof(struct Level3Data, events_a) == 0x6FF5E - BLOB_BASE, "Level3Data.events_a");
 _Static_assert(offsetof(struct Level3Data, events_a_end) == 0x70784 - BLOB_BASE, "Level3Data.events_a_end");
 _Static_assert(offsetof(struct Level3Data, pad_70786) == 0x70786 - BLOB_BASE, "Level3Data.pad_70786");
@@ -997,15 +1027,17 @@ struct Level4Data {
     struct Formation1 formation_3;   /* 54EF2 */
     struct Formation1 formation_5;   /* 54F0C */
     struct Formation1 formation_6;   /* 54F26 */
-    BLOB_PAD(120)
+    uint16_t words_54f40[60];   /* 54F40 */
     uint16_t pad_54fb8[42];   /* 54FB8 */
-    BLOB_PAD(334)
+    uint16_t words_5500c[66];   /* 5500C */
+    BLOB_PAD(202)
     struct Level4ScrollEnemy scroll_enemies[4];   /* 5515A */
-    BLOB_PAD(500)
+    uint16_t words_5518a[96];   /* 5518A */
+    BLOB_PAD(308)
     struct Level4EnemyGun enemy_a_guns[2];   /* 5537E */
     BLOB_PAD(486)
     const uint16_t *anims_by_kind[8];   /* 55574 */
-    BLOB_PAD(384)
+    uint16_t words_55594[192];   /* 55594 */
     const uint8_t *enemy_f8_paths[4];   /* 55714 */
     BLOB_PAD(348)
     struct Level4Boss1Piece boss1_pieces[19];   /* 55880 */
@@ -1021,10 +1053,11 @@ struct Level4Data {
     uint16_t b1_gun_dx_by_dir[8];   /* 55E10 */
     uint16_t b1_gun_dy_by_dir[8];   /* 55E20 */
     const uint16_t *b1_gun_anims_by_angle[8];   /* 55E30 */
-    BLOB_PAD(120)
+    uint16_t words_55e50[60];   /* 55E50 */
     uint8_t b1_gun_dirs_left[8];   /* 55EC8 */
     uint8_t b1_gun_dirs_right[8];   /* 55ED0 */
-    BLOB_PAD(610)
+    BLOB_PAD(322)
+    uint16_t words_5601a[144];   /* 5601A */
     struct Level4Boss2Piece boss2_pieces[20];   /* 5613A */
     BLOB_PAD(648)
     uint16_t b2_shot_anim[18];   /* 56552 */
@@ -1035,7 +1068,8 @@ struct Level4Data {
     const uint16_t *b2_barrel_anims_by_dir[8];   /* 56680 */
     uint16_t b2_muzzle_dx[8];   /* 566A0 */
     uint16_t b2_muzzle_dy[8];   /* 566B0 */
-    BLOB_PAD(530)
+    uint16_t words_566c0[144];   /* 566C0 */
+    BLOB_PAD(242)
     const uint16_t *b2_eye_anims[8];   /* 568D2 */
     BLOB_PAD(386)
     uint16_t bar_anim_10c[18];   /* 56A74 */
@@ -1063,7 +1097,7 @@ struct Level4Data {
     uint16_t enemy_b_picture[16];   /* 5FEBC */
     BLOB_PAD(46)
     uint16_t pad_5ff0a[1641];   /* 5FF0A */
-    BLOB_PAD(27834)
+    uint16_t words_60bdc[13917];   /* 60BDC */
     struct SpawnRec events_b[36];   /* 67896 */
     int16_t events_b_end;   /* 67A8E */
     uint16_t pad_67a90[16272];   /* 67A90 */
@@ -1071,9 +1105,9 @@ struct Level4Data {
     struct ShotPic *shot_gfx_table[5];   /* 77B70 */
     struct ShotPic shot_gfx_cells[3];   /* 77B84 */
     struct PathCmd *formation_paths[72];   /* 77B90 */
-    BLOB_PAD(3988)
+    uint16_t words_77cb0[1994];   /* 77CB0 */
     uint16_t pad_78c44[15];   /* 78C44 */
-    BLOB_PAD(634)
+    uint16_t words_78c62[317];   /* 78C62 */
     struct SpawnRec events_a[103];   /* 78EDC */
     int16_t events_a_end;   /* 7947E */
     uint16_t pad_79480[7680];   /* 79480 */
@@ -1121,10 +1155,14 @@ _Static_assert(offsetof(struct Level4Data, formation_2) == 0x54ED8 - BLOB_BASE, 
 _Static_assert(offsetof(struct Level4Data, formation_3) == 0x54EF2 - BLOB_BASE, "Level4Data.formation_3");
 _Static_assert(offsetof(struct Level4Data, formation_5) == 0x54F0C - BLOB_BASE, "Level4Data.formation_5");
 _Static_assert(offsetof(struct Level4Data, formation_6) == 0x54F26 - BLOB_BASE, "Level4Data.formation_6");
+_Static_assert(offsetof(struct Level4Data, words_54f40) == 0x54F40 - BLOB_BASE, "Level4Data.words_54f40");
 _Static_assert(offsetof(struct Level4Data, pad_54fb8) == 0x54FB8 - BLOB_BASE, "Level4Data.pad_54fb8");
+_Static_assert(offsetof(struct Level4Data, words_5500c) == 0x5500C - BLOB_BASE, "Level4Data.words_5500c");
 _Static_assert(offsetof(struct Level4Data, scroll_enemies) == 0x5515A - BLOB_BASE, "Level4Data.scroll_enemies");
+_Static_assert(offsetof(struct Level4Data, words_5518a) == 0x5518A - BLOB_BASE, "Level4Data.words_5518a");
 _Static_assert(offsetof(struct Level4Data, enemy_a_guns) == 0x5537E - BLOB_BASE, "Level4Data.enemy_a_guns");
 _Static_assert(offsetof(struct Level4Data, anims_by_kind) == 0x55574 - BLOB_BASE, "Level4Data.anims_by_kind");
+_Static_assert(offsetof(struct Level4Data, words_55594) == 0x55594 - BLOB_BASE, "Level4Data.words_55594");
 _Static_assert(offsetof(struct Level4Data, enemy_f8_paths) == 0x55714 - BLOB_BASE, "Level4Data.enemy_f8_paths");
 _Static_assert(offsetof(struct Level4Data, boss1_pieces) == 0x55880 - BLOB_BASE, "Level4Data.boss1_pieces");
 _Static_assert(offsetof(struct Level4Data, core_cells) == 0x55AAC - BLOB_BASE, "Level4Data.core_cells");
@@ -1135,8 +1173,10 @@ _Static_assert(offsetof(struct Level4Data, b1_core_sway) == 0x55C54 - BLOB_BASE,
 _Static_assert(offsetof(struct Level4Data, b1_gun_dx_by_dir) == 0x55E10 - BLOB_BASE, "Level4Data.b1_gun_dx_by_dir");
 _Static_assert(offsetof(struct Level4Data, b1_gun_dy_by_dir) == 0x55E20 - BLOB_BASE, "Level4Data.b1_gun_dy_by_dir");
 _Static_assert(offsetof(struct Level4Data, b1_gun_anims_by_angle) == 0x55E30 - BLOB_BASE, "Level4Data.b1_gun_anims_by_angle");
+_Static_assert(offsetof(struct Level4Data, words_55e50) == 0x55E50 - BLOB_BASE, "Level4Data.words_55e50");
 _Static_assert(offsetof(struct Level4Data, b1_gun_dirs_left) == 0x55EC8 - BLOB_BASE, "Level4Data.b1_gun_dirs_left");
 _Static_assert(offsetof(struct Level4Data, b1_gun_dirs_right) == 0x55ED0 - BLOB_BASE, "Level4Data.b1_gun_dirs_right");
+_Static_assert(offsetof(struct Level4Data, words_5601a) == 0x5601A - BLOB_BASE, "Level4Data.words_5601a");
 _Static_assert(offsetof(struct Level4Data, boss2_pieces) == 0x5613A - BLOB_BASE, "Level4Data.boss2_pieces");
 _Static_assert(offsetof(struct Level4Data, b2_shot_anim) == 0x56552 - BLOB_BASE, "Level4Data.b2_shot_anim");
 _Static_assert(offsetof(struct Level4Data, head_pictures) == 0x56576 - BLOB_BASE, "Level4Data.head_pictures");
@@ -1144,6 +1184,7 @@ _Static_assert(offsetof(struct Level4Data, b2_gun_pictures) == 0x565DA - BLOB_BA
 _Static_assert(offsetof(struct Level4Data, b2_barrel_anims_by_dir) == 0x56680 - BLOB_BASE, "Level4Data.b2_barrel_anims_by_dir");
 _Static_assert(offsetof(struct Level4Data, b2_muzzle_dx) == 0x566A0 - BLOB_BASE, "Level4Data.b2_muzzle_dx");
 _Static_assert(offsetof(struct Level4Data, b2_muzzle_dy) == 0x566B0 - BLOB_BASE, "Level4Data.b2_muzzle_dy");
+_Static_assert(offsetof(struct Level4Data, words_566c0) == 0x566C0 - BLOB_BASE, "Level4Data.words_566c0");
 _Static_assert(offsetof(struct Level4Data, b2_eye_anims) == 0x568D2 - BLOB_BASE, "Level4Data.b2_eye_anims");
 _Static_assert(offsetof(struct Level4Data, bar_anim_10c) == 0x56A74 - BLOB_BASE, "Level4Data.bar_anim_10c");
 _Static_assert(offsetof(struct Level4Data, bar_anim_other) == 0x56A98 - BLOB_BASE, "Level4Data.bar_anim_other");
@@ -1168,13 +1209,16 @@ _Static_assert(offsetof(struct Level4Data, b2_eye_shot_picture) == 0x5FDA6 - BLO
 _Static_assert(offsetof(struct Level4Data, enemy_b_picture_2) == 0x5FE66 - BLOB_BASE, "Level4Data.enemy_b_picture_2");
 _Static_assert(offsetof(struct Level4Data, enemy_b_picture) == 0x5FEBC - BLOB_BASE, "Level4Data.enemy_b_picture");
 _Static_assert(offsetof(struct Level4Data, pad_5ff0a) == 0x5FF0A - BLOB_BASE, "Level4Data.pad_5ff0a");
+_Static_assert(offsetof(struct Level4Data, words_60bdc) == 0x60BDC - BLOB_BASE, "Level4Data.words_60bdc");
 _Static_assert(offsetof(struct Level4Data, events_b) == 0x67896 - BLOB_BASE, "Level4Data.events_b");
 _Static_assert(offsetof(struct Level4Data, events_b_end) == 0x67A8E - BLOB_BASE, "Level4Data.events_b_end");
 _Static_assert(offsetof(struct Level4Data, pad_67a90) == 0x67A90 - BLOB_BASE, "Level4Data.pad_67a90");
 _Static_assert(offsetof(struct Level4Data, shot_gfx_table) == 0x77B70 - BLOB_BASE, "Level4Data.shot_gfx_table");
 _Static_assert(offsetof(struct Level4Data, shot_gfx_cells) == 0x77B84 - BLOB_BASE, "Level4Data.shot_gfx_cells");
 _Static_assert(offsetof(struct Level4Data, formation_paths) == 0x77B90 - BLOB_BASE, "Level4Data.formation_paths");
+_Static_assert(offsetof(struct Level4Data, words_77cb0) == 0x77CB0 - BLOB_BASE, "Level4Data.words_77cb0");
 _Static_assert(offsetof(struct Level4Data, pad_78c44) == 0x78C44 - BLOB_BASE, "Level4Data.pad_78c44");
+_Static_assert(offsetof(struct Level4Data, words_78c62) == 0x78C62 - BLOB_BASE, "Level4Data.words_78c62");
 _Static_assert(offsetof(struct Level4Data, events_a) == 0x78EDC - BLOB_BASE, "Level4Data.events_a");
 _Static_assert(offsetof(struct Level4Data, events_a_end) == 0x7947E - BLOB_BASE, "Level4Data.events_a_end");
 _Static_assert(offsetof(struct Level4Data, pad_79480) == 0x79480 - BLOB_BASE, "Level4Data.pad_79480");
@@ -1227,11 +1271,16 @@ struct Level5Data {
     BLOB_PAD(18)
     struct Formation1 formations[8];   /* 54E92 */
     uint16_t pad_54f62[51];   /* 54F62 */
-    BLOB_PAD(532)
+    uint16_t words_54fc8[204];   /* 54FC8 */
+    BLOB_PAD(24)
+    uint16_t words_55178[12];   /* 55178 */
+    BLOB_PAD(76)
     const uint8_t *gunner_paths[3];   /* 551DC */
     BLOB_PAD(210)
     const uint16_t *gunner_anims[8];   /* 552BA */
-    BLOB_PAD(572)
+    BLOB_PAD(178)
+    uint16_t words_5538c[96];   /* 5538C */
+    BLOB_PAD(202)
     uint16_t cannon_anim_a[18];   /* 55516 */
     uint16_t cannon_anim_b[18];   /* 5553A */
     uint16_t cannon_anim_100[18];   /* 5555E */
@@ -1241,7 +1290,9 @@ struct Level5Data {
     int16_t pellet_dy_by_dir[8];   /* 5580E */
     BLOB_PAD(304)
     struct Level5Boss1Piece boss1_pieces[22];   /* 5594E */
-    BLOB_PAD(976)
+    BLOB_PAD(6)
+    uint16_t words_55b64[75];   /* 55B64 */
+    BLOB_PAD(820)
     const uint16_t *boss_arm2_pictures[5];   /* 55F2E */
     const uint16_t *boss_draw_table[15];   /* 55F42 */
     uint16_t boss_update_data[96];   /* 55F7E */
@@ -1286,16 +1337,17 @@ struct Level5Data {
     uint16_t boss1_cells[270];   /* 57666 */
     BLOB_PAD(32)
     uint16_t pad_578a2[7565];   /* 578A2 */
-    BLOB_PAD(3630)
+    uint16_t words_5b3bc[1815];   /* 5B3BC */
     uint16_t gunner_picture[3798];   /* 5C1EA */
     uint16_t boss2_dead_picture[2484];   /* 5DF96 */
     uint16_t beam_top_picture[33];   /* 5F2FE */
     uint16_t beam_end_picture[16];   /* 5F340 */
-    BLOB_PAD(352)
+    uint16_t words_5f360[176];   /* 5F360 */
     uint16_t pad_5f4c0[3892];   /* 5F4C0 */
-    BLOB_PAD(612)
+    uint16_t words_61328[306];   /* 61328 */
     uint8_t turret_fire_picture;   /* 6158C */
-    BLOB_PAD(6037)
+    BLOB_PAD(1)
+    uint16_t words_6158e[3018];   /* 6158E */
     struct SpawnRec events_b[55];   /* 62D22 */
     int16_t events_b_end;   /* 63024 */
     uint16_t pad_63026[23538];   /* 63026 */
@@ -1303,9 +1355,9 @@ struct Level5Data {
     struct ShotPic *shot_gfx_table[4];   /* 72EC8 */
     struct ShotPic shot_gfx_cells[2];   /* 72ED8 */
     struct PathCmd *formation_paths[110];   /* 72EE0 */
-    BLOB_PAD(4750)
+    uint16_t words_73098[2375];   /* 73098 */
     uint16_t pad_74326[740];   /* 74326 */
-    BLOB_PAD(46)
+    uint16_t words_748ee[23];   /* 748EE */
     struct SpawnRec events_a[149];   /* 7491C */
     int16_t events_a_end;   /* 75142 */
     uint16_t pad_75144[7680];   /* 75144 */
@@ -1345,8 +1397,11 @@ _Static_assert(offsetof(struct Level5Data, gunner_shot_steps_2) == 0x54E7C - BLO
 _Static_assert(offsetof(struct Level5Data, boss2_mover_fire_rate_2) == 0x54E7F - BLOB_BASE, "Level5Data.boss2_mover_fire_rate_2");
 _Static_assert(offsetof(struct Level5Data, formations) == 0x54E92 - BLOB_BASE, "Level5Data.formations");
 _Static_assert(offsetof(struct Level5Data, pad_54f62) == 0x54F62 - BLOB_BASE, "Level5Data.pad_54f62");
+_Static_assert(offsetof(struct Level5Data, words_54fc8) == 0x54FC8 - BLOB_BASE, "Level5Data.words_54fc8");
+_Static_assert(offsetof(struct Level5Data, words_55178) == 0x55178 - BLOB_BASE, "Level5Data.words_55178");
 _Static_assert(offsetof(struct Level5Data, gunner_paths) == 0x551DC - BLOB_BASE, "Level5Data.gunner_paths");
 _Static_assert(offsetof(struct Level5Data, gunner_anims) == 0x552BA - BLOB_BASE, "Level5Data.gunner_anims");
+_Static_assert(offsetof(struct Level5Data, words_5538c) == 0x5538C - BLOB_BASE, "Level5Data.words_5538c");
 _Static_assert(offsetof(struct Level5Data, cannon_anim_a) == 0x55516 - BLOB_BASE, "Level5Data.cannon_anim_a");
 _Static_assert(offsetof(struct Level5Data, cannon_anim_b) == 0x5553A - BLOB_BASE, "Level5Data.cannon_anim_b");
 _Static_assert(offsetof(struct Level5Data, cannon_anim_100) == 0x5555E - BLOB_BASE, "Level5Data.cannon_anim_100");
@@ -1355,6 +1410,7 @@ _Static_assert(offsetof(struct Level5Data, pellet_anims_by_dir) == 0x557DE - BLO
 _Static_assert(offsetof(struct Level5Data, pellet_dx_by_dir) == 0x557FE - BLOB_BASE, "Level5Data.pellet_dx_by_dir");
 _Static_assert(offsetof(struct Level5Data, pellet_dy_by_dir) == 0x5580E - BLOB_BASE, "Level5Data.pellet_dy_by_dir");
 _Static_assert(offsetof(struct Level5Data, boss1_pieces) == 0x5594E - BLOB_BASE, "Level5Data.boss1_pieces");
+_Static_assert(offsetof(struct Level5Data, words_55b64) == 0x55B64 - BLOB_BASE, "Level5Data.words_55b64");
 _Static_assert(offsetof(struct Level5Data, boss_arm2_pictures) == 0x55F2E - BLOB_BASE, "Level5Data.boss_arm2_pictures");
 _Static_assert(offsetof(struct Level5Data, boss_draw_table) == 0x55F42 - BLOB_BASE, "Level5Data.boss_draw_table");
 _Static_assert(offsetof(struct Level5Data, boss_update_data) == 0x55F7E - BLOB_BASE, "Level5Data.boss_update_data");
@@ -1387,19 +1443,25 @@ _Static_assert(offsetof(struct Level5Data, gun_anim_108) == 0x57538 - BLOB_BASE,
 _Static_assert(offsetof(struct Level5Data, gun_anim_other) == 0x57550 - BLOB_BASE, "Level5Data.gun_anim_other");
 _Static_assert(offsetof(struct Level5Data, boss1_cells) == 0x57666 - BLOB_BASE, "Level5Data.boss1_cells");
 _Static_assert(offsetof(struct Level5Data, pad_578a2) == 0x578A2 - BLOB_BASE, "Level5Data.pad_578a2");
+_Static_assert(offsetof(struct Level5Data, words_5b3bc) == 0x5B3BC - BLOB_BASE, "Level5Data.words_5b3bc");
 _Static_assert(offsetof(struct Level5Data, gunner_picture) == 0x5C1EA - BLOB_BASE, "Level5Data.gunner_picture");
 _Static_assert(offsetof(struct Level5Data, boss2_dead_picture) == 0x5DF96 - BLOB_BASE, "Level5Data.boss2_dead_picture");
 _Static_assert(offsetof(struct Level5Data, beam_top_picture) == 0x5F2FE - BLOB_BASE, "Level5Data.beam_top_picture");
 _Static_assert(offsetof(struct Level5Data, beam_end_picture) == 0x5F340 - BLOB_BASE, "Level5Data.beam_end_picture");
+_Static_assert(offsetof(struct Level5Data, words_5f360) == 0x5F360 - BLOB_BASE, "Level5Data.words_5f360");
 _Static_assert(offsetof(struct Level5Data, pad_5f4c0) == 0x5F4C0 - BLOB_BASE, "Level5Data.pad_5f4c0");
+_Static_assert(offsetof(struct Level5Data, words_61328) == 0x61328 - BLOB_BASE, "Level5Data.words_61328");
 _Static_assert(offsetof(struct Level5Data, turret_fire_picture) == 0x6158C - BLOB_BASE, "Level5Data.turret_fire_picture");
+_Static_assert(offsetof(struct Level5Data, words_6158e) == 0x6158E - BLOB_BASE, "Level5Data.words_6158e");
 _Static_assert(offsetof(struct Level5Data, events_b) == 0x62D22 - BLOB_BASE, "Level5Data.events_b");
 _Static_assert(offsetof(struct Level5Data, events_b_end) == 0x63024 - BLOB_BASE, "Level5Data.events_b_end");
 _Static_assert(offsetof(struct Level5Data, pad_63026) == 0x63026 - BLOB_BASE, "Level5Data.pad_63026");
 _Static_assert(offsetof(struct Level5Data, shot_gfx_table) == 0x72EC8 - BLOB_BASE, "Level5Data.shot_gfx_table");
 _Static_assert(offsetof(struct Level5Data, shot_gfx_cells) == 0x72ED8 - BLOB_BASE, "Level5Data.shot_gfx_cells");
 _Static_assert(offsetof(struct Level5Data, formation_paths) == 0x72EE0 - BLOB_BASE, "Level5Data.formation_paths");
+_Static_assert(offsetof(struct Level5Data, words_73098) == 0x73098 - BLOB_BASE, "Level5Data.words_73098");
 _Static_assert(offsetof(struct Level5Data, pad_74326) == 0x74326 - BLOB_BASE, "Level5Data.pad_74326");
+_Static_assert(offsetof(struct Level5Data, words_748ee) == 0x748EE - BLOB_BASE, "Level5Data.words_748ee");
 _Static_assert(offsetof(struct Level5Data, events_a) == 0x7491C - BLOB_BASE, "Level5Data.events_a");
 _Static_assert(offsetof(struct Level5Data, events_a_end) == 0x75142 - BLOB_BASE, "Level5Data.events_a_end");
 _Static_assert(offsetof(struct Level5Data, pad_75144) == 0x75144 - BLOB_BASE, "Level5Data.pad_75144");
