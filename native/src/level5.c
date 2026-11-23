@@ -216,7 +216,7 @@ void l5_spawn_gunners(const struct SpawnRec *record)
     int count;
 
     for (count = 9; count >= 0; count--) {
-        Object *obj = insert_head(&xenon2.obj_list[2]);
+        Object *obj = insert_head(&xenon2.obj_list[LIST_ENEMY]);
 
         obj->type = 0xdc;
         obj->fn_update = (obj_fn)l5_gunner_update;
@@ -299,7 +299,7 @@ void l5_spawn_cannon(const struct SpawnRec *record)
 /* the pellet: type $E4 of the cannon and the unit ($55682) */
 static void spawn_pellet(int16_t x, int16_t y, uint16_t dir)
 {
-    Object *pellet = alloc_in(&xenon2.obj_list[2]);
+    Object *pellet = alloc_in(&xenon2.obj_list[LIST_ENEMY]);
 
     pellet->type = 0xe4;
     pellet->fn_update = (obj_fn)l5_pellet_update;
@@ -437,7 +437,7 @@ void l5_spawn_boss1(uint16_t slot_value)
     xenon2.scroll_pos = 0x1a0;
     xenon2.scroll_max = 0x1a0;
     for (count = 21; count >= 0; count--, rec++) {
-        Object *obj = insert_head(&xenon2.obj_list[2]);
+        Object *obj = insert_head(&xenon2.obj_list[LIST_ENEMY]);
 
         if (root == 0)
             root = obj;
@@ -550,7 +550,7 @@ fire:
         if (obj->boss.phase < 0)
             y = 0xf5;
         y = (int16_t)(y + obj->y);
-        missile = insert_head(&xenon2.obj_list[2]);
+        missile = insert_head(&xenon2.obj_list[LIST_ENEMY]);
         missile->type = 0xec;
         missile->fn_update = (obj_fn)l5_missile_update;
         missile->fn_draw = (obj_fn)draw_bob_masked;
@@ -639,7 +639,7 @@ void l5_turret_update(Object *obj)
     anim_step(obj);
     follow_target_offset(obj);
     if (obj->gfx == &xenon2.level5_data.turret_fire_picture && obj->anim_delay == 1) {
-        Object *beam = alloc_in(&xenon2.obj_list[3]);
+        Object *beam = alloc_in(&xenon2.obj_list[LIST_EFFECT]);
 
         beam->type = 0x110;
         beam->fn_update = (obj_fn)l5_beam_update;
@@ -690,7 +690,7 @@ void l5_heart_hit(Object *shot, Object *heart, uint16_t damage)
         return;
     }
     memset(xenon2.level_init_src + MAP_ROW(12), 0, MAP_ROW(18));
-    free_object_chain(xenon2.obj_list[2].prev);
+    free_object_chain(xenon2.obj_list[LIST_ENEMY].prev);
     spawn_bonuses(9);
     debris_burst(shot, 0x27, 0, 0, 0x140, 0xc0, xenon2.big_explosion_anim);
     xenon2.boss_dead = 0xff;
@@ -712,7 +712,7 @@ void l5_spawn_boss2(const struct SpawnRec *record)
     xenon2.l5_gunners_spawned = 0xff;
     y = (int16_t)(record->y - 8 - xenon2.scroll_pos);
     for (count = 9; count >= 0; count--, rec++) {
-        Object *obj = insert_head(&xenon2.obj_list[2]);
+        Object *obj = insert_head(&xenon2.obj_list[LIST_ENEMY]);
 
         if (root == 0)
             root = obj;
@@ -760,7 +760,7 @@ void l5_wheel_hit(Object *shot, Object *wheel, uint16_t damage)
     boss->fn_draw = (obj_fn)l5_boss2_flash;
     if (!dies(wheel, damage))
         return;
-    free_object_chain(xenon2.obj_list[2].prev);
+    free_object_chain(xenon2.obj_list[LIST_ENEMY].prev);
     debris_burst(shot, 0x13, 0x70, (uint16_t)(0x8d0 - xenon2.scroll_pos), 0x60, 0xa0, xenon2.big_explosion_anim);
     spawn_bonuses(4);
     for (i = 0; i < 10; i++)
@@ -861,7 +861,7 @@ void l5_boss2_mover(Object *obj)
         Object *beam;
 
         xenon2.sfx_cmd = 0x84;
-        beam = alloc_in(&xenon2.obj_list[3]);
+        beam = alloc_in(&xenon2.obj_list[LIST_EFFECT]);
         beam->type = 0x110;
         beam->fn_update = (obj_fn)l5_beam_update;
         beam->fn_draw = (obj_fn)l5_beam_draw;
@@ -1014,7 +1014,7 @@ void l5_spawn_gates(const struct SpawnRec *record)
     cells[1] = cells[2] = 0;
     cells[3] = 0x8add;
     for (count = 2; count >= 0; count--, rec++) {
-        Object *obj = insert_head(&xenon2.obj_list[2]);
+        Object *obj = insert_head(&xenon2.obj_list[LIST_ENEMY]);
         uint16_t step;
 
         obj->type = rec->type;

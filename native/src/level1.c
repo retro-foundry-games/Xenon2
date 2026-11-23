@@ -200,10 +200,10 @@ void level1_launcher_update(Object *launcher)
         launcher->launcher.step = 0;
         launcher->next->prev = launcher->prev;
         launcher->prev->next = launcher->next;
-        tail = xenon2.obj_list[3].prev;
-        xenon2.obj_list[3].prev = launcher;
+        tail = xenon2.obj_list[LIST_EFFECT].prev;
+        xenon2.obj_list[LIST_EFFECT].prev = launcher;
         launcher->prev = tail;
-        launcher->next = &xenon2.obj_list[3];
+        launcher->next = &xenon2.obj_list[LIST_EFFECT];
         tail->next = launcher;
         anim = launcher->type == 0xd4 ? xenon2.level1_data.anim_launcher_d4_fire : xenon2.level1_data.anim_launcher_d0_fire;
         set_anim(launcher, anim);
@@ -352,10 +352,10 @@ void level1_boss_update(Object *boss)
         for (i = 7; i >= 0; i--) {
             part = obj_free_pop();
             if (i == 7) {
-                link = xenon2.obj_list[2].prev;
-                xenon2.obj_list[2].prev = part;
+                link = xenon2.obj_list[LIST_ENEMY].prev;
+                xenon2.obj_list[LIST_ENEMY].prev = part;
                 part->prev = link;
-                part->next = &xenon2.obj_list[2];
+                part->next = &xenon2.obj_list[LIST_ENEMY];
                 link->next = part;
             } else {
                 link = prev_part->prev;
@@ -495,10 +495,10 @@ void level1_init(void)
     xenon2.scroll_max = 0x11ff;
     xenon2.l1_eyes_phase = 0;
     boss = obj_free_pop();
-    link = xenon2.obj_list[2].prev;
-    xenon2.obj_list[2].prev = boss;
+    link = xenon2.obj_list[LIST_ENEMY].prev;
+    xenon2.obj_list[LIST_ENEMY].prev = boss;
     boss->prev = link;
-    boss->next = &xenon2.obj_list[2];
+    boss->next = &xenon2.obj_list[LIST_ENEMY];
     link->next = boss;
     boss->type = 0x50;
     boss->fn_update = (obj_fn)level1_boss_update;

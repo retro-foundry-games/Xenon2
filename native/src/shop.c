@@ -856,7 +856,7 @@ void shop_stock_recheck(void)
 void shop_sell_list(void)
 {
     struct ShopRec *rec = xenon2.shop_data.recs;
-    Object *weapon = xenon2.obj_list[1].prev;
+    Object *weapon = xenon2.obj_list[LIST_MISC].prev;
 
     while (weapon->type != 0) {
         if (weapon->type != 0x94) {

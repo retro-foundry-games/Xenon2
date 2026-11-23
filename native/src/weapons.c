@@ -18,7 +18,7 @@
 /* orig $005C22: the object of list B (type $40) that belongs to pod, or the sentinel */
 static Object *find_decoration(Object *pod)
 {
-    Object *deco = xenon2.obj_list[3].prev;
+    Object *deco = xenon2.obj_list[LIST_EFFECT].prev;
 
     while (deco->type != 0) {
         if (deco->type == 0x40 && deco->link.ptr == pod)
@@ -495,7 +495,7 @@ void bomb_update(Object *obj)
     }
     if (xenon2.fire_press == 0 || timer >= 0)
         return;
-    for (other = xenon2.obj_list[3].prev; other->type != 0; other = other->prev)
+    for (other = xenon2.obj_list[LIST_EFFECT].prev; other->type != 0; other = other->prev)
         if (other->type == 0x28)
             return;
     obj->shot_count = 0;
@@ -534,7 +534,7 @@ void homing_missile_update(Object *obj)
     }
     if (xenon2.fire_press == 0 || timer >= 0)
         return;
-    for (other = xenon2.obj_list[3].prev; other->type != 0; other = other->prev)
+    for (other = xenon2.obj_list[LIST_EFFECT].prev; other->type != 0; other = other->prev)
         if (other->type == 0x48)
             return;
     obj->shot_count = 0;
@@ -741,13 +741,13 @@ void pickup_bomb(Object *obj)
         custom->color[2 * i] = (uint16_t)(v >> 16);
         custom->color[2 * i + 1] = (uint16_t)v;
     }
-    for (enemy = xenon2.obj_list[2].prev; enemy->type != 0; enemy = after) {
+    for (enemy = xenon2.obj_list[LIST_ENEMY].prev; enemy->type != 0; enemy = after) {
         type = enemy->type;
         after = owner_chain_next(enemy);
         if (type != 0x50 && type != 0x54)
-            apply_damage((Object *)&xenon2.obj_list[1], enemy, 0x7f);
+            apply_damage((Object *)&xenon2.obj_list[LIST_MISC], enemy, 0x7f);
     }
-    for (item = xenon2.obj_list[3].prev; item->type != 0; ) {
+    for (item = xenon2.obj_list[LIST_EFFECT].prev; item->type != 0; ) {
         Object *next = item->prev;
 
         if (item->type == 0x14) {
@@ -787,19 +787,19 @@ void init_weapons(Object *caller)
     Object *last = 0;
     int i;
 
-    xenon2.list_a_prev_saved = xenon2.obj_list[1].prev;
-    xenon2.list_a_next_saved = xenon2.obj_list[1].next;
+    xenon2.list_a_prev_saved = xenon2.obj_list[LIST_MISC].prev;
+    xenon2.list_a_next_saved = xenon2.obj_list[LIST_MISC].next;
     for (i = 0; i < 7; i++) {
         xenon2.weapon_slots_saved[i] = xenon2.weapon_slots[i];
         xenon2.weapon_slots[i].type = 0;
         xenon2.weapon_slots[i].obj = 0;
     }
-    xenon2.obj_list[1].type = 0;
-    xenon2.obj_list[1].prev = &xenon2.obj_list[1];
-    xenon2.obj_list[1].next = &xenon2.obj_list[1];
-    xenon2.obj_list[1].fn_update = obj_nop;
-    xenon2.obj_list[1].fn_draw = obj_nop;
-    xenon2.obj_list[1].fn_hit = (void *)obj_nop;
+    xenon2.obj_list[LIST_MISC].type = 0;
+    xenon2.obj_list[LIST_MISC].prev = &xenon2.obj_list[LIST_MISC];
+    xenon2.obj_list[LIST_MISC].next = &xenon2.obj_list[LIST_MISC];
+    xenon2.obj_list[LIST_MISC].fn_update = obj_nop;
+    xenon2.obj_list[LIST_MISC].fn_draw = obj_nop;
+    xenon2.obj_list[LIST_MISC].fn_hit = (void *)obj_nop;
     last = give_forward_shot(caller, last);
     last = give_cannon(caller, last);
     last = give_cannon(caller, last);
@@ -925,7 +925,7 @@ void player_dies(Object *ship)
     xenon2.dive_timer = 0;
     set_anim(&xenon2.player, death_anim);
     xenon2.player.fn_draw = draw_bob_masked;
-    weapon = xenon2.obj_list[1].prev;
+    weapon = xenon2.obj_list[LIST_MISC].prev;
     if (weapon->type == 0)
         return;
     if (weapon->type == 0x94 && weapon->score == 0) {
@@ -1198,7 +1198,7 @@ static Object *pick_target(void)
             enemy = owner_chain_next(enemy);
         }
     }
-    return &xenon2.obj_list[2];
+    return &xenon2.obj_list[LIST_ENEMY];
 }
 
 /* orig $003096: every enemy whose box meets (x0, y0)-(x1, y1) takes dmg from the shooter; it ends when the shooter dies or level_end_items is

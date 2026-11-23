@@ -746,11 +746,11 @@ Object *spawn_enemy_shot(uint16_t x, uint16_t y, uint16_t angle, uint16_t steps,
 /* inlined: $2418 and the insertion before the sentinel of list A / B (the new object is returned) */
 Object *alloc_a(Object *caller)
 {
-    Object *o = obj_free_pop(), *tail = xenon2.obj_list[1].prev;
+    Object *o = obj_free_pop(), *tail = xenon2.obj_list[LIST_MISC].prev;
 
-    xenon2.obj_list[1].prev = o;
+    xenon2.obj_list[LIST_MISC].prev = o;
     o->prev = tail;
-    o->next = &xenon2.obj_list[1];
+    o->next = &xenon2.obj_list[LIST_MISC];
     tail->next = o;
     return o;
 }
@@ -1059,8 +1059,8 @@ Object *obj_free_pop(void)
         xenon2.free_obj = obj->next;
         goto clear;
     }
-    /* $2436: the pool is empty: take an object away from the lists, the effects first (obj_list[3], obj_list[4] is the front list, obj_list[2] the enemies) */
-    obj = &xenon2.obj_list[3];
+    /* $2436: the pool is empty: take an object away from the lists, the effects first (obj_list[LIST_EFFECT], obj_list[LIST_FRONT] is the front list, obj_list[LIST_ENEMY] the enemies) */
+    obj = &xenon2.obj_list[LIST_EFFECT];
     for (;;) {
         obj = obj->prev;
         if (obj->type == 4 || obj->type == 0xc || obj->type == 0x10)
@@ -1068,13 +1068,13 @@ Object *obj_free_pop(void)
         if (obj->type == 0)
             break;
     }
-    obj = xenon2.obj_list[3].prev;
+    obj = xenon2.obj_list[LIST_EFFECT].prev;
     if (obj->type != 0)
         goto steal;
-    obj = xenon2.obj_list[4].prev;
+    obj = xenon2.obj_list[LIST_FRONT].prev;
     if (obj->type != 0)
         goto steal;
-    obj = xenon2.obj_list[2].prev;   /* $247E: from the enemies' list head on, the first dead one or one far enough down */
+    obj = xenon2.obj_list[LIST_ENEMY].prev;   /* $247E: from the enemies' list head on, the first dead one or one far enough down */
     for (;;) {
         if ((int16_t)obj->type >= 0xc8 || obj->type == 4)
             goto steal;
@@ -1082,7 +1082,7 @@ Object *obj_free_pop(void)
         if (obj->type == 0)
             break;
     }
-    obj = xenon2.obj_list[2].prev;
+    obj = xenon2.obj_list[LIST_ENEMY].prev;
 steal:
     next = obj->next;   /* $2464: take it out of its list */
     prev = obj->prev;
@@ -1123,7 +1123,7 @@ void init_objects(void)
         o->fn_hit = obj_nop;
     }
     o = &xenon2.player;
-    list_append(&xenon2.obj_list[0], o);
+    list_append(&xenon2.obj_list[LIST_PLAYER], o);
     o->type = 8;
     o->fn_update = player_update;
     o->fn_draw = draw_bob_masked;
@@ -1133,7 +1133,7 @@ void init_objects(void)
     o->y = 0xb0;
     for (i = 0; i < 4; i++) {
         const uint16_t *rec = &xenon2.option_anims[i * 12];   /* the record the table at $6CB2 points to */
-        Object *h = &xenon2.obj_list[0];
+        Object *h = &xenon2.obj_list[LIST_PLAYER];
         Object *first;
 
         o = obj_free_pop();
@@ -1223,7 +1223,7 @@ void spawn_shot_object(Object *owner, uint16_t dx, uint16_t dy, uint16_t off_x, 
         gfx_slot++;
     }
     shot_obj = obj_free_pop();
-    list_append(&xenon2.obj_list[3], shot_obj);
+    list_append(&xenon2.obj_list[LIST_EFFECT], shot_obj);
     shot_obj->shot.speed = (shot_obj->shot.speed & 0xffffu) | (uint32_t)(uint16_t)(dx) << 16;
     shot_obj->shot.dy = dy;
     shot_obj->x = (uint16_t)(off_x + xenon2.player.x);
@@ -1240,7 +1240,7 @@ void spawn_shot_object(Object *owner, uint16_t dx, uint16_t dy, uint16_t off_x, 
 /* orig $00644e: empties list 1 of its objects and restores its ends and the block at $C66 from their saved copies */
 void reset_extra_objects(void)
 {
-    Object *obj = xenon2.obj_list[1].prev;
+    Object *obj = xenon2.obj_list[LIST_MISC].prev;
     uint16_t i;
 
     while (obj->type) {
@@ -1249,8 +1249,8 @@ void reset_extra_objects(void)
         free_with_slot(obj);
         obj = p;
     }
-    xenon2.obj_list[1].prev = xenon2.list_a_prev_saved;
-    xenon2.obj_list[1].next = xenon2.list_a_next_saved;
+    xenon2.obj_list[LIST_MISC].prev = xenon2.list_a_prev_saved;
+    xenon2.obj_list[LIST_MISC].next = xenon2.list_a_next_saved;
     for (i = 0; i < 7; i++)
         xenon2.weapon_slots[i] = xenon2.weapon_slots_saved[i];
 }
@@ -1381,10 +1381,10 @@ void clear_level_objects(void)
     if (xenon2.nashwan_timer)
         reset_extra_objects();
     scroll_delta = xenon2.scroll_y - xenon2.scroll_pos;
-    free_chain(xenon2.obj_list[4].prev, scroll_delta);
-    free_chain(xenon2.obj_list[3].prev, scroll_delta);
-    free_chain(xenon2.obj_list[2].prev, scroll_delta);
-    for (obj = xenon2.obj_list[1].prev; obj->type; obj = xenon2.obj_list[1].prev)
+    free_chain(xenon2.obj_list[LIST_FRONT].prev, scroll_delta);
+    free_chain(xenon2.obj_list[LIST_EFFECT].prev, scroll_delta);
+    free_chain(xenon2.obj_list[LIST_ENEMY].prev, scroll_delta);
+    for (obj = xenon2.obj_list[LIST_MISC].prev; obj->type; obj = xenon2.obj_list[LIST_MISC].prev)
         free_with_slot(obj);
     for (i = 0; i < 80; i++) {
         xenon2.shots[i].x = -1;
