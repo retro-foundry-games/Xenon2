@@ -366,6 +366,50 @@ static void scripts_save(uint8_t *ram)
     }
 }
 
+/* ---- the sample bank: headers (a long and a word) between the samples, 20 instruments from the start and 18 effects from SAMPLE_EFFECTS ---- */
+#define SAMPLE_BANK 0x1bb80
+#define SAMPLE_BANK_END 0x2baa0
+#define SAMPLE_EFFECTS (SAMPLE_BANK + 0xff1c)
+static const struct { uint32_t start; unsigned count; } sample_runs[] = { { SAMPLE_BANK, 20 }, { SAMPLE_EFFECTS, 18 } };
+
+static void samples_load(uint32_t address, const uint8_t *image, uint32_t length)
+{
+    if (address > SAMPLE_BANK || address + length < SAMPLE_BANK_END)
+        return;
+    for (unsigned r = 0; r < 2; r++) {
+        uint32_t a = sample_runs[r].start;
+
+        for (unsigned i = 0; i < sample_runs[r].count; i++) {
+            const uint8_t *src = image + (a - address);
+            struct SampleHeader *h = (struct SampleHeader *)((uint8_t *)&xenon2 + a);
+
+            h->length = be32(src);
+            h->rate = be16(src + 4);
+            a += sizeof *h + h->length;
+        }
+    }
+}
+
+static void samples_save(uint8_t *ram)
+{
+    for (unsigned r = 0; r < 2; r++) {
+        uint32_t a = sample_runs[r].start;
+
+        for (unsigned i = 0; i < sample_runs[r].count; i++) {
+            struct SampleHeader h;
+
+            memcpy(&h, ram + a, sizeof h);
+            ram[a] = (uint8_t)(h.length >> 24);
+            ram[a + 1] = (uint8_t)(h.length >> 16);
+            ram[a + 2] = (uint8_t)(h.length >> 8);
+            ram[a + 3] = (uint8_t)h.length;
+            ram[a + 4] = (uint8_t)(h.rate >> 8);
+            ram[a + 5] = (uint8_t)h.rate;
+            a += sizeof h + h.length;
+        }
+    }
+}
+
 void guest_load_range(uint32_t address, const uint8_t *image, uint32_t length)
 {
     for (unsigned i = 0; i < sizeof guest_members / sizeof guest_members[0]; i++) {
@@ -414,6 +458,7 @@ void guest_load_range(uint32_t address, const uint8_t *image, uint32_t length)
     }
     blob_load(address, image, length);
     scripts_load(address, length);
+    samples_load(address, image, length);
 }
 
 /* disk 1 from track 82 on is the game's program, data and variables, as the loader of disk 1 puts them at $400 ($6B400 bytes) */
@@ -570,6 +615,7 @@ void host_export_ram_buf(uint8_t *ram)   /* ram: 0x80000 bytes */
     }
     blob_save(ram);
     scripts_save(ram);
+    samples_save(ram);
 }
 
 /* the memory as the original had it (big endian, 0x80000 bytes) into the block: the raw bytes, then the named members converted (the dev build starts the port from the

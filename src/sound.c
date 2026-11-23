@@ -30,20 +30,10 @@ static uint8_t *at(int32_t off)
     return (uint8_t *)((uintptr_t)xenon2.music_base + (uint32_t)off);
 }
 
-static uint16_t word_at(const uint8_t *p)
-{
-    return (uint16_t)((p[0] << 8) | p[1]);
-}
-
 /* the word of a channel's list at OFF (an offset from music_base into music_lists) */
 static uint16_t list_word(int16_t off)
 {
     return xenon2.music_lists[(uint16_t)(off - (int16_t)(offsetof(struct Xenon2, music_lists) - offsetof(struct Xenon2, music_base))) / 2];
-}
-
-static uint32_t long_at(const uint8_t *p)
-{
-    return ((uint32_t)p[0] << 24) | ((uint32_t)p[1] << 16) | ((uint32_t)p[2] << 8) | p[3];
 }
 
 static uint16_t get_volume(void)
@@ -122,22 +112,20 @@ void music_fade_out(void)
 /* orig $1B1B6: build the instrument table from the sample bank (once) */
 void sound_init_instruments(void)
 {
+    const struct SampleHeader *h;
     const uint8_t *p;
     uint16_t i;
-    uint32_t len;
-    uint16_t rate;
 
     if (xenon2.instruments_ready)
         return;
     p = xenon2.sample_bank;
     for (i = 0; i < 20; i++) {
-        len = long_at(p);
-        rate = word_at(p + 4);
-        p += 6;
+        h = (const struct SampleHeader *)p;
+        p += sizeof *h;
         xenon2.instruments[i].sample = (uint8_t *)p;
-        p += len;
-        xenon2.instruments[i].length = (uint16_t)(len >> 1);
-        xenon2.instruments[i].rate = rate_divide(rate);
+        p += h->length;
+        xenon2.instruments[i].length = (uint16_t)(h->length >> 1);
+        xenon2.instruments[i].rate = rate_divide(h->rate);
     }
     xenon2.silence_ptr = (uint8_t *)p;
     xenon2.sfx_wave_base = (uint8_t *)p + 0x40;
@@ -151,27 +139,27 @@ void sound_init_instruments(void)
 /* orig $1B216: build the table of sampled sound effects from the second part of the sample bank (once) */
 void sound_init_sfx_samples(void)
 {
+    const struct SampleHeader *h;
     const uint8_t *p;
     uint16_t i;
-    uint32_t len, scaled;
-    uint16_t rate, quot;
+    uint32_t scaled;
+    uint16_t quot;
 
     if (xenon2.sfx_samples_ready)
         return;
     p = xenon2.sample_bank + 0xff1c;
     for (i = 0; i < 18; i++) {
-        scaled = (uint32_t)word_at(p + 2) * 0x32;
-        quot = (uint16_t)(scaled / word_at(p + 4));
-        if (scaled / word_at(p + 4) > 0xffff)
+        h = (const struct SampleHeader *)p;
+        scaled = (uint32_t)(uint16_t)h->length * 0x32;   /* (the low word of the length) */
+        quot = (uint16_t)(scaled / h->rate);
+        if (scaled / h->rate > 0xffff)
             quot = (uint16_t)scaled;
         xenon2.sfx_samples[i].duration = (uint8_t)(quot + 1);
-        len = long_at(p);
-        rate = word_at(p + 4);
-        p += 6;
+        p += sizeof *h;
         xenon2.sfx_samples[i].sample = (uint8_t *)p;
-        p += len;
-        xenon2.sfx_samples[i].length = (uint16_t)(len >> 1);
-        xenon2.sfx_samples[i].period = rate_divide(rate);
+        p += h->length;
+        xenon2.sfx_samples[i].length = (uint16_t)(h->length >> 1);
+        xenon2.sfx_samples[i].period = rate_divide(h->rate);
     }
     xenon2.sfx_samples_ready = 0xff;
 }
