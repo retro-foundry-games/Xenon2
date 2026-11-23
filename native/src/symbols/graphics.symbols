@@ -48,3 +48,5 @@ arr gfx_4bd00 0x4bd00 uint16_t 80
 arr gfx_25b8 0x25b8 uint16_t 3
 arr gfx_2af8 0x2af8 uint16_t 30
 arr gfx_2bac 0x2bac uint16_t 60
+arr gfx_19328 0x19328 uint16_t 635
+arr gfx_df56 0xdf56 uint16_t 20

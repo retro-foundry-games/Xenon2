@@ -391,7 +391,7 @@ struct Xenon2 {
     const uint16_t title_font[3608];  /* $009A36 tab */
     const uint16_t font_gfx[2432];  /* $00B666 tab */
     const uint16_t title_gfx[2808];  /* $00C966 tab */
-    PAD(40)
+    uint16_t gfx_df56[20];  /* $00DF56 arr */
     uint16_t gfx_df7e[101];  /* $00DF7E arr */
     uint16_t gfx_e048[84];  /* $00E048 arr */
     uint16_t gfx_e0f0[45];  /* $00E0F0 arr */
@@ -440,7 +440,7 @@ struct Xenon2 {
     uint16_t gfx_186d4[1523];  /* $0186D4 arr */
     const uint16_t weaponc0_picture[1];  /* $0192BA tab */
     uint16_t gfx_192bc[54];  /* $0192BC arr */
-    PAD(1270)
+    uint16_t gfx_19328[635];  /* $019328 arr */
     const uint8_t digit_gfx[640];  /* $01981E tab */
     const uint16_t panel_words[640];  /* $019A9E tab */
     uint8_t music_base[4];  /* $019F9E arr */
@@ -829,6 +829,7 @@ LAYOUT_ASSERT(sine_table, 0x98f6);
 LAYOUT_ASSERT(title_font, 0x9a36);
 LAYOUT_ASSERT(font_gfx, 0xb666);
 LAYOUT_ASSERT(title_gfx, 0xc966);
+LAYOUT_ASSERT(gfx_df56, 0xdf56);
 LAYOUT_ASSERT(gfx_df7e, 0xdf7e);
 LAYOUT_ASSERT(gfx_e048, 0xe048);
 LAYOUT_ASSERT(gfx_e0f0, 0xe0f0);
@@ -877,6 +878,7 @@ LAYOUT_ASSERT(gfx_1838e, 0x1838e);
 LAYOUT_ASSERT(gfx_186d4, 0x186d4);
 LAYOUT_ASSERT(weaponc0_picture, 0x192ba);
 LAYOUT_ASSERT(gfx_192bc, 0x192bc);
+LAYOUT_ASSERT(gfx_19328, 0x19328);
 LAYOUT_ASSERT(digit_gfx, 0x1981e);
 LAYOUT_ASSERT(panel_words, 0x19a9e);
 LAYOUT_ASSERT(music_base, 0x19f9e);
