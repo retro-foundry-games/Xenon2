@@ -6,6 +6,10 @@
 #
 # Outside the flake's shell every target is run again inside it.
 
+# (no implicit rules: Makefile.web would make `make` try to tangle it into Makefile)
+MAKEFLAGS += -r
+Makefile: ;
+
 CC  := m68k-amigaos-gcc
 LD  := m68k-amigaos-ld
 NM  := m68k-amigaos-nm
