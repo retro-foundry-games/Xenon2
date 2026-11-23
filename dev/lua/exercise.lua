@@ -3,6 +3,7 @@
 -- the failure; a line is printed every 100 frames (scroll, boss and level flags, energy, lives).
 --
 --   host/ramdump.lua:  ami9000_host host/ramdump.lua --headless --script-args "joy1 load=l3-boss ram=captures/l3-boss.ram"
+--   startfn=8ff2 starts the game again at that function of the original (the shop's program) on the memory
 --   xenon2-sdl-dev --lua dev/lua/exercise.lua --lua-args "ram=captures/l3-boss.ram frames=3000" --disks local
 local path = args:match("ram=(%S+)")
 local frames = tonumber(args:match("frames=(%d+)") or "3000")
@@ -25,6 +26,8 @@ port.run_until(SWAP, 20)
 local fh = assert(io.open(path, "rb"))
 port.load_ram(fh:read("a"))
 fh:close()
+local startfn = args:match("startfn=(%x+)")
+if startfn then port.run_function(tonumber(startfn, 16)) end   -- (the shop: 8ff2)
 
 local function s16(a) local v = port.peek16(a); return v >= 0x8000 and v - 0x10000 or v end
 for i = 1, frames do

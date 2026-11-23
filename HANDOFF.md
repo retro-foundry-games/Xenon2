@@ -56,6 +56,7 @@ Dropping into a level or its boss (`host/scenario.lua`; the places are its `SCEN
     ... host/ramdump.lua --headless --script-args "joy1 load=l3-boss ram=captures/l3-boss.ram"                    the memory of the place, for the port alone:
     dev/build/xenon2-sdl-dev --lua dev/lua/exercise.lua --lua-args "ram=captures/l3-boss.ram frames=3000" --disks local     the port drops in, moves under fire; a crash is the failure
     for l in 1 2 3 4 5: tools/poison_gaps.py $l=captures/l$l-boss.ram captures/l$l-boss-poison.ram; exercise.lua on both; the outputs must be equal (reads of unnamed memory)
+    tools/poison_gaps.py shop=captures/shop-before.ram captures/shop-before-poison.ram; exercise.lua ram=... startfn=8ff2 on both: the shop (clean, 2026-11-23)
     ... host/level_events.lua --headless --script-args "state=frame-8880"                                          the event lists of a level (where the bosses come)
 
 A stop with `hold=1` and `--control SOCK`: `ami9000/host/ctl.py SOCK 'LS.port_call("print(port.peek16(0xcd0))")'` asks the port, `LS.snap.ram` is the original's
