@@ -136,23 +136,22 @@ void music_fade_out(void)
 /* orig $1B1B6: build the instrument table from the sample bank (once) */
 void sound_init_instruments(void)
 {
-    const struct SampleHeader *h;
-    const uint8_t *p;
+    uint32_t pos = 0;   /* index into sample_bank */
     uint16_t i;
 
     if (xenon2.instruments_ready)
         return;
-    p = xenon2.sample_bank;
     for (i = 0; i < 20; i++) {
-        h = (const struct SampleHeader *)p;
-        p += sizeof *h;
-        xenon2.instruments[i].sample = (uint8_t *)p;
-        p += h->length;
+        const struct SampleHeader *h = (const struct SampleHeader *)&xenon2.sample_bank[pos];
+
+        pos += sizeof *h;
+        xenon2.instruments[i].sample = (uint8_t *)&xenon2.sample_bank[pos];
+        pos += h->length;
         xenon2.instruments[i].length = (uint16_t)(h->length >> 1);
         xenon2.instruments[i].rate = rate_divide(h->rate);
     }
-    xenon2.silence_ptr = (uint8_t *)p;
-    xenon2.sfx_wave_base = (uint8_t *)p + 0x40;
+    xenon2.silence_ptr = (uint8_t *)&xenon2.sample_bank[pos];
+    xenon2.sfx_wave_base = (uint8_t *)&xenon2.sample_bank[pos + 0x40];
     xenon2.instruments_ready = 0xff;
     xenon2.instruments[5].rate -= 8;
     xenon2.instruments[6].rate -= 8;
@@ -163,25 +162,24 @@ void sound_init_instruments(void)
 /* orig $1B216: build the table of sampled sound effects from the second part of the sample bank (once) */
 void sound_init_sfx_samples(void)
 {
-    const struct SampleHeader *h;
-    const uint8_t *p;
+    uint32_t pos = SAMPLE_EFFECTS_OFFSET;   /* index into sample_bank */
     uint16_t i;
     uint32_t scaled;
     uint16_t quot;
 
     if (xenon2.sfx_samples_ready)
         return;
-    p = xenon2.sample_bank + SAMPLE_EFFECTS_OFFSET;
     for (i = 0; i < 18; i++) {
-        h = (const struct SampleHeader *)p;
+        const struct SampleHeader *h = (const struct SampleHeader *)&xenon2.sample_bank[pos];
+
         scaled = (uint32_t)(uint16_t)h->length * 0x32;   /* (the low word of the length) */
         quot = (uint16_t)(scaled / h->rate);
         if (scaled / h->rate > 0xffff)
             quot = (uint16_t)scaled;
         xenon2.sfx_samples[i].duration = (uint8_t)(quot + 1);
-        p += sizeof *h;
-        xenon2.sfx_samples[i].sample = (uint8_t *)p;
-        p += h->length;
+        pos += sizeof *h;
+        xenon2.sfx_samples[i].sample = (uint8_t *)&xenon2.sample_bank[pos];
+        pos += h->length;
         xenon2.sfx_samples[i].length = (uint16_t)(h->length >> 1);
         xenon2.sfx_samples[i].period = rate_divide(h->rate);
     }
