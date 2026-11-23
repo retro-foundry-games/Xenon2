@@ -16,6 +16,12 @@ struct SampleHeader {
     uint16_t rate;          /* 4 */
 };
 
+/* an entry of the sample bank: a header and its samples; the next entry follows */
+struct SampleEntry {
+    struct SampleHeader header;
+    uint8_t samples[];
+};
+
 /* an instrument ($1A738, 20 of them, built by sound_init_instruments from the sample bank) */
 struct Instrument {
     uint8_t *sample;        /* 0: first byte of the 8-bit sample */

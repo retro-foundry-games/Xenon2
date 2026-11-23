@@ -111,7 +111,7 @@ static void channel_stop(volatile struct AudioChannel *hw, struct ShopChan *ch, 
     hw->per = 0x7c;
     SETCLR_WRITE(dmacon, dma_bit);
     shop_sound_delay();
-    hw->lc = ADDR(mir->lc);
+    hw->lc = (uintptr_t)(mir->lc);
     hw->len = mir->len;
     hw->per = mir->per;
     hw->vol = mir->vol;
@@ -204,7 +204,7 @@ static void channel_step(volatile struct AudioChannel *hw, struct ShopChan *ch, 
             pair = (pair << 16) | (pair >> 16);
         ch->head.rot_b = b;
     }
-    hw->lc = ADDR(xenon2.shop_data.snd.waves + (int16_t)pair);
+    hw->lc = (uintptr_t)(xenon2.shop_data.snd.waves + (int16_t)pair);
     SETCLR_WRITE(dmacon, (uint16_t)(dma_bit | 0x8200));
 }
 
@@ -250,7 +250,7 @@ static void start_sampled(uint16_t id)
     if (sample->once != 0)
         ch->head.timer = 0;
     hw->len = sample->len;
-    hw->lc = ADDR(sample->lc);
+    hw->lc = (uintptr_t)(sample->lc);
     hw->per = sample->period;
     ch->cur_period = sample->period;
     ch->slide_period = sample->period;
@@ -261,12 +261,12 @@ static void start_sampled(uint16_t id)
     shop_sound_delay();
     off = sample->loop_off;
     if ((int32_t)off < 0) {
-        hw->lc = ADDR(snd->silence);
+        hw->lc = (uintptr_t)(snd->silence);
         hw->len = 0x20;
         return;
     }
     hw->len = (uint16_t)(sample->len - (uint16_t)(off >> 1));
-    hw->lc = ADDR(sample->lc + off);
+    hw->lc = (uintptr_t)(sample->lc + off);
 }
 
 /* orig $649C6, $647A6: start the effect of the command (cmd = (channel << 8) | effect) on the channel; the music's hold on the channel is marked */

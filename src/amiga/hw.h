@@ -60,7 +60,6 @@ extern volatile uint8_t host_cia_raw[0x2000];   /* the CIAs: $BFD000 on */
 #else
 #define custom ((volatile struct Custom *)0xdff000)
 #endif
-#define ADDR(p) ((uint32_t)(uintptr_t)(p))   /* a pointer as the chip wants it: a 32-bit address */
 
 /* The registers with SET/CLR semantics (bit 15 selects set or clear of the other bits): dmacon, intena, intreq, adkcon.  Write them only
  * with SETCLR_WRITE(dmacon, 0x8201): on the Amiga it is the plain write, in the SDL port the host applies it (starts and stops the audio

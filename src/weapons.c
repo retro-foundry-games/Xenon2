@@ -2202,7 +2202,7 @@ void beam_draw(Object *obj)
                 plane[0] = (uint16_t)((plane[0] & (uint16_t)rot[0]) | (uint16_t)rot[1 + i]);
             }
             dst -= SCREEN_ROW_WORDS;
-            lt = (int32_t)ADDR(dst) < (int32_t)ADDR(xenon2.draw_screen);
+            lt = (int32_t)(uintptr_t)(dst) < (int32_t)(uintptr_t)(xenon2.draw_screen);
         }
     } else if ((int16_t)xenon2.beam_state[0] > 0x130) {
         while (!lt) {
@@ -2213,7 +2213,7 @@ void beam_draw(Object *obj)
                 plane[0] = (uint16_t)((plane[0] & (uint16_t)(rot[0] >> 16)) | (uint16_t)(rot[1 + i] >> 16));
             }
             dst -= SCREEN_ROW_WORDS;
-            lt = (int32_t)ADDR(dst) < (int32_t)ADDR(xenon2.draw_screen);
+            lt = (int32_t)(uintptr_t)(dst) < (int32_t)(uintptr_t)(xenon2.draw_screen);
         }
     } else {
         while (!lt) {
@@ -2225,7 +2225,7 @@ void beam_draw(Object *obj)
                 plane[1] = (uint16_t)((plane[1] & (uint16_t)rot[0]) | (uint16_t)rot[1 + i]);
             }
             dst -= SCREEN_ROW_WORDS;
-            lt = (int32_t)ADDR(dst) < (int32_t)ADDR(xenon2.draw_screen);
+            lt = (int32_t)(uintptr_t)(dst) < (int32_t)(uintptr_t)(xenon2.draw_screen);
         }
     }
 }
