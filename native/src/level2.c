@@ -57,6 +57,22 @@ static uint32_t ror5(uint32_t *seed)
 struct L2Block { uint16_t state, x, y, cell; };
 struct L2Group { uint16_t count; struct L2Block entries[]; };
 
+/* the group after G in l2_block_table: groups follow one another */
+static struct L2Group *l2_next_group(struct L2Group *g)
+{
+    return (struct L2Group *)&g->entries[g->count];
+}
+
+/* the group that starts OFFSET bytes into l2_block_table (the data names its groups by offset) */
+static struct L2Group *l2_group(uint32_t offset)
+{
+    struct L2Group *g = (struct L2Group *)xenon2.l2_block_table;
+
+    for (uint32_t pos = 0; pos < offset; pos += sizeof g->count + g->count * sizeof(struct L2Block), g = l2_next_group(g))
+        ;
+    return g;
+}
+
 /* ---- the entries the engine calls ($54E0C..$54E2C) ---- */
 
 /* level2 $054E0C, $056F54: a box (x0, y0)-(x1, y1) meets one of the blocks that break (l2_block_table: four groups by the quarter of the
@@ -76,7 +92,7 @@ Object *l2_collision_hook(int16_t box_x0, int16_t box_y0, int16_t box_x1, int16_
     if (box_x0 <= 0x80)
         quarter |= 2;
     {
-        const struct L2Group *group = (const struct L2Group *)((const uint8_t *)xenon2.l2_block_table + xenon2.level2_data.block_group_offsets[quarter]);
+        const struct L2Group *group = l2_group(xenon2.level2_data.block_group_offsets[quarter]);
 
         n = group->count;
         entry = group->entries;
@@ -227,7 +243,6 @@ void l2_swap_hook(void)
 void l2_init(void)
 {
     static const uint16_t gate_at[3][2] = { { 9, 0xb8 }, { 4, 0xa4 }, { 0xe, 0xa4 } };
-    static const uint16_t groups[4] = { 0, 0x62, 0xc4, 0x116 };
     Object *obj;
     int i, gate;
 
@@ -283,11 +298,12 @@ void l2_init(void)
     xenon2.l2_debris_waves = 2;
     for (i = 0; i < 8; i++)
         xenon2.level_vars[i] = 0;
-    for (i = 0; i < 4; i++) {
-        struct L2Group *g = (struct L2Group *)((uint8_t *)xenon2.l2_block_table + groups[i]);
+    {
+        struct L2Group *g = (struct L2Group *)xenon2.l2_block_table;
 
-        for (uint16_t n = 0; n < g->count; n++)
-            g->entries[n].state = 1;
+        for (i = 0; i < 4; i++, g = l2_next_group(g))
+            for (uint16_t n = 0; n < g->count; n++)
+                g->entries[n].state = 1;
     }
     xenon2.l2_block_object.type = 0;
     xenon2.l2_block_object.prev = &xenon2.l2_block_object;
@@ -535,7 +551,7 @@ static void l2_restore_blocks(Object *bolt)
     if (box_x0 <= 0x80)
         quarter |= 2;
     {
-        struct L2Group *group = (struct L2Group *)((uint8_t *)xenon2.l2_block_table + xenon2.level2_data.block_group_offsets[quarter]);
+        struct L2Group *group = l2_group(xenon2.level2_data.block_group_offsets[quarter]);
 
         n = group->count;
         entry = group->entries;
