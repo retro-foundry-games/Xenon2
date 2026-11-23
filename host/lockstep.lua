@@ -8,6 +8,7 @@
 --     play=1        play it: ami9000_host host/lockstep.lua --script-args "play=1 state=frame-8880 tolerant=1"  (a window, not --headless): arrows = stick, Ctrl / Space / Return = fire;
 --                   the keys are applied to both sides at the sync points; the port's picture and the difference are shown beside the original; the first difference pauses both
 --     auto=1        the autoplayer (host/autoplay.lua) plays, headless or in the window: finds differences in a run no one has to play
+--     (auto=1: ctl.py SOCK 'reload_autoplay()' loads host/autoplay.lua again while it runs; 'auto_stick{left=1}' holds a stick by hand, 'auto_stick(nil)' ends it)
 --     record=FILE   where the input of play=1 / auto=1 is written (default captures/input/play-latest.txt, overwritten each run)
 --     snap=ADDR:NAME the first time the original reaches ADDR (hex) its state is saved as local/save/NAME.state and its memory as captures/NAME.ram
 --     live=0|1      the port's panel live: the port is stepped one frame for each emulator frame and waits at a sync point for the original (default on with play=1 / auto=1)
@@ -17,6 +18,7 @@
 --     startfn=HEX   (with state=) the original's state is inside a function that has no sync point for a long time (the shop: state=shop-before-512k startfn=8ff2): the port is given the memory at once and runs that function
 --     resync=N      after more than N frames between two sync points (a disk load) the port takes the original's memory and the baseline starts again (with startfn=: 120)
 --     gate=0        (default on) a disk load of the port waits for the original's: the port takes the original's memory at the instant its load returns and goes on from there, the comparison starts again
+--     shield=inf    (with state=) the same for the whole run
 --     shield=SECONDS (with state=) both sides are invulnerable for that many seconds (50 sync points each)
 --     health=full   (with state=) the player's energy is set to full in the state before the run
 --     syncs=N       how many synchronisation points to compare (default 300)
@@ -56,7 +58,8 @@ local STRICT = args:match("strict=1") ~= nil
 local REPORT = args:match("report=(%S+)")
 local PLAY = args:match("play=1") ~= nil   -- you play: arrows = stick, Ctrl / Space / Return = fire, in the emulator's window (without --headless); implies hold=1, no sync limit
 local AUTO = args:match("auto=1") ~= nil   -- the autoplayer (host/autoplay.lua) plays: the stick from the original's memory at each sync point; the input is written to captures/input/play-latest.txt as when played
-local SHIELD_FRAMES = tonumber(args:match("shield=(%d+)") or "0") * 50   -- shield=SECONDS: the original and the port are invulnerable (shield_timer counts down by the sync points)
+local SHIELD_INF = args:match("shield=inf") ~= nil   -- shield=inf: invulnerable for the whole run (the timer is set again at every sync point)
+local SHIELD_FRAMES = SHIELD_INF and 0x7000 or tonumber(args:match("shield=(%d+)") or "0") * 50   -- shield=SECONDS: the original and the port are invulnerable (shield_timer counts down by the sync points)
 local LIVE = (PLAY or AUTO or args:match("live=1") ~= nil) and args:match("live=0") == nil   -- the port is stepped a frame at a time beside the emulator, its panel shows it live (it waits at each sync point for the original); off for headless regression runs
 local HOLD = PLAY or args:match("hold=1") ~= nil   -- (a replay=FILE of a run is shown in the window with the three views too)   -- at the first difference stay paused (with --control PATH: LS.port_call(LUA) runs Lua in the port, LS.snap is the original's memory and frame at the point)
 local CALLS = args:match("calls=1") ~= nil   -- also compare how often each function of the game was called between two sync points (the code table of the port)
@@ -106,7 +109,23 @@ if REPLAY then
         end
     end
 end
-local autoplay = AUTO and load(ami.file_read("host/autoplay.lua", 0, ami.file_size("host/autoplay.lua")))()(ami.peek16, ami.peek32) or nil
+local autoplay
+function reload_autoplay(file)   -- from the control shell: ctl.py SOCK 'reload_autoplay()' (or a file name) loads the autoplayer again, the level goes on; a file with an error leaves the one that runs
+    file = file or "host/autoplay.lua"
+    local size = ami.file_size(file)
+    local text = size and size > 0 and ami.file_read(file, 0, size)
+    local chunk, err = load(text or "", "@" .. file)
+    if not text then chunk, err = nil, "cannot read " .. file end
+    local factory = chunk and select(2, pcall(chunk))
+    local ok, decide = pcall(factory, ami.peek16, ami.peek32)
+    if not chunk or type(factory) ~= "function" or not ok then ami.log("reload_autoplay: " .. tostring(err or factory or decide)); return false end
+    autoplay = decide
+    ami.log("the autoplayer " .. file .. " is loaded")
+    return true
+end
+if AUTO then reload_autoplay() end
+local auto_override
+function auto_stick(t) auto_override = t end   -- ctl.py SOCK 'auto_stick{left=1,fire=1}' holds that stick instead of the autoplayer's; auto_stick(nil) gives it back
 local started = false
 if STATE then
     ami.wait(1)
@@ -255,8 +274,9 @@ local function sync_point()
     call_counts = {}
     pending[#pending + 1] = { n = n, frame = ami.frame(), calls = calls, ram = (COMPARE_MEM or (STATE and n == 1)) and ami.read(0, 0x80000) or nil }
     local st = joys[n]
-    if AUTO then   -- the autoplayer decides from the original's memory as it is now
+    if AUTO and n >= 3 then   -- (no input before sync 3: live stepping takes the original's memory at sync 1 and a stick pressed then is lost to the port) the autoplayer decides from the original's memory as it is now
         local want = autoplay(n)
+        if auto_override then want = { up = auto_override.up or 0, down = auto_override.down or 0, left = auto_override.left or 0, right = auto_override.right or 0, fire = auto_override.fire or 0 } end
         for k, v in pairs(want) do stick[k] = v end
     end
     if PLAY or AUTO then   -- the stick as it is held now, on both sides from here on
@@ -268,7 +288,7 @@ local function sync_point()
             for k, v in pairs(stick) do applied_stick[k] = v end
         end
     end
-    if SHIELD_FRAMES > 0 and n <= SHIELD_FRAMES then ami.poke16(0xcc8, SHIELD_FRAMES - n) end
+    if SHIELD_INF then ami.poke16(0xcc8, SHIELD_FRAMES) elseif SHIELD_FRAMES > 0 and n <= SHIELD_FRAMES then ami.poke16(0xcc8, SHIELD_FRAMES - n) end
     pending[#pending].shop = shop_loaded   -- the shop's overlay (sector 1476) is the last thing loaded at $54E00 (the level's code lives there too)
     do
         local list = PLAY and key_queue or replay_keys[n] or {}
@@ -650,7 +670,7 @@ local function apply_joy(snap)
     local r = reads[snap.n - 1]
     local first = r and r.first
     apply_joy0(snap)
-    if SHIELD_FRAMES > 0 and snap.ram and snap.n <= SHIELD_FRAMES + 1 then port_call(("port.set_shield(%d)"):format(snap.ram:byte(0xcc9) * 256 + snap.ram:byte(0xcca))) end
+    if SHIELD_FRAMES > 0 and snap.ram and (SHIELD_INF or snap.n <= SHIELD_FRAMES + 1) then port_call(("port.set_shield(%d)"):format(snap.ram:byte(0xcc9) * 256 + snap.ram:byte(0xcca))) end
     if snap.ram then port_call(("port.set_a6a(%d)"):format(snap.ram:byte(0xa6b))) end   -- the press the original's interrupt saw is in fire_press where it copied it
     -- the interrupt that brings a fire press came after the routine that read the old stick: the press is in key_pressed from there on
     port_call(("port.edge_defer(%d)"):format(first and port_joy and first & 0x80 == 0 and stick_bits(port_joy) & 0x80 ~= 0 and 1 or 0))
@@ -744,7 +764,7 @@ while not done do
             different = different + 1
             say("sync %d (emulator frame %d, port frame %s): %s", snap.n, snap.frame, reply:match("synced (%d+)") or "?", table.concat(problems, "; "))
             for _, l in ipairs(trail) do say("   %s", l) end
-            if not CONTINUE then
+            if not CONTINUE and not snap.shop then   -- (the shop's differences are expected: logged, the run goes on)
                 ami.pause()
                 if HOLD then
                     LS = { loads = loads, prev = function() return prev_orig_ram, prev_port_ram end, peer = peer, wait_ready = wait_ready, orig_picture = function(d) d = d or 0; return cut(ring[snap.frame + win.lag + d] or ring[snap.frame + 1], win) end, port_call = port_call, port_binary = port_binary, snap = snap, hex = hex, ram16 = function(a) return ami.peek16(a) end, ram32 = function(a) return ami.peek32(a) end }
