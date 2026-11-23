@@ -518,4 +518,26 @@ Object *spawn_marker_front(uint16_t type, const struct SpawnRec *rec, void (*upd
 void enemy_shot_update(Object *shot);
 Object *spawn_enemy_shot(uint16_t x, uint16_t y, uint16_t angle, uint16_t steps, const void *gfx);
 
+/* from the weapons module */
+void kill_object(Object *o);
+Object *alloc_a(Object *caller);
+void free_object(Object *obj);
+void debris_burst(Object *obj, int16_t count, uint16_t x, uint16_t y, uint16_t w, uint16_t h, const uint16_t *anim);
+void spawn_bonuses(int16_t count);
+void enemy_killed(Object *shooter, Object *enemy);
+int player_hits(Object *obj);                                               /* orig $005550 */
+void apply_damage(Object *shooter, Object *victim, uint16_t damage);                    /* orig $005924 */
+void apply_damage_max(Object *shooter, Object *victim);                             /* orig $005920 */
+int point_in_player_box(int16_t x, int16_t y);
+void animate_only(Object *obj);
+void follow_target(Object *obj);
+void hit_part(Object *shooter, Object *enemy, uint16_t damage);
+void hit_flash(Object *shooter, Object *victim, uint16_t damage);
+void hit_kill_shooter(Object *shooter, Object *victim, uint16_t damage);
+void hit_flash_kill_shooter(Object *shooter, Object *victim, uint16_t damage);
+void hit_enemy(Object *shooter, Object *enemy, uint16_t damage);
+void hit_explode(Object *shooter, Object *enemy, uint16_t damage);
+void hit_tile(Object *shooter, Object *tile, uint16_t damage);
+void tile_draw(Object *obj);
+void free_chain(Object *obj, int16_t dy);
 #endif

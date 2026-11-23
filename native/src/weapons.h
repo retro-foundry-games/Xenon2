@@ -17,15 +17,12 @@ typedef void (*hit_fn)(Object *shooter, Object *target, uint16_t damage);
 
 void weapon_shield_draw(Object *obj);
 void area_damage(Object *shooter, int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_t dmg);
-void debris_burst(Object *obj, int16_t count, uint16_t x, uint16_t y, uint16_t w, uint16_t h, const uint16_t *anim);
-void spawn_bonuses(int16_t count);
 void spinner_update(Object *obj); void drill_update(Object *obj); void weaponc0_update(Object *obj); void weaponb0_update(Object *obj);
 void pod_decoration_update(Object *obj); void weapon2c_update(Object *obj); void weapon4c_update(Object *obj); void weapon20_update(Object *obj);
 void beam_update(Object *obj); void beam_draw(Object *obj); void weapon34_update(Object *obj); void pod_trail_update(Object *obj);
 void weapon90_update(Object *obj); void shell_update(Object *obj); void weapon38_update(Object *obj);
 void weapon94_update(Object *obj); void weapon98_update(Object *obj); void weapon44_update(Object *obj);
 void weapon9c_update(Object *obj); void weaponA0_update(Object *obj);
-void enemy_killed(Object *shooter, Object *enemy);
 
 /* the object lists: $AD8, $B3A and $B9C are sentinels in obj_list */
 #define LIST_A ((Object *)&xenon2.obj_list[1])
@@ -39,10 +36,7 @@ Object *refill_slot0(Object *caller, Object *last);                             
 Object *weapon_94(Object *caller, Object *last);                                 /* orig $004AFC */
 void init_weapons(Object *caller);                                             /* orig $004A0A */
 void pickup_update(Object *obj);                                            /* orig $004634 */
-int player_hits(Object *obj);                                               /* orig $005550 */
 
-void apply_damage(Object *shooter, Object *victim, uint16_t damage);                    /* orig $005924 */
-void apply_damage_max(Object *shooter, Object *victim);                             /* orig $005920 */
 Object *weapon_c0(Object *caller, Object *last);                                 /* orig $004BA8 */
 Object *weapon_98(Object *caller, Object *last);                                 /* orig $004C64 */
 Object *weapon_28(Object *caller, Object *last);                                 /* orig $004D28 */
@@ -59,15 +53,8 @@ Object *weapon_34(Object *caller, Object *last);                                
 void pickup_shield_small(Object *obj); void pickup_shield_big(Object *obj); void pickup_grow_weakest(Object *obj);
 void pickup_speed(Object *obj); void pickup_move(Object *obj); void pickup_flag_d83(Object *obj); void pickup_ca0(Object *obj);
 void pickup_weapon_98(Object *obj); void pickup_nothing(Object *obj); void pickup_bomb(Object *obj); void pickup_spinner(Object *obj);
-int point_in_player_box(int16_t x, int16_t y);
-void animate_only(Object *obj); void follow_target(Object *obj);
 void shot_fixed_update(Object *obj); void shot_update(Object *obj);
-void hit_part(Object *shooter, Object *enemy, uint16_t damage); void hit_flash(Object *shooter, Object *victim, uint16_t damage);
-void hit_kill_shooter(Object *shooter, Object *victim, uint16_t damage);
-void hit_flash_kill_shooter(Object *shooter, Object *victim, uint16_t damage); void hit_enemy(Object *shooter, Object *enemy, uint16_t damage);
-void hit_explode(Object *shooter, Object *enemy, uint16_t damage); void hit_tile(Object *shooter, Object *tile, uint16_t damage);
-void tile_draw(Object *obj);
-void kill_with_slot(Object *obj); void free_with_slot(Object *obj); void free_chain(Object *obj, int16_t dy);
+void kill_with_slot(Object *obj); void free_with_slot(Object *obj);
 void player_dies(Object *ship); void player_damage(Object *ship, uint16_t damage); void player_move(Object *ship); void player_update(Object *ship);
 
 /* level 2's blob (level2.c) and the entries that choose by the level in level_number */
