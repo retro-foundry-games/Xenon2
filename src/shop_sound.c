@@ -1,9 +1,8 @@
 /* The shop's sound ($6477C-$64D4A of the blob): a player for the four audio channels, driven by the vertical-blank interrupt ($2090 = shop_irq_tick) and a command
  * ($2094 = shop_sound_cmd, cmd = (channel << 8) | effect; effect bit 7 = a sampled effect, else a synthesised one).  Its state is shop_data.snd (ShopSound): the channels
  * (chan), what the music left in each channel (mirror: lc, len, per, vol, then had: it had one, has: the effect has it), the tables of the sampled and synthesised
- * effects, the envelopes (offsets from snd, env_off).  It drives the voices of audio.h. */
+ * effects, the envelopes (offsets from snd, env_off).  The hardware is written as the original does (HLE: audio). */
 #include "shop.h"
-#include "audio.h"
 #include "game_all.h"
 
 #define SND_PERIOD_CLOCK 0x369e99u
@@ -86,9 +85,10 @@ void shop_sound_stop(void)
         snd->mirror[i].had = 0;
         snd->mirror[i].has = 0;
     }
-    audio_stop_all();
+    SETCLR_WRITE(dmacon, 0x000f);
+    SETCLR_WRITE(adkcon, 0x00ff);
     for (i = 0; i < 4; i++)
-        audio_volume(i, 0);
+        custom->aud[i].vol = 0;
 }
 
 /* shop $64828: every channel has one frame left */
@@ -101,25 +101,25 @@ void shop_sound_reset(void)
 }
 
 /* the effect on the channel stops; the channel goes back to the music if it had one */
-static void channel_stop(int voice, struct ShopChan *ch, struct ShopMirror *mir)
+static void channel_stop(volatile struct AudioChannel *hw, struct ShopChan *ch, struct ShopMirror *mir, uint16_t dma_bit)
 {
     ch->active = 0;
-    audio_stop(voice);
+    SETCLR_WRITE(dmacon, dma_bit);
     mir->has = 0;
     if (mir->had == 0)
         return;
-    audio_period(voice, 0x7c);
-    audio_stop(voice);
+    hw->per = 0x7c;
+    SETCLR_WRITE(dmacon, dma_bit);
     shop_sound_delay();
-    audio_data(voice, mir->lc);
-    audio_length(voice, mir->len);
-    audio_period(voice, mir->per);
-    audio_volume(voice, mir->vol);
-    audio_start(voice);
+    hw->lc = (uintptr_t)(mir->lc);
+    hw->len = mir->len;
+    hw->per = mir->per;
+    hw->vol = mir->vol;
+    SETCLR_WRITE(dmacon, (uint16_t)(dma_bit | 0x8200));
 }
 
-/* shop $64C1E: one frame of a channel (voice = its voice, ch = its record, mir = its mirror) */
-static void channel_step(int voice, struct ShopChan *ch, struct ShopMirror *mir)
+/* shop $64C1E: one frame of a channel (hw = its registers, ch = its record, mir = its mirror, dma_bit = its DMA bit) */
+static void channel_step(volatile struct AudioChannel *hw, struct ShopChan *ch, struct ShopMirror *mir, uint16_t dma_bit)
 {
     uint16_t id, period, slide;
     uint32_t pair;
@@ -127,7 +127,7 @@ static void channel_step(int voice, struct ShopChan *ch, struct ShopMirror *mir)
     if (ch->head.timer != 0) {
         ch->head.timer--;
         if (ch->head.timer == 0) {
-            channel_stop(voice, ch, mir);
+            channel_stop(hw, ch, mir, dma_bit);
             return;
         }
     }
@@ -138,16 +138,16 @@ static void channel_step(int voice, struct ShopChan *ch, struct ShopMirror *mir)
         period = ch->slide_period;
         slide = sample->slide;
         if (slide == 0) {
-            audio_period(voice, ch->slide_period);
+            hw->per = ch->slide_period;
             return;
         }
         period = (uint16_t)(period + slide);
         if ((int16_t)period < 0x7c) {
-            channel_stop(voice, ch, mir);
+            channel_stop(hw, ch, mir, dma_bit);
             return;
         }
         ch->slide_period = period;
-        audio_period(voice, period);
+        hw->per = period;
         return;
     }
     if (ch->head.reload_f != 0) {
@@ -182,18 +182,18 @@ static void channel_step(int voice, struct ShopChan *ch, struct ShopMirror *mir)
         env = ch->env_ptr;
         v = *env++;
         if (v == 0) {
-            channel_stop(voice, ch, mir);
+            channel_stop(hw, ch, mir, dma_bit);
             return;
         }
         if (!(v & 0x80)) {
             ch->env_ptr = env;
-            audio_volume(voice, v);
+            hw->vol = v;
         }
     }
     period = ch->head.period;
     if ((int16_t)period < 0x7c)
         period = 0x7c;
-    audio_period(voice, period);
+    hw->per = period;
     pair = ch->head.pair_b;
     {
         uint8_t b = ch->head.rot_b;
@@ -204,8 +204,8 @@ static void channel_step(int voice, struct ShopChan *ch, struct ShopMirror *mir)
             pair = (pair << 16) | (pair >> 16);
         ch->head.rot_b = b;
     }
-    audio_data(voice, xenon2.shop_data.snd.waves + (int16_t)pair);
-    audio_start(voice);
+    hw->lc = (uintptr_t)(xenon2.shop_data.snd.waves + (int16_t)pair);
+    SETCLR_WRITE(dmacon, (uint16_t)(dma_bit | 0x8200));
 }
 
 /* shop $64BBC: the vertical blank: every active channel goes on one frame */
@@ -216,7 +216,7 @@ void shop_sound_tick(void)
 
     for (i = 0; i < 4; i++)
         if (snd->chan[i].active != 0)
-            channel_step(i, &snd->chan[i], &snd->mirror[i]);
+            channel_step(&custom->aud[i], &snd->chan[i], &snd->mirror[i], (uint16_t)(1 << i));
 }
 
 /* orig $6477C: the interrupt's call of the player (the handler keeps the registers) */
@@ -231,38 +231,42 @@ static void start_sampled(uint16_t id)
     struct ShopSound *snd = &xenon2.shop_data.snd;
     struct ShopChan *ch;
     const struct ShopSample *sample;
-    uint16_t voice;
+    uint16_t dma_bit, chan;
+    volatile struct AudioChannel *hw;
     uint32_t off;
 
     shop_sound_tables2();
-    voice = (uint8_t)(snd->cmd >> 8);
-    ch = &snd->chan[voice];
+    chan = (uint8_t)(snd->cmd >> 8);
+    ch = &snd->chan[chan];
     ch->head.sample_id = (uint8_t)id;
-    audio_stop(voice);
-    audio_period(voice, 0x7c);
-    audio_length(voice, 1);
+    dma_bit = (uint16_t)(1u << chan);
+    SETCLR_WRITE(dmacon, dma_bit);
+    hw = &custom->aud[chan];
+    hw->per = 0x7c;
+    hw->len = 1;
     shop_sound_delay();
     sample = &snd->samples[ch->head.sample_id & 0x7f];
     ch->head.timer = sample->steps;
     if (sample->once != 0)
         ch->head.timer = 0;
-    audio_length(voice, sample->len);
-    audio_data(voice, sample->lc);
-    audio_period(voice, sample->period);
+    hw->len = sample->len;
+    hw->lc = (uintptr_t)(sample->lc);
+    hw->per = sample->period;
     ch->cur_period = sample->period;
     ch->slide_period = sample->period;
-    audio_volume(voice, 0x40);
-    audio_start(voice);
+    hw->vol = 0x40;
+    dma_bit |= 0x8200;
+    SETCLR_WRITE(dmacon, dma_bit);
     ch->active = 0xff;
     shop_sound_delay();
     off = sample->loop_off;
     if ((int32_t)off < 0) {
-        audio_data(voice, snd->silence);
-        audio_length(voice, 0x20);
+        hw->lc = (uintptr_t)(snd->silence);
+        hw->len = 0x20;
         return;
     }
-    audio_length(voice, (uint16_t)(sample->len - (uint16_t)(off >> 1)));
-    audio_data(voice, sample->lc + off);
+    hw->len = (uint16_t)(sample->len - (uint16_t)(off >> 1));
+    hw->lc = (uintptr_t)(sample->lc + off);
 }
 
 /* orig $649C6, $647A6: start the effect of the command (cmd = (channel << 8) | effect) on the channel; the music's hold on the channel is marked */
@@ -270,9 +274,12 @@ void shop_sound_cmd(uint16_t cmd)
 {
     struct ShopSound *snd = &xenon2.shop_data.snd;
     struct ShopChan *ch;
+    uint16_t dma_bit;
     uint8_t chan;
+    volatile struct AudioChannel *hw;
 
     CIAA_PRA |= 2;
+    SETCLR_WRITE(adkcon, 0x00ff);
     cmd &= 0x3ff;
     snd->cmd = cmd;
     chan = (uint8_t)(cmd >> 8);
@@ -285,13 +292,15 @@ void shop_sound_cmd(uint16_t cmd)
         return;
     }
     ch = &snd->chan[chan];
-    audio_length(chan, 1);
-    audio_period(chan, 0x7c);
+    dma_bit = (uint16_t)(1u << chan);
+    hw = &custom->aud[chan];
+    hw->len = 1;
+    hw->per = 0x7c;
     shop_sound_delay();
-    audio_stop(chan);
+    SETCLR_WRITE(dmacon, dma_bit);
     shop_sound_delay();
     ch->head = snd->synth[(uint8_t)cmd];
-    audio_length(chan, ch->head.length);
+    hw->len = ch->head.length;
     ch->count_e = ch->head.reload_e;
     ch->count_f = ch->head.reload_f;
     ch->env_count = 1;
