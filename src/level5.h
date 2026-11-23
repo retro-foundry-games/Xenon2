@@ -46,62 +46,62 @@ struct Level5UnitDir {
 _Static_assert(sizeof(struct Level5UnitDir) == 4, "Level5UnitDir");
 
 struct Level5Data {
-    BLOB_PAD(0, 2)
+    BLOB_PAD(2)
     uint16_t gunners_energy;   /* 54E42 */
     uint16_t gunners_param;   /* 54E44 */
     uint16_t gunners_steps;   /* 54E46 */
     uint16_t cannon_energy;   /* 54E48 */
-    BLOB_PAD(a, 1)
+    BLOB_PAD(1)
     uint8_t cannon_fire_rate;   /* 54E4B */
     uint16_t pellet_energy;   /* 54E4C */
     uint16_t pellet_param;   /* 54E4E */
-    BLOB_PAD(10, 1)
+    BLOB_PAD(1)
     uint8_t boss_fire_rate;   /* 54E51 */
     uint16_t boss_energy;   /* 54E52 */
-    BLOB_PAD(14, 1)
+    BLOB_PAD(1)
     uint8_t turret_fire_rate;   /* 54E55 */
-    BLOB_PAD(16, 1)
+    BLOB_PAD(1)
     uint8_t boss2_turret_fire_rate;   /* 54E57 */
     uint16_t boss2_turret_shot_steps;   /* 54E58 */
-    BLOB_PAD(1a, 1)
+    BLOB_PAD(1)
     uint8_t boss2_mover_fire_rate;   /* 54E5B */
     uint16_t turret_param;   /* 54E5C */
     uint16_t gates_energy;   /* 54E5E */
     uint16_t bridge_energy;   /* 54E60 */
     uint16_t group_energy;   /* 54E62 */
-    BLOB_PAD(24, 1)
+    BLOB_PAD(1)
     uint8_t unit_fire_rate;   /* 54E65 */
     uint16_t unit_shot_steps;   /* 54E66 */
     uint16_t gun_energy;   /* 54E68 */
-    BLOB_PAD(2a, 1)
+    BLOB_PAD(1)
     uint8_t gun_fire_rate;   /* 54E6B */
     uint16_t gun_shot_steps;   /* 54E6C */
     uint16_t boss2_turret_shot_steps_2;   /* 54E6E */
-    BLOB_PAD(30, 1)
+    BLOB_PAD(1)
     uint8_t init_patch;   /* 54E71 */
-    BLOB_PAD(32, 1)
+    BLOB_PAD(1)
     uint8_t bridge_fire_rate;   /* 54E73 */
     uint16_t bridge_shot_steps;   /* 54E74 */
     uint16_t init_patch_2;   /* 54E76 */
-    BLOB_PAD(38, 1)
+    BLOB_PAD(1)
     uint8_t gunner_fire_rate;   /* 54E79 */
     uint16_t gunner_shot_steps;   /* 54E7A */
     uint16_t gunner_shot_steps_2;   /* 54E7C */
-    BLOB_PAD(3e, 1)
+    BLOB_PAD(1)
     uint8_t boss2_mover_fire_rate_2;   /* 54E7F */
-    BLOB_PAD(40, 18)
+    BLOB_PAD(18)
     struct Formation1 formations[8];   /* 54E92 */
     uint16_t pad_54f62[51];   /* 54F62 */
     uint16_t words_54fc8[204];   /* 54FC8 */
-    BLOB_PAD(320, 24)
+    BLOB_PAD(24)
     uint16_t words_55178[12];   /* 55178 */
-    BLOB_PAD(350, 76)
+    BLOB_PAD(76)
     const uint8_t *gunner_paths[3];   /* 551DC */
-    BLOB_PAD(3a8, 210)
+    BLOB_PAD(210)
     const uint16_t *gunner_anims[8];   /* 552BA */
-    BLOB_PAD(49a, 178)
+    BLOB_PAD(178)
     uint16_t words_5538c[96];   /* 5538C */
-    BLOB_PAD(60c, 202)
+    BLOB_PAD(202)
     uint16_t cannon_anim_a[18];   /* 55516 */
     uint16_t cannon_anim_b[18];   /* 5553A */
     uint16_t cannon_anim_100[18];   /* 5555E */
@@ -109,46 +109,46 @@ struct Level5Data {
     const uint16_t *pellet_anims_by_dir[8];   /* 557DE */
     int16_t pellet_dx_by_dir[8];   /* 557FE */
     int16_t pellet_dy_by_dir[8];   /* 5580E */
-    BLOB_PAD(9de, 304)
+    BLOB_PAD(304)
     struct Level5Boss1Piece boss1_pieces[22];   /* 5594E */
-    BLOB_PAD(d1e, 6)
+    BLOB_PAD(6)
     uint16_t words_55b64[75];   /* 55B64 */
-    BLOB_PAD(dba, 820)
+    BLOB_PAD(820)
     const uint16_t *boss_arm2_pictures[5];   /* 55F2E */
     const uint16_t *boss_draw_table[15];   /* 55F42 */
     uint16_t anim_boss_update[96];   /* 55F7E */
     const uint16_t *missile_anims_by_dir[8];   /* 5603E */
-    BLOB_PAD(121e, 536)
+    BLOB_PAD(536)
     const uint16_t *heart_pictures[12];   /* 56276 */
-    BLOB_PAD(1466, 148)
+    BLOB_PAD(148)
     struct Level5Boss2Piece boss2_pieces[10];   /* 5633A */
-    BLOB_PAD(15ea, 228)
+    BLOB_PAD(228)
     const uint16_t *wheel_pictures[6];   /* 5650E */
-    BLOB_PAD(16e6, 156)
+    BLOB_PAD(156)
     const uint8_t *spinner_source_118[4];   /* 565C2 */
     const uint8_t *spinner_source_other[4];   /* 565D2 */
-    BLOB_PAD(17a2, 118)
+    BLOB_PAD(118)
     const uint16_t *boss2_turret_pictures[8];   /* 56658 */
-    BLOB_PAD(1838, 532)
+    BLOB_PAD(532)
     uint16_t boss2_draw_rows[54];   /* 5688C */
     uint16_t boss2_flash_grid[8];   /* 568F8 */
     uint16_t boss2_draw_data[18];   /* 56908 */
-    BLOB_PAD(1aec, 512)
+    BLOB_PAD(512)
     struct Level5Gate gates[3];   /* 56B2C */
-    BLOB_PAD(1d10, 224)
+    BLOB_PAD(224)
     uint16_t gate_update_data[50];   /* 56C30 */
     uint16_t wall_cells_128[4];   /* 56C94 */
     uint16_t wall_cells_other[4];   /* 56C9C */
-    BLOB_PAD(1e64, 408)
+    BLOB_PAD(408)
     uint16_t wall_flash_a_grid;   /* 56E3C */
     uint16_t wall_flash_b_grid;   /* 56E3E */
-    BLOB_PAD(2000, 98)
+    BLOB_PAD(98)
     uint16_t bridge_cells[139];   /* 56EA2 */
     uint16_t anim_bridge_update[179];   /* 56FB8 */
     uint16_t group_cells[198];   /* 5711E */
     struct Level5UnitDir unit_dirs[8];   /* 572AA */
     const uint16_t *unit_shot_pictures[8];   /* 572CA */
-    BLOB_PAD(24aa, 554)
+    BLOB_PAD(554)
     uint16_t gun_cells_a[8];   /* 57514 */
     uint16_t gun_cells_b[8];   /* 57524 */
     uint16_t gun_anim_b;   /* 57534 */
@@ -156,7 +156,7 @@ struct Level5Data {
     uint16_t gun_anim_108[12];   /* 57538 */
     uint16_t gun_anim_other[139];   /* 57550 */
     uint16_t boss1_cells[270];   /* 57666 */
-    BLOB_PAD(2a42, 32)
+    BLOB_PAD(32)
     uint16_t pad_578a2[7565];   /* 578A2 */
     uint16_t words_5b3bc[1815];   /* 5B3BC */
     uint16_t gunner_picture[3798];   /* 5C1EA */
@@ -167,12 +167,12 @@ struct Level5Data {
     uint16_t pad_5f4c0[3892];   /* 5F4C0 */
     uint16_t words_61328[306];   /* 61328 */
     uint8_t turret_fire_picture;   /* 6158C */
-    BLOB_PAD(c74d, 1)
+    BLOB_PAD(1)
     uint16_t words_6158e[3018];   /* 6158E */
     struct SpawnRec events_b[55];   /* 62D22 */
     int16_t events_b_end;   /* 63024 */
     uint16_t pad_63026[23538];   /* 63026 */
-    BLOB_PAD(199ca, 18110)
+    BLOB_PAD(18110)
     struct ShotPic *shot_gfx_table[4];   /* 72EC8 */
     struct ShotPic shot_gfx_cells[2];   /* 72ED8 */
     struct PathCmd *formation_paths[110];   /* 72EE0 */

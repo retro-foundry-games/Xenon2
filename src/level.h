@@ -7,7 +7,9 @@
 
 #define BLOB_BASE 0x54E40
 
-#define BLOB_PAD(at, n) uint8_t pad_##at[n];   /* a gap between members, named by its offset */
+#define BLOB_PAD_CAT2(a, b) a##b
+#define BLOB_PAD_CAT(a, b) BLOB_PAD_CAT2(a, b)
+#define BLOB_PAD(n) uint8_t BLOB_PAD_CAT(pad_, __LINE__)[n];
 
 struct SpawnRec {
     int16_t scroll;
@@ -27,7 +29,7 @@ struct SpawnDef {
     void (*draw)(void);
     void (*hit)(void);
     const uint16_t *anim;
-    BLOB_PAD(14, 2)
+    BLOB_PAD(2)
     uint8_t to_big;
     uint8_t to_is_part;
 };
