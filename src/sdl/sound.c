@@ -1,52 +1,87 @@
-/* Paula, from the channel registers: four DMA channels that play 8-bit samples at a rate of 3546895 Hz / period, with a volume 0..64.  The game's player
- * writes the registers (custom->aud[n]: lc, len in words, per, vol) and SETCLR_WRITE(dmacon, ...); no register of the sound is emulated beyond what the
- * mixer needs: when DMA is switched on the channel latches lc and len, plays them and at the end starts again from the (then current) lc and len. */
+/* The voices of audio.h, mixed for the SDL stream: sound_mix makes the stereo samples of one video frame from what the game has set. */
 #include <stdint.h>
 #include <string.h>
 
-#include "amiga/hw.h"
+#include "audio.h"
 #include "host.h"
 
 #define PAULA_CLOCK 3546895.0
 #define OUTPUT_RATE 44100
 
-struct channel {
-    int on;
-    const int8_t *start;
+struct voice {
+    int playing;
+    const int8_t *start;     /* what it plays now */
     uint32_t length;         /* in bytes */
     double position;         /* in bytes */
+    const int8_t *data;      /* what it plays next, from the end of this */
+    uint32_t words;
+    uint16_t period, volume;
 };
 
-static struct channel channel[4];
+static struct voice voice[4];
 
 void sound_state(host_state_visit visit, void *arg)
 {
-    visit(channel, sizeof channel, arg);
+    visit(voice, sizeof voice, arg);
 }
 
 void sound_init(void)
 {
-    memset(channel, 0, sizeof channel);
+    memset(voice, 0, sizeof voice);
 }
 
-/* DMA of channel n (and master DMAEN) went from off to on or the other way */
-void sound_dma_changed(uint16_t before, uint16_t after)
+void audio_data(int n, const void *samples)
 {
-    for (int n = 0; n < 4; n++) {
-        int was = (before & 0x200) && (before & (1 << n));
-        int is = (after & 0x200) && (after & (1 << n));
+    voice[n].data = samples;
+}
 
-        if (is && !was) {
-            volatile struct AudioChannel *a = &custom->aud[n];
+void audio_length(int n, uint16_t words)
+{
+    voice[n].words = words ? words : 0x10000u;
+}
 
-            channel[n].start = (const int8_t *)guest_ptr(a->lc);
-            channel[n].length = (a->len ? a->len : 0x10000u) * 2;
-            channel[n].position = 0;
-            channel[n].on = channel[n].start != 0;
-        } else if (!is) {
-            channel[n].on = 0;
-        }
-    }
+void audio_period(int n, uint16_t period)
+{
+    voice[n].period = period;
+}
+
+void audio_volume(int n, uint16_t volume)
+{
+    voice[n].volume = volume;
+}
+
+void audio_start(int n)
+{
+    struct voice *v = &voice[n];
+
+    if (v->playing)
+        return;
+    v->start = v->data;
+    v->length = v->words * 2;
+    v->position = 0;
+    v->playing = v->start != 0;
+}
+
+void audio_stop(int n)
+{
+    voice[n].playing = 0;
+}
+
+void audio_start_all(void)
+{
+    for (int n = 0; n < 4; n++)
+        audio_start(n);
+}
+
+void audio_stop_all(void)
+{
+    for (int n = 0; n < 4; n++)
+        audio_stop(n);
+}
+
+static int16_t clip(int sample)
+{
+    return (int16_t)(sample > 32767 ? 32767 : sample < -32768 ? -32768 : sample);
 }
 
 void sound_mix(int16_t *out, int frames)
@@ -55,32 +90,30 @@ void sound_mix(int16_t *out, int frames)
         int left = 0, right = 0;
 
         for (int n = 0; n < 4; n++) {
-            struct channel *ch = &channel[n];
-            volatile struct AudioChannel *a = &custom->aud[n];
-            int period, volume;
-            int sample;
+            struct voice *v = &voice[n];
+            int period, volume, sample;
 
-            if (!ch->on)
+            if (!v->playing)
                 continue;
-            period = a->per < 124 ? 124 : a->per;
-            volume = a->vol & 0x7f;
+            period = v->period < 124 ? 124 : v->period;
+            volume = v->volume & 0x7f;
             if (volume > 64)
                 volume = 64;
-            sample = ch->start[(uint32_t)ch->position] * volume;
+            sample = v->start[(uint32_t)v->position] * volume;
             if (n == 0 || n == 3)
                 left += sample;
             else
                 right += sample;
-            ch->position += PAULA_CLOCK / period / OUTPUT_RATE;
-            if (ch->position >= ch->length) {            /* the end: again from the registers as they are now */
-                ch->start = (const int8_t *)guest_ptr(a->lc);
-                ch->length = (a->len ? a->len : 0x10000u) * 2;
-                ch->position = 0;
-                if (!ch->start)
-                    ch->on = 0;
+            v->position += PAULA_CLOCK / period / OUTPUT_RATE;
+            if (v->position >= v->length) {
+                v->start = v->data;
+                v->length = v->words * 2;
+                v->position = 0;
+                if (!v->start)
+                    v->playing = 0;
             }
         }
-        out[2 * i] = (int16_t)(left * 8 > 32767 ? 32767 : left * 8 < -32768 ? -32768 : left * 8);
-        out[2 * i + 1] = (int16_t)(right * 8 > 32767 ? 32767 : right * 8 < -32768 ? -32768 : right * 8);
+        out[2 * i] = clip(left * 8);
+        out[2 * i + 1] = clip(right * 8);
     }
 }

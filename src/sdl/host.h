@@ -39,7 +39,6 @@ void display_render(uint32_t *rgb);
 
 /* sound.c: Paula from the channel registers */
 void sound_init(void);
-void sound_dma_changed(uint16_t dmacon_before, uint16_t dmacon_after);
 void sound_mix(int16_t *stereo, int frames);        /* 44100 Hz, interleaved left/right */
 
 /* input.c / main.c */

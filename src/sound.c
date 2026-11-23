@@ -1,5 +1,5 @@
-/* The music and sound-effect player, $19F9E-$1B6CE (its data sits in the same area).  It writes the Paula registers directly
- * (custom->aud[n].lc/len/per/vol, SETCLR_WRITE(dmacon / adkcon)): the SDL mixer reads the channel registers and the dmacon state.
+/* The music and sound-effect player, $19F9E-$1B6CE (its data sits in the same area).  It drives the four voices of the sound hardware with the audio_ functions
+ * (audio.h: the sample, its length, the period and the volume; start and stop).
  *
  * Calls (via the pointers at $2090/$2094 of the interrupt handler): music_tick every vertical blank; sfx_play(request) with
  * request = (channel << 8) | effect, effect bit 7 = a sampled effect (sfx_samples), else a synthesised one (sfx_defs);
@@ -23,6 +23,7 @@
  *   music_transpose, music_fade_speed, music_tempo_mul. */
 #include "sound.h"
 #include "game_all.h"
+#include "audio.h"
 #include "amiga/hw.h"
 
 /* the music file's offsets (words, signed) count from the start of the player's code */
@@ -79,7 +80,7 @@ static uint16_t rate_divide(uint16_t rate)
     return quot > 0xffff ? 0x9e99 : (uint16_t)quot;
 }
 
-/* orig $1B536: a delay between audio register writes (HLE: audio) */
+/* orig $1B536: a delay between audio register writes */
 void audio_delay(void)
 {
     volatile int16_t n;
@@ -88,7 +89,7 @@ void audio_delay(void)
         ;
 }
 
-/* orig $19FBA, $1A09A: stop the music and the sound effects, audio DMA and modulation off (HLE: audio) */
+/* orig $19FBA, $1A09A: stop the music and the sound effects, audio DMA and modulation off */
 void music_silence(void)
 {
     uint16_t i;
@@ -99,12 +100,9 @@ void music_silence(void)
         xenon2.hw_mirror[i].music_on = 0;
         xenon2.hw_mirror[i].sfx_on = 0;
     }
-    SETCLR_WRITE(dmacon, 0x000f);
-    SETCLR_WRITE(adkcon, 0x00ff);
-    custom->aud[0].vol = 0;
-    custom->aud[1].vol = 0;
-    custom->aud[2].vol = 0;
-    custom->aud[3].vol = 0;
+    audio_stop_all();
+    for (i = 0; i < 4; i++)
+        audio_volume(i, 0);
 }
 
 /* orig $19FE4, $1A0F4: every sound effect channel ends at its next tick */
@@ -116,12 +114,11 @@ void sfx_stop_all(void)
     xenon2.sfx_channels[3].timer = 1;
 }
 
-/* orig $19FC8, $1A112: audio DMA on for the four channels (HLE: audio) */
+/* orig $19FC8, $1A112: audio DMA on for the four channels */
 void music_resume(void)
 {
     if (xenon2.music_enabled) {
-        SETCLR_WRITE(adkcon, 0x00ff);
-        SETCLR_WRITE(dmacon, 0x820f);
+        audio_start_all();
         xenon2.music_playing = 0xff;
     }
 }
@@ -182,7 +179,7 @@ void sound_init_sfx_samples(void)
     xenon2.sfx_samples_ready = 0xff;
 }
 
-/* orig $19F9E, $19FFC: start song `song` (HLE: audio) */
+/* orig $19F9E, $19FFC: start song `song` */
 void music_start(uint16_t song)
 {
     const SongHeader *header;
@@ -229,11 +226,10 @@ static void music_stop(void)
     xenon2.hw_mirror[1].music_on = xenon2.hw_mirror[1].sfx_on = 0;
     xenon2.hw_mirror[2].music_on = xenon2.hw_mirror[2].sfx_on = 0;
     xenon2.hw_mirror[3].music_on = xenon2.hw_mirror[3].sfx_on = 0;
-    SETCLR_WRITE(dmacon, 0x000f);
-    SETCLR_WRITE(adkcon, 0x00ff);
+    audio_stop_all();
 }
 
-/* orig $19FAC, $1A154: one tick of the music (every vertical blank), then of the sound effects (HLE: audio) */
+/* orig $19FAC, $1A154: one tick of the music (every vertical blank), then of the sound effects */
 void music_tick(void)
 {
     uint16_t ch;
@@ -276,7 +272,6 @@ void music_tick(void)
     for (ch = 0; ch < 4; ch++) {
         HwMirror *mirror = &xenon2.hw_mirror[ch];
         MusicChannel *chan = &xenon2.music_channels[ch];
-        volatile struct AudioChannel *hw = &custom->aud[ch];
         Instrument *ins = chan->instr;
         const uint8_t *stream = chan->stream;
         uint32_t code;
@@ -293,15 +288,15 @@ void music_tick(void)
                 mirror->lc = loop;
                 mirror->len = loop_len;
                 if (!mirror->sfx_on) {
-                    hw->lc = (uintptr_t)(loop);
-                    hw->len = loop_len;
+                    audio_data(ch, loop);
+                    audio_length(ch, loop_len);
                 }
             } else {
                 mirror->lc = xenon2.silence_ptr;
                 mirror->len = 0x20;
                 if (!mirror->sfx_on) {
-                    hw->lc = (uintptr_t)(xenon2.silence_ptr);
-                    hw->len = 0x20;
+                    audio_data(ch, xenon2.silence_ptr);
+                    audio_length(ch, 0x20);
                 }
             }
         }
@@ -312,7 +307,7 @@ void music_tick(void)
         }
         if (chan->dur == 1) {
             if (!mirror->sfx_on && *stream != 0x83)
-                SETCLR_WRITE(dmacon, (uint16_t)(1 << ch));
+                audio_stop(ch);
             continue;
         }
         goto effects;
@@ -335,14 +330,14 @@ void music_tick(void)
             vol = (uint16_t)(((uint32_t)(uint16_t)v * get_volume()) & 0xffff) >> 6;
             mirror->vol = vol;
             if (!mirror->sfx_on) {
-                hw->lc = (uintptr_t)(ins->sample);
-                hw->len = ins->length;
-                hw->vol = vol;
+                audio_data(ch, ins->sample);
+                audio_length(ch, ins->length);
+                audio_volume(ch, vol);
             }
             code = ((uint32_t)xenon2.music_periods[code & 0xff] * ins->rate) >> 10;
             mirror->per = (uint16_t)code;
             if (!mirror->sfx_on)
-                hw->per = (uint16_t)code;
+                audio_period(ch, (uint16_t)code);
             chan->loaded = 0;
             goto start;
         }
@@ -396,8 +391,8 @@ void music_tick(void)
             mirror->lc = xenon2.silence_ptr;
             mirror->len = 0x20;
             if (!mirror->sfx_on) {
-                hw->lc = (uintptr_t)(xenon2.silence_ptr);
-                hw->len = 0x20;
+                audio_data(ch, xenon2.silence_ptr);
+                audio_length(ch, 0x20);
             }
             continue;
         case 0x83:
@@ -439,7 +434,7 @@ void music_tick(void)
     start:
         chan->stream = stream;
         chan->dur = chan->dur_reload;
-        SETCLR_WRITE(dmacon, (uint16_t)(0x8200 | (1 << ch)));
+        audio_start(ch);
         continue;
 
     effects: {
@@ -489,7 +484,7 @@ void music_tick(void)
             }
             mirror->per = (uint16_t)period;
             if (!mirror->sfx_on)
-                hw->per = (uint16_t)period;
+                audio_period(ch, (uint16_t)period);
             if (chan->vol_count-- == 0) {
                 int8_t b;
 
@@ -501,23 +496,21 @@ void music_tick(void)
                 vol = (uint16_t)(((uint32_t)(b & 0x7f) * get_volume()) & 0xffff) >> 6;
                 mirror->vol = vol;
                 if (!mirror->sfx_on)
-                    hw->vol = vol;
+                    audio_volume(ch, vol);
             }
         }
     }
     sfx_tick();
 }
 
-/* orig $19FD6, $1B26A: start sound effect `request` = (channel << 8) | effect (HLE: audio) */
+/* orig $19FD6, $1B26A: start sound effect `request` = (channel << 8) | effect */
 void sfx_play(uint16_t request)
 {
-    uint16_t ch, dma_bit;
+    uint16_t ch;
     int8_t id;
     SfxChannel *sfx;
-    volatile struct AudioChannel *hw;
 
     CIAA_PRA |= 2;
-    SETCLR_WRITE(adkcon, 0x00ff);
     request &= 0x3ff;
     xenon2.sfx_request = request;
     ch = xenon2.sfx_request >> 8;
@@ -526,18 +519,16 @@ void sfx_play(uint16_t request)
     sound_init_instruments();
     xenon2.hw_mirror[ch].sfx_on = 0xff;
     sfx = &xenon2.sfx_channels[ch];
-    hw = &custom->aud[ch];
-    dma_bit = (uint16_t)(1 << ch);
     id = (int8_t)request;
 
     if (id >= 0) {
         const SfxDef *def = &xenon2.sfx_defs[(uint8_t)id];
         int8_t e;
 
-        hw->len = 1;
-        hw->per = 0x7c;
+        audio_length(ch, 1);
+        audio_period(ch, 0x7c);
         audio_delay();
-        SETCLR_WRITE(dmacon, dma_bit);
+        audio_stop(ch);
         audio_delay();
         sfx->step = def->step;
         sfx->period_reset = def->period_reset;
@@ -553,7 +544,7 @@ void sfx_play(uint16_t request)
         sfx->env_index = def->env_index;
         sfx->sample_id = def->sample_id;
         sfx->length = def->length;
-        hw->len = sfx->length;
+        audio_length(ch, sfx->length);
         sfx->count_e = sfx->reload_e;
         sfx->count_f = sfx->reload_f;
         sfx->env_count = 1;
@@ -568,36 +559,36 @@ void sfx_play(uint16_t request)
 
         sound_init_sfx_samples();
         sfx->sample_id = (uint8_t)id;
-        SETCLR_WRITE(dmacon, dma_bit);
-        hw->per = 0x7c;
-        hw->len = 1;
+        audio_stop(ch);
+        audio_period(ch, 0x7c);
+        audio_length(ch, 1);
         audio_delay();
         sample = &xenon2.sfx_samples[sfx->sample_id & 0x7f];
         sfx->timer = sample->duration;
         if (sample->endless)
             sfx->timer = 0;
-        hw->len = sample->length;
-        hw->lc = (uintptr_t)(sample->sample);
-        hw->per = sample->period;
+        audio_length(ch, sample->length);
+        audio_data(ch, sample->sample);
+        audio_period(ch, sample->period);
         sfx->cur_period = sample->period;
         sfx->slide_period = sample->period;
-        hw->vol = 0x40;
-        SETCLR_WRITE(dmacon, (uint16_t)(dma_bit | 0x8200));
+        audio_volume(ch, 0x40);
+        audio_start(ch);
         sfx->active = 0xff;
         audio_delay();
         loop_off = sample->loop_off;
         if (loop_off >= 0) {
-            hw->len = (uint16_t)(sample->length - (uint16_t)((uint32_t)loop_off >> 1));
-            hw->lc = (uintptr_t)(sample->sample + loop_off);
+            audio_length(ch, (uint16_t)(sample->length - (uint16_t)((uint32_t)loop_off >> 1)));
+            audio_data(ch, sample->sample + loop_off);
         } else {
-            hw->lc = (uintptr_t)(xenon2.silence_ptr);
-            hw->len = 0x20;
+            audio_data(ch, xenon2.silence_ptr);
+            audio_length(ch, 0x20);
         }
     }
 }
 
-/* orig $1B5A2: one tick of a sound effect channel (HLE: audio) */
-static void sfx_channel_tick(SfxChannel *sfx, volatile struct AudioChannel *hw, uint16_t dma_bit, HwMirror *mirror)
+/* orig $1B5A2: one tick of a sound effect channel */
+static void sfx_channel_tick(SfxChannel *sfx, int ch, HwMirror *mirror)
 {
     uint16_t period, slide_val;
 
@@ -616,10 +607,10 @@ static void sfx_channel_tick(SfxChannel *sfx, volatile struct AudioChannel *hw, 
             if ((int16_t)period < 0x7c)
                 goto stop;
             sfx->slide_period = period;
-            hw->per = period;
+            audio_period(ch, period);
             return;
         }
-        hw->per = sfx->slide_period;
+        audio_period(ch, sfx->slide_period);
         return;
     }
     if (sfx->reload_f != 0) {
@@ -659,7 +650,7 @@ static void sfx_channel_tick(SfxChannel *sfx, volatile struct AudioChannel *hw, 
             goto stop;
         if (b > 0) {
             sfx->env_ptr = env;
-            hw->vol = (uint16_t)(int16_t)b;
+            audio_volume(ch, (uint16_t)(int16_t)b);
         }
     }
     {
@@ -669,7 +660,7 @@ static void sfx_channel_tick(SfxChannel *sfx, volatile struct AudioChannel *hw, 
 
         if (per < 0x7c)
             per = 0x7c;
-        hw->per = (uint16_t)per;
+        audio_period(ch, (uint16_t)per);
         if (b & 1)
             b = (uint8_t)((b >> 1) | 0x80);
         else {
@@ -677,33 +668,33 @@ static void sfx_channel_tick(SfxChannel *sfx, volatile struct AudioChannel *hw, 
             pair = (pair << 16) | (pair >> 16);
         }
         sfx->rot_b = b;
-        hw->lc = (uintptr_t)(xenon2.sfx_wave_base + (int16_t)pair);
-        SETCLR_WRITE(dmacon, (uint16_t)(dma_bit | 0x8200));
+        audio_data(ch, xenon2.sfx_wave_base + (int16_t)pair);
+        audio_start(ch);
     }
     return;
 
 stop:
     sfx->active = 0;
-    SETCLR_WRITE(dmacon, dma_bit);
+    audio_stop(ch);
     mirror->sfx_on = 0;
     if (mirror->music_on) {
-        hw->per = 0x7c;
-        SETCLR_WRITE(dmacon, dma_bit);
+        audio_period(ch, 0x7c);
+        audio_stop(ch);
         audio_delay();
-        hw->lc = (uintptr_t)(mirror->lc);
-        hw->len = mirror->len;
-        hw->per = mirror->per;
-        hw->vol = mirror->vol;
-        SETCLR_WRITE(dmacon, (uint16_t)(dma_bit | 0x8200));
+        audio_data(ch, mirror->lc);
+        audio_length(ch, mirror->len);
+        audio_period(ch, mirror->per);
+        audio_volume(ch, mirror->vol);
+        audio_start(ch);
     }
 }
 
-/* orig $1B540, $1A14E: tick every active sound effect channel (HLE: audio) */
+/* orig $1B540, $1A14E: tick every active sound effect channel */
 void sfx_tick(void)
 {
     uint16_t i;
 
     for (i = 0; i < 4; i++)
         if (xenon2.sfx_channels[i].active)
-            sfx_channel_tick(&xenon2.sfx_channels[i], &custom->aud[i], (uint16_t)(1 << i), &xenon2.hw_mirror[i]);
+            sfx_channel_tick(&xenon2.sfx_channels[i], i, &xenon2.hw_mirror[i]);
 }

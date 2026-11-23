@@ -39,14 +39,10 @@ void host_setclr_write(unsigned offset, uint16_t value)
     volatile struct Custom *c = custom;
 
     switch (offset) {
-    case 0x96: {
-        uint16_t before = dmacon_state;
-
+    case 0x96:
         dmacon_state = apply(dmacon_state, value) & 0x07ff;
-        c->dmaconr = dmacon_state;   /* (the blitter is never busy: its draws are done when the function returns) */
-        sound_dma_changed(before, dmacon_state);
+        c->dmaconr = dmacon_state;
         break;
-    }
     case 0x9a:
         intena_state = apply(intena_state, value) & 0x7fff;
         c->intenar = intena_state;
