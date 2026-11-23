@@ -35,6 +35,12 @@ static uint16_t word_at(const uint8_t *p)
     return (uint16_t)((p[0] << 8) | p[1]);
 }
 
+/* the word of a channel's list at OFF (an offset from music_base into music_lists) */
+static uint16_t list_word(int16_t off)
+{
+    return xenon2.music_lists[(uint16_t)(off - (int16_t)(offsetof(struct Xenon2, music_lists) - offsetof(struct Xenon2, music_base))) / 2];
+}
+
 static uint32_t long_at(const uint8_t *p)
 {
     return ((uint32_t)p[0] << 24) | ((uint32_t)p[1] << 16) | ((uint32_t)p[2] << 8) | p[3];
@@ -196,7 +202,7 @@ void music_start(uint16_t song)
         chan->env_ptr = xenon2.music_env_data;
         chan->list_off = header->list[i];
         chan->list_idx = 2;
-        chan->stream = at((int16_t)word_at(at((int16_t)header->list[i])));
+        chan->stream = at((int16_t)list_word((int16_t)header->list[i]));
     }
     set_volume(0x40);
     xenon2.music_fade_speed = 0;
@@ -364,11 +370,11 @@ void music_tick(void)
             int16_t off = (int16_t)(chan->list_off + idx);
 
             idx += 2;
-            if (word_at(at(off)) == 0) {
+            if (list_word(off) == 0) {
                 off = (int16_t)chan->list_off;
                 idx = 2;
             }
-            stream = at((int16_t)word_at(at(off)));
+            stream = at((int16_t)list_word(off));
             chan->list_idx = idx;
             goto fetch;
         }
