@@ -126,7 +126,7 @@ void map_tile_mask(uint16_t x, uint16_t y, uint16_t rows)
 
     y = (uint16_t)(y + xenon2.scroll_fine);
     row = y & 0xf;
-    cell = (const Cell *)((const uint8_t *)cell + (int16_t)(uint16_t)((uint32_t)(y >> 4) * (2 * MAP_COLS)));
+    cell += (int16_t)(uint16_t)((uint32_t)(y >> 4) * MAP_COLS);
     cell += (x >> 4) & 0x7f;
     mask0 = tile_mask_ptr_at(cell);
     mask1 = tile_mask_ptr_at(cell + 1);
@@ -158,7 +158,7 @@ void map_tile_mask2(uint16_t x, uint16_t y, uint16_t rows)
 
     y = (uint16_t)(y + xenon2.scroll_fine);
     row = y & 0xf;
-    cell = (const Cell *)((const uint8_t *)cell + (int16_t)(uint16_t)((uint32_t)(y >> 4) * (2 * MAP_COLS)));
+    cell += (int16_t)(uint16_t)((uint32_t)(y >> 4) * MAP_COLS);
     cell += (x >> 4) & 0x7f;
     mask0 = tile_mask_ptr_at(cell);
     mask1 = tile_mask_ptr_at(cell + 1);
