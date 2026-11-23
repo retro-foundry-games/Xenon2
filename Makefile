@@ -34,11 +34,11 @@ all: blob
 # game.h, game.ld, guest_members.h and data.c are made from the symbol files (tools/gen_symbols.py; the tables are read from XENON_RAM)
 XENON_RAM ?= ../captures/trace-10000.bin
 SYMBOL_FILES := $(wildcard $(SRC)/game.symbols $(SRC)/symbols/*.symbols)
-$(SRC)/game.h $(SRC)/game.ld $(SRC)/guest_members.h $(SRC)/data.c: $(SYMBOL_FILES) $(SRC)/types_blobs.h ../tools/gen_symbols.py
+$(SRC)/game.h $(SRC)/game.ld $(SRC)/guest_members.h $(SRC)/data.c: $(SYMBOL_FILES) $(SRC)/level.h ../tools/gen_symbols.py
 	$(PYTHON) ../tools/gen_symbols.py --ram $(XENON_RAM)
 generate: $(SRC)/game.h
 # the layout of the level blobs (tools/gen_blobs.py)
-$(SRC)/types_blobs.h $(SRC)/guest_blob.h: $(wildcard $(SRC)/blobs/*.blob) ../tools/gen_blobs.py
+$(SRC)/level.h $(SRC)/guest_blob.h $(SRC)/level2.h $(SRC)/level3.h $(SRC)/level4.h $(SRC)/level5.h: $(wildcard $(SRC)/blobs/*.blob) ../tools/gen_blobs.py
 	$(PYTHON) ../tools/gen_blobs.py
 
 $(BUILD):

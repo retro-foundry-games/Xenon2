@@ -76,7 +76,7 @@ extern unsigned guest_record_size(const char *type);
 /* put the bytes of the original's memory at ADDRESS (as they are in the image: big endian) into the members that cover them, in this machine's byte
  * order; pointers (addresses of the original's memory) become pointers into the block */
 static int blob_raw;   /* 1: the shop's blob (overlays the level's; the flat members that lie in $54E00-$73E00 are not loaded), 0, 2 to 5: the blob of that level
-                        * (0 is level 1): its members (types_blobs.h, guest_blob.h) are converted */
+                        * (0 is level 1): its members (level.h, levelN.h, shop.h, guest_blob.h) are converted */
 #define BLOB_LO 0x54e00u
 #define BLOB_HI 0x74000u
 #define BLOB_LEVEL_LO 0x54e40u

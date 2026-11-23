@@ -1,4 +1,4 @@
-/* level3: level 3's own code (the blob at $54E40 while level 3 is loaded), as level3_data (struct Level3Data, types_blobs.h), written like level2.c;
+/* level3: level 3's own code (the blob at $54E40 while level 3 is loaded), as level3_data (struct Level3Data, level3.h), written like level2.c;
  * a function has `level3 $ADDR` for its address. */
 #include "weapons.h"
 #include "shop.h"
