@@ -1,5 +1,5 @@
 ; weapons: $4000-$5FFF (objects, weapons, pickups) and level 1's blob ($54E00 on)
-type Object 98                                    ; an object (struct Object in types_weapons.h; play's Obj is the same record, less detailed)
+type Object 98                                    ; an object (struct Object in objects.h; play's Obj is the same record, less detailed)
 type Slot 6                                       ; a weapon slot: type word, the object
 var player_x_prev 0x4e4 uint16_t                         ; the player's x, one frame old
 var player_y_prev 0x4e6 uint16_t
