@@ -481,8 +481,8 @@ struct Xenon2 {
     const uint8_t sfx_env_data[136];  /* $01B9D4 tab */
     const uint16_t music_vol_env_offsets[16];  /* $01BA5C tab */
     const uint8_t music_vol_env_data[260];  /* $01BA7C tab */
-    uint8_t sample_bank[4];  /* $01BB80 arr */
-    PAD(127762)
+    uint8_t sample_bank[127764];  /* $01BB80 arr */
+    PAD(2)
     const uint32_t hit_mask_ptrs[16];  /* $03AE96 tab */
     const uint16_t hit_mask_data[1200];  /* $03AED6 tab */
     PAD(1142)

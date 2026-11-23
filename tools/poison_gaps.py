@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """tools/poison_gaps.py N=captures/NAME.ram OUT: copies a RAM dump with every byte that no member of the port names (the gaps of struct Xenon2 and the pads of the
-level blob N) set to 0xA5 (the sample bank, $1BB80-$3B836, and the zero page stay).  The port played from the poisoned dump must behave as from the dump: a difference is a read of
+level blob N) set to 0xA5 (the zero page stays).  The port played from the poisoned dump must behave as from the dump: a difference is a read of
 memory that has no name."""
 import re, sys, pathlib
 root = pathlib.Path(__file__).resolve().parent.parent / 'native' / 'src'
@@ -19,7 +19,7 @@ for o, z in re.findall(r'\{ 0x([0-9A-F]+), (\d+) \}', pads):
         cov[i] = 0
 n = 0
 for i in range(0x400, 0x7d120):
-    if not cov[i] and not (0x1bb80 <= i < 0x3b836):
+    if not cov[i]:
         d[i] = 0xA5
         n += 1
 open(sys.argv[2], 'wb').write(d)
