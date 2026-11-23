@@ -518,7 +518,7 @@ void shop_run(void)
     palette_fade_in(xenon2.level_palette_copy);
 }
 
-/* ---- the disk (HLE: disk) ---- */
+/* ---- the disk ---- */
 
 /* ---- the work area ---- */
 
