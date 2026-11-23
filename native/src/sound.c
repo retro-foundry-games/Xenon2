@@ -5,7 +5,7 @@
  * request = (channel << 8) | effect, effect bit 7 = a sampled effect (sfx_samples), else a synthesised one (sfx_defs);
  * music_start(song) starts a song; music_silence, music_resume, music_fade_out, sfx_stop_all.
  *
- * Offsets: the player addresses its data with words relative to music_base ($19F9E); at(off) makes the address.
+ * Offsets: the player addresses its data with words relative to the start of its code ($19F9E, MUSIC_OFFSET_ZERO); each table has a function that turns an offset into a pointer into it.
  *
  * Sample bank (sample_bank, $1BB80, loaded with the game image; to $2BAA0): 20 instruments, each { uint32 length in bytes, uint16 rate,
  *   8-bit samples }, then 0x40 bytes of silence (silence_ptr, sfx_wave_base = silence + 0x40); the first 20 follow at $1BB80 and a
@@ -25,15 +25,39 @@
 #include "game_all.h"
 #include "amiga/hw.h"
 
-static uint8_t *at(int32_t off)
+/* the music file's offsets (words, signed) count from the start of the player's code */
+#define MUSIC_OFFSET_ZERO 0x19f9e
+
+/* the bytes of TABLE (a member of struct Xenon2, at ADDRESS in the original) that the offset OFF of the music file names */
+static const uint8_t *in_table(const uint8_t *table, uint32_t address, int16_t off)
 {
-    return (uint8_t *)((uintptr_t)xenon2.music_base + (uint32_t)off);
+    return table + (MUSIC_OFFSET_ZERO + off - address);
 }
 
-/* the word of a channel's list at OFF (an offset from music_base into music_lists) */
+static const uint8_t *pitch_envelope(int16_t off)
+{
+    return in_table(xenon2.music_env_data, offsetof(struct Xenon2, music_env_data), off);
+}
+
+static const uint8_t *volume_envelope(int16_t off)
+{
+    return in_table(xenon2.music_vol_env_data, offsetof(struct Xenon2, music_vol_env_data), off);
+}
+
+static const uint8_t *effect_envelope(int16_t off)
+{
+    return in_table(xenon2.sfx_env_data, offsetof(struct Xenon2, sfx_env_data), off);
+}
+
+static const uint8_t *sequence(int16_t off)
+{
+    return in_table(xenon2.music_data, offsetof(struct Xenon2, music_data), off);
+}
+
+/* the word of a channel's list at OFF */
 static uint16_t list_word(int16_t off)
 {
-    return xenon2.music_lists[(uint16_t)(off - (int16_t)(offsetof(struct Xenon2, music_lists) - offsetof(struct Xenon2, music_base))) / 2];
+    return xenon2.music_lists[(uint16_t)(MUSIC_OFFSET_ZERO + off - offsetof(struct Xenon2, music_lists)) / 2];
 }
 
 static uint16_t get_volume(void)
@@ -190,7 +214,7 @@ void music_start(uint16_t song)
         chan->env_ptr = xenon2.music_env_data;
         chan->list_off = header->list[i];
         chan->list_idx = 2;
-        chan->stream = at((int16_t)list_word((int16_t)header->list[i]));
+        chan->stream = sequence((int16_t)list_word((int16_t)header->list[i]));
     }
     set_volume(0x40);
     xenon2.music_fade_speed = 0;
@@ -339,14 +363,14 @@ void music_tick(void)
             goto fetch;
         }
         if (code >= 0xa0) {
-            const uint8_t *vol_env = at((int16_t)xenon2.music_vol_env_offsets[code - 0xa0]);
+            const uint8_t *vol_env = volume_envelope((int16_t)xenon2.music_vol_env_offsets[code - 0xa0]);
 
             chan->vol_start = vol_env;
             chan->vol_speed = vol_env[-1];
             goto fetch;
         }
         if (code >= 0x90) {
-            const uint8_t *env = at((int16_t)xenon2.music_env_offsets[code - 0x90]);
+            const uint8_t *env = pitch_envelope((int16_t)xenon2.music_env_offsets[code - 0x90]);
 
             chan->env_start = env;
             chan->env_ptr = env;
@@ -362,7 +386,7 @@ void music_tick(void)
                 off = (int16_t)chan->list_off;
                 idx = 2;
             }
-            stream = at((int16_t)list_word(off));
+            stream = sequence((int16_t)list_word(off));
             chan->list_idx = idx;
             goto fetch;
         }
@@ -540,7 +564,7 @@ void sfx_play(uint16_t request)
         sfx->count_f = sfx->reload_f;
         sfx->env_count = 1;
         e = (int8_t)sfx->env_index;
-        sfx->env_ptr = at((int16_t)xenon2.sfx_env_offsets[e]);
+        sfx->env_ptr = effect_envelope((int16_t)xenon2.sfx_env_offsets[e]);
         audio_delay();
         sfx->active = 0xff;
         return;
