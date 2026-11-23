@@ -41,13 +41,6 @@ void missile_launcher_update(Object *obj); void shell_update(Object *obj); void 
 void forward_shot_update(Object *obj); void side_shot_update(Object *obj); void rear_shot_update(Object *obj);
 void bomb_update(Object *obj); void homing_missile_update(Object *obj);
 
-/* the object lists: $AD8, $B3A and $B9C are sentinels in obj_list */
-#define LIST_A ((Object *)&xenon2.obj_list[1])
-#define LIST_C ((Object *)&xenon2.obj_list[2])
-#define LIST_B ((Object *)&xenon2.obj_list[3])
-#define PLAYER ((Object *)&xenon2.player)
-#define SLOT(i) (&xenon2.weapon_slots[i])
-
 Object *weapon_select(uint16_t type, Object *caller, Object *last);               /* orig $004822 */
 Object *refill_slot0(Object *caller, Object *last);                                /* orig $005540 */
 Object *give_forward_shot(Object *caller, Object *last);                                 /* orig $004AFC */

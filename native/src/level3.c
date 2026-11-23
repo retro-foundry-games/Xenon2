@@ -21,8 +21,8 @@
 /* the scratch fields of Object, by the kind that uses them */
 
 
-#define PLAYER_X (PLAYER->x)
-#define PLAYER_Y (PLAYER->y)
+#define PLAYER_X (xenon2.player.x)
+#define PLAYER_Y (xenon2.player.y)
 
 static Object *alloc_in(Object *list)
 {
@@ -250,7 +250,7 @@ void l3_worm_spawn(uint16_t side)
     y = (int16_t)(path->arg.pos.y - xenon2.scroll_pos - xenon2.scroll_step);
     count = xenon2.level3_data.worm_spawn.last + 1;
     for (n = 0; n < count; n++) {
-        Object *seg = alloc_in(LIST_C);
+        Object *seg = alloc_in(&xenon2.obj_list[2]);
 
         if (prev)
             prev->chain = seg;
@@ -393,7 +393,7 @@ void l3_snake_body(Object *obj)
  * markers ($B8 and $BC) holds the box of the group */
 void l3_spawn_snake(const struct SpawnRec *rec)
 {
-    Object *box = alloc_in(LIST_C), *head, *seg, *anchor;
+    Object *box = alloc_in(&xenon2.obj_list[2]), *head, *seg, *anchor;
     int flag = rec->steps != 0;
     int16_t x = (int16_t)(rec->x - 8), y;
     int i;
@@ -401,7 +401,7 @@ void l3_spawn_snake(const struct SpawnRec *rec)
     if (flag)
         x = (int16_t)(x + 0x20);
     y = (int16_t)(rec->y - xenon2.scroll_pos);
-    seg = alloc_in(LIST_C);
+    seg = alloc_in(&xenon2.obj_list[2]);
     head = seg;
     for (i = 7; i >= 0; i--) {
         int16_t offset;
@@ -447,7 +447,7 @@ void l3_spawn_snake(const struct SpawnRec *rec)
             seg = n;
         }
     }
-    anchor = alloc_in(LIST_C);
+    anchor = alloc_in(&xenon2.obj_list[2]);
     anchor->type = 0xb8;
     anchor->fn_update = (obj_fn)obj_nop_thunk;
     anchor->fn_draw = (obj_fn)obj_nop_thunk;
@@ -540,7 +540,7 @@ void l3_diver_update(Object *obj)
                 sx = (int16_t)(sx + 0xa);
                 gfx = xenon2.level3_data.diver_shot_picture_b;
             }
-            shot = alloc_in(LIST_B);
+            shot = alloc_in(&xenon2.obj_list[3]);
             shot->type = 0x14;
             shot->fn_update = (obj_fn)l3_diver_shot;
             shot->fn_draw = draw_bob_masked;
@@ -566,7 +566,7 @@ void l3_diver_update(Object *obj)
 /* level3 $056108: a diver ($D0) from a record: it flies towards the middle from the side it is on */
 void l3_spawn_diver(const struct SpawnRec *rec)
 {
-    Object *obj = alloc_in(LIST_C);
+    Object *obj = alloc_in(&xenon2.obj_list[2]);
     const uint16_t *anim = xenon2.level3_data.anim_diver_update;
 
     obj->type = 0xd0;
@@ -611,7 +611,7 @@ void l3_spawn_parts(void)
     Object *first = 0, *prev = 0;
 
     do {
-        Object *part = insert_head(LIST_C);
+        Object *part = insert_head(&xenon2.obj_list[2]);
 
         if (prev)
             prev->chain = part;
@@ -1126,7 +1126,7 @@ void l3_boss2_flash(Object *obj)
 /* level3 $0556F6: a walker ($DC) from a record: the direction w6 of the record gives its first place and picture */
 void l3_spawn_walker(const struct SpawnRec *rec)
 {
-    Object *obj = alloc_in(LIST_C);
+    Object *obj = alloc_in(&xenon2.obj_list[2]);
     uint16_t i = rec->index;
 
     obj->type = 0xdc;
@@ -1294,5 +1294,5 @@ void l3_worm_hit(Object *shot, Object *worm, uint16_t damage)
     }
     kill_thunk(worm);
     debris_burst(shot, 0x13, 0, 0, 0x140, 0xc0, xenon2.big_explosion_anim);
-    free_object_chain(LIST_C->prev);
+    free_object_chain(xenon2.obj_list[2].prev);
 }

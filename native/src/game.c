@@ -814,7 +814,7 @@ void clear_palette(void)
     }
 }
 
-/* orig $006d9c: puts the player back at the start of a level section (scroll positions, the shot trails, the "PLAYER n" text) */
+/* orig $006d9c: puts the player back at the start of a level section (scroll positions, the shot trails, the "&xenon2.player n" text) */
 void respawn_player(void)
 {
     uint16_t pos, i;
