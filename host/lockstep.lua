@@ -124,7 +124,8 @@ function reload_autoplay(file)   -- from the control shell: ctl.py SOCK 'reload_
     return true
 end
 if AUTO then reload_autoplay() end
-local auto_override
+local auto_override, manual
+function auto_manual(on) manual = on; if on then ami.log('manual: the arrows and Ctrl / Space / Return are yours') else ami.log('the autoplayer plays again') end end   -- ctl.py SOCK 'auto_manual(true)' hands the stick to the keys in the window, 'auto_manual(false)' takes it back
 function auto_stick(t) auto_override = t end   -- ctl.py SOCK 'auto_stick{left=1,fire=1}' holds that stick instead of the autoplayer's; auto_stick(nil) gives it back
 local started = false
 if STATE then
@@ -274,13 +275,13 @@ local function sync_point()
     call_counts = {}
     pending[#pending + 1] = { n = n, frame = ami.frame(), calls = calls, ram = (COMPARE_MEM or (STATE and n == 1)) and ami.read(0, 0x80000) or nil }
     local st = joys[n]
-    if AUTO and n >= 3 then   -- (no input before sync 3: live stepping takes the original's memory at sync 1 and a stick pressed then is lost to the port) the autoplayer decides from the original's memory as it is now
+    if AUTO and n >= 3 and not manual then   -- (no input before sync 3: live stepping takes the original's memory at sync 1 and a stick pressed then is lost to the port) the autoplayer decides from the original's memory as it is now
         local want = autoplay(n)
         if auto_override then want = { up = auto_override.up or 0, down = auto_override.down or 0, left = auto_override.left or 0, right = auto_override.right or 0, fire = auto_override.fire or 0 } end
         for k, v in pairs(want) do stick[k] = v end
     end
     if PLAY or AUTO then   -- the stick as it is held now, on both sides from here on
-        if PLAY then read_keys() end
+        if PLAY or manual then read_keys() end
         local changed = false
         for k, v in pairs(stick) do if applied_stick[k] ~= v then changed = true end end
         if changed then
@@ -800,7 +801,7 @@ while not done do
         snap_request = nil
     end
     if not done then
-        if PLAY then read_keys() end
+        if PLAY or manual then read_keys() end
         if COMPARE_PIC then
             if NOSPR then ami.poke16(0xdff096, 0x0020) end
             ring[ami.frame()] = ami.frame_rgb(0, 0, FRAME_W, FRAME_H, 1)
