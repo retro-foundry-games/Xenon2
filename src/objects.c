@@ -1038,3 +1038,558 @@ void spawn_bonuses(int16_t count)
         xenon2.level_end_items++;
     } while (--count != -1);
 }
+
+/* orig $ED2, $00200A: do two boxes overlap?  The original returns it in the Z flag: Z clear = overlap (returned here as 1).
+ * a_left, a_top, a_right, a_bottom = the first; b_left, b_top, b_right, b_bottom = the second. */
+uint16_t box_overlap(int16_t a_left, int16_t a_top, int16_t a_right, int16_t a_bottom, int16_t b_left, int16_t b_top, int16_t b_right, int16_t b_bottom)
+{
+    if (b_right < a_left || b_left > a_right || b_bottom < a_top || b_top > a_bottom)
+        return 0;
+    return 1;
+}
+
+/* orig $E54, $002418: take an object off the free list (free_obj) and clear its flag bytes; the result is returned (0 here when the list is
+ * empty: the original then searches the lists from $2436, goes on at $2436). */
+Object *obj_free_pop(void)
+{
+    Object *obj = xenon2.free_obj;
+    Object *next, *prev;
+
+    if (obj != 0) {
+        xenon2.free_obj = obj->next;
+        goto clear;
+    }
+    /* $2436: the pool is empty: take an object away from the lists, the effects first (obj_list[3], obj_list[4] is the front list, obj_list[2] the enemies) */
+    obj = &xenon2.obj_list[3];
+    for (;;) {
+        obj = obj->prev;
+        if (obj->type == 4 || obj->type == 0xc || obj->type == 0x10)
+            goto steal;
+        if (obj->type == 0)
+            break;
+    }
+    obj = xenon2.obj_list[3].prev;
+    if (obj->type != 0)
+        goto steal;
+    obj = xenon2.obj_list[4].prev;
+    if (obj->type != 0)
+        goto steal;
+    obj = xenon2.obj_list[2].prev;   /* $247E: from the enemies' list head on, the first dead one or one far enough down */
+    for (;;) {
+        if ((int16_t)obj->type >= 0xc8 || obj->type == 4)
+            goto steal;
+        obj = obj->prev;
+        if (obj->type == 0)
+            break;
+    }
+    obj = xenon2.obj_list[2].prev;
+steal:
+    next = obj->next;   /* $2464: take it out of its list */
+    prev = obj->prev;
+    next->prev = prev;
+    prev->next = next;
+clear:
+    obj->is_part = 0;
+    obj->persists = 0;
+    obj->screen_fixed = 0;
+    return obj;
+}
+
+/* ---- the player, the lists of objects, the status panel (the module that was play.c) ---- */
+/* inlined at its callers: the pair of list links of an append at the end of a list (before the head) */
+void list_append(Object *head, Object *o)
+{
+    Object *last = head->prev;
+
+    head->prev = o;
+    o->prev = last;
+    o->next = head;
+    last->next = o;
+}
+
+/* orig $006990: empties the five object lists, puts in the player and its four options, clears the game's counters */
+void init_objects(void)
+{
+    uint16_t i;
+    Object *o;
+
+    for (i = 0; i < 5; i++) {
+        o = &xenon2.obj_list[i];
+        o->type = 0;
+        o->prev = o;
+        o->next = o;
+        o->fn_update = obj_nop;
+        o->fn_draw = obj_nop;
+        o->fn_hit = obj_nop;
+    }
+    o = &xenon2.player;
+    list_append(&xenon2.obj_list[0], o);
+    o->type = 8;
+    o->fn_update = player_update;
+    o->fn_draw = draw_bob_masked;
+    o->gfx = &xenon2.player_gfx;
+    o->anim_delay = 0;
+    o->x = 0xa0;
+    o->y = 0xb0;
+    for (i = 0; i < 4; i++) {
+        const uint16_t *rec = &xenon2.option_anims[i * 12];   /* the record the table at $6CB2 points to */
+        Object *h = &xenon2.obj_list[0];
+        Object *first;
+
+        o = obj_free_pop();
+        first = h->next;
+        h->next = o;
+        o->next = first;
+        o->prev = h;
+        first->prev = o;
+        o->type = 0xc4;
+        o->fn_update = option_update;
+        o->fn_draw = obj_nop;
+        anim_header_set(o, rec);
+        o->x = 0xa0;
+        o->y = 0xb0;
+        o->option.index = 3 - i;
+    }
+    for (i = 0; i < 7; i++)
+        xenon2.weapon_slots[i].type = 0;
+    weapon_94(0, 0);
+    for (i = 0; i < 14; i++)
+        xenon2.slot_snapshot[i] = 0;
+    latch_slots(0);
+    xenon2.autofire_counter = 8;
+    xenon2.autofire_period = 8;
+    xenon2.autofire_level = 1;
+    xenon2.crush_timer = 0;
+    xenon2.shades_timer = 0;
+    xenon2.dive_phase = 0;
+    xenon2.dive_step = 0;
+    xenon2.player_score = 0;
+    xenon2.score_shown = 0;
+    xenon2.speed_level = 0;
+    xenon2.dive_charges = 0;
+    xenon2.dive_timer = 0;
+    xenon2.nashwan_timer = 0;
+    for (i = 0; i < 7; i++)
+        xenon2.score_digits[i] = 0;
+    xenon2.level_end_items = 0;
+    xenon2.player_energy = 0x27;
+    xenon2.shield_timer = 0;
+    xenon2.protection = 0;
+    xenon2.player_dead = 0;
+    xenon2.player_lives = 3;
+    xenon2.scroll_step_target = 1;
+    xenon2.skip_map_draw = 0;
+    xenon2.continues_left = 3;
+    draw_status_digit();
+    xenon2.energy_dirty = 0xff;
+    redraw_energy_bar();
+}
+
+/* orig $0068b0: an option's update: follows the player at an offset given by player_vx, fires when the button says so */
+void option_update(Object *option)
+{
+    uint16_t x, index;
+    uint8_t bit;
+
+    anim_step(option);
+    x = xenon2.player.x;
+    index = (uint16_t)xenon2.player_vx;
+    if ((int16_t)index < 0)
+        index = (uint16_t)-(int16_t)index;
+    if (option->option.index & 1)
+        index += 7;
+    x += (uint16_t)xenon2.option_offsets[index];
+    option->x = x;
+    option->y = xenon2.player.y;
+    option->fn_draw = obj_nop;
+    if (xenon2.dive_phase)
+        return;
+    bit = (option->option.index < 2) ? 1 : 2;
+    if (xenon2.joy_stick & bit)
+        option->fn_draw = draw_bob_masked;
+}
+
+/* orig $00615a: makes a shot object ($5850) for the object owner; dx and dy go into its $2A and $2E, off_x/off_y are offsets from the player;
+ * gfx_slot points at its graphics pointer (the next ones when owner's $42 is 1 or more) */
+void spawn_shot_object(Object *owner, uint16_t dx, uint16_t dy, uint16_t off_x, uint16_t off_y, void *const *gfx_slot)
+{
+    Object *shot_obj;
+
+    if (xenon2.sfx_cmd < 0)
+        xenon2.sfx_cmd = 0x89;
+    if (owner->score != 0) {
+        if (owner->score != 1)
+            gfx_slot++;
+        gfx_slot++;
+    }
+    shot_obj = obj_free_pop();
+    list_append(&xenon2.obj_list[3], shot_obj);
+    shot_obj->shot.speed = (shot_obj->shot.speed & 0xffffu) | (uint32_t)(uint16_t)(dx) << 16;
+    shot_obj->shot.dy = dy;
+    shot_obj->x = (uint16_t)(off_x + xenon2.player.x);
+    shot_obj->y = (uint16_t)(off_y + xenon2.player.y);
+    shot_obj->type = 0x10;
+    shot_obj->fn_update = shot_update;
+    shot_obj->fn_draw = draw_bob_masked;
+    shot_obj->gfx = *gfx_slot;
+    shot_obj->anim_delay = 0;
+    shot_obj->shot.phase = 0;
+    shot_obj->score = owner->score;
+}
+
+/* orig $00644e: empties list 1 of its objects and restores its ends and the block at $C66 from their saved copies */
+void reset_extra_objects(void)
+{
+    Object *obj = xenon2.obj_list[1].prev;
+    uint16_t i;
+
+    while (obj->type) {
+        Object *p = obj->prev;
+
+        free_with_slot(obj);
+        obj = p;
+    }
+    xenon2.obj_list[1].prev = xenon2.list_a_prev_saved;
+    xenon2.obj_list[1].next = xenon2.list_a_next_saved;
+    for (i = 0; i < 7; i++)
+        xenon2.weapon_slots[i] = xenon2.weapon_slots_saved[i];
+}
+
+/* orig $0061e6: moves the 80 shot dots and draws them into the screen being drawn */
+void update_shots(void)
+{
+    uint16_t i;
+
+    for (i = 0; i < 80; i++) {
+        Shot *s = &xenon2.shots[i];
+        uint16_t x, y, x16;
+        uint8_t *dst;
+        uint32_t mask2, mask3;
+        uint16_t lo2, hi2, lo3, hi3;
+
+        if (s->x < 0)
+            continue;
+        x = (uint16_t)(s->x + s->dx);
+        y = (uint16_t)(s->y + s->dy);
+        if (x >= 0x13c || y >= 0xbc) {
+            s->x = -1;
+            continue;
+        }
+        s->x = x;
+        s->y = y;
+        if (!point_in_enemy(x, y)) {
+            s->x = -1;
+            continue;
+        }
+        dst = xenon2.draw_screen;
+        dst += (int16_t)((uint16_t)(y) * SCREEN_ROW_BYTES);
+        x16 = x & 0xf;
+        dst += (uint16_t)((x ^ x16) >> 3);
+#define ORW(off, v) (*(uint16_t *)(dst + (off)) |= (uint16_t)(v))
+#define ANDW(off, v) (*(uint16_t *)(dst + (off)) &= (uint16_t)(v))
+        if ((int16_t)x16 <= 0xc) {
+            lo2 = (uint16_t)(0xe000u >> x16 | 0xe000u << (16 - x16));
+            lo3 = (uint16_t)(0x4000u >> x16 | 0x4000u << (16 - x16));
+            hi2 = hi3 = 0;
+        } else {
+            mask2 = 0xe000u;
+            mask3 = 0x4000u;
+            mask2 = mask2 >> x16 | mask2 << (32 - x16);
+            mask3 = mask3 >> x16 | mask3 << (32 - x16);
+            lo2 = (uint16_t)mask2;
+            hi2 = (uint16_t)(mask2 >> 16);
+            lo3 = (uint16_t)mask3;
+            hi3 = (uint16_t)(mask3 >> 16);
+        }
+        ORW(0, lo2);
+        ORW(0x28, lo3);
+        ORW(0x50, lo2);
+        ORW(0x140, lo2);
+        ORW(0x168, lo3);
+        ORW(0x190, lo2);
+        ANDW(0x78, (uint16_t)~lo3);
+        ANDW(0x1b8, (uint16_t)~lo3);
+        ORW(0xa0, lo2);
+        ORW(0xc8, lo2);
+        ORW(0xf0, lo2);
+        ANDW(0x118, (uint16_t)~lo2);
+        if ((int16_t)x16 > 0xc) {
+            ORW(2, hi2);
+            ORW(0x2a, hi3);
+            ORW(0x52, hi2);
+            ORW(0x1e2, hi2);
+            ORW(0x20a, hi3);
+            ORW(0x232, hi2);
+            ANDW(0x7a, (uint16_t)~hi3);
+            ANDW(0x25a, (uint16_t)~hi3);
+            ORW(0xa2, hi2);
+            ORW(0xca, hi2);
+            ORW(0xf2, hi2);
+            ORW(0x142, hi2);
+            ORW(0x16a, hi2);
+            ORW(0x192, hi2);
+            ANDW(0x11a, (uint16_t)~hi2);
+            ANDW(0x1ba, (uint16_t)~hi2);
+        }
+#undef ORW
+#undef ANDW
+    }
+}
+
+/* orig $F02, $006862: puts the objects of a chain (towards the previous ones) back on the free list */
+void free_object_chain(Object *obj)
+{
+    while (obj->type) {
+        Object *earlier = obj->prev;
+        Object *after = obj->next;
+        Object *before = obj->prev;
+
+        after->prev = before;
+        before->next = after;
+        obj->next = xenon2.free_obj;
+        xenon2.free_obj = obj;
+        obj->type = 0;
+        obj = earlier;
+    }
+}
+
+/* orig $006d74: makes an object for each of the 7 queued (type, value) pairs; the value goes into the object's $42 */
+void create_queued_objects(void)
+{
+    uint16_t i;
+
+    for (i = 0; i < 7; i++) {
+        uint16_t type = xenon2.slot_snapshot[i * 2];
+        uint16_t value = xenon2.slot_snapshot[i * 2 + 1];
+
+        if (type != 0) {
+            Object *obj = weapon_select(type, 0, 0);
+
+            obj->score = value;
+        }
+    }
+}
+
+/* orig $006d22: empties the object lists 2 to 4, and the shot dots */
+void clear_level_objects(void)
+{
+    uint16_t scroll_delta;
+    Object *obj;
+    uint16_t i;
+
+    sfx_stop_all();
+    if (xenon2.nashwan_timer)
+        reset_extra_objects();
+    scroll_delta = xenon2.scroll_y - xenon2.scroll_pos;
+    free_chain(xenon2.obj_list[4].prev, scroll_delta);
+    free_chain(xenon2.obj_list[3].prev, scroll_delta);
+    free_chain(xenon2.obj_list[2].prev, scroll_delta);
+    for (obj = xenon2.obj_list[1].prev; obj->type; obj = xenon2.obj_list[1].prev)
+        free_with_slot(obj);
+    for (i = 0; i < 80; i++) {
+        xenon2.shots[i].x = -1;
+        xenon2.shots[i].y = -1;
+        xenon2.shots[i].dx = -1;
+        xenon2.shots[i].dy = -1;
+    }
+}
+
+void obj_script_step(Object *obj)
+{
+    Object *o = obj;
+    const int8_t *sine = xenon2.sine_table;
+    uint16_t steps;
+    uint32_t x_fixed, y_fixed, angle_fixed, turn;
+    int32_t turn_delta;
+
+    steps = o->steps;
+    if (steps == 0)
+        return;
+    if (o->path.wait == 0)
+        goto next_command;
+    if (o->path.wait < 0) {
+        steps = (uint16_t)(steps + o->path.wait);
+        if ((int16_t)steps > 0)
+            goto next_command;
+        o->path.wait = (int16_t)steps;
+        return;
+    }
+move:
+    x_fixed = ((uint32_t)o->x << 16) | o->x_frac;
+    y_fixed = ((uint32_t)o->y << 16) | o->y_frac;
+    angle_fixed = o->path.angle;
+    turn = o->turn;
+    turn_delta = (int16_t)o->turn_step;
+    for (;;) {
+        steps--;
+        if ((int16_t)steps < 0) {
+            o->x = (uint16_t)(x_fixed >> 16);
+            o->x_frac = (uint16_t)x_fixed;
+            o->y = (uint16_t)(y_fixed >> 16);
+            o->y_frac = (uint16_t)y_fixed;
+            o->path.angle = angle_fixed;
+            o->turn = turn;
+            return;
+        }
+        o->path.wait--;
+        if (o->path.wait < 0) {
+            steps++;
+            o->x = (uint16_t)(x_fixed >> 16);
+            o->x_frac = (uint16_t)x_fixed;
+            o->y = (uint16_t)(y_fixed >> 16);
+            o->y_frac = (uint16_t)y_fixed;
+            o->path.angle = angle_fixed;
+            o->turn = turn;
+            goto next_command;
+        }
+        y_fixed += (uint32_t)((int32_t)((uint32_t)(int16_t)sine[(int16_t)angle_fixed] << 16) >> 6);
+        x_fixed += (uint32_t)((int32_t)((uint32_t)(int16_t)sine[0x40 + (int16_t)angle_fixed] << 16) >> 6);
+        angle_fixed = (angle_fixed << 16) | (angle_fixed >> 16);
+        angle_fixed += turn;
+        angle_fixed = (angle_fixed << 16) | (angle_fixed >> 16);
+        angle_fixed = (angle_fixed & 0xffff0000u) | (angle_fixed & 0xff);
+        turn += (uint32_t)turn_delta;
+    }
+next_command:
+    for (;;) {
+        const struct PathCmd *cmd = o->cursor;
+
+        switch (cmd->op) {
+        case 0: {
+            int i;
+            Object *e;
+
+            if (o->kind != 0) {
+                for (i = 0; i < 8; i++) {
+                    if (xenon2.pickup_groups[2 * i] == (uint16_t)o->kind) {
+                        xenon2.pickup_groups[2 * i] = 0;
+                        xenon2.pickup_groups[2 * i + 1] = 0;
+                        break;
+                    }
+                }
+            }
+            if (o->is_part == 0) {
+                o->type = 4;
+                o->fn_update = (obj_fn)free_object;
+                o->fn_draw = (obj_fn)obj_nop;
+                o->fn_hit = (obj_fn)obj_nop;
+                o->is_part = 0;
+                o->persists = 0;
+                return;
+            }
+            e = o->target;
+            for (;;) {
+                Object *next = e->chain;
+
+                e->type = 4;
+                e->fn_update = (obj_fn)free_object;
+                e->fn_draw = (obj_fn)obj_nop;
+                e->fn_hit = (obj_fn)obj_nop;
+                e->is_part = 0;
+                e->persists = 0;
+                if (next == 0)
+                    return;
+                e = next;
+            }
+        }
+        case 2:
+            o->path.angle = cmd->arg.move.angle;
+            o->turn = (uint32_t)((int32_t)((uint32_t)cmd->arg.move.turn << 16) >> 8);
+            o->turn_step = (int16_t)cmd->arg.move.turn_step;
+            o->path.wait = (int16_t)cmd->arg.move.wait;
+            o->cursor = (const struct PathCmd *)(&cmd->arg.move + 1);
+            goto move;
+        case 4: {
+            uint16_t t = cmd->arg.pause.steps;
+
+            o->cursor = (const struct PathCmd *)(&cmd->arg.pause + 1);
+            steps = (uint16_t)(steps - t);
+            if ((int16_t)steps > 0)
+                continue;
+            o->path.wait = (int16_t)steps;
+            return;
+        }
+        case 6: {
+            int16_t t;
+
+            do {
+                t = (int16_t)cmd->arg.pick[(random_next() & 0xe) / 2];
+            } while (t < 0);
+            o->cursor = (const struct PathCmd *)(o->script + t);
+            continue;
+        }
+        case 8:
+            o->cursor = (const struct PathCmd *)(o->script + (int16_t)cmd->arg.jump.offset);
+            continue;
+        case 10:
+            o->cursor = (const struct PathCmd *)(&cmd->arg.pos + 1);
+            continue;
+        default:
+            return;
+        }
+    }
+}
+
+/* orig $EF6, $9734: the path script, then the box of the object unless it is dying */
+void obj_script_run(Object *o)
+{
+    obj_script_step(o);
+    if (o->type != 4)
+        bbox_from_frame(o);
+}
+
+/* orig $E0C, $96B6: an enemy's update: the animation, the path, and now and then a shot (at the player when shot_rate is 100 or more,
+ * else in a random direction) */
+void enemy_update(Object *obj)
+{
+    anim_step(obj);
+    enemy_update_no_anim(obj);
+}
+
+/* orig $E78, $96BA: enemy_update without the animation step */
+void enemy_update_no_anim(Object *obj)
+{
+    Object *o = obj;
+    uint8_t rate;
+    uint16_t sum, dir;
+
+    obj_script_run(obj);
+    if (o->type == 4)
+        return;
+    if (o->shot_rate == 0)
+        return;
+    rate = o->shot_rate;
+    while (rate >= 0x64)
+        rate -= 0x64;
+    sum = (uint16_t)(o->shot_count + rate);
+    o->shot_count = (uint8_t)sum;
+    if (!(sum & 0x100))
+        return;
+    o->shot_count = (uint8_t)(random_next() & 0x3f);
+    if (o->shot_rate < 0x64) {
+        dir = (uint16_t)(random_next() & 7);
+    } else {
+        dir = direction8((int16_t)(xenon2.player.x - (int16_t)o->x), (int16_t)(xenon2.player.y - (int16_t)o->y));
+    }
+    spawn_enemy_shot(o->x, o->y, dir, 6, xenon2.enemy_shot_gfx);
+}
+
+/* orig $EEA, $9670: the random state is kept for enemy_update_seeded, then enemy_update */
+void enemy_update_keep_seed(Object *o)
+{
+    xenon2.rand_saved[0] = xenon2.random_state_a;
+    xenon2.rand_saved[1] = xenon2.random_state_b;
+    enemy_update(o);
+}
+
+/* orig $EF0, $9682: enemy_update with the random state of enemy_update_keep_seed; the caller's state is put back */
+void enemy_update_seeded(Object *o)
+{
+    xenon2.rand_saved[2] = xenon2.random_state_a;
+    xenon2.rand_saved[3] = xenon2.random_state_b;
+    xenon2.random_state_a = xenon2.rand_saved[0];
+    xenon2.random_state_b = xenon2.rand_saved[1];
+    enemy_update(o);
+    xenon2.random_state_a = xenon2.rand_saved[2];
+    xenon2.random_state_b = xenon2.rand_saved[3];
+}

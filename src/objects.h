@@ -539,4 +539,30 @@ void hit_explode(Object *shooter, Object *enemy, uint16_t damage);
 void hit_tile(Object *shooter, Object *tile, uint16_t damage);
 void tile_draw(Object *obj);
 void free_chain(Object *obj, int16_t dy);
+void enemy_update_keep_seed(Object *o);                     /* orig $9670 */
+void enemy_update_seeded(Object *o);                        /* orig $9682 */
+void enemy_update(Object *o);                               /* orig $96B6 */
+void enemy_update_no_anim(Object *o);                       /* orig $96BA */
+void obj_script_run(Object *o);                             /* orig $9734 */
+void obj_script_step(Object *o);                            /* orig $9740 */
+uint16_t box_overlap(int16_t a_left, int16_t a_top, int16_t a_right, int16_t a_bottom, int16_t b_left, int16_t b_top, int16_t b_right, int16_t b_bottom);
+Object *obj_free_pop(void);
+void spawn_shot_object(Object *owner, uint16_t dx, uint16_t dy, uint16_t off_x, uint16_t off_y, void *const *gfx_slot);
+void free_object_chain(Object *obj);
+void reset_extra_objects(void);
+void option_update(Object *option);
+void init_objects(void);
+void update_shots(void);
+void clear_level_objects(void);
+void create_queued_objects(void);
+uint16_t box_overlap(int16_t a_left, int16_t a_top, int16_t a_right, int16_t a_bottom, int16_t b_left, int16_t b_top, int16_t b_right, int16_t b_bottom);
+Object *obj_free_pop(void);
+void spawn_shot_object(Object *owner, uint16_t dx, uint16_t dy, uint16_t off_x, uint16_t off_y, void *const *gfx_slot);
+void free_object_chain(Object *obj);
+void reset_extra_objects(void);
+void option_update(Object *option);
+void init_objects(void);
+void update_shots(void);
+void clear_level_objects(void);
+void create_queued_objects(void);
 #endif

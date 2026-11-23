@@ -45,4 +45,12 @@ HLE_WEAK void draw_bob_masked_at(uint16_t x, uint16_t y, const uint16_t *gfx);
 HLE_WEAK void draw_bob_or_first(Object *obj);
 HLE_WEAK void draw_bob_or(Object *obj);
 HLE_WEAK void draw_bob_or_at(uint16_t x, uint16_t y, const uint16_t *gfx);
+void draw_gauge(uint16_t x, uint16_t y, uint16_t fill, uint16_t max);
+void panel_clear_score(void);
+void panel_init(void);
+void update_score_display(void);
+void draw_gauge(uint16_t x, uint16_t y, uint16_t fill, uint16_t max);
+void panel_clear_score(void);
+void panel_init(void);
+void update_score_display(void);
 #endif

@@ -655,3 +655,108 @@ HLE_WEAK void draw_bob_behind_map(Object *obj)
 {
     bob_behind_map(obj);
 }
+
+/* orig $00668c: fills the score area of both screens at the current player's place with the first glyph rows */
+void panel_clear_score(void)
+{
+    const uint8_t *gfx = xenon2.digit_gfx;
+    uint32_t off = xenon2.cur_player ? 0x1e : 2;   /* from the panel's start */
+    uint8_t *pb = (uint8_t *)xenon2.panel_b;
+    uint8_t *pa = (uint8_t *)xenon2.panel_a;
+    uint16_t first = xenon2.cur_player ? 0 : 1;
+    int row;
+
+    for (row = 0; row < 8; row++) {
+        uint16_t col_off = 0;
+        do {
+            uint8_t byte = *gfx++;
+            uint16_t k;
+
+            for (k = first; k < first + 7; k++) {
+                put_screen_byte(pb + off + col_off + k, byte);
+                put_screen_byte(pa + off + col_off + k, byte);
+            }
+            col_off += 0x28;
+        } while ((int16_t)col_off <= 0x78);
+        off += 0xa0;
+    }
+}
+
+/* orig $006676: the score area for both players */
+void panel_init(void)
+{
+    panel_clear_score();
+    xenon2.cur_player ^= 1;
+    panel_clear_score();
+    xenon2.cur_player ^= 1;
+}
+
+/* orig $006766: counts the displayed score up towards the real one by 10, 100 or 1000 and draws the digit that changed */
+void update_score_display(void)
+{
+    int32_t diff = (int32_t)(xenon2.player_score - xenon2.score_shown);
+    uint8_t *digit;
+    uint32_t off;   /* from the panel's start */
+    uint8_t *pb = (uint8_t *)xenon2.panel_b;
+    uint8_t *pa = (uint8_t *)xenon2.panel_a;
+
+    if (diff == 0)
+        return;
+    if (diff < 0) {
+        xenon2.score_shown = xenon2.player_score;
+        return;
+    }
+    if (diff >= 0xc8) {
+        if (diff >= 0x7d0) {
+            digit = &xenon2.score_digits[3];
+            off = 6;
+            xenon2.score_shown += 0x3e8;
+        } else {
+            digit = &xenon2.score_digits[4];
+            off = 7;
+            xenon2.score_shown += 0x64;
+        }
+    } else {
+        digit = &xenon2.score_digits[5];
+        off = 8;
+        xenon2.score_shown += 0xa;
+    }
+    if (xenon2.cur_player)
+        off += 0x1b;
+    for (;;) {
+        const uint8_t *g;
+        int row, k;
+
+        (*digit)++;
+        if ((int8_t)*digit >= 10)
+            *digit = 0;
+        g = xenon2.digit_gfx + ((uint16_t)*digit << 5);
+        for (row = 0; row < 8; row++) {
+            for (k = 0; k < 4; k++) {
+                uint8_t b = *g++;
+
+                put_screen_byte(pb + off + row * SCREEN_ROW_BYTES + k * SCREEN_PLANE_BYTES, b);
+                put_screen_byte(pa + off + row * SCREEN_ROW_BYTES + k * SCREEN_PLANE_BYTES, b);
+            }
+        }
+        if (*digit != 0)
+            return;
+        digit--;
+        off--;
+        if (digit < xenon2.score_digits)
+            return;
+    }
+}
+
+/* orig $00635E: a gauge of ten steps: the picture for fill / (max + 1) * 10 at (x, y); the original's table has no picture for a full
+ * gauge (it would draw code bytes), nothing is drawn then */
+void draw_gauge(uint16_t x, uint16_t y, uint16_t fill, uint16_t max)
+{
+    uint32_t dividend = (uint32_t)fill * 10;
+    uint16_t divisor = (uint16_t)(max + 1);
+    uint32_t q = dividend / divisor;
+    uint16_t pic = q > 0xffff ? (uint16_t)dividend : (uint16_t)q;
+
+    if (pic < 10)
+        draw_bob_masked_at(x, y, xenon2.gauge_pics[pic]);
+}

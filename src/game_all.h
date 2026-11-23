@@ -9,5 +9,7 @@
 #include "level1.h"
 #include "title.h"
 #include "menus.h"
+#include "disk.h"
+#include "stars.h"
 #include "sound.h"
 #endif
