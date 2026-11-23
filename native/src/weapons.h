@@ -12,6 +12,23 @@ struct Slot {
 
 #include "game.h"
 
+/* the types of the weapons (the type of a weapon slot and of its object) */
+#define WEAPON_LASER 0x20
+#define WEAPON_BOMB 0x28
+#define WEAPON_DRONE 0x2c
+#define WEAPON_CANNON 0x34
+#define WEAPON_MINE_1 0x38
+#define WEAPON_MINE_2 0x3c
+#define WEAPON_REAR_SHOT 0x44
+#define WEAPON_HOMING_MISSILE 0x48
+#define WEAPON_ELECTRO_BALL 0x4c
+#define WEAPON_MISSILE_LAUNCHER 0x90
+#define WEAPON_FORWARD_SHOT 0x94
+#define WEAPON_SIDE_SHOT 0x98
+#define WEAPON_FLAMER 0xb0
+#define WEAPON_DOUBLE_SHOT 0xc0
+
+
 /* a hit routine (an object's fn_hit): the shooter's object, the object that was hit, the damage */
 typedef void (*hit_fn)(Object *shooter, Object *target, uint16_t damage);
 
