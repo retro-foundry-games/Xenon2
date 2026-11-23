@@ -7,7 +7,6 @@
 #include "objects.h"
 #include "weapons.h"
 #include "level1.h"
-#include "play.h"
 #include "title.h"
 #include "menus.h"
 #include "sound.h"
