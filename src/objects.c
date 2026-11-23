@@ -716,7 +716,7 @@ void enemy_shot_update(Object *shot)
             return;
         if (xenon2.shield_timer == 0) {
             player_damage(shot, 4);
-            PLAYER->fn_draw = (obj_fn)draw_bob_or_first;
+            xenon2.player.fn_draw = (obj_fn)draw_bob_or_first;
         }
     }
     kill_object(shot);
@@ -746,11 +746,11 @@ Object *spawn_enemy_shot(uint16_t x, uint16_t y, uint16_t angle, uint16_t steps,
 /* inlined: $2418 and the insertion before the sentinel of list A / B (the new object is returned) */
 Object *alloc_a(Object *caller)
 {
-    Object *o = obj_free_pop(), *tail = LIST_A->prev;
+    Object *o = obj_free_pop(), *tail = xenon2.obj_list[1].prev;
 
-    LIST_A->prev = o;
+    xenon2.obj_list[1].prev = o;
     o->prev = tail;
-    o->next = LIST_A;
+    o->next = &xenon2.obj_list[1];
     tail->next = o;
     return o;
 }
@@ -782,7 +782,7 @@ void apply_damage_max(Object *shooter, Object *victim)
 /* orig $F0E, $005550: 1 when the object's box meets the player's (the flag the caller tests; inlined: $200A) */
 int player_hits(Object *obj)
 {
-    const Object *p = PLAYER;
+    const Object *p = &xenon2.player;
 
     if (xenon2.dive_phase)
         return 0;
@@ -792,7 +792,7 @@ int player_hits(Object *obj)
 /* orig $EAE, $00556C: 1 when the point (x, y) is in the player's box */
 int point_in_player_box(int16_t x, int16_t y)
 {
-    const Object *p = PLAYER;
+    const Object *p = &xenon2.player;
 
     if (xenon2.dive_phase)
         return 0;

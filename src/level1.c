@@ -192,7 +192,7 @@ void level1_launcher_update(Object *launcher)
     launcher->y = (int16_t)(launcher->y + xenon2.scroll_speed);
     if (launcher->launcher.step == 0)
         return;
-    dy = (int16_t)(launcher->y - PLAYER->y);
+    dy = (int16_t)(launcher->y - xenon2.player.y);
     if (dy <= 0xa && dy >= -0x1e && (uint8_t)random_next() < 0x32) {
         Object *tail;
         const uint16_t *anim;
@@ -200,10 +200,10 @@ void level1_launcher_update(Object *launcher)
         launcher->launcher.step = 0;
         launcher->next->prev = launcher->prev;
         launcher->prev->next = launcher->next;
-        tail = LIST_B->prev;
-        LIST_B->prev = launcher;
+        tail = xenon2.obj_list[3].prev;
+        xenon2.obj_list[3].prev = launcher;
         launcher->prev = tail;
-        launcher->next = LIST_B;
+        launcher->next = &xenon2.obj_list[3];
         tail->next = launcher;
         anim = launcher->type == 0xd4 ? xenon2.level1_data.anim_launcher_d4_fire : xenon2.level1_data.anim_launcher_d0_fire;
         set_anim(launcher, anim);
@@ -307,7 +307,7 @@ void level1_scroll(void)
     uint16_t *vars = xenon2.level_vars;
     int count, i;
 
-    if (xenon2.l1_boss_zone_entered == 0 && (int16_t)(xenon2.scroll_pos + PLAYER->y) < 0xa80) {
+    if (xenon2.l1_boss_zone_entered == 0 && (int16_t)(xenon2.scroll_pos + xenon2.player.y) < 0xa80) {
         xenon2.level_over = 0xff;
         xenon2.l1_boss_zone_entered = 0xff;
         xenon2.scroll_pos = 0x9c0;
@@ -352,10 +352,10 @@ void level1_boss_update(Object *boss)
         for (i = 7; i >= 0; i--) {
             part = obj_free_pop();
             if (i == 7) {
-                link = LIST_C->prev;
-                LIST_C->prev = part;
+                link = xenon2.obj_list[2].prev;
+                xenon2.obj_list[2].prev = part;
                 part->prev = link;
-                part->next = LIST_C;
+                part->next = &xenon2.obj_list[2];
                 link->next = part;
             } else {
                 link = prev_part->prev;
@@ -495,10 +495,10 @@ void level1_init(void)
     xenon2.scroll_max = 0x11ff;
     xenon2.l1_eyes_phase = 0;
     boss = obj_free_pop();
-    link = LIST_C->prev;
-    LIST_C->prev = boss;
+    link = xenon2.obj_list[2].prev;
+    xenon2.obj_list[2].prev = boss;
     boss->prev = link;
-    boss->next = LIST_C;
+    boss->next = &xenon2.obj_list[2];
     link->next = boss;
     boss->type = 0x50;
     boss->fn_update = (obj_fn)level1_boss_update;
@@ -796,7 +796,7 @@ void level1_boss_part_update(Object *part)
         return;
     }
     if (part->type == 0x100) {
-        uint16_t dir = direction8((int16_t)(PLAYER->x - part->x), (int16_t)(PLAYER->y - part->y));
+        uint16_t dir = direction8((int16_t)(xenon2.player.x - part->x), (int16_t)(xenon2.player.y - part->y));
 
         part->l1.angle = (part->l1.angle & 0xffffu) | (uint32_t)(uint16_t)((int16_t)dir) << 16;
         part->gfx = xenon2.level1_data.boss_part_pictures[dir];
