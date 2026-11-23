@@ -1,5 +1,15 @@
 #ifndef WEAPONS_H
 #define WEAPONS_H
+#include <stdint.h>
+#include "types.h"
+
+/* a weapon slot at $C66 (7 of them) */
+typedef struct Slot Slot;
+struct Slot {
+    uint16_t type;
+    struct Object *obj;
+};
+
 #include "game.h"
 
 /* a hit routine (an object's fn_hit): the shooter's object, the object that was hit, the damage */

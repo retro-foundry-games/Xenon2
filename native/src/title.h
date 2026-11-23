@@ -1,5 +1,14 @@
 #ifndef TITLE_H
 #define TITLE_H
+#include <stdint.h>
+#include "types.h"
+
+/* a star of the title starfield: x, y, depth; bit 15 of z marks a star that is hidden behind drawn pixels
+ * (the dot-star variant at the same address uses the words as screen offset, bit mask, 0) */
+struct Star {
+    int16_t x, y, z;
+};
+
 #include "game.h"
 #include "random.h"
 

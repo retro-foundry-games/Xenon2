@@ -1,5 +1,15 @@
 #ifndef PLAY_H
 #define PLAY_H
+#include <stdint.h>
+#include "types.h"
+
+typedef struct Shot Shot;
+
+/* a shot dot at $42D5C: type < 0 = free */
+struct Shot {
+    int16_t x, y, dx, dy;
+};
+
 #include "game.h"
 
 void draw_gauge(uint16_t x, uint16_t y, uint16_t fill, uint16_t max);
@@ -27,6 +37,6 @@ void create_queued_objects(void);
 void respawn_player(void);
 void switch_player(void);
 void swap_player_state(void);
-#endif
 
 uint8_t autofire_stick(void);                                   /* orig $006426 */
+#endif
