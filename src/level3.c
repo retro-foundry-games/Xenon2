@@ -1181,16 +1181,16 @@ void l3_walker_update(Object *obj)
             turn = 1;
         } else {
             uint16_t row = (uint16_t)((uint16_t)(obj->y + xenon2.scroll_pos) >> 4);
-            const uint8_t *tile = xenon2.level_init_src + (int16_t)(uint16_t)MAP_ROW(row) + (((uint16_t)x >> 3) & 0xfe);
+            const Cell *tile = (const Cell *)xenon2.level_init_src + (int16_t)row * MAP_COLS + ((uint16_t)x >> 4);
 
-            if (*(const Cell *)tile != 0) {
+            if (*tile != 0) {
                 obj->x = (int16_t)(obj->x - xenon2.level3_data.walker_update_words[dir]);
                 obj->y = (int16_t)(obj->y - xenon2.level3_data.walker_update_words_2[dir]);
                 turn = 1;
             } else {
-                int16_t offset = xenon2.level3_data.walker_update_words_3[dir];
+                int16_t offset = xenon2.level3_data.walker_update_words_3[dir];   /* (bytes: two to a cell) */
 
-                turn = *(const Cell *)(tile + offset) == 0;
+                turn = tile[offset / 2] == 0;
             }
         }
         if (turn) {
