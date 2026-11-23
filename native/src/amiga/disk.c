@@ -2,29 +2,6 @@
 #include "game_all.h"
 #include "amiga/hw.h"
 
-#define DISK_SCRATCH ((struct DiskScratch *)xenon2.screen_a)
-
-/* orig $8F9A: sector 0 of the disk must hold "X2B ": returns 1 when it does (Z set) */
-int game_disk_present(void)
-{
-    int ok;
-
-    if (xenon2.draw_screen != (uint8_t *)xenon2.screen_a) {
-        uint32_t *dst = (uint32_t *)xenon2.screen_b;
-        const uint32_t *src = (const uint32_t *)xenon2.screen_a;
-        int i;
-
-        for (i = 0; i < 0x1f40; i++)
-            *dst++ = *src++;
-        swap_screens_200();
-    }
-    xenon2.irq_vectors[2] = irq_vblank_hooked;
-    disk_read_sectors(0, 1, DISK_SCRATCH->boot);
-    xenon2.irq_vectors[2] = irq_vblank;
-    ok = DISK_SCRATCH->boot[1] == 0x5832 && DISK_SCRATCH->boot[2] == 0x4220;
-    return ok;
-}
-
 /* busy waits of the original (dbra loops); the host does not wait */
 static void spin(uint32_t n)
 {
@@ -34,8 +11,8 @@ static void spin(uint32_t n)
         ;
 }
 
-/* orig $92C8: drive 0 selected, motor on (HLE: disk) */
-HLE_WEAK void disk_motor_on(void)
+/* orig $92C8: drive 0 selected, motor on */
+static void disk_motor_on(void)
 {
     CIAB_PRB = 0xff;
     CIAB_PRB = 0x7f;
@@ -43,21 +20,21 @@ HLE_WEAK void disk_motor_on(void)
     spin(4 * 65536);
 }
 
-/* orig $92EE: motor off, drive deselected (HLE: disk) */
-HLE_WEAK void disk_motor_off(void)
+/* orig $92EE: motor off, drive deselected */
+static void disk_motor_off(void)
 {
     CIAB_PRB = 0xff;
     CIAB_PRB = 0x87;
     CIAB_PRB = 0xff;
 }
 
-/* orig $93EE: the wait after each head step (HLE: disk) */
-HLE_WEAK void disk_delay(void)
+/* orig $93EE: the wait after each head step */
+static void disk_delay(void)
 {
     spin(0x5961);
 }
 
-/* the steps both directions share: up to 0x52 steps of the head, each a pulse on the step line followed by the delay (HLE: disk) */
+/* the steps both directions share: up to 0x52 steps of the head, each a pulse on the step line followed by the delay */
 static void disk_step(uint16_t steps, uint8_t dir_bits)
 {
     uint8_t low, high;
@@ -75,20 +52,20 @@ static void disk_step(uint16_t steps, uint8_t dir_bits)
     } while (n-- != 0);
 }
 
-/* orig $93AA: the head steps outwards, toward track 0 (HLE: disk) */
-HLE_WEAK void disk_step_out(uint16_t steps)
+/* orig $93AA: the head steps outwards, toward track 0 */
+static void disk_step_out(uint16_t steps)
 {
     disk_step(steps, (uint8_t)(CIAB_PRB | 2));
 }
 
-/* orig $93B6: the head steps inwards (HLE: disk) */
-HLE_WEAK void disk_step_in(uint16_t steps)
+/* orig $93B6: the head steps inwards */
+static void disk_step_in(uint16_t steps)
 {
     disk_step(steps, (uint8_t)(CIAB_PRB & 0xfd));
 }
 
-/* orig $9308: the head goes out until track 0 shows (at most 256 steps); the track is 0 afterwards (HLE: disk) */
-HLE_WEAK void disk_recalibrate(void)
+/* orig $9308: the head goes out until track 0 shows (at most 256 steps); the track is 0 afterwards */
+static void disk_recalibrate(void)
 {
     int16_t n;
 
@@ -102,8 +79,8 @@ HLE_WEAK void disk_recalibrate(void)
 }
 
 /* orig $932E: the head to track (bit 0 is the side); the percentage of the sectors read is drawn at the bottom of the shown screen
- * (HLE: disk) */
-HLE_WEAK void disk_seek(uint16_t track)
+ * */
+static void disk_seek(uint16_t track)
 {
     int16_t delta;
 
@@ -133,7 +110,7 @@ HLE_WEAK void disk_seek(uint16_t track)
 }
 
 /* orig $957E: bytes of MFM data (odd bits first, then the even bits) decoded to dest; returns the end of the source */
-uint16_t *mfm_decode(uint16_t *dest, uint16_t *src, uint16_t bytes)
+static uint16_t *mfm_decode(uint16_t *dest, uint16_t *src, uint16_t bytes)
 {
     uint16_t words = (uint16_t)(bytes >> 1);
     const uint16_t *odd = src;
@@ -147,8 +124,9 @@ uint16_t *mfm_decode(uint16_t *dest, uint16_t *src, uint16_t bytes)
 /* orig $951E: looks in the raw track from src on for the sector sync (a run of $5555 or $AAAA words followed by one of the
  * patterns of the table), then shifts the raw words 0 to 15 bits into place at the start of the track buffer; returns the shift,
  * -1 when nothing is found within 0xABC bytes */
-int32_t mfm_align(const uint16_t *src)
+static int32_t mfm_align(const uint16_t *src)
 {
+    struct DiskScratch *scratch = (struct DiskScratch *)xenon2.screen_a;
     const uint16_t *p = src;
     const uint16_t *limit = (const uint16_t *)((const uint8_t *)src + 0xabc);
     const uint32_t *pats;
@@ -189,7 +167,7 @@ int32_t mfm_align(const uint16_t *src)
         }
     }
 found:
-    out = DISK_SCRATCH->track;
+    out = scratch->track;
     shift_left = (uint16_t)(0x10 - shift_right);
     for (i = 0; i < 0x2000; i++) {
         uint16_t hi = (uint16_t)((uint32_t)p[-1] << shift_left);
@@ -201,9 +179,10 @@ found:
 }
 
 /* orig $93F8: reads the track the head is on into the track buffer by DMA and decodes its eleven sectors into screen_a (sector n
- * at 512 * n); up to 4 tries, the head recalibrated between them; returns 0, or -1 when it fails (HLE: disk) */
-HLE_WEAK int disk_read_track(void)
+ * at 512 * n); up to 4 tries, the head recalibrated between them; returns 0, or -1 when it fails */
+static int disk_read_track(void)
 {
+    struct DiskScratch *scratch = (struct DiskScratch *)xenon2.screen_a;
     uint16_t *p;
     int n;
 
@@ -214,7 +193,7 @@ retry:
     for (n = 0; n < 11; n++)
         xenon2.disk_seen[n] = 0;
     custom->dsklen = 0x4000;
-    custom->dskpt = (uintptr_t)(DISK_SCRATCH->track);
+    custom->dskpt = (uintptr_t)(scratch->track);
     SETCLR_WRITE(intreq, 0x1002);
     SETCLR_WRITE(adkcon, 0x6600);
     SETCLR_WRITE(adkcon, 0x9100);
@@ -223,10 +202,10 @@ retry:
     while (!xenon2.disk_done)
         HOST_IDLE();
     custom->dsklen = 0x4000;
-    mfm_align(&DISK_SCRATCH->track[2]);
+    mfm_align(&scratch->track[2]);
     if (xenon2.disk_error)
         goto fail;
-    p = &DISK_SCRATCH->track[1];
+    p = &scratch->track[1];
     while (*p == 0x4489)
         p++;
     for (n = 10; n >= 0; n--) {
@@ -240,10 +219,10 @@ retry:
         if (xenon2.disk_seen[sector] & 0x80)
             goto fail;
         xenon2.disk_seen[sector] |= 0x80;
-        p = mfm_decode(DISK_SCRATCH->sector[sector].word, p, 0x200);
+        p = mfm_decode(scratch->sector[sector].word, p, 0x200);
         if ((xenon2.disk_header[1] & 0xff) == 1) {
             mfm_align(p);
-            p = &DISK_SCRATCH->track[1];
+            p = &scratch->track[1];
             while (*p == 0x4489)
                 p++;
         } else {
@@ -266,9 +245,10 @@ fail:
 }
 
 /* orig $921A (rabs): count sectors from sector first_sector of the disk (11 to a track, track = sector / 11) to dest; 0 = read, -1 =
- * failed (HLE: disk) */
-HLE_WEAK int disk_read_sectors(uint16_t first_sector, uint16_t count, void *dest)
+ * failed */
+int disk_read_sectors(uint16_t first_sector, uint16_t count, void *dest)
 {
+    struct DiskScratch *scratch = (struct DiskScratch *)xenon2.screen_a;
     uint16_t track = (uint16_t)(first_sector / 11);
 
     xenon2.disk_dest = dest;
@@ -289,7 +269,7 @@ HLE_WEAK int disk_read_sectors(uint16_t first_sector, uint16_t count, void *dest
             return -1;
         }
         to = (uint32_t *)xenon2.disk_dest;
-        from = (const uint32_t *)DISK_SCRATCH->sector[xenon2.disk_sector].word;
+        from = (const uint32_t *)scratch->sector[xenon2.disk_sector].word;
         n = (int16_t)(11 - xenon2.disk_sector);
         if (!(n <= (int16_t)xenon2.disk_count))
             n = (int16_t)xenon2.disk_count;
@@ -308,7 +288,7 @@ HLE_WEAK int disk_read_sectors(uint16_t first_sector, uint16_t count, void *dest
     return 0;
 }
 
-/* orig $95E4: level 1 interrupt, the disk block is read: acknowledged, the flag set (HLE: disk) */
+/* orig $95E4: level 1 interrupt, the disk block is read: acknowledged, the flag set */
 void irq_disk_block(void)
 {
     SETCLR_WRITE(intreq, 2);

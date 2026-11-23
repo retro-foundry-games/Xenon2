@@ -47,17 +47,17 @@ print('game: %d bytes at $%x, %d functions' % (len(code), base, len(funcs)))
 # stores the original's address
 import glob
 origs = {}
-for f in sorted(glob.glob('src/*.c')):
+for f in sorted(glob.glob('src/*.c') + ['src/amiga/disk.c']):
     text = open(f).read()
-    for m in re.finditer(r'orig\s+((?:\$[0-9A-Fa-f]+(?:\s*(?:,|and)\s*)?)+)(?:(?!\*/).)*?\*/\s*\n(?:HLE_WEAK\s+)?(?:static\s+)?(?:inline\s+)?[\w\s\*]+?\b(\w+)\s*\(', text, re.S):
+    for m in re.finditer(r'orig\s+((?:\$[0-9A-Fa-f]+(?:\s*(?:,|and)\s*)?)+)(?:(?!\*/).)*?\*/\s*\n(?:static\s+)?(?:inline\s+)?[\w\s\*]+?\b(\w+)\s*\(', text, re.S):
         for a in re.findall(r'\$([0-9A-Fa-f]+)', m.group(1)):
             origs.setdefault(m.group(2), []).append(int(a, 16))
 (build / 'game_origs.lua').write_text('return {\n%s}\n' % ''.join('  %s = { %s },\n' % (k, ', '.join('0x%x' % a for a in v)) for k, v in sorted(origs.items())))
 
 # the routines that wait for the vertical blank (they contain HOST_IDLE): the oracle makes them return at once, in the original and in the C
 waits_c, waits_orig = set(), set()
-hdr = re.compile(r'(?:/\*.*?orig\s+((?:\$[0-9A-Fa-f]+(?:\s*(?:,|and)\s*)?)+)(?:(?!\*/).)*?\*/\s*)?\n(?:HLE_WEAK\s+)?(?:static\s+)?(?:inline\s+)?(?:const\s+)?[\w\*]+[\w\s\*]*?\b(\w+)\s*\([^;{)]*\)\s*\{', re.S)
-for f in sorted(glob.glob('src/*.c')):
+hdr = re.compile(r'(?:/\*.*?orig\s+((?:\$[0-9A-Fa-f]+(?:\s*(?:,|and)\s*)?)+)(?:(?!\*/).)*?\*/\s*)?\n(?:static\s+)?(?:inline\s+)?(?:const\s+)?[\w\*]+[\w\s\*]*?\b(\w+)\s*\([^;{)]*\)\s*\{', re.S)
+for f in sorted(glob.glob('src/*.c') + ['src/amiga/disk.c']):
     text = open(f).read()
     ms = list(hdr.finditer(text))
     for i, m in enumerate(ms):

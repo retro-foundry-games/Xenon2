@@ -12,7 +12,7 @@ def definitions():
     defs = {}
     for f in sorted(glob.glob(os.path.join(SRC, '*.c'))):
         text = open(f).read()
-        for m in re.finditer(r'orig\s+((?:\$[0-9A-Fa-f]+(?:\s*(?:,|and)\s*)?)+)(?:(?!\*/).)*?\*/\s*\n(?:HLE_WEAK\s+)?(static\s+)?(?:inline\s+)?[\w\s\*]+?\b(\w+)\s*\(', text, re.S):
+        for m in re.finditer(r'orig\s+((?:\$[0-9A-Fa-f]+(?:\s*(?:,|and)\s*)?)+)(?:(?!\*/).)*?\*/\s*\n(static\s+)?(?:inline\s+)?[\w\s\*]+?\b(\w+)\s*\(', text, re.S):
             for a in re.findall(r'\$([0-9A-Fa-f]+)', m.group(1)):
                 defs.setdefault(int(a, 16), []).append((m.group(3), bool(m.group(2)), os.path.basename(f)))
     return defs

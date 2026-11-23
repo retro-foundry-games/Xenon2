@@ -26,7 +26,7 @@ GAME_CFLAGS := $(COMMON) -O2 -I$(SRC)
 WARN := -Wall -Wextra -Wno-unused-parameter
 # every module in src/ (data.c is generated)
 GAME_MODULES := $(filter-out runtime,$(notdir $(basename $(wildcard $(SRC)/*.c))))
-GAME_OBJS := $(GAME_MODULES:%=$(BUILD)/%.o) $(BUILD)/runtime.o
+GAME_OBJS := $(GAME_MODULES:%=$(BUILD)/%.o) $(BUILD)/runtime.o $(BUILD)/amiga_disk.o
 
 .PHONY: all blob clean generate sdl sdl-run
 all: blob
@@ -44,6 +44,8 @@ $(SRC)/level.h $(SRC)/guest_blob.h $(SRC)/level2.h $(SRC)/level3.h $(SRC)/level4
 $(BUILD):
 	mkdir -p $@
 $(BUILD)/%.o: $(SRC)/%.c $(SRC)/game.h $(wildcard $(SRC)/*.h) | $(BUILD)
+	$(CC) $(GAME_CFLAGS) $(WARN) -c $< -o $@
+$(BUILD)/amiga_disk.o: $(SRC)/amiga/disk.c $(SRC)/game.h $(wildcard $(SRC)/*.h) | $(BUILD)
 	$(CC) $(GAME_CFLAGS) $(WARN) -c $< -o $@
 $(BUILD)/runtime.o: $(SRC)/amiga/runtime.c | $(BUILD)
 	$(CC) $(GAME_CFLAGS) -fno-builtin -c $< -o $@
@@ -72,7 +74,7 @@ $(SDL_BUILD)/h_%.o: $(SRC)/sdl/%.c $(SRC)/game.h $(wildcard $(SRC)/*.h $(SRC)/sd
 $(SDL_BUILD):
 	mkdir -p $@
 # the loader tables of the port: how records of the disk image become records of the host, and the C function of each address of the original's code
-$(SRC)/sdl/records.c $(SRC)/code_table.c: $(wildcard $(SRC)/types_*.h $(filter-out $(SRC)/code_table.c $(SRC)/data.c,$(wildcard $(SRC)/*.c))) ../tools/gen_records.py
+$(SRC)/sdl/records.c $(SRC)/code_table.c: $(wildcard $(SRC)/types_*.h $(filter-out $(SRC)/code_table.c $(SRC)/data.c,$(wildcard $(SRC)/*.c)) $(SRC)/sdl/disk.c) ../tools/gen_records.py
 	$(PYTHON) ../tools/gen_records.py
 sdl: $(SDL_BUILD)/xenon2-sdl
 $(SDL_BUILD)/xenon2-sdl: $(SDL_OBJS)
