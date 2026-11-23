@@ -106,6 +106,12 @@ struct Level2WallPieces {
 };
 _Static_assert(sizeof(struct Level2WallPieces) == 146, "Level2WallPieces");
 
+struct Formation7 {
+    struct SpawnDef defs[7];
+    uint16_t end;
+};
+_Static_assert(sizeof(struct Formation7) == 170, "Formation7");
+
 struct Level3EndPiece {
     const uint16_t *cells;
     uint16_t w;
@@ -767,8 +773,7 @@ struct Level3Data {
     BLOB_PAD(2)
     struct Formation1 formation_1;   /* 54E7E */
     struct Formation1 formation_2;   /* 54E98 */
-    struct Formation1 formation_3;   /* 54EB2 */
-    BLOB_PAD(144)
+    struct Formation7 formation_3;   /* 54EB2 */
     struct Formation1 formation_4;   /* 54F5C */
     struct Formation1 formation_5;   /* 54F76 */
     uint16_t words_54f90[30];   /* 54F90 */
