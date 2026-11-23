@@ -10,6 +10,12 @@ typedef struct SfxSample SfxSample;
 typedef struct SfxDef SfxDef;
 typedef struct SfxChannel SfxChannel;
 
+/* the header of a sample in the sample bank: the 8-bit samples follow, then the next header */
+struct SampleHeader {
+    uint32_t length;        /* 0: bytes of samples */
+    uint16_t rate;          /* 4 */
+};
+
 /* an instrument ($1A738, 20 of them, built by sound_init_instruments from the sample bank) */
 struct Instrument {
     uint8_t *sample;        /* 0: first byte of the 8-bit sample */
