@@ -26,7 +26,7 @@ int guest_load_game_image(void);                    /* disk 1, tracks 82-159, fr
 typedef void (*host_state_visit)(void *data, size_t size, void *arg);
 void host_state(host_state_visit visit, void *arg);   /* main.c: the memory, the chips, the disks, the sound, the input, the frame count */
 void guest_state(host_state_visit visit, void *arg);  /* guest.c */
-void sound_state(host_state_visit visit, void *arg);  /* sound.c */
+void sound_state(host_state_visit visit, void *arg);  /* mixer.c */
 
 /* files.c: the disks (ADF images) */
 int files_open(const char *folder);
@@ -37,10 +37,19 @@ int files_read_sectors(int disk, uint32_t first_sector, uint32_t count, void *de
 #define DISPLAY_H 256
 void display_render(uint32_t *rgb);
 
-/* sound.c: Paula from the channel registers */
+/* mixer.c: the four voices of the sound hardware.  A voice plays 8-bit samples (the data, its length in words of two bytes) at 3546895 Hz / period, with a volume of 0 to 64.
+ * Started, it plays from the data and length it has then, and at the end of them again from the ones it has by then (a loop is the data and length set after the start).
+ * Voices 0 and 3 are the left channel, 1 and 2 the right one.  The players (sound.c, shop_sound.c) set them. */
 void sound_init(void);
-void sound_dma_changed(uint16_t dmacon_before, uint16_t dmacon_after);
 void sound_mix(int16_t *stereo, int frames);        /* 44100 Hz, interleaved left/right */
+void audio_data(int voice, const void *samples);
+void audio_length(int voice, uint16_t words);
+void audio_period(int voice, uint16_t period);
+void audio_volume(int voice, uint16_t volume);
+void audio_start(int voice);        /* a voice that is playing goes on */
+void audio_stop(int voice);
+void audio_start_all(void);
+void audio_stop_all(void);
 
 /* input.c / main.c */
 void host_input(int fire, int up, int down, int left, int right);

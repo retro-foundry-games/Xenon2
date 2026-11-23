@@ -47,7 +47,7 @@ print('game: %d bytes at $%x, %d functions' % (len(code), base, len(funcs)))
 # stores the original's address
 import glob
 origs = {}
-for f in sorted(glob.glob('src/*.c') + ['src/amiga/disk.c', 'src/amiga/draw.c']):
+for f in sorted(glob.glob('src/*.c') + glob.glob('src/amiga/*.c')):
     text = open(f).read()
     for m in re.finditer(r'orig\s+((?:\$[0-9A-Fa-f]+(?:\s*(?:,|and)\s*)?)+)(?:(?!\*/).)*?\*/\s*\n(?:static\s+)?(?:inline\s+)?[\w\s\*]+?\b(\w+)\s*\(', text, re.S):
         for a in re.findall(r'\$([0-9A-Fa-f]+)', m.group(1)):
@@ -57,7 +57,7 @@ for f in sorted(glob.glob('src/*.c') + ['src/amiga/disk.c', 'src/amiga/draw.c'])
 # the routines that wait for the vertical blank (they contain HOST_IDLE): the oracle makes them return at once, in the original and in the C
 waits_c, waits_orig = set(), set()
 hdr = re.compile(r'(?:/\*.*?orig\s+((?:\$[0-9A-Fa-f]+(?:\s*(?:,|and)\s*)?)+)(?:(?!\*/).)*?\*/\s*)?\n(?:static\s+)?(?:inline\s+)?(?:const\s+)?[\w\*]+[\w\s\*]*?\b(\w+)\s*\([^;{)]*\)\s*\{', re.S)
-for f in sorted(glob.glob('src/*.c') + ['src/amiga/disk.c', 'src/amiga/draw.c']):
+for f in sorted(glob.glob('src/*.c') + glob.glob('src/amiga/*.c')):
     text = open(f).read()
     ms = list(hdr.finditer(text))
     for i, m in enumerate(ms):
