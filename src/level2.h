@@ -11,14 +11,18 @@ struct Level2FrontEntry {
     int16_t dx;
     int16_t dy;
 };
+#ifdef MATCH_MEMORY_LAYOUT
 _Static_assert(sizeof(struct Level2FrontEntry) == 8, "Level2FrontEntry");
+#endif
 
 struct Level2RoamerNode {
     int16_t x;
     int16_t y;
     uint16_t targets[3];
 };
+#ifdef MATCH_MEMORY_LAYOUT
 _Static_assert(sizeof(struct Level2RoamerNode) == 10, "Level2RoamerNode");
+#endif
 
 struct Level2DebrisWall {
     uint16_t x;
@@ -27,7 +31,9 @@ struct Level2DebrisWall {
     uint16_t var;
     const uint8_t *path;
 };
+#ifdef MATCH_MEMORY_LAYOUT
 _Static_assert(sizeof(struct Level2DebrisWall) == 12, "Level2DebrisWall");
+#endif
 
 struct Level2WallPiece {
     uint16_t type;
@@ -35,13 +41,17 @@ struct Level2WallPiece {
     const uint16_t *gfx;
     uint16_t score;
 };
+#ifdef MATCH_MEMORY_LAYOUT
 _Static_assert(sizeof(struct Level2WallPiece) == 12, "Level2WallPiece");
+#endif
 
 struct Level2WallPieces {
     uint16_t last;
     struct Level2WallPiece pieces[12];
 };
+#ifdef MATCH_MEMORY_LAYOUT
 _Static_assert(sizeof(struct Level2WallPieces) == 146, "Level2WallPieces");
+#endif
 
 struct Level2Data {
     BLOB_PAD(2)
@@ -153,6 +163,7 @@ struct Level2Data {
     BLOB_PAD(34502)
     uint16_t blocks[180];   /* 7CFB8 */
 };
+#ifdef MATCH_MEMORY_LAYOUT
 _Static_assert(sizeof(struct Level2Data) == 164576, "Level2Data");
 _Static_assert(offsetof(struct Level2Data, marker_f8_energy) == 0x54E42 - BLOB_BASE, "Level2Data.marker_f8_energy");
 _Static_assert(offsetof(struct Level2Data, marker_fc_energy) == 0x54E44 - BLOB_BASE, "Level2Data.marker_fc_energy");
@@ -249,6 +260,7 @@ _Static_assert(offsetof(struct Level2Data, pad_6dcaa) == 0x6DCAA - BLOB_BASE, "L
 _Static_assert(offsetof(struct Level2Data, block_source) == 0x718AA - BLOB_BASE, "Level2Data.block_source");
 _Static_assert(offsetof(struct Level2Data, data_src) == 0x71A12 - BLOB_BASE, "Level2Data.data_src");
 _Static_assert(offsetof(struct Level2Data, blocks) == 0x7CFB8 - BLOB_BASE, "Level2Data.blocks");
+#endif
 
 /* END generated */
 #include "game.h"

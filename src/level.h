@@ -9,7 +9,11 @@
 
 #define BLOB_PAD_NAME(line) BLOB_PAD_NAME_(line)
 #define BLOB_PAD_NAME_(line) pad_##line
+#ifdef MATCH_MEMORY_LAYOUT
 #define BLOB_PAD(n) uint8_t BLOB_PAD_NAME(__LINE__)[n];
+#else
+#define BLOB_PAD(n)
+#endif
 
 struct SpawnRec {
     int16_t scroll;
@@ -20,7 +24,9 @@ struct SpawnRec {
     int16_t y;
     uint16_t steps;
 };
+#ifdef MATCH_MEMORY_LAYOUT
 _Static_assert(sizeof(struct SpawnRec) == 14, "SpawnRec");
+#endif
 
 struct SpawnDef {
     uint16_t kind;
@@ -33,30 +39,40 @@ struct SpawnDef {
     uint8_t to_big;
     uint8_t to_is_part;
 };
+#ifdef MATCH_MEMORY_LAYOUT
 _Static_assert(sizeof(struct SpawnDef) == 24, "SpawnDef");
+#endif
 
 struct Formation1 {
     struct SpawnDef defs;
     uint16_t end;
 };
+#ifdef MATCH_MEMORY_LAYOUT
 _Static_assert(sizeof(struct Formation1) == 26, "Formation1");
+#endif
 
 struct Formation2 {
     struct SpawnDef defs[2];
     uint16_t end;
 };
+#ifdef MATCH_MEMORY_LAYOUT
 _Static_assert(sizeof(struct Formation2) == 50, "Formation2");
+#endif
 
 struct Formation7 {
     struct SpawnDef defs[7];
     uint16_t end;
 };
+#ifdef MATCH_MEMORY_LAYOUT
 _Static_assert(sizeof(struct Formation7) == 170, "Formation7");
+#endif
 
 struct ShotPic {
     const uint16_t *pic;
 };
+#ifdef MATCH_MEMORY_LAYOUT
 _Static_assert(sizeof(struct ShotPic) == 4, "ShotPic");
+#endif
 
 struct LevelSpawn {
     int16_t x;
@@ -65,7 +81,9 @@ struct LevelSpawn {
     int16_t flag;
     const uint8_t *path;
 };
+#ifdef MATCH_MEMORY_LAYOUT
 _Static_assert(sizeof(struct LevelSpawn) == 12, "LevelSpawn");
+#endif
 
 struct LevelSeg {
     uint16_t type;
@@ -73,7 +91,9 @@ struct LevelSeg {
     const uint16_t *gfx;
     uint16_t score;
 };
+#ifdef MATCH_MEMORY_LAYOUT
 _Static_assert(sizeof(struct LevelSeg) == 12, "LevelSeg");
+#endif
 
 /* END generated */
 #endif

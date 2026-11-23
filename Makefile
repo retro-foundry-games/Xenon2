@@ -22,7 +22,7 @@ all $(MAKECMDGOALS):
 else
 
 COMMON := -m68000 -ffreestanding -fno-tree-loop-distribute-patterns -fno-tree-forwprop -fno-ivopts -nostdlib -fdata-sections -ffunction-sections
-GAME_CFLAGS := $(COMMON) -O2 -I$(SRC)
+GAME_CFLAGS := $(COMMON) -O2 -DMATCH_MEMORY_LAYOUT -I$(SRC)
 WARN := -Wall -Wextra -Wno-unused-parameter
 # every module in src/ (data.c is generated)
 GAME_MODULES := $(filter-out runtime,$(notdir $(basename $(wildcard $(SRC)/*.c))))
@@ -60,7 +60,7 @@ blob: $(BUILD)/game
 
 # the SDL3 port: the game's C compiled for the host as 32-bit (the 68000's pointers are 4 bytes) with the machine of src/sdl/ around it
 SDL_BUILD ?= build/sdl
-SDL_CFLAGS := -m32 -fpack-struct=2 -std=gnu11 -O1 -g -fno-strict-aliasing -DGAME_SDL -I$(SRC) -I$(SRC)/sdl -Wall -Wno-unused-function $(shell pkg-config --cflags sdl3)
+SDL_CFLAGS := -m32 -fpack-struct=2 -std=gnu11 -O1 -g -fno-strict-aliasing -DGAME_SDL -DMATCH_MEMORY_LAYOUT -I$(SRC) -I$(SRC)/sdl -Wall -Wno-unused-function $(shell pkg-config --cflags sdl3)
 # (the tables are struct members in the SDL build, loaded from the disk image: no data.c)
 SDL_GAME_MODULES := $(filter-out runtime data,$(GAME_MODULES))
 SDL_HOST_SOURCES := $(sort $(wildcard $(SRC)/sdl/*.c) $(SRC)/sdl/records.c)

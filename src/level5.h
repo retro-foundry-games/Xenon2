@@ -17,7 +17,9 @@ struct Level5Boss1Piece {
     uint8_t energy;
     uint8_t big;
 };
+#ifdef MATCH_MEMORY_LAYOUT
 _Static_assert(sizeof(struct Level5Boss1Piece) == 24, "Level5Boss1Piece");
+#endif
 
 struct Level5Boss2Piece {
     uint16_t type;
@@ -29,7 +31,9 @@ struct Level5Boss2Piece {
     int16_t dy;
     uint16_t energy;
 };
+#ifdef MATCH_MEMORY_LAYOUT
 _Static_assert(sizeof(struct Level5Boss2Piece) == 24, "Level5Boss2Piece");
+#endif
 
 struct Level5Gate {
     uint16_t type;
@@ -37,13 +41,17 @@ struct Level5Gate {
     void (*hit)(void);
     uint16_t step;
 };
+#ifdef MATCH_MEMORY_LAYOUT
 _Static_assert(sizeof(struct Level5Gate) == 12, "Level5Gate");
+#endif
 
 struct Level5UnitDir {
     int16_t dx;
     int16_t dy;
 };
+#ifdef MATCH_MEMORY_LAYOUT
 _Static_assert(sizeof(struct Level5UnitDir) == 4, "Level5UnitDir");
+#endif
 
 struct Level5Data {
     BLOB_PAD(2)
@@ -184,6 +192,7 @@ struct Level5Data {
     uint16_t pad_75144[7680];   /* 75144 */
     uint16_t data_src[6000];   /* 78D44 */
 };
+#ifdef MATCH_MEMORY_LAYOUT
 _Static_assert(sizeof(struct Level5Data) == 159204, "Level5Data");
 _Static_assert(offsetof(struct Level5Data, gunners_energy) == 0x54E42 - BLOB_BASE, "Level5Data.gunners_energy");
 _Static_assert(offsetof(struct Level5Data, gunners_param) == 0x54E44 - BLOB_BASE, "Level5Data.gunners_param");
@@ -287,6 +296,7 @@ _Static_assert(offsetof(struct Level5Data, events_a) == 0x7491C - BLOB_BASE, "Le
 _Static_assert(offsetof(struct Level5Data, events_a_end) == 0x75142 - BLOB_BASE, "Level5Data.events_a_end");
 _Static_assert(offsetof(struct Level5Data, pad_75144) == 0x75144 - BLOB_BASE, "Level5Data.pad_75144");
 _Static_assert(offsetof(struct Level5Data, data_src) == 0x78D44 - BLOB_BASE, "Level5Data.data_src");
+#endif
 
 /* END generated */
 #include "game.h"

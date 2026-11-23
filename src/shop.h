@@ -15,7 +15,9 @@ struct BankSample {
     uint16_t size_lo;
     uint16_t rate;
 };
+#ifdef MATCH_MEMORY_LAYOUT
 _Static_assert(sizeof(struct BankSample) == 6, "BankSample");
+#endif
 
 struct ShopHead {
     int16_t step;
@@ -33,7 +35,9 @@ struct ShopHead {
     uint8_t sample_id;
     uint16_t length;
 };
+#ifdef MATCH_MEMORY_LAYOUT
 _Static_assert(sizeof(struct ShopHead) == 24, "ShopHead");
+#endif
 
 struct ShopChan {
     struct ShopHead head;
@@ -45,7 +49,9 @@ struct ShopChan {
     uint16_t cur_period;
     uint16_t slide_period;
 };
+#ifdef MATCH_MEMORY_LAYOUT
 _Static_assert(sizeof(struct ShopChan) == 36, "ShopChan");
+#endif
 
 struct ShopMirror {
     const uint8_t *lc;
@@ -55,7 +61,9 @@ struct ShopMirror {
     uint8_t had;
     uint8_t has;
 };
+#ifdef MATCH_MEMORY_LAYOUT
 _Static_assert(sizeof(struct ShopMirror) == 12, "ShopMirror");
+#endif
 
 struct ShopSample {
     const uint8_t *lc;
@@ -66,7 +74,9 @@ struct ShopSample {
     uint8_t once;
     uint16_t slide;
 };
+#ifdef MATCH_MEMORY_LAYOUT
 _Static_assert(sizeof(struct ShopSample) == 16, "ShopSample");
+#endif
 
 struct ShopWave {
     const uint8_t *lc;
@@ -74,7 +84,9 @@ struct ShopWave {
     uint16_t len;
     uint16_t period;
 };
+#ifdef MATCH_MEMORY_LAYOUT
 _Static_assert(sizeof(struct ShopWave) == 12, "ShopWave");
+#endif
 
 struct ShopSound {
     BLOB_PAD(232)
@@ -97,7 +109,9 @@ struct ShopSound {
     uint16_t env_off[11];
     uint8_t env_data[138];
 };
+#ifdef MATCH_MEMORY_LAYOUT
 _Static_assert(sizeof(struct ShopSound) == 2412, "ShopSound");
+#endif
 
 struct ShopRec {
     int16_t state;
@@ -107,7 +121,9 @@ struct ShopRec {
     const uint8_t *list;
     struct Object *weapon;
 };
+#ifdef MATCH_MEMORY_LAYOUT
 _Static_assert(sizeof(struct ShopRec) == 16, "ShopRec");
+#endif
 
 struct ShopPic {
     const uint16_t *gfx;
@@ -115,14 +131,18 @@ struct ShopPic {
     uint16_t width_m1;
     uint16_t height_m1;
 };
+#ifdef MATCH_MEMORY_LAYOUT
 _Static_assert(sizeof(struct ShopPic) == 10, "ShopPic");
+#endif
 
 struct ShopLight {
     uint16_t x;
     uint16_t y;
     const uint8_t *list;
 };
+#ifdef MATCH_MEMORY_LAYOUT
 _Static_assert(sizeof(struct ShopLight) == 8, "ShopLight");
+#endif
 
 struct ShopData {
     BLOB_PAD(728)
@@ -225,6 +245,7 @@ struct ShopData {
     struct BankSample bank_head_4;   /* 6A31E */
     uint8_t bank_data_4[76948];   /* 6A324 */
 };
+#ifdef MATCH_MEMORY_LAYOUT
 _Static_assert(sizeof(struct ShopData) == 164216, "ShopData");
 _Static_assert(offsetof(struct ShopData, palette_a) == 0x55118 - BLOB_BASE, "ShopData.palette_a");
 _Static_assert(offsetof(struct ShopData, txt_thats_it) == 0x55138 - BLOB_BASE, "ShopData.txt_thats_it");
@@ -315,6 +336,7 @@ _Static_assert(offsetof(struct ShopData, bank_head_3) == 0x67FDC - BLOB_BASE, "S
 _Static_assert(offsetof(struct ShopData, bank_data_3) == 0x67FE2 - BLOB_BASE, "ShopData.bank_data_3");
 _Static_assert(offsetof(struct ShopData, bank_head_4) == 0x6A31E - BLOB_BASE, "ShopData.bank_head_4");
 _Static_assert(offsetof(struct ShopData, bank_data_4) == 0x6A324 - BLOB_BASE, "ShopData.bank_data_4");
+#endif
 
 /* END generated */
 #include "game.h"
