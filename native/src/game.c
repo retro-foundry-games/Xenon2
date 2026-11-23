@@ -8,11 +8,6 @@ extern void guest_stick_restore(void);   /* sdl/guest.c: undoes what the lockste
 #endif
 
 
-/* The starfield of the game keeps in each record of `stars` (struct Star of title): x = offset in the screen, y = bit mask, z = fractional line. */
-#define STAR_OFF(s) ((s)->x)
-#define STAR_MASK(s) ((s)->y)
-#define STAR_POS(s) ((s)->z)
-
 /* orig $ED8, $001F22: the background's scroll position (background_scroll, high word) moves back by half the scroll speed; speed = scroll speed */
 void scroll_pos_update(uint16_t speed)
 {
@@ -33,15 +28,6 @@ void scroll_pos_update(uint16_t speed)
             pos -= SCREEN_ROWS;
         xenon2.background_scroll = (xenon2.background_scroll & 0xffffu) | ((uint32_t)pos << 16);
     }
-}
-
-/* orig $ED2, $00200A: do two boxes overlap?  The original returns it in the Z flag: Z clear = overlap (returned here as 1).
- * a_left, a_top, a_right, a_bottom = the first; b_left, b_top, b_right, b_bottom = the second. */
-uint16_t box_overlap(int16_t a_left, int16_t a_top, int16_t a_right, int16_t a_bottom, int16_t b_left, int16_t b_top, int16_t b_right, int16_t b_bottom)
-{
-    if (b_right < a_left || b_left > a_right || b_bottom < a_top || b_top > a_bottom)
-        return 0;
-    return 1;
 }
 
 /* orig $002034: wait until the minimum number of vertical blanks has passed since the last flip, wait for the beam below line 258,
@@ -81,106 +67,6 @@ uint32_t swap_screens_192(void)
 {
     swap_screens();
     return 0x7800;
-}
-
-/* orig $EDE, $0022DA: scroll the starfield: each of the 48 stars moves by a step that grows with its index (speed = scroll speed);
- * the fractional line (z) wraps at 0x180 and moves the offset by one line (0xA0 bytes), the offset wraps at 0x7800. */
-void stars_scroll(uint16_t speed)
-{
-    uint16_t vel = *(const uint16_t *)((const uint8_t *)(xenon2.star_speed + 16) + (int16_t)(uint16_t)(speed * 2));
-    uint16_t step = (uint16_t)(speed << 3);
-
-    for (int i = 0; i < 48; i++) {
-        struct Star *s = &xenon2.stars[i];
-        uint16_t frac = STAR_POS(s) + vel;
-
-        while ((int16_t)frac < 0) {
-            STAR_OFF(s) -= SCREEN_ROW_BYTES;
-            if ((int16_t)STAR_OFF(s) < 0)
-                STAR_OFF(s) += SCREEN_ROWS * SCREEN_ROW_BYTES;
-            frac += 0x180;
-        }
-        while ((int16_t)frac >= 0x180) {
-            STAR_OFF(s) += SCREEN_ROW_BYTES;
-            if ((int16_t)STAR_OFF(s) >= SCREEN_ROWS * SCREEN_ROW_BYTES)
-                STAR_OFF(s) -= SCREEN_ROWS * SCREEN_ROW_BYTES;
-            frac -= 0x180;
-        }
-        STAR_POS(s) = frac;
-        vel += step;
-    }
-}
-
-/* orig $00233A: draw the starfield into the draw screen: a star is drawn only where its four planes are empty under the mask;
- * four groups of 12 stars in four colours (planes 2; 0+2; 1+2; 0+1+2). */
-void stars_draw(void)
-{
-    uint8_t *screen = xenon2.draw_screen;
-
-    stars_scroll(xenon2.scroll_speed);
-    for (int g = 0; g < 4; g++) {
-        for (int i = 0; i < 12; i++) {
-            struct Star *s = &xenon2.stars[g * 12 + i];
-            uint16_t *p = (uint16_t *)(screen + (int16_t)STAR_OFF(s));
-            uint16_t mask = STAR_MASK(s);
-            uint16_t planes = p[0] | p[SCREEN_PLANE_WORDS] | p[2 * SCREEN_PLANE_WORDS] | p[3 * SCREEN_PLANE_WORDS];
-
-            if (planes & mask)
-                continue;
-            if (g == 1 || g == 3)
-                p[0] = p[0] | mask;
-            if (g == 2 || g == 3)
-                p[SCREEN_PLANE_WORDS] = p[SCREEN_PLANE_WORDS] | mask;
-            p[2 * SCREEN_PLANE_WORDS] = p[2 * SCREEN_PLANE_WORDS] | mask;
-        }
-    }
-}
-
-/* orig $E54, $002418: take an object off the free list (free_obj) and clear its flag bytes; the result is returned (0 here when the list is
- * empty: the original then searches the lists from $2436, goes on at $2436). */
-Object *obj_free_pop(void)
-{
-    Object *obj = xenon2.free_obj;
-    Object *next, *prev;
-
-    if (obj != 0) {
-        xenon2.free_obj = obj->next;
-        goto clear;
-    }
-    /* $2436: the pool is empty: take an object away from the lists, the effects first (obj_list[3], obj_list[4] is the front list, obj_list[2] the enemies) */
-    obj = &xenon2.obj_list[3];
-    for (;;) {
-        obj = obj->prev;
-        if (obj->type == 4 || obj->type == 0xc || obj->type == 0x10)
-            goto steal;
-        if (obj->type == 0)
-            break;
-    }
-    obj = xenon2.obj_list[3].prev;
-    if (obj->type != 0)
-        goto steal;
-    obj = xenon2.obj_list[4].prev;
-    if (obj->type != 0)
-        goto steal;
-    obj = xenon2.obj_list[2].prev;   /* $247E: from the enemies' list head on, the first dead one or one far enough down */
-    for (;;) {
-        if ((int16_t)obj->type >= 0xc8 || obj->type == 4)
-            goto steal;
-        obj = obj->prev;
-        if (obj->type == 0)
-            break;
-    }
-    obj = xenon2.obj_list[2].prev;
-steal:
-    next = obj->next;   /* $2464: take it out of its list */
-    prev = obj->prev;
-    next->prev = prev;
-    prev->next = next;
-clear:
-    obj->is_part = 0;
-    obj->persists = 0;
-    obj->screen_fixed = 0;
-    return obj;
 }
 
 #ifdef GAME_SDL
@@ -730,18 +616,6 @@ void game_entry(void)
     }
 }
 
-/* ---- the player, the lists of objects, the status panel (the module that was play.c) ---- */
-/* inlined at its callers: the pair of list links of an append at the end of a list (before the head) */
-static void list_append(Object *head, Object *o)
-{
-    Object *last = head->prev;
-
-    head->prev = o;
-    o->prev = last;
-    o->next = head;
-    last->next = o;
-}
-
 /* orig $006bc8 and $006bce: clears the first `rows` rows of both screens (the panel's rows follow the screen's: $6bc8 clears 200, $6bce 192) */
 static void clear_screens(uint16_t rows)
 {
@@ -764,98 +638,6 @@ void clear_screens_large(void)
 void clear_screens_small(void)
 {
     clear_screens(SCREEN_ROWS);
-}
-
-/* orig $00668c: fills the score area of both screens at the current player's place with the first glyph rows */
-void panel_clear_score(void)
-{
-    const uint8_t *gfx = xenon2.digit_gfx;
-    uint32_t off = xenon2.cur_player ? 0x1e : 2;   /* from the panel's start */
-    uint8_t *pb = (uint8_t *)xenon2.panel_b;
-    uint8_t *pa = (uint8_t *)xenon2.panel_a;
-    uint16_t first = xenon2.cur_player ? 0 : 1;
-    int row;
-
-    for (row = 0; row < 8; row++) {
-        uint16_t col_off = 0;
-        do {
-            uint8_t byte = *gfx++;
-            uint16_t k;
-
-            for (k = first; k < first + 7; k++) {
-                put_screen_byte(pb + off + col_off + k, byte);
-                put_screen_byte(pa + off + col_off + k, byte);
-            }
-            col_off += 0x28;
-        } while ((int16_t)col_off <= 0x78);
-        off += 0xa0;
-    }
-}
-
-/* orig $006676: the score area for both players */
-void panel_init(void)
-{
-    panel_clear_score();
-    xenon2.cur_player ^= 1;
-    panel_clear_score();
-    xenon2.cur_player ^= 1;
-}
-
-/* orig $006766: counts the displayed score up towards the real one by 10, 100 or 1000 and draws the digit that changed */
-void update_score_display(void)
-{
-    int32_t diff = (int32_t)(xenon2.player_score - xenon2.score_shown);
-    uint8_t *digit;
-    uint32_t off;   /* from the panel's start */
-    uint8_t *pb = (uint8_t *)xenon2.panel_b;
-    uint8_t *pa = (uint8_t *)xenon2.panel_a;
-
-    if (diff == 0)
-        return;
-    if (diff < 0) {
-        xenon2.score_shown = xenon2.player_score;
-        return;
-    }
-    if (diff >= 0xc8) {
-        if (diff >= 0x7d0) {
-            digit = &xenon2.score_digits[3];
-            off = 6;
-            xenon2.score_shown += 0x3e8;
-        } else {
-            digit = &xenon2.score_digits[4];
-            off = 7;
-            xenon2.score_shown += 0x64;
-        }
-    } else {
-        digit = &xenon2.score_digits[5];
-        off = 8;
-        xenon2.score_shown += 0xa;
-    }
-    if (xenon2.cur_player)
-        off += 0x1b;
-    for (;;) {
-        const uint8_t *g;
-        int row, k;
-
-        (*digit)++;
-        if ((int8_t)*digit >= 10)
-            *digit = 0;
-        g = xenon2.digit_gfx + ((uint16_t)*digit << 5);
-        for (row = 0; row < 8; row++) {
-            for (k = 0; k < 4; k++) {
-                uint8_t b = *g++;
-
-                put_screen_byte(pb + off + row * SCREEN_ROW_BYTES + k * SCREEN_PLANE_BYTES, b);
-                put_screen_byte(pa + off + row * SCREEN_ROW_BYTES + k * SCREEN_PLANE_BYTES, b);
-            }
-        }
-        if (*digit != 0)
-            return;
-        digit--;
-        off--;
-        if (digit < xenon2.score_digits)
-            return;
-    }
 }
 
 /* orig $006bea: sets up a level: flags, both screens' panel, the free list of objects, the shot list, the objects */
@@ -918,154 +700,6 @@ void init_level_state(void)
     }
 }
 
-/* orig $006990: empties the five object lists, puts in the player and its four options, clears the game's counters */
-void init_objects(void)
-{
-    uint16_t i;
-    Object *o;
-
-    for (i = 0; i < 5; i++) {
-        o = &xenon2.obj_list[i];
-        o->type = 0;
-        o->prev = o;
-        o->next = o;
-        o->fn_update = obj_nop;
-        o->fn_draw = obj_nop;
-        o->fn_hit = obj_nop;
-    }
-    o = &xenon2.player;
-    list_append(&xenon2.obj_list[0], o);
-    o->type = 8;
-    o->fn_update = player_update;
-    o->fn_draw = draw_bob_masked;
-    o->gfx = &xenon2.player_gfx;
-    o->anim_delay = 0;
-    o->x = 0xa0;
-    o->y = 0xb0;
-    for (i = 0; i < 4; i++) {
-        const uint16_t *rec = &xenon2.option_anims[i * 12];   /* the record the table at $6CB2 points to */
-        Object *h = &xenon2.obj_list[0];
-        Object *first;
-
-        o = obj_free_pop();
-        first = h->next;
-        h->next = o;
-        o->next = first;
-        o->prev = h;
-        first->prev = o;
-        o->type = 0xc4;
-        o->fn_update = option_update;
-        o->fn_draw = obj_nop;
-        anim_header_set(o, rec);
-        o->x = 0xa0;
-        o->y = 0xb0;
-        o->option.index = 3 - i;
-    }
-    for (i = 0; i < 7; i++)
-        xenon2.weapon_slots[i].type = 0;
-    weapon_94(0, 0);
-    for (i = 0; i < 14; i++)
-        xenon2.slot_snapshot[i] = 0;
-    latch_slots(0);
-    xenon2.autofire_counter = 8;
-    xenon2.autofire_period = 8;
-    xenon2.autofire_level = 1;
-    xenon2.crush_timer = 0;
-    xenon2.shades_timer = 0;
-    xenon2.dive_phase = 0;
-    xenon2.dive_step = 0;
-    xenon2.player_score = 0;
-    xenon2.score_shown = 0;
-    xenon2.speed_level = 0;
-    xenon2.dive_charges = 0;
-    xenon2.dive_timer = 0;
-    xenon2.nashwan_timer = 0;
-    for (i = 0; i < 7; i++)
-        xenon2.score_digits[i] = 0;
-    xenon2.level_end_items = 0;
-    xenon2.player_energy = 0x27;
-    xenon2.shield_timer = 0;
-    xenon2.protection = 0;
-    xenon2.player_dead = 0;
-    xenon2.player_lives = 3;
-    xenon2.scroll_step_target = 1;
-    xenon2.skip_map_draw = 0;
-    xenon2.continues_left = 3;
-    draw_status_digit();
-    xenon2.energy_dirty = 0xff;
-    redraw_energy_bar();
-}
-
-/* orig $0068b0: an option's update: follows the player at an offset given by player_vx, fires when the button says so */
-void option_update(Object *option)
-{
-    uint16_t x, index;
-    uint8_t bit;
-
-    anim_step(option);
-    x = xenon2.player.x;
-    index = (uint16_t)xenon2.player_vx;
-    if ((int16_t)index < 0)
-        index = (uint16_t)-(int16_t)index;
-    if (option->option.index & 1)
-        index += 7;
-    x += (uint16_t)xenon2.option_offsets[index];
-    option->x = x;
-    option->y = xenon2.player.y;
-    option->fn_draw = obj_nop;
-    if (xenon2.dive_phase)
-        return;
-    bit = (option->option.index < 2) ? 1 : 2;
-    if (xenon2.joy_stick & bit)
-        option->fn_draw = draw_bob_masked;
-}
-
-/* orig $00615a: makes a shot object ($5850) for the object owner; dx and dy go into its $2A and $2E, off_x/off_y are offsets from the player;
- * gfx_slot points at its graphics pointer (the next ones when owner's $42 is 1 or more) */
-void spawn_shot_object(Object *owner, uint16_t dx, uint16_t dy, uint16_t off_x, uint16_t off_y, void *const *gfx_slot)
-{
-    Object *shot_obj;
-
-    if (xenon2.sfx_cmd < 0)
-        xenon2.sfx_cmd = 0x89;
-    if (owner->score != 0) {
-        if (owner->score != 1)
-            gfx_slot++;
-        gfx_slot++;
-    }
-    shot_obj = obj_free_pop();
-    list_append(&xenon2.obj_list[3], shot_obj);
-    shot_obj->shot.speed = (shot_obj->shot.speed & 0xffffu) | (uint32_t)(uint16_t)(dx) << 16;
-    shot_obj->shot.dy = dy;
-    shot_obj->x = (uint16_t)(off_x + xenon2.player.x);
-    shot_obj->y = (uint16_t)(off_y + xenon2.player.y);
-    shot_obj->type = 0x10;
-    shot_obj->fn_update = shot_update;
-    shot_obj->fn_draw = draw_bob_masked;
-    shot_obj->gfx = *gfx_slot;
-    shot_obj->anim_delay = 0;
-    shot_obj->shot.phase = 0;
-    shot_obj->score = owner->score;
-}
-
-/* orig $00644e: empties list 1 of its objects and restores its ends and the block at $C66 from their saved copies */
-void reset_extra_objects(void)
-{
-    Object *obj = xenon2.obj_list[1].prev;
-    uint16_t i;
-
-    while (obj->type) {
-        Object *p = obj->prev;
-
-        free_with_slot(obj);
-        obj = p;
-    }
-    xenon2.obj_list[1].prev = xenon2.list_a_prev_saved;
-    xenon2.obj_list[1].next = xenon2.list_a_next_saved;
-    for (i = 0; i < 7; i++)
-        xenon2.weapon_slots[i] = xenon2.weapon_slots_saved[i];
-}
-
 /* orig $006426: the read of the stick for the autofire counter (the lockstep hooks it to give the port the byte the original read) */
 uint8_t autofire_stick(void)
 {
@@ -1121,87 +755,6 @@ void frame_update(void)
     }
 }
 
-/* orig $0061e6: moves the 80 shot dots and draws them into the screen being drawn */
-void update_shots(void)
-{
-    uint16_t i;
-
-    for (i = 0; i < 80; i++) {
-        Shot *s = &xenon2.shots[i];
-        uint16_t x, y, x16;
-        uint8_t *dst;
-        uint32_t mask2, mask3;
-        uint16_t lo2, hi2, lo3, hi3;
-
-        if (s->x < 0)
-            continue;
-        x = (uint16_t)(s->x + s->dx);
-        y = (uint16_t)(s->y + s->dy);
-        if (x >= 0x13c || y >= 0xbc) {
-            s->x = -1;
-            continue;
-        }
-        s->x = x;
-        s->y = y;
-        if (!point_in_enemy(x, y)) {
-            s->x = -1;
-            continue;
-        }
-        dst = xenon2.draw_screen;
-        dst += (int16_t)((uint16_t)(y) * SCREEN_ROW_BYTES);
-        x16 = x & 0xf;
-        dst += (uint16_t)((x ^ x16) >> 3);
-#define ORW(off, v) (*(uint16_t *)(dst + (off)) |= (uint16_t)(v))
-#define ANDW(off, v) (*(uint16_t *)(dst + (off)) &= (uint16_t)(v))
-        if ((int16_t)x16 <= 0xc) {
-            lo2 = (uint16_t)(0xe000u >> x16 | 0xe000u << (16 - x16));
-            lo3 = (uint16_t)(0x4000u >> x16 | 0x4000u << (16 - x16));
-            hi2 = hi3 = 0;
-        } else {
-            mask2 = 0xe000u;
-            mask3 = 0x4000u;
-            mask2 = mask2 >> x16 | mask2 << (32 - x16);
-            mask3 = mask3 >> x16 | mask3 << (32 - x16);
-            lo2 = (uint16_t)mask2;
-            hi2 = (uint16_t)(mask2 >> 16);
-            lo3 = (uint16_t)mask3;
-            hi3 = (uint16_t)(mask3 >> 16);
-        }
-        ORW(0, lo2);
-        ORW(0x28, lo3);
-        ORW(0x50, lo2);
-        ORW(0x140, lo2);
-        ORW(0x168, lo3);
-        ORW(0x190, lo2);
-        ANDW(0x78, (uint16_t)~lo3);
-        ANDW(0x1b8, (uint16_t)~lo3);
-        ORW(0xa0, lo2);
-        ORW(0xc8, lo2);
-        ORW(0xf0, lo2);
-        ANDW(0x118, (uint16_t)~lo2);
-        if ((int16_t)x16 > 0xc) {
-            ORW(2, hi2);
-            ORW(0x2a, hi3);
-            ORW(0x52, hi2);
-            ORW(0x1e2, hi2);
-            ORW(0x20a, hi3);
-            ORW(0x232, hi2);
-            ANDW(0x7a, (uint16_t)~hi3);
-            ANDW(0x25a, (uint16_t)~hi3);
-            ORW(0xa2, hi2);
-            ORW(0xca, hi2);
-            ORW(0xf2, hi2);
-            ORW(0x142, hi2);
-            ORW(0x16a, hi2);
-            ORW(0x192, hi2);
-            ANDW(0x11a, (uint16_t)~hi2);
-            ANDW(0x1ba, (uint16_t)~hi2);
-        }
-#undef ORW
-#undef ANDW
-    }
-}
-
 /* orig $00683c: draws the objects of list 2 and counts those that are not of type $50 or $54 */
 void draw_enemy_list(void)
 {
@@ -1215,64 +768,6 @@ void draw_enemy_list(void)
         obj = owner_chain_next(obj);
     }
     xenon2.target_count = count;
-}
-
-/* orig $F02, $006862: puts the objects of a chain (towards the previous ones) back on the free list */
-void free_object_chain(Object *obj)
-{
-    while (obj->type) {
-        Object *earlier = obj->prev;
-        Object *after = obj->next;
-        Object *before = obj->prev;
-
-        after->prev = before;
-        before->next = after;
-        obj->next = xenon2.free_obj;
-        xenon2.free_obj = obj;
-        obj->type = 0;
-        obj = earlier;
-    }
-}
-
-/* orig $006d74: makes an object for each of the 7 queued (type, value) pairs; the value goes into the object's $42 */
-void create_queued_objects(void)
-{
-    uint16_t i;
-
-    for (i = 0; i < 7; i++) {
-        uint16_t type = xenon2.slot_snapshot[i * 2];
-        uint16_t value = xenon2.slot_snapshot[i * 2 + 1];
-
-        if (type != 0) {
-            Object *obj = weapon_select(type, 0, 0);
-
-            obj->score = value;
-        }
-    }
-}
-
-/* orig $006d22: empties the object lists 2 to 4, and the shot dots */
-void clear_level_objects(void)
-{
-    uint16_t scroll_delta;
-    Object *obj;
-    uint16_t i;
-
-    sfx_stop_all();
-    if (xenon2.nashwan_timer)
-        reset_extra_objects();
-    scroll_delta = xenon2.scroll_y - xenon2.scroll_pos;
-    free_chain(xenon2.obj_list[4].prev, scroll_delta);
-    free_chain(xenon2.obj_list[3].prev, scroll_delta);
-    free_chain(xenon2.obj_list[2].prev, scroll_delta);
-    for (obj = xenon2.obj_list[1].prev; obj->type; obj = xenon2.obj_list[1].prev)
-        free_with_slot(obj);
-    for (i = 0; i < 80; i++) {
-        xenon2.shots[i].x = -1;
-        xenon2.shots[i].y = -1;
-        xenon2.shots[i].dx = -1;
-        xenon2.shots[i].dy = -1;
-    }
 }
 
 /* orig $006e70: exchanges the state of the two players: the block at $A76, the player object, the level data */
@@ -1392,19 +887,6 @@ void switch_player_after_clear(void)
     }
     respawn_player();
     xenon2.respawn_shield = 8;
-}
-
-/* orig $00635E: a gauge of ten steps: the picture for fill / (max + 1) * 10 at (x, y); the original's table has no picture for a full
- * gauge (it would draw code bytes), nothing is drawn then */
-void draw_gauge(uint16_t x, uint16_t y, uint16_t fill, uint16_t max)
-{
-    uint32_t dividend = (uint32_t)fill * 10;
-    uint16_t divisor = (uint16_t)(max + 1);
-    uint32_t q = dividend / divisor;
-    uint16_t pic = q > 0xffff ? (uint16_t)dividend : (uint16_t)q;
-
-    if (pic < 10)
-        draw_bob_masked_at(x, y, xenon2.gauge_pics[pic]);
 }
 
 /* orig $006f1e: the scroll and timing variables at the start of a level */
