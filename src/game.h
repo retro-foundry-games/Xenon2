@@ -500,11 +500,11 @@ struct Xenon2 {
     uint16_t row_offset[200];  /* $04321C arr */
     uint16_t tile_mask_buf[75];  /* $0433AC arr */
     PAD(606)
-    uint16_t gfx_436a0[1200];  /* $0436A0 arr */
+    uint16_t screen_a_margin[1200];  /* $0436A0 arr */
     uint16_t screen_a[15360];  /* $044000 arr */
     uint16_t panel_a[640];  /* $04B800 arr */
     uint16_t gfx_4bd00[80];  /* $04BD00 arr */
-    uint16_t gfx_4bda0[1200];  /* $04BDA0 arr */
+    uint16_t screen_b_margin[1200];  /* $04BDA0 arr */
     uint16_t screen_b[15360];  /* $04C700 arr */
     uint16_t panel_b[640];  /* $053F00 arr */
     PAD(2560)
@@ -928,11 +928,11 @@ LAYOUT_ASSERT(shots, 0x42d5c);
 LAYOUT_ASSERT(stars, 0x42fdc);
 LAYOUT_ASSERT(row_offset, 0x4321c);
 LAYOUT_ASSERT(tile_mask_buf, 0x433ac);
-LAYOUT_ASSERT(gfx_436a0, 0x436a0);
+LAYOUT_ASSERT(screen_a_margin, 0x436a0);
 LAYOUT_ASSERT(screen_a, 0x44000);
 LAYOUT_ASSERT(panel_a, 0x4b800);
 LAYOUT_ASSERT(gfx_4bd00, 0x4bd00);
-LAYOUT_ASSERT(gfx_4bda0, 0x4bda0);
+LAYOUT_ASSERT(screen_b_margin, 0x4bda0);
 LAYOUT_ASSERT(screen_b, 0x4c700);
 LAYOUT_ASSERT(panel_b, 0x53f00);
 LAYOUT_ASSERT(map_image, 0x54e00);

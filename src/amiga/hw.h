@@ -71,15 +71,6 @@ void host_setclr_write(unsigned register_offset, uint16_t value);
 #define SETCLR_WRITE(reg, value) (custom->reg = (uint16_t)(value))
 #endif
 
-/* Starting the blitter: the write to BLTSIZE.  On the Amiga it is the plain write; in the SDL port the host performs the whole operation (the area blit with the
- * registers as they are: shifts, masks, minterm, modulos) at once, so the blitter is never busy.  Write BLTSIZE only with BLTSIZE_WRITE(value). */
-#ifdef GAME_SDL
-void host_blit_start(uint16_t bltsize);
-#define BLTSIZE_WRITE(value) host_blit_start((uint16_t)(value))
-#else
-#define BLTSIZE_WRITE(value) (custom->bltsize = (uint16_t)(value))
-#endif
-
 /* A loop that waits for something an interrupt handler (or a chip) changes, as `while (!vblank_seen) HOST_IDLE();`: on the Amiga the
  * interrupt comes by itself and HOST_IDLE() is nothing; in the SDL port it runs the interrupts that are due (the vertical blank every
  * 20 ms of emulated time, with the picture and the sound) and waits for the clock. */
