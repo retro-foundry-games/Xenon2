@@ -467,8 +467,9 @@ struct Xenon2 {
     const uint8_t music_env_data[50];  /* $01A706 tab */
     struct Instrument instruments[20];  /* $01A738 arr */
     struct SongHeader song_headers[1];  /* $01A828 arr */
-    const uint8_t music_data[2436];  /* $01A832 tab */
-    PAD(178)
+    const uint16_t music_lists[141];  /* $01A832 tab */
+    const uint8_t music_data[2150];  /* $01A94C tab */
+    PAD(182)
     uint8_t sfx_samples_ready;  /* $01B268 var */
     PAD(233)
     struct SfxSample sfx_samples[18];  /* $01B352 arr */
@@ -900,7 +901,8 @@ LAYOUT_ASSERT(music_env_offsets, 0x1a6e6);
 LAYOUT_ASSERT(music_env_data, 0x1a706);
 LAYOUT_ASSERT(instruments, 0x1a738);
 LAYOUT_ASSERT(song_headers, 0x1a828);
-LAYOUT_ASSERT(music_data, 0x1a832);
+LAYOUT_ASSERT(music_lists, 0x1a832);
+LAYOUT_ASSERT(music_data, 0x1a94c);
 LAYOUT_ASSERT(sfx_samples_ready, 0x1b268);
 LAYOUT_ASSERT(sfx_samples, 0x1b352);
 LAYOUT_ASSERT(sfx_channels, 0x1b6d0);

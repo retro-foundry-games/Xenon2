@@ -27,7 +27,8 @@ tab music_env_offsets 0x1a6e6 uint16_t 16
 tab music_env_data 0x1a706 uint8_t 50
 arr instruments 0x1a738 Instrument 20
 arr song_headers 0x1a828 SongHeader 1
-tab music_data 0x1a832 uint8_t 0x984              ; lists of sequences, sequences
+tab music_lists 0x1a832 uint16_t 141            ; the channels' lists of sequences: offsets from music_base of the sequences, 0 ends
+tab music_data 0x1a94c uint8_t 2150               ; the sequences
 var sfx_samples_ready 0x1b268 uint8_t
 arr sfx_samples 0x1b352 SfxSample 18
 arr sfx_channels 0x1b6d0 SfxChannel 4
