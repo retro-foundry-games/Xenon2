@@ -30,6 +30,7 @@ end
 
 local wander_x, wander_until = 160, 0
 local last_scroll, stalled = -1, 0
+local course_w   -- the course being flown: { x, y in map coordinates }
 local retreat_until, retreats = 0, 0   -- stuck (the scroll has stood still for long): back off for a while
 local last_x, last_y = 0, 0   -- the direction held at the last decision
 
@@ -37,35 +38,57 @@ local KEEP_BACK = 20   -- px between the ship and an obstacle ahead
 
 -- The tile map: the cell under screen pixel (x, y) is the word at level_init_src + map_row_offset + (row * 20 + column) * 2, row = (y + scroll_fine) / 16, column = x / 16
 -- (map_tile_mask in objects.c): 0 is empty, any other word is a tile that stops the ship (a full one, or one with a mask of its own, taken as solid).
+local AHEAD_ROWS = 24   -- rows of the map above the screen that are read (the level scrolls down: the map ahead has the lower rows)
 local cells, fine = {}, 0
-local function read_map()   -- the 20 x 16 cells of the screen once a decision
+local function read_map()   -- the cells of the 20 columns, rows -AHEAD_ROWS .. 15 relative to the screen's top, once a decision
     fine = peek16(0xcd6)
-    local base = peek32(0x54e04) + s16(0xcce)
-    for i = 0, 319 do cells[i] = peek16(base + i * 2) end
+    local offset = s16(0xcce)
+    local base = peek32(0x54e04) + offset
+    local available = offset // 40   -- rows of map above the screen's top
+    for row = -AHEAD_ROWS, 15 do
+        for col = 0, 19 do
+            cells[(row + AHEAD_ROWS) * 20 + col] = (row < -available) and 0 or peek16(base + (row * 20 + col) * 2)
+        end
+    end
 end
 local function solid(x, y)
     if x < 0 or x > 319 then return true end
-    if y < 0 then return false end
     local row = (y + fine) // 16
-    if row > 15 then return false end
-    return cells[row * 20 + x // 16] ~= 0
+    if row > 15 or row < -AHEAD_ROWS then return false end
+    return cells[(row + AHEAD_ROWS) * 20 + x // 16] ~= 0
 end
 
 local REACH = 96   -- px ahead (up) that are looked at
-local function clear_ahead(cx, py)   -- px the ship's column at cx can go up from py before a tile stops it (REACH at most)
+-- the ship's box relative to its position (the game's hit box of the player object: it takes the wings), read each decision
+local BX0, BY0, BX1, BY1 = -14, -14, 13, 9
+local obstacles = {}   -- the boxes of the enemies on screen (absolute x0 y0 x1 y1)
+
+local function row_solid(cx, y)   -- a tile in the ship's width at height y with the ship at column cx
+    local x = cx + BX0
+    while x < cx + BX1 do
+        if solid(x, y) then return true end
+        x = x + 8
+    end
+    return solid(cx + BX1, y)
+end
+
+local function clear_ahead(cx, py)   -- px the ship can go up from py at column cx before a tile stops it (REACH at most)
     for d = 0, REACH - 1, 8 do
-        local y = py - 14 - d
-        if solid(cx - 14, y) or solid(cx, y) or solid(cx + 13, y) then return d end
+        if row_solid(cx, py + BY0 - d) then return d end
     end
     return REACH
 end
 
--- the ship's box (28 x 24) against the tiles at a position
+-- the ship's whole box against the tiles and the enemies at a position
 local function box_free(x, y)
-    for _, dx in ipairs { -14, 0, 13 } do
-        for _, dy in ipairs { -14, -2, 9 } do
-            if solid(x + dx, y + dy) then return false end
-        end
+    local row = y + BY0
+    while row < y + BY1 do
+        if row_solid(x, row) then return false end
+        row = row + 8
+    end
+    if row_solid(x, y + BY1) then return false end
+    for _, o in ipairs(obstacles) do
+        if x + BX1 >= o[1] - 2 and x + BX0 <= o[3] + 2 and y + BY1 >= o[2] - 2 and y + BY0 <= o[4] + 2 then return false end
     end
     return true
 end
@@ -100,10 +123,46 @@ local function find_way(px, py, want_x)
     return { step // 100 - sx, step % 100 - sy }
 end
 
+-- A course through the map ahead (depth first): from the ship's position up the map, in 8 px steps, moves up / towards the wanted column / away from it / down
+-- (last: to back out of a pocket); the first course that reaches PLAN_STEPS steps up is the one to fly (a dead end is left by backing out of the search, not by the ship).  Returns the list of
+-- { x, y } positions, or nil when the map ahead has no way up from here.
+local PLAN_STEPS = 40
+local function plan_course(px, py, want_x)
+    local MAX_DOWN = math.max(0, (196 - py) // 8)   -- (down only as far as the lower part of the screen)
+    local sx = math.max(0, math.min(GNX - 1, (px - GX0 + 4) // 8))
+    local visited, path = {}, {}
+    local order = { { 0, 1 }, { 1, 0 }, { -1, 0 } }
+    local function dfs(gx, k)
+        visited[gx * 100 + k] = true
+        path[#path + 1] = { GX0 + gx * 8, py - 8 * k }
+        if k >= PLAN_STEPS then return true end
+        local toward = (GX0 + gx * 8 < want_x) and 1 or -1
+        local tries = { { 0, 1 }, { toward, 0 }, { -toward, 0 }, { 0, -1 } }
+        for _, d in ipairs(tries) do
+            local nx, nk = gx + d[1], k + d[2]
+            local key = nx * 100 + nk
+            if nx >= 0 and nx < GNX and nk >= -MAX_DOWN and not visited[key] then
+                local x, y = GX0 + nx * 8, py - 8 * nk
+                if box_free(x, y) and dfs(nx, nk) then return true end
+            end
+        end
+        path[#path] = nil
+        return false
+    end
+    if dfs(sx, 0) then return path end
+    return nil
+end
+
 local PICKUP = { [0x4634] = true, [0xf3e] = true }   -- pickup_update (the routine and the jump-table thunk)
 
 local function decide(n)
     read_map()
+    do
+        local x0, y0, x1, y1 = s16(PLAYER + 0x36), s16(PLAYER + 0x38), s16(PLAYER + 0x3a), s16(PLAYER + 0x3c)
+        local px_, py_ = s16(PLAYER + 0x20), s16(PLAYER + 0x24)
+        if x1 - x0 > 8 and x1 - x0 < 120 and y1 - y0 > 8 and y1 - y0 < 120 then BX0, BY0, BX1, BY1 = x0 - px_, y0 - py_, x1 - px_, y1 - py_ end
+    end
+    obstacles = {}
     local px, py = s16(PLAYER + 0x20), s16(PLAYER + 0x24)
     local enemy, danger, pickup = false, nil, nil
     local ahead = nil   -- the gap (px) between the ship's top and the nearest thing above it that is in its way
@@ -112,7 +171,8 @@ local function decide(n)
         if o == PLAYER or NOP[peek32(o + 6)] then return end
         local x, y = s16(o + 0x20), s16(o + 0x24)
         if y > 0 and y < py and x > 8 and x < 312 then enemy = true end
-        local x0, x1, y1 = s16(o + 0x36), s16(o + 0x3a), s16(o + 0x3c)   -- the box x0 y0 x1 y1
+        local x0, y0, x1, y1 = s16(o + 0x36), s16(o + 0x38), s16(o + 0x3a), s16(o + 0x3c)   -- the box x0 y0 x1 y1
+        if x1 > x0 and x1 - x0 < 200 and y1 > y0 and y1 > 0 and y0 < 256 then obstacles[#obstacles + 1] = { x0, y0, x1, y1 } end
         if x1 > x0 and x1 - x0 < 300 and x1 > px - 16 and x0 < px + 16 and y1 < py then
             local gap = (py - 14) - y1
             if not ahead or gap < ahead then ahead = gap end
@@ -152,8 +212,39 @@ local function decide(n)
     local free = clear_ahead(px, py)
     if want_x < px - 5 then st.left = 1 elseif want_x > px + 5 then st.right = 1 end
     if px < 20 then st.left, st.right = 0, 1 elseif px > 296 then st.left, st.right = 1, 0 end
-    local way
-    if free < 64 or not box_free(px + (st.right == 1 and 8 or st.left == 1 and -8 or 0), py) then   -- a wall ahead or beside: take the way the tiles allow
+    local way, course_y
+    -- the course is kept in map coordinates and followed until the ship is off it, something moved into it, or it is nearly flown; then a new one is planned
+    local wbase = (s16(0xcce) // 40) * 16 + fine
+    local function course_at(i) return { course_w[i][1], course_w[i][2] - wbase } end
+    local near, near_d = 1, 1e9
+    if course_w then
+        for i = 1, #course_w do
+            local c = course_at(i)
+            local d = math.abs(c[1] - px) + math.abs(c[2] - py)
+            if d < near_d then near, near_d = i, d end
+        end
+        local bad = near_d > 20 or #course_w - near < 10
+        for i = near, math.min(#course_w, near + 8) do
+            local c = course_at(i)
+            if not box_free(c[1], c[2]) then bad = true end
+        end
+        if bad then course_w = nil end
+    end
+    if not course_w then
+        local fresh = plan_course(px, py, want_x)
+        if fresh then
+            course_w = {}
+            for i, c in ipairs(fresh) do course_w[i] = { c[1], c[2] + wbase } end
+            near = 1
+        end
+    end
+    local course = course_w and { course_at(math.min(#course_w, near + 6)) } or nil
+    if course then   -- be at the column the course has about 48 px ahead of the ship
+        local goal = course[1][1]
+        st.left = goal < px - 4 and 1 or 0
+        st.right = goal > px + 4 and 1 or 0
+        course_y = course[1][2]
+    elseif free < 64 or not box_free(px + (st.right == 1 and 8 or st.left == 1 and -8 or 0), py) then   -- no course: a wall ahead or beside: take the way the tiles allow
         way = find_way(px, py, want_x)
         if way then st.left, st.right = way[1] < 0 and 1 or 0, way[1] > 0 and 1 or 0 end
     end
@@ -164,6 +255,7 @@ local function decide(n)
         if pickup.y < py - 6 then st.up = 1 elseif pickup.y > py + 6 then st.down = 1 end
     elseif py > high then st.up = 1 elseif py < low then st.down = 1
     elseif random(12) == 0 then if random(2) == 0 then st.up = 1 else st.down = 1 end end
+    if course_y and course_y > py + 3 then st.up, st.down = 0, 1 end   -- the course backs out of a pocket
     if way then st.up, st.down = way[2] < 0 and 1 or 0, way[2] > 0 and 1 or 0 end
     if free < 16 and not way then st.up = 0 end   -- (not into a tile)
     if ahead and ahead < KEEP_BACK then st.up, st.down = 0, 1 end   -- hold back until the thing ahead is KEEP_BACK px away
@@ -177,7 +269,7 @@ local function decide(n)
     if x ~= 0 and x == -last_x then st.left, st.right, x = 0, 0, 0 end
     if y ~= 0 and y == -last_y then st.up, st.down, y = 0, 0, 0 end
     last_x, last_y = x, y
-    if auto_trace and n % auto_trace == 0 then ami.log(string.format('auto %d: ship %d,%d want_x %d free %d ahead %s danger %s pickup %s -> %s%s%s%s%s', n, px, py, want_x, free, tostring(ahead), danger and (danger.x .. ',' .. danger.y) or '-', pickup and (pickup.x .. ',' .. pickup.y) or '-', st.left == 1 and 'L' or '', st.right == 1 and 'R' or '', st.up == 1 and 'U' or '', st.down == 1 and 'D' or '', st.fire == 1 and 'F' or '')) end
+    if auto_trace and n % auto_trace == 0 then ami.log(string.format('auto %d: ship %d,%d want_x %d course %s free %d ahead %s danger %s pickup %s -> %s%s%s%s%s', n, px, py, want_x, course and ((#course_w - near) .. '@' .. course[1][1] .. ',' .. course[1][2]) or 'none', free, tostring(ahead), danger and (danger.x .. ',' .. danger.y) or '-', pickup and (pickup.x .. ',' .. pickup.y) or '-', st.left == 1 and 'L' or '', st.right == 1 and 'R' or '', st.up == 1 and 'U' or '', st.down == 1 and 'D' or '', st.fire == 1 and 'F' or '')) end
     return st
 end
 

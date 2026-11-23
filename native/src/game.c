@@ -271,8 +271,9 @@ static int key_command(uint8_t key)
 {
     uint32_t target = 0;
 
+    xenon2.key_table[3] = ((uint32_t)key << 24) | (xenon2.key_table[3] & 0xffffff);   /* the last entry's code is patched to the key */
     for (int i = 0; i < 4; i++) {
-        if ((xenon2.key_table[i] >> 24) == key || i == 3) {   /* the original patches the last entry's code to the key */
+        if ((xenon2.key_table[i] >> 24) == key) {
             target = xenon2.key_table[i] & 0xffffff;
             break;
         }
