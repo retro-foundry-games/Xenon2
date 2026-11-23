@@ -26,7 +26,7 @@ GAME_CFLAGS := $(COMMON) -O2 -I$(SRC)
 WARN := -Wall -Wextra -Wno-unused-parameter
 # every module in src/ (data.c is generated)
 GAME_MODULES := $(filter-out runtime,$(notdir $(basename $(wildcard $(SRC)/*.c))))
-GAME_OBJS := $(GAME_MODULES:%=$(BUILD)/%.o) $(BUILD)/runtime.o $(BUILD)/amiga_disk.o $(BUILD)/amiga_draw.o $(BUILD)/amiga_audio.o
+GAME_OBJS := $(GAME_MODULES:%=$(BUILD)/%.o) $(BUILD)/runtime.o $(BUILD)/amiga_disk.o $(BUILD)/amiga_draw.o
 
 .PHONY: all blob clean generate sdl sdl-run
 all: blob
@@ -46,8 +46,6 @@ $(BUILD):
 $(BUILD)/%.o: $(SRC)/%.c $(SRC)/game.h $(wildcard $(SRC)/*.h) | $(BUILD)
 	$(CC) $(GAME_CFLAGS) $(WARN) -c $< -o $@
 $(BUILD)/amiga_disk.o: $(SRC)/amiga/disk.c $(SRC)/game.h $(wildcard $(SRC)/*.h) | $(BUILD)
-	$(CC) $(GAME_CFLAGS) $(WARN) -c $< -o $@
-$(BUILD)/amiga_audio.o: $(SRC)/amiga/audio.c $(SRC)/game.h $(wildcard $(SRC)/*.h) | $(BUILD)
 	$(CC) $(GAME_CFLAGS) $(WARN) -c $< -o $@
 $(BUILD)/amiga_draw.o: $(SRC)/amiga/draw.c $(SRC)/game.h $(wildcard $(SRC)/*.h) | $(BUILD)
 	$(CC) $(GAME_CFLAGS) $(WARN) -c $< -o $@
