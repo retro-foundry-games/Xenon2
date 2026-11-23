@@ -6,12 +6,8 @@ __pycache__/
 .venv/
 native/src/game_state.h
 native/src/game.ld
-native/src/guest_members.h
 native/src/data.c
-native/src/sdl/records.c
 native/src/sdl/code_table.c
 native/build/
-native/src/sdl/unimplemented.c
-native/src/code_table.c
 dev/members.lua
 dev/build/

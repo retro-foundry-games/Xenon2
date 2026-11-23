@@ -1,4 +1,4 @@
-# nixpkgs' SDL3 source compiled once for Emscripten (with threads: the game's program runs on a thread, so the page links shared memory), so game rebuilds reuse it.
+# nixpkgs' SDL3 source compiled once for Emscripten, so game rebuilds reuse it.
 { pkgs }:
 pkgs.stdenv.mkDerivation {
   pname = "sdl3-emscripten";
@@ -19,8 +19,7 @@ pkgs.stdenv.mkDerivation {
       -DSDL_STATIC=ON \
       -DSDL_TEST_LIBRARY=OFF \
       -DSDL_TESTS=OFF \
-      -DSDL_INSTALL=ON \
-      -DCMAKE_C_FLAGS=-pthread
+      -DSDL_INSTALL=ON
     cmake --build build-sdl
   '';
   installPhase = ''
