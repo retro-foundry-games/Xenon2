@@ -290,16 +290,29 @@ int host_init(int argc, char **argv)
     if (!headless) {
         SDL_AudioSpec spec = { SDL_AUDIO_S16, 2, 44100 };
 
-        if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO)) {
-            fprintf(stderr, "xenon2-sdl: SDL_Init: %s\n", SDL_GetError());
-            return 1;
+        /* Wayland first, then X11, unless SDL_VIDEO_DRIVER says which */
+        char failure[256] = "";
+        const char *drivers[] = { getenv("SDL_VIDEO_DRIVER") ? 0 : "wayland", getenv("SDL_VIDEO_DRIVER") ? 0 : "x11", 0 };
+
+        for (int i = 0; !renderer && (i == 0 || drivers[i - 1]); i++) {
+            if (drivers[i])
+                SDL_SetHint(SDL_HINT_VIDEO_DRIVER, drivers[i]);
+            if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO)) {
+                snprintf(failure, sizeof failure, "SDL_Init: %s", SDL_GetError());
+                continue;
+            }
+            window = SDL_CreateWindow("Xenon 2", DISPLAY_W * scale, DISPLAY_H * scale, 0);
+            renderer = window ? SDL_CreateRenderer(window, renderer_name) : 0;
+            if (!renderer) {
+                snprintf(failure, sizeof failure, "%s: %s", drivers[i] ? drivers[i] : "window", SDL_GetError());
+                if (window)
+                    SDL_DestroyWindow(window);
+                window = 0;
+                SDL_Quit();
+            }
         }
-        window = SDL_CreateWindow("Xenon 2", DISPLAY_W * scale, DISPLAY_H * scale, 0);
-        renderer = window ? SDL_CreateRenderer(window, renderer_name) : 0;
-        if (renderer)
-            fprintf(stderr, "xenon2-sdl: renderer %s, video driver %s\n", SDL_GetRendererName(renderer), SDL_GetCurrentVideoDriver());
         if (!renderer) {
-            fprintf(stderr, "xenon2-sdl: window: %s\n", SDL_GetError());
+            fprintf(stderr, "xenon2-sdl: %s\n", failure);
             return 1;
         }
         SDL_SetRenderVSync(renderer, 1);
