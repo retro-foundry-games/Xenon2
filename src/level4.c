@@ -248,7 +248,7 @@ void l4_scroll(void)
     if ((xenon2.frame_tick & 0xf) != 0 || (int16_t)xenon2.scroll_pos > 0xe50 || (int16_t)xenon2.scroll_pos < 0xae0)
         return;
     {
-        Object *obj = alloc_in(&xenon2.obj_list[2]);
+        Object *obj = alloc_in(&xenon2.obj_list[LIST_ENEMY]);
         uint16_t index = (random_next() & 1) ? 1 : 0;
         const struct Level4ScrollEnemy *entry;
 
@@ -295,7 +295,7 @@ void l4_enemy_a(Object *obj)
             const struct Level4EnemyGun *gun = &xenon2.level4_data.enemy_a_guns[obj->type == 0xc8 ? 0 : 1];
 
             obj->shot_count = (uint8_t)(random_next() & 0x3f);
-            part = alloc_in(&xenon2.obj_list[3]);
+            part = alloc_in(&xenon2.obj_list[LIST_EFFECT]);
             part->type = gun->type;
             part->fn_update = (obj_fn)l4_shot_a;
             part->fn_draw = draw_bob_masked;
@@ -356,7 +356,7 @@ void l4_shot_a(Object *obj)
     } else {
         return;
     }
-    drop = alloc_in(&xenon2.obj_list[2]);
+    drop = alloc_in(&xenon2.obj_list[LIST_ENEMY]);
     drop->type = 0xf8;
     drop->fn_update = (obj_fn)l4_enemy_f8;
     drop->fn_draw = draw_bob_masked;
@@ -457,7 +457,7 @@ void l4_spawn_boss1(void)
         return;
     xenon2.l4_boss1_spawned = 0xff;
     for (n = 0; n < 19; n++) {
-        Object *obj = insert_head(&xenon2.obj_list[2]);
+        Object *obj = insert_head(&xenon2.obj_list[LIST_ENEMY]);
 
         if (!first)
             first = obj;
@@ -540,7 +540,7 @@ void l4_b1_core_hit(Object *shot, Object *enemy, uint16_t damage)
     enemy->energy = (int16_t)(old - damage);
     if (old > damage)
         return;
-    free_object_chain(xenon2.obj_list[2].prev);
+    free_object_chain(xenon2.obj_list[LIST_ENEMY].prev);
     spawn_bonuses(9);
     debris_burst(shot, 0x13, 0x70, enemy->y, 0x60, 0x50, xenon2.big_explosion_anim);
     xenon2.boss_dead = 0xff;
@@ -739,7 +739,7 @@ void l4_spawn_boss2(const struct SpawnRec *record, uint16_t slots)
     xenon2.player_y_saved = 0xb0;
     latch_slots(slots);
     for (n = 0; n < 20; n++) {
-        Object *obj = insert_head(&xenon2.obj_list[2]);
+        Object *obj = insert_head(&xenon2.obj_list[LIST_ENEMY]);
 
         obj->type = 0x54;
         obj->fn_update = (obj_fn)piece->update;
@@ -963,7 +963,7 @@ void l4_b2_gun_hit(Object *shot, Object *enemy, uint16_t damage)
     enemy->energy = (int16_t)(old - damage);
     if (old > damage)
         return;
-    for (o = xenon2.obj_list[2].prev; o->type != 0; o = prev) {
+    for (o = xenon2.obj_list[LIST_ENEMY].prev; o->type != 0; o = prev) {
         prev = o->prev;
         kill_thunk(o);
     }
@@ -1201,7 +1201,7 @@ void l4_walker_hit(Object *shot, Object *enemy, uint16_t damage)
     y = (int16_t)(y - xenon2.scroll_pos);
     spawn_effect(x, y, xenon2.big_explosion_anim, draw_bob_masked);
     xenon2.player_score += (uint16_t)enemy->score;
-    p = alloc_in(&xenon2.obj_list[3]);
+    p = alloc_in(&xenon2.obj_list[LIST_EFFECT]);
     p->type = 0x18;
     p->pickup.mode = 7;
     p->fn_update = (obj_fn)pickup_update;

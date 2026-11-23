@@ -15,11 +15,11 @@ static inline void kill_object_thunk(Object *o)
 
 static inline Object *alloc_b(Object *caller)
 {
-    Object *o = obj_free_pop(), *tail = xenon2.obj_list[3].prev;
+    Object *o = obj_free_pop(), *tail = xenon2.obj_list[LIST_EFFECT].prev;
 
-    xenon2.obj_list[3].prev = o;
+    xenon2.obj_list[LIST_EFFECT].prev = o;
     o->prev = tail;
-    o->next = &xenon2.obj_list[3];
+    o->next = &xenon2.obj_list[LIST_EFFECT];
     tail->next = o;
     return o;
 }
@@ -27,11 +27,11 @@ static inline Object *alloc_b(Object *caller)
 /* list B from the other end: the object goes first (baa), links swapped */
 static inline Object *alloc_b_front(Object *caller)
 {
-    Object *o = obj_free_pop(), *head = xenon2.obj_list[3].next;
+    Object *o = obj_free_pop(), *head = xenon2.obj_list[LIST_EFFECT].next;
 
-    xenon2.obj_list[3].next = o;
+    xenon2.obj_list[LIST_EFFECT].next = o;
     o->next = head;
-    o->prev = &xenon2.obj_list[3];
+    o->prev = &xenon2.obj_list[LIST_EFFECT];
     head->prev = o;
     return o;
 }
@@ -51,11 +51,11 @@ static inline void set_anim(Object *o, const uint16_t *a)
 /* the object from the free list put first in the list of enemies (list C, head $B4C) */
 static inline Object *alloc_c(void)
 {
-    Object *o = obj_free_pop(), *tail = xenon2.obj_list[2].prev;
+    Object *o = obj_free_pop(), *tail = xenon2.obj_list[LIST_ENEMY].prev;
 
-    xenon2.obj_list[2].prev = o;
+    xenon2.obj_list[LIST_ENEMY].prev = o;
     o->prev = tail;
-    o->next = &xenon2.obj_list[2];
+    o->next = &xenon2.obj_list[LIST_ENEMY];
     tail->next = o;
     return o;
 }

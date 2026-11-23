@@ -434,7 +434,7 @@ static void main_loop(void)
         xenon2.boss_dead = 0;
         if (xenon2.level_number == 5) {
             for (;;) {
-                Object *obj = xenon2.obj_list[1].prev;
+                Object *obj = xenon2.obj_list[LIST_MISC].prev;
 
                 if (obj->type == 0)
                     break;
@@ -450,9 +450,9 @@ static void main_loop(void)
             if (xenon2.player_active[other] != 0 && xenon2.player_active[other + 2] == 0) {
                 xenon2.player_active[xenon2.cur_player + 2] = 0xff;
                 clear_level_objects();
-                free_object_chain(xenon2.obj_list[2].prev);
-                free_object_chain(xenon2.obj_list[4].prev);
-                free_object_chain(xenon2.obj_list[3].prev);
+                free_object_chain(xenon2.obj_list[LIST_ENEMY].prev);
+                free_object_chain(xenon2.obj_list[LIST_FRONT].prev);
+                free_object_chain(xenon2.obj_list[LIST_EFFECT].prev);
                 switch_player_after_clear();
                 music_restart_if_enabled();
                 continue;
@@ -460,9 +460,9 @@ static void main_loop(void)
         }
         clear_palette();
         clear_level_objects();
-        free_object_chain(xenon2.obj_list[2].prev);
-        free_object_chain(xenon2.obj_list[4].prev);
-        free_object_chain(xenon2.obj_list[3].prev);
+        free_object_chain(xenon2.obj_list[LIST_ENEMY].prev);
+        free_object_chain(xenon2.obj_list[LIST_FRONT].prev);
+        free_object_chain(xenon2.obj_list[LIST_EFFECT].prev);
         xenon2.level_number++;
         if ((int16_t)xenon2.level_number >= 6) {
             xenon2.level_number = 1;
@@ -758,7 +758,7 @@ void frame_update(void)
 /* orig $00683c: draws the objects of list 2 and counts those that are not of type $50 or $54 */
 void draw_enemy_list(void)
 {
-    Object *obj = xenon2.obj_list[2].prev;
+    Object *obj = xenon2.obj_list[LIST_ENEMY].prev;
     uint16_t count = 0;
     uint16_t type;
 

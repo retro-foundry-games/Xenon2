@@ -179,7 +179,7 @@ void l2_hook(uint16_t hook, const struct SpawnRec *rec, uint16_t rec_scroll)
         }
         return;
     case 3:
-        obj = alloc_in(&xenon2.obj_list[2]);
+        obj = alloc_in(&xenon2.obj_list[LIST_ENEMY]);
         obj->type = flag ? 0x100 : 0x104;
         obj->fn_update = (obj_fn)l2_launcher_update;
         obj->fn_draw = draw_bob_masked;
@@ -257,7 +257,7 @@ void l2_init(void)
     xenon2.scroll_min = 0x9e0;
     xenon2.scroll_max = 0x11ff;
     xenon2.l2_first_fight_won = 0;
-    obj = alloc_in(&xenon2.obj_list[2]);
+    obj = alloc_in(&xenon2.obj_list[LIST_ENEMY]);
     obj->type = 0x50;
     obj->fn_update = (obj_fn)l2_boss_update;
     obj->fn_draw = (obj_fn)l2_boss_draw;
@@ -275,7 +275,7 @@ void l2_init(void)
     for (gate = 2; gate >= 0; gate--) {
         uint16_t x = gate_at[2 - gate][0], y = gate_at[2 - gate][1];
 
-        obj = alloc_in(&xenon2.obj_list[2]);
+        obj = alloc_in(&xenon2.obj_list[LIST_ENEMY]);
         obj->type = 0x54;
         obj->fn_update = (obj_fn)l2_gate_update;
         obj->fn_draw = (obj_fn)obj_nop_thunk;
@@ -463,7 +463,7 @@ void l2_marker_f8_update(Object *marker)
     if (marker->marker_f8.blink != 4)
         return;
     {
-        Object *flyer = alloc_in(&xenon2.obj_list[2]);
+        Object *flyer = alloc_in(&xenon2.obj_list[LIST_ENEMY]);
 
         flyer->type = 0xe0;
         flyer->fn_update = (obj_fn)l2_flyer_update;
@@ -518,7 +518,7 @@ void l2_marker_fc_update(Object *marker)
     if (marker->marker_fc.step != 4)
         return;
     {
-        Object *flyer = alloc_in(&xenon2.obj_list[2]);
+        Object *flyer = alloc_in(&xenon2.obj_list[LIST_ENEMY]);
 
         flyer->type = 0xe4;
         flyer->fn_update = (obj_fn)l2_flyer_update;
@@ -688,7 +688,7 @@ void l2_roamer_update(Object *roamer)
         return;
     }
     if (roamer->gfx == (void *)xenon2.level2_data.roamer_picture) {
-        Object *bolt = alloc_in(&xenon2.obj_list[2]);
+        Object *bolt = alloc_in(&xenon2.obj_list[LIST_ENEMY]);
 
         bolt->type = 0x110;
         bolt->fn_update = (obj_fn)l2_roamer_shot_update;
@@ -735,7 +735,7 @@ void l2_front_update(Object *marker)
         return;
     for (i = 7; i >= 0; i--) {
         const struct Level2FrontEntry *entry = &xenon2.level2_data.front_entries[7 - i];
-        Object *part = alloc_in(&xenon2.obj_list[2]);
+        Object *part = alloc_in(&xenon2.obj_list[LIST_ENEMY]);
 
         part->type = 0x108;
         part->fn_update = (obj_fn)l2_front_piece_update;
@@ -817,10 +817,10 @@ void l2_launcher_update(Object *launcher)
         launcher->launcher.step = 0;
         launcher->next->prev = launcher->prev;
         launcher->prev->next = launcher->next;
-        tail = xenon2.obj_list[3].prev;
-        xenon2.obj_list[3].prev = launcher;
+        tail = xenon2.obj_list[LIST_EFFECT].prev;
+        xenon2.obj_list[LIST_EFFECT].prev = launcher;
         launcher->prev = tail;
-        launcher->next = &xenon2.obj_list[3];
+        launcher->next = &xenon2.obj_list[LIST_EFFECT];
         tail->next = launcher;
         set_anim(launcher, launcher->type == 0x100 ? xenon2.level2_data.launcher_anim_100 : xenon2.level2_data.launcher_anim_other);
         shot_x = (int16_t)(launcher->x + 0xb);
@@ -844,7 +844,7 @@ void l2_launcher_update(Object *launcher)
 /* the end of $055DEC, $055E0E and $055E28: the object obj bursts into a wreck (animation anim) that flies away, the object goes */
 static void l2_wreck(Object *obj, const uint16_t *anim)
 {
-    Object *wreck = alloc_in(&xenon2.obj_list[3]);
+    Object *wreck = alloc_in(&xenon2.obj_list[LIST_EFFECT]);
 
     wreck->type = obj->type;
     wreck->fn_update = obj->fn_update;
@@ -923,7 +923,7 @@ static void l2_debris_wall(uint16_t side)
     wait = 0;
     spec = xenon2.level2_data.wall_pieces.pieces;
     for (k = xenon2.level2_data.wall_pieces.last; k != 0xffff; k--) {
-        obj = alloc_in(&xenon2.obj_list[2]);
+        obj = alloc_in(&xenon2.obj_list[LIST_ENEMY]);
         obj->type = spec->type;
         obj->fn_update = (obj_fn)l2_piece_update;
         obj->fn_draw = (obj_fn)obj_nop_thunk;
@@ -1301,7 +1301,7 @@ void l2_boss_update(Object *boss)
         boss->l2_boss_b.flash--;
         if (boss->l2_boss_b.flash != 0)
             return;
-        shot = alloc_in(&xenon2.obj_list[2]);
+        shot = alloc_in(&xenon2.obj_list[LIST_ENEMY]);
         shot->type = 0x10c;
         shot->fn_update = (obj_fn)l2_roamer_update;
         shot->fn_draw = draw_bob_masked;
