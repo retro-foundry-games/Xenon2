@@ -70,25 +70,25 @@ _Static_assert(sizeof(struct ShopSample) == 16, "ShopSample");
 
 struct ShopWave {
     const uint8_t *lc;
-    BLOB_PAD(4)
+    BLOB_PAD(4, 4)
     uint16_t len;
     uint16_t period;
 };
 _Static_assert(sizeof(struct ShopWave) == 12, "ShopWave");
 
 struct ShopSound {
-    BLOB_PAD(232)
+    BLOB_PAD(0, 232)
     uint8_t built1;
     uint8_t running;
-    BLOB_PAD(2)
+    BLOB_PAD(ea, 2)
     const uint8_t *silence;
-    BLOB_PAD(192)
+    BLOB_PAD(f0, 192)
     struct ShopWave wave;
-    BLOB_PAD(154)
+    BLOB_PAD(1bc, 154)
     uint8_t built2;
-    BLOB_PAD(233)
+    BLOB_PAD(257, 233)
     struct ShopSample samples[4];
-    BLOB_PAD(606)
+    BLOB_PAD(380, 606)
     struct ShopChan chan[4];
     uint16_t cmd;
     struct ShopMirror mirror[4];
@@ -125,20 +125,20 @@ struct ShopLight {
 _Static_assert(sizeof(struct ShopLight) == 8, "ShopLight");
 
 struct ShopData {
-    BLOB_PAD(728)
+    BLOB_PAD(0, 728)
     uint16_t palette_a[16];   /* 55118 */
     uint8_t txt_thats_it[27];   /* 55138 */
     uint8_t txt_forget[39];   /* 55153 */
     uint8_t txt_good_enough[170];   /* 5517A */
     struct ShopPic tab_pics[7];   /* 55224 */
-    BLOB_PAD(440)
+    BLOB_PAD(42a, 440)
     uint16_t page;   /* 55422 */
-    BLOB_PAD(364)
+    BLOB_PAD(5e4, 364)
     uint16_t last_x;   /* 55590 */
     uint16_t last_y;   /* 55592 */
-    BLOB_PAD(522)
+    BLOB_PAD(754, 522)
     uint8_t tab_flags[22];   /* 5579E */
-    BLOB_PAD(4)
+    BLOB_PAD(974, 4)
     const uint8_t *tab_names[25];   /* 557B8 */
     const uint16_t *tab_anim[27];   /* 5581C */
     uint16_t tab_price[25];   /* 55888 */
@@ -153,21 +153,21 @@ struct ShopData {
     uint8_t txt_cost[384];   /* 55DD6 */
     uint8_t txt_power[8];   /* 55F56 */
     uint16_t repeat;   /* 55F5E */
-    BLOB_PAD(322)
+    BLOB_PAD(1120, 322)
     uint8_t selling;   /* 560A2 */
     uint8_t no_blink;   /* 560A3 */
     uint8_t blink_a;   /* 560A4 */
     uint8_t blink_b;   /* 560A5 */
-    BLOB_PAD(98)
+    BLOB_PAD(1266, 98)
     const uint8_t *lists[223];   /* 56108 */
     uint16_t kx;   /* 56484 */
     uint16_t ky;   /* 56486 */
     const uint16_t *kgfx;   /* 56488 */
-    BLOB_PAD(1546)
+    BLOB_PAD(164c, 1546)
     const uint16_t *tab_spark[9];   /* 56A96 */
     const uint16_t *tab_puff[2];   /* 56ABA */
     struct ShopRec recs[20];   /* 56AC2 */
-    BLOB_PAD(590)
+    BLOB_PAD(1dc2, 590)
     uint8_t txt_sell[30];   /* 56E50 */
     uint8_t txt_buy[74];   /* 56E6E */
     struct ShopLight tab_lights[7];   /* 56EB8 */
@@ -176,7 +176,7 @@ struct ShopData {
     uint8_t txt_welcome_b[19];   /* 56FFC */
     uint8_t txt_last_chance[29];   /* 5700F */
     const uint8_t *tab_advice[30];   /* 5702C */
-    BLOB_PAD(376)
+    BLOB_PAD(2264, 376)
     uint16_t gfx_bar_1[128];   /* 5721C */
     uint16_t gfx_bar_2[88];   /* 5731C */
     uint16_t gfx_bar_3[128];   /* 573CC */

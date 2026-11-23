@@ -7,15 +7,15 @@
 #include "level.h"
 
 struct Level1Data {
-    BLOB_PAD(3)
+    BLOB_PAD(0, 3)
     uint8_t shot_1_rate;   /* 54E43 */
     uint16_t shot_1_gfx;   /* 54E44 */
     uint16_t shot_1_steps;   /* 54E46 */
-    BLOB_PAD(1)
+    BLOB_PAD(8, 1)
     uint8_t shot_2_rate;   /* 54E49 */
     uint16_t shot_2_gfx;   /* 54E4A */
     uint16_t shot_2_steps;   /* 54E4C */
-    BLOB_PAD(1)
+    BLOB_PAD(e, 1)
     uint8_t shot_3_rate;   /* 54E4F */
     uint16_t shot_3_gfx;   /* 54E50 */
     uint16_t shot_3_steps;   /* 54E52 */
@@ -24,7 +24,7 @@ struct Level1Data {
     uint16_t boss_energy[2];   /* 54E58 */
     uint16_t turret_energy[3];   /* 54E5C */
     uint16_t boss_steps;   /* 54E62 */
-    BLOB_PAD(2)
+    BLOB_PAD(24, 2)
     struct Formation1 formation_1;   /* 54E66 */
     struct Formation1 formation_2;   /* 54E80 */
     struct Formation1 formation_3;   /* 54E9A */
@@ -52,38 +52,38 @@ struct Level1Data {
     uint16_t words_5527a[27];   /* 5527A */
     uint16_t anim_shot[3];   /* 552B0 */
     uint16_t words_552b6[12];   /* 552B6 */
-    BLOB_PAD(228)
+    BLOB_PAD(48e, 228)
     uint16_t turret_a_cells_e0[16];   /* 553B2 */
     uint16_t turret_a_cells_e4[16];   /* 553D2 */
     uint16_t turret_a_anim_e0[4];   /* 553F2 */
     uint16_t turret_a_anim_e4[4];   /* 553FA */
-    BLOB_PAD(248)
+    BLOB_PAD(5c2, 248)
     uint16_t turret_c_steps_dc[40];   /* 554FA */
     uint16_t turret_c_steps_d8[40];   /* 5554A */
     uint16_t turret_c_anim[4];   /* 5559A */
-    BLOB_PAD(234)
+    BLOB_PAD(762, 234)
     uint16_t turret_b_cells_ec[16];   /* 5568C */
     uint16_t turret_b_cells_e8[16];   /* 556AC */
     uint16_t turret_b_anim_e8[4];   /* 556CC */
     uint16_t turret_b_anim_ec[4];   /* 556D4 */
-    BLOB_PAD(454)
+    BLOB_PAD(89c, 454)
     uint16_t level_patches[80];   /* 558A2 */
-    BLOB_PAD(402)
+    BLOB_PAD(b02, 402)
     uint16_t turret_c_cells_dc[4];   /* 55AD4 */
     uint16_t turret_c_cells_d8[4];   /* 55ADC */
-    BLOB_PAD(514)
+    BLOB_PAD(ca4, 514)
     uint16_t unit_pieces_less_one;   /* 55CE6 */
     struct LevelSeg segs[11];   /* 55CE8 */
     struct LevelSpawn unit_starts[16];   /* 55D6C */
-    BLOB_PAD(840)
+    BLOB_PAD(fec, 840)
     const uint16_t *piece_pictures[16];   /* 56174 */
-    BLOB_PAD(470)
+    BLOB_PAD(1374, 470)
     const uint16_t *boss_part_pictures[8];   /* 5638A */
-    BLOB_PAD(1042)
+    BLOB_PAD(156a, 1042)
     uint16_t boss_grid;   /* 567BC */
-    BLOB_PAD(60)
+    BLOB_PAD(197e, 60)
     uint16_t boss_draw_table[10];   /* 567FA */
-    BLOB_PAD(2)
+    BLOB_PAD(19ce, 2)
     uint16_t boss_draw_sources[24];   /* 56810 */
     uint16_t words_56840[6900];   /* 56840 */
     uint16_t boss_part_picture;   /* 59E28 */
@@ -91,9 +91,9 @@ struct Level1Data {
     uint16_t pad_5adec[1307];   /* 5ADEC */
     uint16_t words_5b822[1121];   /* 5B822 */
     uint16_t eyes_a;   /* 5C0E4 */
-    BLOB_PAD(174)
+    BLOB_PAD(72a6, 174)
     uint16_t eyes_b;   /* 5C194 */
-    BLOB_PAD(174)
+    BLOB_PAD(7356, 174)
     uint16_t eyes_c;   /* 5C244 */
     uint16_t words_5c246[775];   /* 5C246 */
     struct SpawnRec events_b[51];   /* 5C854 */
