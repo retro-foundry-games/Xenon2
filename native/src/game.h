@@ -1001,5 +1001,6 @@ void switch_player(void);
 void swap_player_state(void);
 
 uint8_t autofire_stick(void);                                   /* orig $006426 */
+void update_all(void);
 
 #endif

@@ -508,7 +508,6 @@ void latch_slots(uint16_t score);
 void scroll_events(void);
 void run_updates(Object *obj);
 void run_draws(Object *obj);
-void update_all(void);
 void spawn_debris(Object *shooter_unused, Object *target, uint16_t damage_unused);
 void group_box_update(Object *end);
 Object *spawn_wave_326c(Object *obj, const struct SpawnRec *rec);
