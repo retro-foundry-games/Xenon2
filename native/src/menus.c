@@ -848,7 +848,7 @@ void work_area_restore(void)
 
 void obj_script_step(Object *obj)
 {
-    ObjMove *o = (ObjMove *)obj;
+    Object *o = obj;
     const int8_t *sine = xenon2.sine_table;
     uint16_t steps;
     uint32_t x_fixed, y_fixed, angle_fixed, turn;
@@ -857,40 +857,40 @@ void obj_script_step(Object *obj)
     steps = o->steps;
     if (steps == 0)
         return;
-    if (o->wait == 0)
+    if (o->path.wait == 0)
         goto next_command;
-    if (o->wait < 0) {
-        steps = (uint16_t)(steps + o->wait);
+    if (o->path.wait < 0) {
+        steps = (uint16_t)(steps + o->path.wait);
         if ((int16_t)steps > 0)
             goto next_command;
-        o->wait = (int16_t)steps;
+        o->path.wait = (int16_t)steps;
         return;
     }
 move:
-    x_fixed = ((uint32_t)o->x_hi << 16) | o->x_lo;
-    y_fixed = ((uint32_t)o->y_hi << 16) | o->y_lo;
-    angle_fixed = o->angle;
+    x_fixed = ((uint32_t)o->x << 16) | o->x_frac;
+    y_fixed = ((uint32_t)o->y << 16) | o->y_frac;
+    angle_fixed = o->path.angle;
     turn = o->turn;
-    turn_delta = o->turn_step;
+    turn_delta = (int16_t)o->turn_step;
     for (;;) {
         steps--;
         if ((int16_t)steps < 0) {
-            o->x_hi = (uint16_t)(x_fixed >> 16);
-            o->x_lo = (uint16_t)x_fixed;
-            o->y_hi = (uint16_t)(y_fixed >> 16);
-            o->y_lo = (uint16_t)y_fixed;
-            o->angle = angle_fixed;
+            o->x = (uint16_t)(x_fixed >> 16);
+            o->x_frac = (uint16_t)x_fixed;
+            o->y = (uint16_t)(y_fixed >> 16);
+            o->y_frac = (uint16_t)y_fixed;
+            o->path.angle = angle_fixed;
             o->turn = turn;
             return;
         }
-        o->wait--;
-        if (o->wait < 0) {
+        o->path.wait--;
+        if (o->path.wait < 0) {
             steps++;
-            o->x_hi = (uint16_t)(x_fixed >> 16);
-            o->x_lo = (uint16_t)x_fixed;
-            o->y_hi = (uint16_t)(y_fixed >> 16);
-            o->y_lo = (uint16_t)y_fixed;
-            o->angle = angle_fixed;
+            o->x = (uint16_t)(x_fixed >> 16);
+            o->x_frac = (uint16_t)x_fixed;
+            o->y = (uint16_t)(y_fixed >> 16);
+            o->y_frac = (uint16_t)y_fixed;
+            o->path.angle = angle_fixed;
             o->turn = turn;
             goto next_command;
         }
@@ -909,11 +909,11 @@ next_command:
         switch (cmd->op) {
         case 0: {
             int i;
-            ObjMove *e;
+            Object *e;
 
-            if (o->id != 0) {
+            if (o->kind != 0) {
                 for (i = 0; i < 8; i++) {
-                    if (xenon2.pickup_groups[2 * i] == o->id) {
+                    if (xenon2.pickup_groups[2 * i] == (uint16_t)o->kind) {
                         xenon2.pickup_groups[2 * i] = 0;
                         xenon2.pickup_groups[2 * i + 1] = 0;
                         break;
@@ -931,7 +931,7 @@ next_command:
             }
             e = o->target;
             for (;;) {
-                ObjMove *next = e->chain;
+                Object *next = e->chain;
 
                 e->type = 4;
                 e->fn_update = (obj_fn)free_object;
@@ -945,10 +945,10 @@ next_command:
             }
         }
         case 2:
-            o->angle = cmd->arg.move.angle;
+            o->path.angle = cmd->arg.move.angle;
             o->turn = (uint32_t)((int32_t)((uint32_t)cmd->arg.move.turn << 16) >> 8);
             o->turn_step = (int16_t)cmd->arg.move.turn_step;
-            o->wait = (int16_t)cmd->arg.move.wait;
+            o->path.wait = (int16_t)cmd->arg.move.wait;
             o->cursor = (const struct PathCmd *)(&cmd->arg.move + 1);
             goto move;
         case 4: {
@@ -958,7 +958,7 @@ next_command:
             steps = (uint16_t)(steps - t);
             if ((int16_t)steps > 0)
                 continue;
-            o->wait = (int16_t)steps;
+            o->path.wait = (int16_t)steps;
             return;
         }
         case 6: {
@@ -1001,7 +1001,7 @@ void enemy_update(Object *obj)
 /* orig $E78, $96BA: enemy_update without the animation step */
 void enemy_update_no_anim(Object *obj)
 {
-    ObjMove *o = (ObjMove *)obj;
+    Object *o = obj;
     uint8_t rate;
     uint16_t sum, dir;
 
@@ -1021,9 +1021,9 @@ void enemy_update_no_anim(Object *obj)
     if (o->shot_rate < 0x64) {
         dir = (uint16_t)(random_next() & 7);
     } else {
-        dir = direction8((int16_t)(xenon2.player.x - (int16_t)o->x_hi), (int16_t)(xenon2.player.y - (int16_t)o->y_hi));
+        dir = direction8((int16_t)(xenon2.player.x - (int16_t)o->x), (int16_t)(xenon2.player.y - (int16_t)o->y));
     }
-    spawn_enemy_shot(o->x_hi, o->y_hi, dir, 6, xenon2.enemy_shot_gfx);
+    spawn_enemy_shot(o->x, o->y, dir, 6, xenon2.enemy_shot_gfx);
 }
 
 /* orig $EEA, $9670: the random state is kept for enemy_update_seeded, then enemy_update */

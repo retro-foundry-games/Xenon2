@@ -16,7 +16,6 @@
 _Static_assert(sizeof(struct HwMirror) == 12, "struct HwMirror has not the size game.symbols gives");
 _Static_assert(sizeof(struct Instrument) == 12, "struct Instrument has not the size game.symbols gives");
 _Static_assert(sizeof(struct MusicChannel) == 48, "struct MusicChannel has not the size game.symbols gives");
-_Static_assert(sizeof(struct ObjMove) == 98, "struct ObjMove has not the size game.symbols gives");
 _Static_assert(sizeof(struct Object) == 98, "struct Object has not the size game.symbols gives");
 _Static_assert(sizeof(struct SfxChannel) == 36, "struct SfxChannel has not the size game.symbols gives");
 _Static_assert(sizeof(struct SfxDef) == 24, "struct SfxDef has not the size game.symbols gives");

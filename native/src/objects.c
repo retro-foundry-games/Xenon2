@@ -2,8 +2,6 @@
 #include "shop.h"
 #include "game_all.h"
 
-/* the path script view of an object (ObjMove) */
-
 /* the scratch fields of Object, by the kind that uses them */
 
 #ifdef GAME_SDL
