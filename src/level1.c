@@ -82,11 +82,11 @@ void level1_turret_a_update(Object *turret)
     turret->map[MAP_COLS] = table[offset + 2];
     turret->map[MAP_COLS + 1] = table[offset + 3];
     turret->l1_turret.step = (int16_t)((turret->l1_turret.step + 1) & 3);
-    sum = (uint16_t)(((ObjMove *)turret)->shot_count + xenon2.level1_data.shot_1_rate);
-    ((ObjMove *)turret)->shot_count = (uint8_t)sum;
+    sum = (uint16_t)(turret->shot_count + xenon2.level1_data.shot_1_rate);
+    turret->shot_count = (uint8_t)sum;
     if (!(sum & 0x100))
         return;
-    ((ObjMove *)turret)->shot_count = (uint8_t)(random_next() & 0x3f);
+    turret->shot_count = (uint8_t)(random_next() & 0x3f);
     x = (int16_t)(turret->x + 0x10);
     y = (int16_t)(turret->y - xenon2.scroll_pos + 0xe);
     dir = 2;
@@ -118,11 +118,11 @@ void level1_turret_b_update(Object *turret)
     turret->map[MAP_COLS] = table[offset + 2];
     turret->map[MAP_COLS + 1] = table[offset + 3];
     turret->l1_turret.step = (int16_t)((turret->l1_turret.step + 1) & 0xf);
-    sum = (uint16_t)(((ObjMove *)turret)->shot_count + xenon2.level1_data.shot_3_rate);
-    ((ObjMove *)turret)->shot_count = (uint8_t)sum;
+    sum = (uint16_t)(turret->shot_count + xenon2.level1_data.shot_3_rate);
+    turret->shot_count = (uint8_t)sum;
     if (!(sum & 0x100))
         return;
-    ((ObjMove *)turret)->shot_count = (uint8_t)(random_next() & 0x3f);
+    turret->shot_count = (uint8_t)(random_next() & 0x3f);
     x = (int16_t)(turret->x + 0x20);
     y = (int16_t)(turret->y - xenon2.scroll_pos + 0xe);
     dir = 2;
@@ -152,11 +152,11 @@ void level1_turret_c_update(Object *turret)
     turret->map[0] = table[offset];
     turret->map[1] = table[offset + 1];
     if (turret->l1_turret.step == 0) {
-        sum = (uint16_t)(((ObjMove *)turret)->shot_count + xenon2.level1_data.shot_2_rate);
-        ((ObjMove *)turret)->shot_count = (uint8_t)sum;
+        sum = (uint16_t)(turret->shot_count + xenon2.level1_data.shot_2_rate);
+        turret->shot_count = (uint8_t)sum;
         if (!(sum & 0x100))
             return;
-        ((ObjMove *)turret)->shot_count = (uint8_t)(random_next() & 0x3f);
+        turret->shot_count = (uint8_t)(random_next() & 0x3f);
     }
     turret->l1_turret.step++;
     if (turret->l1_turret.step == 0x28) {
@@ -569,7 +569,7 @@ void level1_spawn_unit(uint16_t unit)
     obj->unit.counter = counter;
     obj->shot_count = obj->shot_rate = 0;
     obj->script = (uint8_t *)s->path;
-    ((ObjMove *)obj)->cursor = (const struct PathCmd *)s->path;
+    obj->cursor = (const struct PathCmd *)s->path;
     obj->x = x;
     obj->y = y;
     obj->unit.wait = wait;
@@ -594,7 +594,7 @@ void level1_spawn_unit(uint16_t unit)
         obj->shot_count = obj->shot_rate = 0;
         obj->anim_delay = 0;
         obj->script = (uint8_t *)s->path;
-        ((ObjMove *)obj)->cursor = (const struct PathCmd *)s->path;
+        obj->cursor = (const struct PathCmd *)s->path;
         obj->x = x;
         obj->y = y;
         obj->kind = 0;
@@ -766,7 +766,6 @@ void level1_boss_hit(Object *shooter, Object *boss, uint16_t damage)
  * ($1C), the first one the boss's; the last part turns towards the player and shoots */
 void level1_boss_part_update(Object *part)
 {
-    ObjMove *part_move = (ObjMove *)part;
     Object *prev;
 
     if (xenon2.l1_boss_spawned == 0) {
@@ -802,13 +801,13 @@ void level1_boss_part_update(Object *part)
         part->l1.angle = (part->l1.angle & 0xffffu) | (uint32_t)(uint16_t)((int16_t)dir) << 16;
         part->gfx = xenon2.level1_data.boss_part_pictures[dir];
         if (part->steps >= 0xb) {
-            uint16_t sum = (uint16_t)(part_move->shot_count + 0xf);
+            uint16_t sum = (uint16_t)(part->shot_count + 0xf);
 
-            part_move->shot_count = (uint8_t)sum;
+            part->shot_count = (uint8_t)sum;
             if (sum & 0x100) {
                 Object *shot;
 
-                part_move->shot_count = (uint8_t)(random_next() & 0x3f);
+                part->shot_count = (uint8_t)(random_next() & 0x3f);
                 shot = spawn_enemy_shot((uint16_t)part->x, (uint16_t)part->y, (uint16_t)(int16_t)(part->l1.angle >> 16), 4, 0);
                 set_anim(shot, xenon2.level1_data.anim_shot);
             }

@@ -1,5 +1,4 @@
 ; menus: the menu, the disk check, the loader (rabs), the level load, the high-score table, the enemy path script
-type ObjMove 98                                    ; struct ObjMove in types_menus.h: an object as the path script sees it
 var disk_retries 0x0002 uint16_t                   ; tries left for reading a track
 arr hiscore_values 0x891e uint32_t 10              ; the ten best scores, best first
 arr hiscore_lines 0x8946 uint8_t 150               ; their lines of text, 15 characters: " 1. 0000600 AA:"
