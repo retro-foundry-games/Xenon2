@@ -709,7 +709,7 @@ retry:
     for (n = 0; n < 11; n++)
         xenon2.disk_seen[n] = 0;
     custom->dsklen = 0x4000;
-    custom->dskpt = ADDR(DISK_SCRATCH->track);
+    custom->dskpt = (uintptr_t)(DISK_SCRATCH->track);
     SETCLR_WRITE(intreq, 0x1002);
     SETCLR_WRITE(adkcon, 0x6600);
     SETCLR_WRITE(adkcon, 0x9100);

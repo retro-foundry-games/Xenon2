@@ -83,13 +83,13 @@ def layout(name, structs, memo):
             decls = []
             for d in rest.split(','):
                 d = d.strip()
-                dm = re.match(r'(\*?)\s*(\w+)\s*(?:\[\s*(\w+)\s*\])?(?:\s*:\s*\d+)?$', d)
+                dm = re.match(r'(\*?)\s*(\w+)\s*(?:\[\s*(\w*)\s*\])?(?:\s*:\s*\d+)?$', d)
                 if not dm: raise SystemExit('cannot parse declarator %r in struct %s' % (d, name))
                 ptr = bool(star or dm.group(1))
                 if base in TYPEDEFS and TYPEDEFS[base] == 'fn' and not ptr:
                     decls.append((dm.group(2), 'fn', 4, int(dm.group(3), 0) if dm.group(3) else 1)); continue
                 if base in TYPEDEFS and TYPEDEFS[base] in SCALARS: base = TYPEDEFS[base]
-                count = int(dm.group(3), 0) if dm.group(3) else 1
+                count = int(dm.group(3), 0) if dm.group(3) else (0 if '[' in d else 1)   # (a flexible array member has no elements of its own)
                 if ptr: decls.append((dm.group(2), 'ptrv' if base == 'void' else 'ptr', 4, count))   # (a void pointer may be code or data)
                 elif base in SCALARS:
                     decls.append((dm.group(2), {1: '8', 2: '16', 4: '32'}[SCALARS[base]] if base != 'irq_fn' else 'fn', SCALARS[base], count))

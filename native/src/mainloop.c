@@ -62,7 +62,7 @@ void swap_screens(void)
     old_draw = xenon2.draw_screen;
     xenon2.draw_screen = xenon2.show_screen;
     xenon2.show_screen = old_draw;
-    list = ADDR(xenon2.copper_list_a) + ADDR(xenon2.copper_list_b) - ADDR(xenon2.copper_cur);   /* the lists alternate */
+    list = (uintptr_t)(xenon2.copper_list_a) + (uintptr_t)(xenon2.copper_list_b) - (uintptr_t)(xenon2.copper_cur);   /* the lists alternate */
     xenon2.copper_cur = (uint16_t *)list;
     custom->cop1lc = list;
     custom->copjmp1 = (uint16_t)list;   /* HLE: copper */
@@ -669,7 +669,7 @@ static void hardware_init(void)
         custom->spr[i][2] = 0;
         custom->spr[i][3] = 0;
     }
-    custom->cop1lc = ADDR(xenon2.copper_list_b);
+    custom->cop1lc = (uintptr_t)(xenon2.copper_list_b);
     xenon2.copper_cur = xenon2.copper_list_b;
     custom->copjmp1 = 0;
 }
