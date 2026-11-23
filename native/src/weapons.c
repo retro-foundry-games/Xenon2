@@ -2181,7 +2181,7 @@ void beam_draw(Object *obj)
     y = (int16_t)xenon2.beam_state[1];
     if (y < 0)
         return;
-    dst = (uint16_t *)(xenon2.draw_screen + (int16_t)xenon2.row_offset[(uint16_t)y]);
+    dst = (uint16_t *)(xenon2.draw_screen + (int16_t)((uint16_t)((uint16_t)y) * SCREEN_ROW_BYTES));
     {
         const uint32_t *pattern = &xenon2.beam_pattern[xenon2.beam_state[3] * 5];
         uint16_t shift = (uint16_t)x & 0xf;
