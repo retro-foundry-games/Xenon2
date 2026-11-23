@@ -109,7 +109,7 @@ def layout(name, structs, memo):
 
 def code_functions(tag='orig'):
     funcs = {}
-    for f in sorted(glob.glob(os.path.join(SRC, '*.c'))) + [os.path.join(SRC, 'sdl', 'disk.c')]:   # (amiga/ is the Amiga build's: the port has its own high-level disk)
+    for f in sorted(glob.glob(os.path.join(SRC, '*.c'))) + [os.path.join(SRC, 'sdl', n + '.c') for n in ('disk', 'draw')]:   # (amiga/ is the Amiga build's: the port has its own high-level disk and drawing)
         text = open(f).read()
         for m in re.finditer(tag + r'\s+((?:\$[0-9A-Fa-f]+(?:\s*(?:,|and)\s*)?)+)(?:(?!\*/).)*?\*/\s*\n(static\s+)?[\w\s\*]+?\b(\w+)\s*\(', text, re.S):
             if m.group(2): continue   # a static function cannot be named from another file
