@@ -3,6 +3,8 @@
 #include "game.h"
 #include "amiga/hw.h"
 
+int game_disk_present(void);                                /* orig $8F9A: 1 = Z set = the game disk is in */
+
 /* the menu, the high-score table, the disk check and loader, the level load, the enemy path script */
 void menu(void);                                            /* orig $8CB6 */
 uint16_t continue_screen(void);                             /* orig $8E88 */

@@ -4,6 +4,28 @@
 #include "title.h"
 #include "draw.h"
 
+/* orig $8F9A: sector 0 of the disk must hold "X2B ": returns 1 when it does (Z set) */
+int game_disk_present(void)
+{
+    struct DiskScratch *scratch = (struct DiskScratch *)xenon2.screen_a;
+    int ok;
+
+    if (xenon2.draw_screen != (uint8_t *)xenon2.screen_a) {
+        uint32_t *dst = (uint32_t *)xenon2.screen_b;
+        const uint32_t *src = (const uint32_t *)xenon2.screen_a;
+        int i;
+
+        for (i = 0; i < 0x1f40; i++)
+            *dst++ = *src++;
+        swap_screens_200();
+    }
+    xenon2.irq_vectors[2] = irq_vblank_hooked;
+    disk_read_sectors(0, 1, scratch->boot);
+    xenon2.irq_vectors[2] = irq_vblank;
+    ok = scratch->boot[1] == 0x5832 && scratch->boot[2] == 0x4220;
+    return ok;
+}
+
 #define MENU_LINE 20   /* the characters of a line of menu_text */
 
 /* ---- title lines, fade, high-score table ---- */

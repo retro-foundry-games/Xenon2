@@ -1,4 +1,4 @@
-/* The game's own disk loader, replaced by a high-level one: the game's C (HLE_WEAK disk_read_sectors, menus) programs the disk DMA and decodes MFM; here the
+/* The game's own disk loader, replaced by a high-level one: the game's C (disk_read_sectors, menus) programs the disk DMA and decodes MFM; here the
  * sectors come straight from the ADF of the game disk (disk 2: the levels, the shop; disk 1 holds the program, loaded at the start) and are put into the
  * members of the game's memory that cover the destination.  There is no drive to put a disk in: the game's check of sector 0 always finds its disk. */
 #include <stdint.h>
@@ -9,11 +9,20 @@
 extern void host_idle(void);
 
 #include "game.h"
+#include "disk.h"
 #include "host.h"
 
 int host_disk_gate;      /* the lockstep: a load waits (host_disk_waiting) until the script releases it instead of taking the drive's time */
 int host_disk_waiting;
 
+/* orig $95E4: level 1 interrupt, the disk block is read: acknowledged, the flag set */
+void irq_disk_block(void)
+{
+    SETCLR_WRITE(intreq, 2);
+    xenon2.disk_done = 0xff;
+}
+
+/* orig $921A: count sectors from sector first_sector of the game disk to dest; 0 = read */
 int disk_read_sectors(uint16_t first_sector, uint16_t count, void *dest)
 {
     uint8_t *tmp;

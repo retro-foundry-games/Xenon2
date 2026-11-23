@@ -1,7 +1,7 @@
 /* The picture, from what the game leaves: the registers of the custom chips (set by the CPU) and the copper list that `cop1lc` points at (a list of
  * MOVE and WAIT instructions that, in this game, mostly sets the bitplane pointers).  No beam is emulated: the list is read as data once a frame,
  * and the bitplanes it names are decoded line by line with the registers as the list leaves them at that line.  The blitter is not emulated either:
- * the game's drawing routines that use it are replaced (HLE_WEAK in the game's C) and draw straight into the bitplanes. */
+ * the game's drawing routines that use it are replaced and draw straight into the bitplanes. */
 #include <stdint.h>
 #include <string.h>
 

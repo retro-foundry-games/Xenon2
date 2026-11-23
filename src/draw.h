@@ -32,19 +32,19 @@ static inline void anim_header_set(Object *o, const uint16_t *header)
     o->anim = (const uint16_t *)(h + 1);
 }
 
-HLE_WEAK void draw_background(void);
-HLE_WEAK void draw_tile_grid(const uint16_t *cells, uint16_t cols, uint16_t rows, int16_t y, uint16_t x);
-HLE_WEAK void draw_tile_grid_flash(const uint16_t *cells, uint16_t cols, uint16_t rows, int16_t y, uint16_t x);
-HLE_WEAK void draw_bob_behind_map(Object *obj);
+void draw_background(void);
+void draw_tile_grid(const uint16_t *cells, uint16_t cols, uint16_t rows, int16_t y, uint16_t x);
+void draw_tile_grid_flash(const uint16_t *cells, uint16_t cols, uint16_t rows, int16_t y, uint16_t x);
+void draw_bob_behind_map(Object *obj);
 void redraw_energy_bar(void);
 void draw_status_digit(void);
-HLE_WEAK void draw_text(const uint8_t *text, uint8_t *dest);
-HLE_WEAK void draw_number(uint32_t value, uint8_t *dest);
-HLE_WEAK void draw_bob_masked(Object *obj);
-HLE_WEAK void draw_bob_masked_at(uint16_t x, uint16_t y, const uint16_t *gfx);
-HLE_WEAK void draw_bob_or_first(Object *obj);
-HLE_WEAK void draw_bob_or(Object *obj);
-HLE_WEAK void draw_bob_or_at(uint16_t x, uint16_t y, const uint16_t *gfx);
+void draw_text(const uint8_t *text, uint8_t *dest);
+void draw_number(uint32_t value, uint8_t *dest);
+void draw_bob_masked(Object *obj);
+void draw_bob_masked_at(uint16_t x, uint16_t y, const uint16_t *gfx);
+void draw_bob_or_first(Object *obj);
+void draw_bob_or(Object *obj);
+void draw_bob_or_at(uint16_t x, uint16_t y, const uint16_t *gfx);
 void draw_gauge(uint16_t x, uint16_t y, uint16_t fill, uint16_t max);
 void panel_clear_score(void);
 void panel_init(void);

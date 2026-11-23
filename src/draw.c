@@ -178,7 +178,7 @@ first_mask:
 }
 
 /* orig $E90, $129A: draw a bob (masked, cookie-cut) at x, y; gfx = its header; HLE: blitter */
-HLE_WEAK void draw_bob_masked_at(uint16_t x, uint16_t y, const uint16_t *gfx)
+void draw_bob_masked_at(uint16_t x, uint16_t y, const uint16_t *gfx)
 {
     Clip c;
     uint16_t bltcon;
@@ -208,14 +208,14 @@ HLE_WEAK void draw_bob_masked_at(uint16_t x, uint16_t y, const uint16_t *gfx)
 }
 
 /* orig $E12, $128E, $133E, $1350, $135C and $1366: draw the bob of an object, masked; HLE: blitter */
-HLE_WEAK void draw_bob_masked(Object *obj)
+void draw_bob_masked(Object *obj)
 {
     draw_bob_masked_at(obj->x, obj->y, (const uint16_t *)obj->gfx);
 }
 
 /* orig $F14, $137C, $1384, $139E, $13AA, $13B4, $13BE, $13D0, $13DA, $13EA, $1404, $1414, $142C and $1436: draw a bob by OR-ing its mask
  * into planes 0-2 and clearing it in plane 3 (a flash); HLE: blitter */
-HLE_WEAK void draw_bob_or_at(uint16_t x, uint16_t y, const uint16_t *gfx)
+void draw_bob_or_at(uint16_t x, uint16_t y, const uint16_t *gfx)
 {
     Clip c;
     uint16_t bltcon;
@@ -244,20 +244,20 @@ HLE_WEAK void draw_bob_or_at(uint16_t x, uint16_t y, const uint16_t *gfx)
 }
 
 /* orig $F08, $1370 and $1378: draw the bob of an object as above */
-HLE_WEAK void draw_bob_or(Object *obj)
+void draw_bob_or(Object *obj)
 {
     draw_bob_or_at(obj->x, obj->y, (const uint16_t *)obj->gfx);
 }
 
 /* orig $E66, $1368: the object is drawn masked from now on, this time as above */
-HLE_WEAK void draw_bob_or_first(Object *obj)
+void draw_bob_or_first(Object *obj)
 {
     obj->fn_draw = (obj_fn)draw_bob_masked;
     draw_bob_or(obj);
 }
 
 /* orig $15CE: draw a zero-terminated string with the font into the screen at dest (2 bytes a character); HLE: blitter */
-HLE_WEAK void draw_text(const uint8_t *text, uint8_t *dest)
+void draw_text(const uint8_t *text, uint8_t *dest)
 {
     for (;;) {
         uint8_t c = *text++;
@@ -455,7 +455,7 @@ static void put_tile(const uint8_t *tiles, uint16_t cell, uint8_t *dest, uint16_
 }
 
 /* orig $17D6: draw the background: the picture scrolled by the strip at $436, then the map's tiles over it; HLE: blitter */
-HLE_WEAK void draw_background(void)
+void draw_background(void)
 {
     uint16_t scroll = (uint16_t)(xenon2.background_scroll >> 16);
     uint16_t lines = (uint16_t)(0xc0 - scroll);
@@ -590,13 +590,13 @@ static void tile_grid(const uint16_t *cells, uint16_t cols, int16_t rows, int16_
 }
 
 /* orig $E8A, $18B6: draw a block of map cells (cols + 1 by rows + 1) at line y and byte x / 4 of the screen; HLE: blitter */
-HLE_WEAK void draw_tile_grid(const uint16_t *cells, uint16_t cols, uint16_t rows, int16_t y, uint16_t x)
+void draw_tile_grid(const uint16_t *cells, uint16_t cols, uint16_t rows, int16_t y, uint16_t x)
 {
     tile_grid(cells, cols, (int16_t)rows, y, x, put_tile);
 }
 
 /* orig $E96, $1BD0: the same with the cells drawn as flashes; HLE: blitter */
-HLE_WEAK void draw_tile_grid_flash(const uint16_t *cells, uint16_t cols, uint16_t rows, int16_t y, uint16_t x)
+void draw_tile_grid_flash(const uint16_t *cells, uint16_t cols, uint16_t rows, int16_t y, uint16_t x)
 {
     tile_grid(cells, cols, (int16_t)rows, y, x, put_tile_flash);
 }
@@ -651,7 +651,7 @@ static void bob_behind_map(Object *obj)
 }
 
 /* orig $EBA, $1438: draw the bob of an object masked, and hidden where the map's tiles under it are solid; HLE: blitter */
-HLE_WEAK void draw_bob_behind_map(Object *obj)
+void draw_bob_behind_map(Object *obj)
 {
     bob_behind_map(obj);
 }
