@@ -132,8 +132,8 @@ static void deliver_keys(void)
         int code = key_queue[i];   /* bit 7: released */
         uint8_t sdr = (uint8_t)~((code << 1) | (code >> 7));
 
-        CIA_BYTE(0xbfec01, 0) = sdr;
-        CIA_BYTE(0xbfed01, 0) |= 0x08;   /* CIA A interrupt control: the serial port (a key) is the source */
+        CIAA_SDR = sdr;
+        CIAA_ICR |= 0x08;   /* CIA A interrupt control: the serial port (a key) is the source */
         intreq_state |= 0x08;
         custom->intreqr = intreq_state;
         if ((intena_state & 0x4000) && (intena_state & 0x08))
