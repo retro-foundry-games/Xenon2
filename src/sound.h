@@ -2,6 +2,9 @@
 #define SOUND_H
 #include "game.h"
 
+/* where the sampled effects start in sample_bank */
+#define SAMPLE_EFFECTS_OFFSET 0xff1c
+
 void music_start(uint16_t song);        /* orig $19F9E, $19FFC */
 void music_tick(void);                  /* orig $19FAC, $1A154 */
 void music_silence(void);               /* orig $19FBA, $1A09A */

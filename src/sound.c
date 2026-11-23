@@ -7,9 +7,9 @@
  *
  * Offsets: the player addresses its data with words relative to the start of its code ($19F9E, MUSIC_OFFSET_ZERO); each table has a function that turns an offset into a pointer into it.
  *
- * Sample bank (sample_bank, $1BB80, loaded with the game image; to $2BAA0): 20 instruments, each { uint32 length in bytes, uint16 rate,
+ * Sample bank (sample_bank, $1BB80, loaded with the game image): 20 instruments, each { uint32 length in bytes, uint16 rate,
  *   8-bit samples }, then 0x40 bytes of silence (silence_ptr, sfx_wave_base = silence + 0x40); the first 20 follow at $1BB80 and a
- *   second part at sample_bank + 0xFF1C holds 18 sampled effects in the same form.  sound_init_instruments / sound_init_sfx_samples
+ *   second part at sample_bank + SAMPLE_EFFECTS_OFFSET holds 18 sampled effects in the same form.  sound_init_instruments / sound_init_sfx_samples
  *   build the tables instruments ($1A738) and sfx_samples ($1B352) from them, once.
  * Song (song_headers $1A828): { tempo, rate, word list offset for each of the 4 channels }.  A list (words, offsets of
  *   sequences, 0 ends and restarts) is in music_data.  A sequence is bytes: 0..0x7F note (index into music_periods), the bytes
@@ -171,7 +171,7 @@ void sound_init_sfx_samples(void)
 
     if (xenon2.sfx_samples_ready)
         return;
-    p = xenon2.sample_bank + 0xff1c;
+    p = xenon2.sample_bank + SAMPLE_EFFECTS_OFFSET;
     for (i = 0; i < 18; i++) {
         h = (const struct SampleHeader *)p;
         scaled = (uint32_t)(uint16_t)h->length * 0x32;   /* (the low word of the length) */

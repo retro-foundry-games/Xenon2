@@ -9,6 +9,7 @@
 
 #include "game.h"
 #include "host.h"
+#include "sound.h"
 
 struct Xenon2 xenon2 __attribute__((aligned(16)));
 volatile uint8_t host_custom_raw[0x1000] __attribute__((aligned(4)));
@@ -367,9 +368,9 @@ static void scripts_save(uint8_t *ram)
 }
 
 /* ---- the sample bank: headers (a long and a word) between the samples, 20 instruments from the start and 18 effects from SAMPLE_EFFECTS ---- */
-#define SAMPLE_BANK 0x1bb80
-#define SAMPLE_BANK_END 0x3b836
-#define SAMPLE_EFFECTS (SAMPLE_BANK + 0xff1c)
+#define SAMPLE_BANK offsetof(struct Xenon2, sample_bank)
+#define SAMPLE_BANK_END (SAMPLE_BANK + sizeof xenon2.sample_bank)
+#define SAMPLE_EFFECTS (SAMPLE_BANK + SAMPLE_EFFECTS_OFFSET)
 static const struct { uint32_t start; unsigned count; } sample_runs[] = { { SAMPLE_BANK, 20 }, { SAMPLE_EFFECTS, 18 } };
 
 static void samples_load(uint32_t address, const uint8_t *image, uint32_t length)
