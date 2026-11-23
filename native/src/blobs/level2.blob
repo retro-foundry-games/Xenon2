@@ -55,10 +55,10 @@ end
 55032 flyer_anim_e0 u16 12
 5504a flyer_anim2_other u16 3
 55050 flyer_anim_other u16 9
-55062 wreck_a u16 30
-5509e wreck_b u16 30
-550da wreck_c u16 30
-55116 boss_update_data_4 u16 18
+55062 anim_wreck_a u16 30
+5509e anim_wreck_b u16 30
+550da anim_wreck_c u16 30
+55116 anim_boss_update_4 u16 18
 5513a roamer_anim u16 454
 554c6 marker_f8_cells u16 218
 5567a hook_words u16 151
@@ -93,8 +93,8 @@ end
 56c44 boss_cells_by_cell ptr:u16 4
 56e46 boss_move_paths_a ptr 2
 56e4e boss_move_paths_b ptr 2
-56e8e boss_update_data u16 15
-56eac boss_update_data_2 u16 60
+56e8e anim_boss_update u16 15
+56eac anim_boss_update_2 u16 60
 56f24 block_group_offsets u32 4
 5725e boss_grid u16 38
 572aa boss_cells u16 16

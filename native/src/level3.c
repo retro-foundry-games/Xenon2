@@ -503,15 +503,15 @@ void l3_diver_update(Object *obj)
         obj->x = x;
         if (x <= -0x20) {
             obj->x = 0;
-            anim = xenon2.level3_data.diver_update_data;
+            anim = xenon2.level3_data.anim_diver_update;
             flip = 1;
         } else if (x >= 0x160) {
             obj->x = 0x140;
-            anim = xenon2.level3_data.diver_update_data_2;
+            anim = xenon2.level3_data.anim_diver_update_2;
             flip = 1;
         } else if (x == 0x88) {
             obj->diver.state = 1;
-            anim = xenon2.level3_data.diver_update_data_3;
+            anim = xenon2.level3_data.anim_diver_update_3;
             flip = 0;
         } else if (x == 0xb8) {
             obj->diver.state = 1;
@@ -525,10 +525,10 @@ void l3_diver_update(Object *obj)
         obj->diver.state = 0;
         if (obj->x > 0xa0) {
             obj->x = 0xd8;
-            anim = xenon2.level3_data.diver_update_data;
+            anim = xenon2.level3_data.anim_diver_update;
         } else {
             obj->x = 0x68;
-            anim = xenon2.level3_data.diver_update_data_2;
+            anim = xenon2.level3_data.anim_diver_update_2;
         }
         flip = 1;
     } else {
@@ -569,7 +569,7 @@ void l3_diver_update(Object *obj)
 void l3_spawn_diver(const struct SpawnRec *rec)
 {
     Object *obj = alloc_in(LIST_C);
-    const uint16_t *anim = xenon2.level3_data.diver_update_data;
+    const uint16_t *anim = xenon2.level3_data.anim_diver_update;
 
     obj->type = 0xd0;
     obj->fn_update = (obj_fn)l3_diver_update;
@@ -579,7 +579,7 @@ void l3_spawn_diver(const struct SpawnRec *rec)
     obj->y = (int16_t)(rec->y + 8 - xenon2.scroll_pos);
     obj->diver.side = (obj->diver.side & 0xffffu) | (uint32_t)(uint16_t)(2) << 16;
     if (obj->x > 0xa0) {
-        anim = xenon2.level3_data.diver_update_data_2;
+        anim = xenon2.level3_data.anim_diver_update_2;
         obj->diver.side = (obj->diver.side & 0xffffu) | (uint32_t)(uint16_t)(-2) << 16;
     }
     set_anim(obj, anim);
@@ -667,7 +667,7 @@ void l3_part_core(Object *obj)
         obj->shot_count = (uint8_t)(random_next() & 0x3f);
         angle = direction8((int16_t)(PLAYER_X - obj->x), (int16_t)(PLAYER_Y - obj->y));
         shot = spawn_enemy_shot((uint16_t)(obj->x + 0x10), (uint16_t)(obj->y + 0x3c), angle, xenon2.level3_data.part_core_shot_steps, 0);
-        set_anim(shot, xenon2.level3_data.part_core_data);
+        set_anim(shot, xenon2.level3_data.anim_part_core);
     }
 }
 
@@ -709,7 +709,7 @@ void l3_part_gun(Object *obj)
         obj->shot_count = (uint8_t)sum;
         if (sum > 0xff) {
             obj->shot_count = (uint8_t)(random_next() & 0x3f);
-            set_anim(obj, xenon2.level3_data.part_gun_data_3);
+            set_anim(obj, xenon2.level3_data.anim_part_gun_3);
         }
     }
     obj->hit[0] = 0x3e8;
@@ -1250,7 +1250,7 @@ void l3_worm_head(Object *obj)
         for (i = 7; i >= 0; i--) {
             Object *shot = spawn_enemy_shot((uint16_t)obj->x, (uint16_t)obj->y, (uint16_t)i, xenon2.level3_data.worm_head_shot_steps, 0);
 
-            set_anim(shot, xenon2.level3_data.worm_head_data);
+            set_anim(shot, xenon2.level3_data.anim_worm_head);
         }
     }
     bbox_from_frame(obj);

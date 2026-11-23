@@ -560,7 +560,7 @@ fire:
         missile->x = x;
         missile->y = y;
         missile->missile.dir = (missile->missile.dir & 0xffffu) | (uint32_t)(uint16_t)(0) << 16;
-        set_anim(missile, xenon2.level5_data.boss_update_data);
+        set_anim(missile, xenon2.level5_data.anim_boss_update);
         missile->energy = (int16_t)xenon2.level5_data.boss_energy;
         missile->big = 0;
         missile->score = 0x96;
@@ -1175,7 +1175,7 @@ void l5_bridge_update(Object *obj)
         for (dir = 7; dir >= 0; dir--) {
             Object *shot = spawn_enemy_shot((uint16_t)(obj->x + 0x10), (uint16_t)(obj->y - xenon2.scroll_pos + 0x10), (uint16_t)dir, xenon2.level5_data.bridge_shot_steps, 0);
 
-            set_anim(shot, xenon2.level5_data.bridge_update_data);
+            set_anim(shot, xenon2.level5_data.anim_bridge_update);
         }
     }
     c = obj->map;

@@ -48,6 +48,15 @@ Xenon 2 Megablast (Amiga, Image Works 1989) ported to C following the skill in `
     dev/build/xenon2-sdl-dev --lua dev/lua/course.lua --lua-args "syncs=3400 horizon=12 ew=15 sw=1 aw=6 pw=40 out=captures/input/level1-course.txt" --disks local
     ... host/lockstep.lua --headless --script-args "replay=captures/input/level1-course.txt hold=1 state=frame-8880 tolerant=1 syncs=3400"
 
+Dropping into a level or its boss (`host/scenario.lua`; the places are its `SCENARIOS` table: `l1-boss` .. `l5-boss`, each from the level's running state, a scroll_y a little before the boss):
+
+    ... host/scenario.lua --headless --script-args "scenario=l3-boss"                       local/save/l3-boss.state: the game's own respawn (scroll_y + player_died) puts the player there
+    ... host/scenario.lua --headless --script-args "state=frame-8880 scroll=9e0 out=NAME frames=120 probe=1"      any place; probe=1 prints the kinds of object every 25 frames
+    ... host/lockstep.lua --headless --script-args "auto=1 state=l3-boss tolerant=1 health=full syncs=600"       the lockstep from there, the autoplayer playing
+    ... host/ramdump.lua --headless --script-args "joy1 load=l3-boss ram=captures/l3-boss.ram"                    the memory of the place, for the port alone:
+    dev/build/xenon2-sdl-dev --lua dev/lua/exercise.lua --lua-args "ram=captures/l3-boss.ram frames=3000" --disks local     the port drops in, moves under fire; a crash is the failure
+    ... host/level_events.lua --headless --script-args "state=frame-8880"                                          the event lists of a level (where the bosses come)
+
 A stop with `hold=1` and `--control SOCK`: `ami9000/host/ctl.py SOCK 'LS.port_call("print(port.peek16(0xcd0))")'` asks the port, `LS.snap.ram` is the original's
 memory at the stop, `LS.hex(...)`.  `gdb -p` on the `xenon2-sdl-dev` process shows the port's raw state.
 
@@ -100,6 +109,13 @@ memory at the stop, `LS.hex(...)`.  `gdb -p` on the `xenon2-sdl-dev` process sho
 
 ## Things that bit
 
+- **Words no member names are raw bytes in the port** (2026-11-23): the loader converts members only, so a picture, tile, script or path script outside every member is
+  the original's big-endian bytes, and the blitter, `struct Pic` reads and the script walker see swapped words.  The lockstep did not show it for a long time because it only
+  looks at what the played course reaches (a recorded play of level 1 differed from sync 76 on after the native-endian commit).  The fixes: `graphics.symbols` arrays for every
+  stretch of the picture area, `tools/blob_gaps.py` (RAM dumps of the levels in, `u16` members of `levelN.blob` out: scripts, path scripts, pictures, tiles the level reaches),
+  a script that is only reached through a member must be named `anim_*` (the walker starts from those and from `ptr:u16` records; `anim_wreck_a`, `anim_part_core`, ...).
+  A new crash of the port in `draw_bob_masked_at`/`bbox_from_frame` with a `gfx` like `0x614e0006` is this: a script step not converted.  The drop-in scenarios found two.
+- A script walk that goes on past the step that ends it reads the data that follows (gun cells became pointers); the walker stops at the end step and at a long that is not a picture.
 - `pkill -f`/`pgrep -f` kill your own shell (the pattern matches the command); use `pgrep -x NAME` and kill by pid.  A windowed run started from a tool call dies with it:
   `setsid nohup ... < /dev/null & disown`.
 - `port.joy{...}` takes booleans; `0` is true in Lua.  The lockstep's `joy(u,d,l,r,f)` helper converts.

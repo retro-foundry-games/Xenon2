@@ -74,7 +74,7 @@ end
 5594e boss1_pieces Level5Boss1Piece 22
 55f2e boss_arm2_pictures ptr:u16 5
 55f42 boss_draw_table ptr:u16 15
-55f7e boss_update_data u16 96
+55f7e anim_boss_update u16 96
 5603e missile_anims_by_dir ptr:u16 8
 56276 heart_pictures ptr:u16 12
 5633a boss2_pieces Level5Boss2Piece 10
@@ -92,7 +92,7 @@ end
 56e3c wall_flash_a_grid u16 1
 56e3e wall_flash_b_grid u16 1
 56ea2 bridge_cells u16 139
-56fb8 bridge_update_data u16 179
+56fb8 anim_bridge_update u16 179
 5711e group_cells u16 198
 572aa unit_dirs Level5UnitDir 8
 572ca unit_shot_pictures ptr:u16 8

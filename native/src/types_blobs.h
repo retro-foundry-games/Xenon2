@@ -555,10 +555,10 @@ struct Level2Data {
     uint16_t flyer_anim_e0[12];   /* 55032 */
     uint16_t flyer_anim2_other[3];   /* 5504A */
     uint16_t flyer_anim_other[9];   /* 55050 */
-    uint16_t wreck_a[30];   /* 55062 */
-    uint16_t wreck_b[30];   /* 5509E */
-    uint16_t wreck_c[30];   /* 550DA */
-    uint16_t boss_update_data_4[18];   /* 55116 */
+    uint16_t anim_wreck_a[30];   /* 55062 */
+    uint16_t anim_wreck_b[30];   /* 5509E */
+    uint16_t anim_wreck_c[30];   /* 550DA */
+    uint16_t anim_boss_update_4[18];   /* 55116 */
     uint16_t roamer_anim[454];   /* 5513A */
     uint16_t marker_f8_cells[218];   /* 554C6 */
     uint16_t hook_words[151];   /* 5567A */
@@ -599,8 +599,8 @@ struct Level2Data {
     const uint8_t *boss_move_paths_a[2];   /* 56E46 */
     const uint8_t *boss_move_paths_b[2];   /* 56E4E */
     BLOB_PAD(56)
-    uint16_t boss_update_data[15];   /* 56E8E */
-    uint16_t boss_update_data_2[60];   /* 56EAC */
+    uint16_t anim_boss_update[15];   /* 56E8E */
+    uint16_t anim_boss_update_2[60];   /* 56EAC */
     uint32_t block_group_offsets[4];   /* 56F24 */
     BLOB_PAD(810)
     uint16_t boss_grid[38];   /* 5725E */
@@ -660,10 +660,10 @@ _Static_assert(offsetof(struct Level2Data, flyer_anim2_e0) == 0x5501A - BLOB_BAS
 _Static_assert(offsetof(struct Level2Data, flyer_anim_e0) == 0x55032 - BLOB_BASE, "Level2Data.flyer_anim_e0");
 _Static_assert(offsetof(struct Level2Data, flyer_anim2_other) == 0x5504A - BLOB_BASE, "Level2Data.flyer_anim2_other");
 _Static_assert(offsetof(struct Level2Data, flyer_anim_other) == 0x55050 - BLOB_BASE, "Level2Data.flyer_anim_other");
-_Static_assert(offsetof(struct Level2Data, wreck_a) == 0x55062 - BLOB_BASE, "Level2Data.wreck_a");
-_Static_assert(offsetof(struct Level2Data, wreck_b) == 0x5509E - BLOB_BASE, "Level2Data.wreck_b");
-_Static_assert(offsetof(struct Level2Data, wreck_c) == 0x550DA - BLOB_BASE, "Level2Data.wreck_c");
-_Static_assert(offsetof(struct Level2Data, boss_update_data_4) == 0x55116 - BLOB_BASE, "Level2Data.boss_update_data_4");
+_Static_assert(offsetof(struct Level2Data, anim_wreck_a) == 0x55062 - BLOB_BASE, "Level2Data.anim_wreck_a");
+_Static_assert(offsetof(struct Level2Data, anim_wreck_b) == 0x5509E - BLOB_BASE, "Level2Data.anim_wreck_b");
+_Static_assert(offsetof(struct Level2Data, anim_wreck_c) == 0x550DA - BLOB_BASE, "Level2Data.anim_wreck_c");
+_Static_assert(offsetof(struct Level2Data, anim_boss_update_4) == 0x55116 - BLOB_BASE, "Level2Data.anim_boss_update_4");
 _Static_assert(offsetof(struct Level2Data, roamer_anim) == 0x5513A - BLOB_BASE, "Level2Data.roamer_anim");
 _Static_assert(offsetof(struct Level2Data, marker_f8_cells) == 0x554C6 - BLOB_BASE, "Level2Data.marker_f8_cells");
 _Static_assert(offsetof(struct Level2Data, hook_words) == 0x5567A - BLOB_BASE, "Level2Data.hook_words");
@@ -698,8 +698,8 @@ _Static_assert(offsetof(struct Level2Data, gate_cells) == 0x56B58 - BLOB_BASE, "
 _Static_assert(offsetof(struct Level2Data, boss_cells_by_cell) == 0x56C44 - BLOB_BASE, "Level2Data.boss_cells_by_cell");
 _Static_assert(offsetof(struct Level2Data, boss_move_paths_a) == 0x56E46 - BLOB_BASE, "Level2Data.boss_move_paths_a");
 _Static_assert(offsetof(struct Level2Data, boss_move_paths_b) == 0x56E4E - BLOB_BASE, "Level2Data.boss_move_paths_b");
-_Static_assert(offsetof(struct Level2Data, boss_update_data) == 0x56E8E - BLOB_BASE, "Level2Data.boss_update_data");
-_Static_assert(offsetof(struct Level2Data, boss_update_data_2) == 0x56EAC - BLOB_BASE, "Level2Data.boss_update_data_2");
+_Static_assert(offsetof(struct Level2Data, anim_boss_update) == 0x56E8E - BLOB_BASE, "Level2Data.anim_boss_update");
+_Static_assert(offsetof(struct Level2Data, anim_boss_update_2) == 0x56EAC - BLOB_BASE, "Level2Data.anim_boss_update_2");
 _Static_assert(offsetof(struct Level2Data, block_group_offsets) == 0x56F24 - BLOB_BASE, "Level2Data.block_group_offsets");
 _Static_assert(offsetof(struct Level2Data, boss_grid) == 0x5725E - BLOB_BASE, "Level2Data.boss_grid");
 _Static_assert(offsetof(struct Level2Data, boss_cells) == 0x572AA - BLOB_BASE, "Level2Data.boss_cells");
@@ -785,7 +785,7 @@ struct Level3Data {
     BLOB_PAD(288)
     const uint16_t *worm_head_anims[8];   /* 55400 */
     BLOB_PAD(126)
-    uint16_t worm_head_data[120];   /* 5549E */
+    uint16_t anim_worm_head[120];   /* 5549E */
     const uint16_t *worm_a_pictures[8];   /* 5558E */
     BLOB_PAD(36)
     const uint16_t *worm_b_pictures[8];   /* 555D2 */
@@ -799,8 +799,8 @@ struct Level3Data {
     uint16_t pad_55818[108];   /* 55818 */
     struct Level3Part parts[18];   /* 558F0 */
     uint16_t words_55a10[24];   /* 55A10 */
-    uint16_t part_gun_data_3[106];   /* 55A40 */
-    uint16_t part_core_data[332];   /* 55B14 */
+    uint16_t anim_part_gun_3[106];   /* 55A40 */
+    uint16_t anim_part_core[332];   /* 55B14 */
     const uint16_t *arm_tip_pictures[16];   /* 55DAC */
     BLOB_PAD(712)
     uint16_t snake_anim_b[21];   /* 560B4 */
@@ -814,9 +814,9 @@ struct Level3Data {
     int16_t walker_update_words_5[8];   /* 56470 */
     uint16_t walker_update_words_6[8];   /* 56480 */
     BLOB_PAD(830)
-    uint16_t diver_update_data[18];   /* 567CE */
-    uint16_t diver_update_data_3[21];   /* 567F2 */
-    uint16_t diver_update_data_2[18];   /* 5681C */
+    uint16_t anim_diver_update[18];   /* 567CE */
+    uint16_t anim_diver_update_3[21];   /* 567F2 */
+    uint16_t anim_diver_update_2[18];   /* 5681C */
     uint16_t diver_update_data_4[177];   /* 56840 */
     uint16_t boss_update_data[105];   /* 569A2 */
     uint16_t boss_flash_grid[188];   /* 56A74 */
@@ -903,7 +903,7 @@ _Static_assert(offsetof(struct Level3Data, enemy_enter_anims) == 0x5513E - BLOB_
 _Static_assert(offsetof(struct Level3Data, words_5514e) == 0x5514E - BLOB_BASE, "Level3Data.words_5514e");
 _Static_assert(offsetof(struct Level3Data, worm_spawn) == 0x55270 - BLOB_BASE, "Level3Data.worm_spawn");
 _Static_assert(offsetof(struct Level3Data, worm_head_anims) == 0x55400 - BLOB_BASE, "Level3Data.worm_head_anims");
-_Static_assert(offsetof(struct Level3Data, worm_head_data) == 0x5549E - BLOB_BASE, "Level3Data.worm_head_data");
+_Static_assert(offsetof(struct Level3Data, anim_worm_head) == 0x5549E - BLOB_BASE, "Level3Data.anim_worm_head");
 _Static_assert(offsetof(struct Level3Data, worm_a_pictures) == 0x5558E - BLOB_BASE, "Level3Data.worm_a_pictures");
 _Static_assert(offsetof(struct Level3Data, worm_b_pictures) == 0x555D2 - BLOB_BASE, "Level3Data.worm_b_pictures");
 _Static_assert(offsetof(struct Level3Data, worm_follow_pictures) == 0x55622 - BLOB_BASE, "Level3Data.worm_follow_pictures");
@@ -914,8 +914,8 @@ _Static_assert(offsetof(struct Level3Data, words_557d0) == 0x557D0 - BLOB_BASE, 
 _Static_assert(offsetof(struct Level3Data, pad_55818) == 0x55818 - BLOB_BASE, "Level3Data.pad_55818");
 _Static_assert(offsetof(struct Level3Data, parts) == 0x558F0 - BLOB_BASE, "Level3Data.parts");
 _Static_assert(offsetof(struct Level3Data, words_55a10) == 0x55A10 - BLOB_BASE, "Level3Data.words_55a10");
-_Static_assert(offsetof(struct Level3Data, part_gun_data_3) == 0x55A40 - BLOB_BASE, "Level3Data.part_gun_data_3");
-_Static_assert(offsetof(struct Level3Data, part_core_data) == 0x55B14 - BLOB_BASE, "Level3Data.part_core_data");
+_Static_assert(offsetof(struct Level3Data, anim_part_gun_3) == 0x55A40 - BLOB_BASE, "Level3Data.anim_part_gun_3");
+_Static_assert(offsetof(struct Level3Data, anim_part_core) == 0x55B14 - BLOB_BASE, "Level3Data.anim_part_core");
 _Static_assert(offsetof(struct Level3Data, arm_tip_pictures) == 0x55DAC - BLOB_BASE, "Level3Data.arm_tip_pictures");
 _Static_assert(offsetof(struct Level3Data, snake_anim_b) == 0x560B4 - BLOB_BASE, "Level3Data.snake_anim_b");
 _Static_assert(offsetof(struct Level3Data, snake_anim_a) == 0x560DE - BLOB_BASE, "Level3Data.snake_anim_a");
@@ -926,9 +926,9 @@ _Static_assert(offsetof(struct Level3Data, walker_update_words_3) == 0x56450 - B
 _Static_assert(offsetof(struct Level3Data, walker_update_words_4) == 0x56460 - BLOB_BASE, "Level3Data.walker_update_words_4");
 _Static_assert(offsetof(struct Level3Data, walker_update_words_5) == 0x56470 - BLOB_BASE, "Level3Data.walker_update_words_5");
 _Static_assert(offsetof(struct Level3Data, walker_update_words_6) == 0x56480 - BLOB_BASE, "Level3Data.walker_update_words_6");
-_Static_assert(offsetof(struct Level3Data, diver_update_data) == 0x567CE - BLOB_BASE, "Level3Data.diver_update_data");
-_Static_assert(offsetof(struct Level3Data, diver_update_data_3) == 0x567F2 - BLOB_BASE, "Level3Data.diver_update_data_3");
-_Static_assert(offsetof(struct Level3Data, diver_update_data_2) == 0x5681C - BLOB_BASE, "Level3Data.diver_update_data_2");
+_Static_assert(offsetof(struct Level3Data, anim_diver_update) == 0x567CE - BLOB_BASE, "Level3Data.anim_diver_update");
+_Static_assert(offsetof(struct Level3Data, anim_diver_update_3) == 0x567F2 - BLOB_BASE, "Level3Data.anim_diver_update_3");
+_Static_assert(offsetof(struct Level3Data, anim_diver_update_2) == 0x5681C - BLOB_BASE, "Level3Data.anim_diver_update_2");
 _Static_assert(offsetof(struct Level3Data, diver_update_data_4) == 0x56840 - BLOB_BASE, "Level3Data.diver_update_data_4");
 _Static_assert(offsetof(struct Level3Data, boss_update_data) == 0x569A2 - BLOB_BASE, "Level3Data.boss_update_data");
 _Static_assert(offsetof(struct Level3Data, boss_flash_grid) == 0x56A74 - BLOB_BASE, "Level3Data.boss_flash_grid");
@@ -1295,7 +1295,7 @@ struct Level5Data {
     BLOB_PAD(820)
     const uint16_t *boss_arm2_pictures[5];   /* 55F2E */
     const uint16_t *boss_draw_table[15];   /* 55F42 */
-    uint16_t boss_update_data[96];   /* 55F7E */
+    uint16_t anim_boss_update[96];   /* 55F7E */
     const uint16_t *missile_anims_by_dir[8];   /* 5603E */
     BLOB_PAD(536)
     const uint16_t *heart_pictures[12];   /* 56276 */
@@ -1323,7 +1323,7 @@ struct Level5Data {
     uint16_t wall_flash_b_grid;   /* 56E3E */
     BLOB_PAD(98)
     uint16_t bridge_cells[139];   /* 56EA2 */
-    uint16_t bridge_update_data[179];   /* 56FB8 */
+    uint16_t anim_bridge_update[179];   /* 56FB8 */
     uint16_t group_cells[198];   /* 5711E */
     struct Level5UnitDir unit_dirs[8];   /* 572AA */
     const uint16_t *unit_shot_pictures[8];   /* 572CA */
@@ -1413,7 +1413,7 @@ _Static_assert(offsetof(struct Level5Data, boss1_pieces) == 0x5594E - BLOB_BASE,
 _Static_assert(offsetof(struct Level5Data, words_55b64) == 0x55B64 - BLOB_BASE, "Level5Data.words_55b64");
 _Static_assert(offsetof(struct Level5Data, boss_arm2_pictures) == 0x55F2E - BLOB_BASE, "Level5Data.boss_arm2_pictures");
 _Static_assert(offsetof(struct Level5Data, boss_draw_table) == 0x55F42 - BLOB_BASE, "Level5Data.boss_draw_table");
-_Static_assert(offsetof(struct Level5Data, boss_update_data) == 0x55F7E - BLOB_BASE, "Level5Data.boss_update_data");
+_Static_assert(offsetof(struct Level5Data, anim_boss_update) == 0x55F7E - BLOB_BASE, "Level5Data.anim_boss_update");
 _Static_assert(offsetof(struct Level5Data, missile_anims_by_dir) == 0x5603E - BLOB_BASE, "Level5Data.missile_anims_by_dir");
 _Static_assert(offsetof(struct Level5Data, heart_pictures) == 0x56276 - BLOB_BASE, "Level5Data.heart_pictures");
 _Static_assert(offsetof(struct Level5Data, boss2_pieces) == 0x5633A - BLOB_BASE, "Level5Data.boss2_pieces");
@@ -1431,7 +1431,7 @@ _Static_assert(offsetof(struct Level5Data, wall_cells_other) == 0x56C9C - BLOB_B
 _Static_assert(offsetof(struct Level5Data, wall_flash_a_grid) == 0x56E3C - BLOB_BASE, "Level5Data.wall_flash_a_grid");
 _Static_assert(offsetof(struct Level5Data, wall_flash_b_grid) == 0x56E3E - BLOB_BASE, "Level5Data.wall_flash_b_grid");
 _Static_assert(offsetof(struct Level5Data, bridge_cells) == 0x56EA2 - BLOB_BASE, "Level5Data.bridge_cells");
-_Static_assert(offsetof(struct Level5Data, bridge_update_data) == 0x56FB8 - BLOB_BASE, "Level5Data.bridge_update_data");
+_Static_assert(offsetof(struct Level5Data, anim_bridge_update) == 0x56FB8 - BLOB_BASE, "Level5Data.anim_bridge_update");
 _Static_assert(offsetof(struct Level5Data, group_cells) == 0x5711E - BLOB_BASE, "Level5Data.group_cells");
 _Static_assert(offsetof(struct Level5Data, unit_dirs) == 0x572AA - BLOB_BASE, "Level5Data.unit_dirs");
 _Static_assert(offsetof(struct Level5Data, unit_shot_pictures) == 0x572CA - BLOB_BASE, "Level5Data.unit_shot_pictures");
