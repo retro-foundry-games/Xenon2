@@ -55,6 +55,7 @@ Dropping into a level or its boss (`host/scenario.lua`; the places are its `SCEN
     ... host/lockstep.lua --headless --script-args "auto=1 state=l3-boss tolerant=1 health=full syncs=600"       the lockstep from there, the autoplayer playing
     ... host/ramdump.lua --headless --script-args "joy1 load=l3-boss ram=captures/l3-boss.ram"                    the memory of the place, for the port alone:
     dev/build/xenon2-sdl-dev --lua dev/lua/exercise.lua --lua-args "ram=captures/l3-boss.ram frames=3000" --disks local     the port drops in, moves under fire; a crash is the failure
+    for l in 1 2 3 4 5: tools/poison_gaps.py $l=captures/l$l-boss.ram captures/l$l-boss-poison.ram; exercise.lua on both; the outputs must be equal (reads of unnamed memory)
     ... host/level_events.lua --headless --script-args "state=frame-8880"                                          the event lists of a level (where the bosses come)
 
 A stop with `hold=1` and `--control SOCK`: `ami9000/host/ctl.py SOCK 'LS.port_call("print(port.peek16(0xcd0))")'` asks the port, `LS.snap.ram` is the original's
@@ -116,6 +117,7 @@ memory at the stop, `LS.hex(...)`.  `gdb -p` on the `xenon2-sdl-dev` process sho
   a script that is only reached through a member must be named `anim_*` (the walker starts from those and from `ptr:u16` records; `anim_wreck_a`, `anim_part_core`, ...).
   A new crash of the port in `draw_bob_masked_at`/`bbox_from_frame` with a `gfx` like `0x614e0006` is this: a script step not converted.  The drop-in scenarios found two.
 - **Sound data** (2026-11-23): `music_lists` (the channels' lists, words) and `struct SampleHeader` (the sample bank's headers, converted by `samples_load/samples_save` in `sdl/guest.c`) are typed; `at(off)` in `sound.c` only turns a music-file offset (from `music_base`) into the sequence pointer.  Offset tables of the original's data that the code adds to a base (`row_offset`, `block_group_offsets`) stay offsets.
+- **The poison check** (2026-11-23): `tools/poison_gaps.py N=captures/lN-boss.ram OUT` sets every byte no member names (gaps of `struct Xenon2`, pads of level N's blob; not the sample bank) to 0xA5; `dev/lua/exercise.lua` from the poisoned dump prints the same lines (picture hash included) as from the dump if the port reads only named memory.  It found `part_gun_picture_other` (16 words, the picture is 64) and the script pictures at `$66098`; all five boss places and `captures/level1.ram` are clean.  Run it after any change to the specs; bisect a difference by poisoning halves.
 - A script walk that goes on past the step that ends it reads the data that follows (gun cells became pointers); the walker stops at the end step and at a long that is not a picture.
 - `pkill -f`/`pgrep -f` kill your own shell (the pattern matches the command); use `pgrep -x NAME` and kill by pid.  A windowed run started from a tool call dies with it:
   `setsid nohup ... < /dev/null & disown`.

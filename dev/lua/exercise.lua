@@ -32,7 +32,7 @@ for i = 1, frames do
     port.joy{ left = left, right = not left, fire = (i % 4) < 2, up = (i // 400) % 3 == 0 }
     port.step()
     if i % 100 == 0 then
-        print(string.format("frame %d level %d scroll_pos %x boss_dead %x level_over %x energy %d lives %d", i, port.peek16(0xe04), port.peek16(0xcd0), port.peek8(0xa07),
+        print(string.format("frame %d picture %s level %d scroll_pos %x boss_dead %x level_over %x energy %d lives %d", i, port.picture_hash(), port.peek16(0xe04), port.peek16(0xcd0), port.peek8(0xa07),
             port.peek8(0xa6c), s16(0xcc6), s16(0xcca)))
     end
 end

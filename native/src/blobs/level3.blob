@@ -104,7 +104,7 @@ end
 5b386 diver_shot_picture_b u16 6540
 5e69e gun_shot_picture u16 1248
 5f05e part_gun_picture_side_40 u16 73
-5f0f0 part_gun_picture_other u16 16
+5f0f0 part_gun_picture_other u16 104
 6ee26 shot_gfx_table ptr:ShotPic 5
 6ee3a shot_gfx_cells ShotPic 3
 6ee46 formation_paths ptr:PathCmd 60
@@ -128,5 +128,6 @@ end
 557d0 words_557d0 u16 36
 55a10 words_55a10 u16 24
 56c0c words_56c0c u16 144
+66098 words_66098 u16 271
 6ef92 words_6ef92 u16 982
 6f756 words_6f756 u16 1028
