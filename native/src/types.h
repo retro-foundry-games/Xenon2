@@ -62,4 +62,11 @@ struct DiskScratch { struct DiskSector sector[11]; uint16_t track[0x2000]; uint1
 /* an interrupt handler, as the vector table at $64..$7C holds them (a pointer: 4 bytes in both builds) */
 typedef void (*irq_fn)(void);
 
+typedef struct Shot Shot;
+
+/* a shot dot at $42D5C: type < 0 = free */
+struct Shot {
+    int16_t x, y, dx, dy;
+};
+
 #endif

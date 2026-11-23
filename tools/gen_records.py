@@ -56,7 +56,7 @@ def flatten_unions(t):
 
 def parse_structs():
     structs = {}
-    for f in [os.path.join(SRC, n + '.h') for n in ('objects', 'weapons', 'sound', 'title', 'play', 'types')]:
+    for f in [os.path.join(SRC, n + '.h') for n in ('objects', 'weapons', 'sound', 'title', 'types')]:
         text = flatten_unions(strip_comments(open(f).read()))
         for m in re.finditer(r'struct\s+(\w+)\s*\{(.*?)\}\s*(?:\w+\s*)?;', text, re.S):
             fields = []
