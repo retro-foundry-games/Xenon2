@@ -135,7 +135,7 @@ void shop_text_char(uint8_t ch)
         shop_text_newline();
         return;
     }
-    dst_b = (uint8_t *)xenon2.screen_b + (int16_t)xenon2.row_offset[xenon2.text_y];
+    dst_b = (uint8_t *)xenon2.screen_b + (int16_t)((uint16_t)(xenon2.text_y) * SCREEN_ROW_BYTES);
     dst_b += (int16_t)(xenon2.text_x >> 1);
     dst_a = (uint8_t *)xenon2.screen_a + (dst_b - (uint8_t *)xenon2.screen_b);
     glyph = xenon2.shop_data.font + (int16_t)((uint16_t)(ch - 0x20) << 5);
@@ -192,7 +192,7 @@ void shop_records_tick(void)
 void shop_sparkle(const struct ShopRec *rec)
 {
     uint16_t x = rec->x, y = rec->y;
-    uint16_t *dst = (uint16_t *)(xenon2.draw_screen + (int16_t)xenon2.row_offset[y] + (int16_t)((uint16_t)(x ^ (x & 0xf)) >> 3));
+    uint16_t *dst = (uint16_t *)(xenon2.draw_screen + (int16_t)((uint16_t)(y) * SCREEN_ROW_BYTES) + (int16_t)((uint16_t)(x ^ (x & 0xf)) >> 3));
     uint16_t shift = x & 0xf, noise, head, mask, inv, rnd;
     int16_t n = 0x1b;
     int p;

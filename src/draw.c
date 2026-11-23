@@ -60,7 +60,7 @@ static int clip_bob(Clip *c, int16_t x, int16_t y, int with_map)
     if (top < 0)
         row = 0;
     xend = shift;
-    c->dst = (uint8_t *)xenon2.draw_screen + (int16_t)xenon2.row_offset[(uint16_t)row];
+    c->dst = (uint8_t *)xenon2.draw_screen + (int16_t)((uint16_t)((uint16_t)row) * SCREEN_ROW_BYTES);
     col = shift;
     shift &= 0xf;
     col = (int16_t)(col - shift);

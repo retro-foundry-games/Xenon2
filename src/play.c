@@ -421,7 +421,7 @@ void update_shots(void)
             continue;
         }
         dst = xenon2.draw_screen;
-        dst += (int16_t)xenon2.row_offset[y];
+        dst += (int16_t)((uint16_t)(y) * SCREEN_ROW_BYTES);
         x16 = x & 0xf;
         dst += (uint16_t)((x ^ x16) >> 3);
 #define ORW(off, v) (*(uint16_t *)(dst + (off)) |= (uint16_t)(v))
