@@ -115,6 +115,7 @@ memory at the stop, `LS.hex(...)`.  `gdb -p` on the `xenon2-sdl-dev` process sho
   stretch of the picture area, `tools/blob_gaps.py` (RAM dumps of the levels in, `u16` members of `levelN.blob` out: scripts, path scripts, pictures, tiles the level reaches),
   a script that is only reached through a member must be named `anim_*` (the walker starts from those and from `ptr:u16` records; `anim_wreck_a`, `anim_part_core`, ...).
   A new crash of the port in `draw_bob_masked_at`/`bbox_from_frame` with a `gfx` like `0x614e0006` is this: a script step not converted.  The drop-in scenarios found two.
+- **Sound data** (2026-11-23): `music_lists` (the channels' lists, words) and `struct SampleHeader` (the sample bank's headers, converted by `samples_load/samples_save` in `sdl/guest.c`) are typed; `at(off)` in `sound.c` only turns a music-file offset (from `music_base`) into the sequence pointer.  Offset tables of the original's data that the code adds to a base (`row_offset`, `block_group_offsets`) stay offsets.
 - A script walk that goes on past the step that ends it reads the data that follows (gun cells became pointers); the walker stops at the end step and at a long that is not a picture.
 - `pkill -f`/`pgrep -f` kill your own shell (the pattern matches the command); use `pgrep -x NAME` and kill by pid.  A windowed run started from a tool call dies with it:
   `setsid nohup ... < /dev/null & disown`.
