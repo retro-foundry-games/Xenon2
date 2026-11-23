@@ -38,45 +38,45 @@ struct Level3Part {
 _Static_assert(sizeof(struct Level3Part) == 16, "Level3Part");
 
 struct Level3Data {
-    BLOB_PAD(0, 2)
+    BLOB_PAD(2)
     uint16_t worm_spawn_steps;   /* 54E42 */
     uint16_t walker_energy;   /* 54E44 */
     uint16_t parts_steps;   /* 54E46 */
     uint16_t snake_energy;   /* 54E48 */
     uint16_t diver_energy;   /* 54E4A */
     uint16_t boss_energy;   /* 54E4C */
-    BLOB_PAD(e, 1)
+    BLOB_PAD(1)
     uint8_t walker_fire_rate;   /* 54E4F */
     uint16_t walker_param;   /* 54E50 */
     uint16_t walker_shot_steps;   /* 54E52 */
     uint16_t diver_steps;   /* 54E54 */
-    BLOB_PAD(16, 1)
+    BLOB_PAD(1)
     uint8_t boss_chance;   /* 54E57 */
-    BLOB_PAD(18, 1)
+    BLOB_PAD(1)
     uint8_t boss_chance_2;   /* 54E59 */
-    BLOB_PAD(1a, 1)
+    BLOB_PAD(1)
     uint8_t boss_fire_rate;   /* 54E5B */
     uint16_t boss_param;   /* 54E5C */
     uint16_t gun_energy;   /* 54E5E */
     uint16_t boss_energy_2;   /* 54E60 */
-    BLOB_PAD(22, 1)
+    BLOB_PAD(1)
     uint8_t boss2_fire_rate;   /* 54E63 */
     uint16_t boss2_shot_steps;   /* 54E64 */
-    BLOB_PAD(26, 1)
+    BLOB_PAD(1)
     uint8_t gun_fire_rate;   /* 54E67 */
     uint16_t gun_shot_steps;   /* 54E68 */
     uint16_t init_patch;   /* 54E6A */
     uint16_t init_patch_2;   /* 54E6C */
-    BLOB_PAD(2e, 1)
+    BLOB_PAD(1)
     uint8_t worm_head_fire_rate;   /* 54E6F */
     uint16_t worm_head_shot_steps;   /* 54E70 */
-    BLOB_PAD(32, 3)
+    BLOB_PAD(3)
     uint8_t part_core_fire_rate;   /* 54E75 */
     uint16_t part_core_shot_steps;   /* 54E76 */
-    BLOB_PAD(38, 1)
+    BLOB_PAD(1)
     uint8_t part_gun_fire_rate;   /* 54E79 */
     uint16_t event_param;   /* 54E7A */
-    BLOB_PAD(3c, 2)
+    BLOB_PAD(2)
     struct Formation1 formation_1;   /* 54E7E */
     struct Formation1 formation_2;   /* 54E98 */
     struct Formation7 formation_3;   /* 54EB2 */
@@ -85,25 +85,25 @@ struct Level3Data {
     uint16_t words_54f90[30];   /* 54F90 */
     uint16_t pad_54fcc[18];   /* 54FCC */
     uint16_t words_54ff0[42];   /* 54FF0 */
-    BLOB_PAD(204, 52)
+    BLOB_PAD(52)
     const uint16_t *enemy_a_pictures[8];   /* 55078 */
     const uint16_t *enemy_b_pictures[8];   /* 55098 */
     const uint16_t *enemy_c_pictures[8];   /* 550B8 */
-    BLOB_PAD(298, 102)
+    BLOB_PAD(102)
     const uint16_t *enemy_enter_anims[4];   /* 5513E */
     uint16_t words_5514e[72];   /* 5514E */
-    BLOB_PAD(39e, 146)
+    BLOB_PAD(146)
     struct Level3WormSpawn worm_spawn;   /* 55270 */
-    BLOB_PAD(4a0, 288)
+    BLOB_PAD(288)
     const uint16_t *worm_head_anims[8];   /* 55400 */
-    BLOB_PAD(5e0, 126)
+    BLOB_PAD(126)
     uint16_t anim_worm_head[120];   /* 5549E */
     const uint16_t *worm_a_pictures[8];   /* 5558E */
-    BLOB_PAD(76e, 36)
+    BLOB_PAD(36)
     const uint16_t *worm_b_pictures[8];   /* 555D2 */
-    BLOB_PAD(7b2, 48)
+    BLOB_PAD(48)
     const uint16_t *worm_follow_pictures[8];   /* 55622 */
-    BLOB_PAD(802, 334)
+    BLOB_PAD(334)
     int16_t walker_spawn_dx[8];   /* 55790 */
     int16_t walker_spawn_dy[8];   /* 557A0 */
     const uint16_t *walker_spawn_anims[8];   /* 557B0 */
@@ -114,18 +114,18 @@ struct Level3Data {
     uint16_t anim_part_gun_3[106];   /* 55A40 */
     uint16_t anim_part_core[332];   /* 55B14 */
     const uint16_t *arm_tip_pictures[16];   /* 55DAC */
-    BLOB_PAD(fac, 712)
+    BLOB_PAD(712)
     uint16_t snake_anim_b[21];   /* 560B4 */
     uint16_t snake_anim_a[137];   /* 560DE */
     uint16_t spawn_boss_data[80];   /* 561F0 */
     int16_t walker_update_words[8];   /* 56290 */
     int16_t walker_update_words_2[8];   /* 562A0 */
-    BLOB_PAD(1470, 416)
+    BLOB_PAD(416)
     int16_t walker_update_words_3[8];   /* 56450 */
     int16_t walker_update_words_4[8];   /* 56460 */
     int16_t walker_update_words_5[8];   /* 56470 */
     uint16_t walker_update_words_6[8];   /* 56480 */
-    BLOB_PAD(1650, 830)
+    BLOB_PAD(830)
     uint16_t anim_diver_update[18];   /* 567CE */
     uint16_t anim_diver_update_3[21];   /* 567F2 */
     uint16_t anim_diver_update_2[18];   /* 5681C */
@@ -140,7 +140,7 @@ struct Level3Data {
     uint16_t gun_anim_b;   /* 56EF6 */
     uint16_t gun_anim_a[81];   /* 56EF8 */
     struct Level3EndPiece end_pieces[6];   /* 56F9A */
-    BLOB_PAD(21a2, 224)
+    BLOB_PAD(224)
     uint16_t spawn_parts_data_2;   /* 570C2 */
     uint16_t spawn_parts_words;   /* 570C4 */
     uint16_t spawn_parts_words_2;   /* 570C6 */

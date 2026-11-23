@@ -29,24 +29,26 @@ _Static_assert(sizeof(struct SongHeader) == 10, "struct SongHeader has not the s
 _Static_assert(sizeof(struct SpawnKind) == 6, "struct SpawnKind has not the size game.symbols gives");
 _Static_assert(sizeof(struct Star) == 6, "struct Star has not the size game.symbols gives");
 
-#define PAD(at, n) uint8_t pad_##at[n];   /* a gap between members, named by its address */
+#define PAD_CAT2(a, b) a##b
+#define PAD_CAT(a, b) PAD_CAT2(a, b)
+#define PAD(n) uint8_t PAD_CAT(pad_, __LINE__)[n];   /* a gap between members, named by its line */
 #define LAYOUT_ASSERT(member, address) _Static_assert(offsetof(struct Xenon2, member) == (address), #member " is not at its address")
 /* The game's memory, byte for byte: the members are at the offsets of the original's addresses, the gaps are padding.  The SDL port defines it (guest.c);
  * the Amiga build links it at address 0 (game.ld). */
 struct Xenon2 {
-    PAD(0, 2)
+    PAD(2)
     uint16_t disk_retries;  /* $000002 var */
-    PAD(4, 4)
+    PAD(4)
     irq_fn exc_vectors_lo[23];  /* $000008 arr */
     irq_fn irq_vectors[7];  /* $000064 arr */
     irq_fn exc_vectors_hi[224];  /* $000080 arr */
-    PAD(400, 4)
+    PAD(4)
     uint16_t last_flip_vbl;  /* $000404 var */
     uint8_t * draw_screen;  /* $000406 var */
     uint8_t * show_screen;  /* $00040A var */
-    PAD(40e, 2)
+    PAD(2)
     uint16_t min_vbl_per_frame;  /* $000410 var */
-    PAD(412, 2)
+    PAD(2)
     int16_t sfx_cmd;  /* $000414 var */
     int16_t sfx_cmd_aux;  /* $000416 var */
     int16_t sfx_cmd2;  /* $000418 var */
@@ -69,7 +71,7 @@ struct Xenon2 {
     uint16_t pickup_kind_a;  /* $00045C var */
     uint16_t pickup_kind_b;  /* $00045E var */
     uint16_t hit_box[4];  /* $000460 arr */
-    PAD(468, 4)
+    PAD(4)
     uint16_t player_trail[8];  /* $00046C arr */
     uint16_t player_history[51];  /* $00047C arr */
     uint16_t target_count;  /* $0004E2 var */
@@ -100,7 +102,7 @@ struct Xenon2 {
     uint8_t fire_press;  /* $000A6A var */
     uint8_t energy_dirty;  /* $000A6B var */
     uint8_t level_over;  /* $000A6C var */
-    PAD(a6d, 9)
+    PAD(9)
     struct Object obj_list[5];  /* $000A76 arr */
     uint16_t autofire_counter;  /* $000C60 var */
     uint16_t autofire_period;  /* $000C62 var */
@@ -156,9 +158,9 @@ struct Xenon2 {
     uint16_t l4_boss1_guns_left;  /* $000D6E var */
     uint16_t l4_core_sway;  /* $000D70 var */
     uint16_t l5_limit_a;  /* $000D72 var */
-    PAD(d74, 2)
+    PAD(2)
     uint16_t l5_limit_b;  /* $000D76 var */
-    PAD(d78, 2)
+    PAD(2)
     uint16_t l5_boss_pieces_left;  /* $000D7A var */
     uint8_t score_digits[7];  /* $000D7C arr */
     uint8_t protection;  /* $000D83 var */
@@ -171,7 +173,7 @@ struct Xenon2 {
     uint8_t l2_right_wall_made;  /* $000D8E var */
     uint8_t l2_debris_waves;  /* $000D8F var */
     uint8_t l2_first_fight_won;  /* $000D90 var */
-    PAD(d91, 1)
+    PAD(1)
     uint8_t l3_worm_dead[2];  /* $000D92 arr */
     uint8_t l3_worm_shown[2];  /* $000D94 arr */
     uint8_t l3_end_active;  /* $000D96 var */
@@ -180,40 +182,40 @@ struct Xenon2 {
     uint8_t l5_boss1_spawned;  /* $000D99 var */
     uint8_t l5_gunners_spawned;  /* $000D9A var */
     uint8_t l5_group_done[2];  /* $000D9B arr */
-    PAD(d9d, 3)
+    PAD(3)
     struct Object l2_block_object;  /* $000DA0 var */
     uint16_t difficulty;  /* $000E02 var */
     uint16_t level_number;  /* $000E04 var */
     uint16_t respawn_shield;  /* $000E06 var */
     uint16_t * l2_block_table;  /* $000E08 var */
-    PAD(e0c, 336)
+    PAD(336)
     uint16_t * shot_pic_b;  /* $000F5C var */
     int8_t * piece_directions;  /* $000F60 var */
     uint16_t * big_explosion_anim;  /* $000F64 var */
     uint16_t * shot_pic_a;  /* $000F68 var */
-    PAD(f6c, 4)
+    PAD(4)
     uint16_t * explosion_anim_f70;  /* $000F70 var */
-    PAD(f74, 160)
+    PAD(160)
     uint16_t copper_list_a[18];  /* $001014 arr */
     uint16_t copper_list_b[18];  /* $001038 arr */
-    PAD(105c, 1602)
+    PAD(1602)
     const uint32_t pow10[8];  /* $00169E tab */
-    PAD(16be, 2020)
+    PAD(2020)
     const uint8_t tile_mask_block[32];  /* $001EA2 tab */
-    PAD(1ec2, 300)
+    PAD(300)
     uint32_t random_state_a;  /* $001FEE var */
     uint32_t random_state_b;  /* $001FF2 var */
-    PAD(1ff6, 150)
+    PAD(150)
     uint16_t irq_div;  /* $00208C var */
     uint8_t irq_joy;  /* $00208E var */
     uint8_t irq_joy_prev;  /* $00208F var */
     irq_fn music_tick_fn;  /* $002090 var */
     irq_fn music_cmd_fn;  /* $002094 var */
-    PAD(2098, 512)
+    PAD(512)
     const uint16_t star_speed[34];  /* $002298 tab */
-    PAD(22dc, 296)
+    PAD(296)
     const int16_t weapon_slot_offsets[8];  /* $002404 tab */
-    PAD(2414, 228)
+    PAD(228)
     const uint16_t anim_debris_3[18];  /* $0024F8 tab */
     const uint16_t anim_debris_2[18];  /* $00251C tab */
     const uint16_t anim_weaponb0[18];  /* $002540 tab */
@@ -264,109 +266,109 @@ struct Xenon2 {
     const uint16_t anim_debris_5[30];  /* $002B70 tab */
     uint16_t gfx_2bac[60];  /* $002BAC arr */
     const uint16_t anim_weapon90[27];  /* $002C24 tab */
-    PAD(2c5a, 396)
+    PAD(396)
     const uint16_t mask_empty[80];  /* $002DE6 tab */
-    PAD(2e86, 32)
+    PAD(32)
     const uint16_t mask_full[80];  /* $002EA6 tab */
-    PAD(2f46, 406)
+    PAD(406)
     uint16_t area_damage_kept;  /* $0030DC var */
-    PAD(30de, 1610)
+    PAD(1610)
     const struct SpawnKind spawn_kinds[18];  /* $003728 tab */
-    PAD(3794, 6)
+    PAD(6)
     const uint16_t anim_debris_13[12];  /* $00379A tab */
-    PAD(37b2, 288)
+    PAD(288)
     const int16_t enemy_shot_dx[16];  /* $0038D2 tab */
     const int16_t enemy_shot_dy[16];  /* $0038F2 tab */
-    PAD(3912, 432)
+    PAD(432)
     const int16_t drill_dy[8];  /* $003AC2 tab */
     const int16_t drill_dx[8];  /* $003AD2 tab */
-    PAD(3ae2, 644)
+    PAD(644)
     const int16_t weapon2c_patterns[99];  /* $003D66 tab */
-    PAD(3e2c, 2368)
+    PAD(2368)
     const int16_t pickup_circle_steps[16];  /* $00476C tab */
-    PAD(478c, 5700)
+    PAD(5700)
     int16_t player_vx_prev;  /* $005DD0 var */
-    PAD(5dd2, 766)
+    PAD(766)
     uint16_t * player_pictures[13];  /* $0060D0 arr */
-    PAD(6104, 70)
+    PAD(70)
     uint16_t * dive_pictures[4];  /* $00614A arr */
-    PAD(615a, 476)
+    PAD(476)
     uint16_t * gauge_pics[10];  /* $006336 arr */
-    PAD(635e, 290)
+    PAD(290)
     uint16_t beam_state[4];  /* $006480 arr */
     uint16_t * beam_heads[3];  /* $006488 arr */
     uint16_t * beam_bodies[3];  /* $006494 arr */
-    PAD(64a0, 410)
+    PAD(410)
     const uint32_t beam_pattern[15];  /* $00663A tab */
-    PAD(6676, 542)
+    PAD(542)
     const int16_t option_offsets[14];  /* $006894 tab */
-    PAD(68b0, 1042)
+    PAD(1042)
     const uint16_t option_anims[48];  /* $006CC2 tab */
-    PAD(6d22, 748)
+    PAD(748)
     uint16_t * copper_cur;  /* $00700E var */
     uint16_t palette_shadow[16];  /* $007012 arr */
-    PAD(7032, 2338)
+    PAD(2338)
     const uint32_t key_table[4];  /* $007954 tab */
-    PAD(7964, 2)
+    PAD(2)
     const uint16_t weapon_damage[4];  /* $007966 tab */
     const uint16_t unused_796e[1];  /* $00796E tab */
     const uint16_t kill_scores[2];  /* $007970 tab */
     const uint16_t blast_damage[3];  /* $007974 tab */
-    PAD(797a, 1116)
+    PAD(1116)
     const uint8_t * title_text;  /* $007DD6 var */
     uint16_t title_scale;  /* $007DDA var */
     int16_t title_y;  /* $007DDC var */
     uint16_t title_phase;  /* $007DDE var */
     uint16_t title_index;  /* $007DE0 var */
-    PAD(7de2, 1368)
+    PAD(1368)
     const uint16_t title_steps[21];  /* $00833A tab */
     const uint16_t title_script[75];  /* $008364 tab */
-    PAD(83fa, 40)
+    PAD(40)
     uint16_t title_rows;  /* $008422 var */
     uint16_t * title_steps_ptr;  /* $008424 var */
     uint8_t text_wait_key;  /* $008428 var */
-    PAD(8429, 491)
+    PAD(491)
     const uint8_t star_colors[8];  /* $008614 tab */
-    PAD(861c, 150)
+    PAD(150)
     const uint16_t title_palette[16];  /* $0086B2 tab */
     const uint8_t title_font_chars[42];  /* $0086D2 tab */
     const uint8_t text_chars[39];  /* $0086FC tab */
-    PAD(8723, 1)
+    PAD(1)
     const uint16_t squeeze_masks[17];  /* $008724 tab */
     const uint8_t title_lines[240];  /* $008746 tab */
     uint8_t ready_text[19];  /* $008836 arr */
-    PAD(8849, 1)
+    PAD(1)
     uint8_t game_over_text[20];  /* $00884A arr */
-    PAD(885e, 192)
+    PAD(192)
     uint32_t hiscore_values[10];  /* $00891E arr */
     uint8_t hiscore_lines[150];  /* $008946 arr */
-    PAD(89dc, 474)
+    PAD(474)
     const uint32_t decimal_powers[8];  /* $008BB6 tab */
     const uint16_t wipe_in[17];  /* $008BD6 tab */
     const uint16_t wipe_out[18];  /* $008BF8 tab */
     const uint8_t title_hiscore[20];  /* $008C1C tab */
     uint8_t loading_text[17];  /* $008C30 arr */
     uint8_t loading_level_digit;  /* $008C41 var */
-    PAD(8c42, 2)
+    PAD(2)
     const uint8_t shop_text[20];  /* $008C44 tab */
-    PAD(8c58, 380)
+    PAD(380)
     const uint8_t menu_text[180];  /* $008DD4 tab */
-    PAD(8e88, 166)
+    PAD(166)
     uint8_t continue_text[40];  /* $008F2E arr */
-    PAD(8f56, 32)
+    PAD(32)
     uint8_t credits_text[10];  /* $008F76 arr */
     const uint8_t insert_disk_text[20];  /* $008F80 tab */
     uint16_t cycle_flag_a;  /* $008F94 var */
     uint16_t cycle_flag_b;  /* $008F96 var */
     uint16_t loaded_level;  /* $008F98 var */
-    PAD(8f9a, 80)
+    PAD(80)
     uint8_t progress_text[2];  /* $008FEA arr */
     uint8_t shop_closing;  /* $008FEC var */
-    PAD(8fed, 1)
+    PAD(1)
     uint8_t * saved_level_init;  /* $008FEE var */
-    PAD(8ff2, 364)
+    PAD(364)
     uint16_t level_palette_copy[16];  /* $00915E arr */
-    PAD(917e, 108)
+    PAD(108)
     const uint16_t level_sectors[12];  /* $0091EA tab */
     int16_t disk_track;  /* $009202 var */
     uint16_t disk_want;  /* $009204 var */
@@ -375,18 +377,18 @@ struct Xenon2 {
     uint16_t disk_header[2];  /* $009208 arr */
     uint16_t disk_total;  /* $00920C var */
     uint8_t disk_seen[11];  /* $00920E arr */
-    PAD(9219, 167)
+    PAD(167)
     uint8_t * disk_dest;  /* $0092C0 var */
     uint16_t disk_sector;  /* $0092C4 var */
     uint16_t disk_count;  /* $0092C6 var */
-    PAD(92c8, 732)
+    PAD(732)
     const uint32_t mfm_sync_a[8];  /* $0095A4 tab */
     const uint32_t mfm_sync_b[8];  /* $0095C4 tab */
-    PAD(95e4, 90)
+    PAD(90)
     uint16_t work_area_users;  /* $00963E var */
     uint16_t palette_saved[16];  /* $009640 arr */
     uint32_t rand_saved[4];  /* $009660 arr */
-    PAD(9670, 646)
+    PAD(646)
     const int8_t sine_table[320];  /* $0098F6 tab */
     const uint16_t title_font[3608];  /* $009A36 tab */
     const uint16_t font_gfx[2432];  /* $00B666 tab */
@@ -443,7 +445,7 @@ struct Xenon2 {
     uint16_t gfx_19328[635];  /* $019328 arr */
     const uint8_t digit_gfx[640];  /* $01981E tab */
     const uint16_t panel_words[640];  /* $019A9E tab */
-    PAD(19f9e, 1508)
+    PAD(1508)
     uint16_t music_tempo_mul;  /* $01A582 var */
     uint8_t music_volume_hi;  /* $01A584 var */
     uint8_t music_volume_lo;  /* $01A585 var */
@@ -452,7 +454,7 @@ struct Xenon2 {
     uint8_t music_accum;  /* $01A588 var */
     uint8_t music_fade_speed;  /* $01A589 var */
     uint8_t music_fade_count;  /* $01A58A var */
-    PAD(1a58b, 1)
+    PAD(1)
     uint8_t music_enabled;  /* $01A58C var */
     uint8_t instruments_ready;  /* $01A58D var */
     uint8_t music_playing;  /* $01A58E var */
@@ -468,11 +470,11 @@ struct Xenon2 {
     struct SongHeader song_headers[1];  /* $01A828 arr */
     const uint16_t music_lists[141];  /* $01A832 tab */
     const uint8_t music_data[2150];  /* $01A94C tab */
-    PAD(1b1b2, 182)
+    PAD(182)
     uint8_t sfx_samples_ready;  /* $01B268 var */
-    PAD(1b269, 233)
+    PAD(233)
     struct SfxSample sfx_samples[18];  /* $01B352 arr */
-    PAD(1b472, 606)
+    PAD(606)
     struct SfxChannel sfx_channels[4];  /* $01B6D0 arr */
     uint16_t sfx_request;  /* $01B760 var */
     struct HwMirror hw_mirror[4];  /* $01B762 arr */
@@ -483,10 +485,10 @@ struct Xenon2 {
     const uint16_t music_vol_env_offsets[16];  /* $01BA5C tab */
     const uint8_t music_vol_env_data[260];  /* $01BA7C tab */
     uint8_t sample_bank[127764];  /* $01BB80 arr */
-    PAD(3ae94, 2)
+    PAD(2)
     const uint32_t hit_mask_ptrs[16];  /* $03AE96 tab */
     const uint16_t hit_mask_data[1200];  /* $03AED6 tab */
-    PAD(3b836, 1142)
+    PAD(1142)
     uint16_t other_player_level[6000];  /* $03BCAC arr */
     uint16_t l2_blocks_player2[180];  /* $03EB8C arr */
     uint32_t other_player_block[202];  /* $03ECF4 arr */
@@ -494,10 +496,10 @@ struct Xenon2 {
     struct Object obj_pool[159];  /* $03F07E arr */
     struct Shot shots[80];  /* $042D5C arr */
     struct Star stars[48];  /* $042FDC arr */
-    PAD(430fc, 288)
+    PAD(288)
     uint16_t row_offset[200];  /* $04321C arr */
     uint16_t tile_mask_buf[75];  /* $0433AC arr */
-    PAD(43442, 606)
+    PAD(606)
     uint16_t screen_a_margin[1200];  /* $0436A0 arr */
     uint16_t screen_a[15360];  /* $044000 arr */
     uint16_t panel_a[640];  /* $04B800 arr */
@@ -505,17 +507,17 @@ struct Xenon2 {
     uint16_t screen_b_margin[1200];  /* $04BDA0 arr */
     uint16_t screen_b[15360];  /* $04C700 arr */
     uint16_t panel_b[640];  /* $053F00 arr */
-    PAD(54400, 2560)
+    PAD(2560)
     uint8_t * map_image;  /* $054E00 var */
     uint8_t * level_init_src;  /* $054E04 var */
     uint8_t * tile_gfx;  /* $054E08 var */
-    PAD(54e0c, 8)
+    PAD(8)
     struct SpawnRec * level_events_b;  /* $054E14 var */
-    PAD(54e18, 4)
+    PAD(4)
     uint16_t * level_palette;  /* $054E1C var */
-    PAD(54e20, 8)
+    PAD(8)
     uint16_t * enemy_shot_gfx;  /* $054E28 var */
-    PAD(54e2c, 4)
+    PAD(4)
     struct PathCmd ** level_formations;  /* $054E30 var */
     uint8_t * level_data_start;  /* $054E34 var */
     struct SpawnRec * level_events_a;  /* $054E38 var */
