@@ -1753,6 +1753,7 @@ static const struct blob_member blob_members_2[] = {
     { 0x7EB6, 16, 2, 0 },
     { 0x7ED6, 341, 2, 0 },
     { 0x8180, 1824, 2, 0 },
+    { 0x8FC0, 388, 2, 0 },
     { 0x92C8, 1, 2, 0 },
     { 0x92CA, 1, 2, 0 },
     { 0x92CC, 1, 2, 0 },
@@ -2718,7 +2719,6 @@ static const struct { uint32_t offset, size; } blob_pads_2[] = {   /* the bytes 
     { 0x1E14, 498 },
     { 0x2016, 56 },
     { 0x20F4, 810 },
-    { 0x8FC0, 776 },
     { 0x1FAB2, 34502 },
 };
 static const struct { uint32_t offset, count; } blob_script_pointers_2[] = {   /* the pointers to scripts */
@@ -3021,8 +3021,9 @@ static const struct blob_member blob_members_3[] = {
     { 0x6546, 6540, 2, 0 },
     { 0x985E, 1248, 2, 0 },
     { 0xA21E, 73, 2, 0 },
-    { 0xA2B0, 16, 2, 0 },
+    { 0xA2B0, 104, 2, 0 },
     { 0xA380, 14188, 2, 0 },
+    { 0x11258, 271, 2, 0 },
     { 0x11476, 1, 2, 0 },
     { 0x11478, 1, 2, 0 },
     { 0x1147A, 1, 2, 0 },
@@ -4562,8 +4563,6 @@ static const struct { uint32_t offset, size; } blob_pads_3[] = {   /* the bytes 
     { 0x1470, 416 },
     { 0x1650, 830 },
     { 0x21A2, 224 },
-    { 0xA2D0, 176 },
-    { 0x11258, 542 },
 };
 static const struct { uint32_t offset, count; } blob_script_pointers_3[] = {   /* the pointers to scripts */
     { 0x4E, 1 },

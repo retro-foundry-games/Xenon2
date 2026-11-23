@@ -368,7 +368,7 @@ static void scripts_save(uint8_t *ram)
 
 /* ---- the sample bank: headers (a long and a word) between the samples, 20 instruments from the start and 18 effects from SAMPLE_EFFECTS ---- */
 #define SAMPLE_BANK 0x1bb80
-#define SAMPLE_BANK_END 0x2baa0
+#define SAMPLE_BANK_END 0x3b836
 #define SAMPLE_EFFECTS (SAMPLE_BANK + 0xff1c)
 static const struct { uint32_t start; unsigned count; } sample_runs[] = { { SAMPLE_BANK, 20 }, { SAMPLE_EFFECTS, 18 } };
 
