@@ -115,7 +115,9 @@ def write_state(types, syms):
         pos = s['addr'] + s['gsize']
     out += ['};', 'extern struct Xenon2 xenon2;']
     out += ['LAYOUT_ASSERT(%s, 0x%x);' % (m['name'], s['addr']) for s in syms for m in s['group']]
-    out += ['', '#include "amiga/hw.h"', '', '#endif']
+    out += ['', '#include "amiga/hw.h"', '']
+    decls = os.path.join(SRC, 'game.decls')
+    out += open(decls).read().rstrip('\n').split('\n') + ['', '#endif'] if os.path.exists(decls) else ['#endif']
     text = '\n'.join(out) + '\n'
     open(os.path.join(SRC, 'game.h'), 'w').write(text)
 

@@ -4,7 +4,6 @@
 #include "game.h"
 #include "random.h"
 #include "draw.h"
-#include "mainloop.h"
 #include "objects.h"
 #include "weapons.h"
 #include "level1.h"

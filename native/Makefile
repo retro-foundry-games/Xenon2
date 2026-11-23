@@ -33,7 +33,7 @@ all: blob
 
 # game.h, game.ld, guest_members.h and data.c are made from the symbol files (tools/gen_symbols.py; the tables are read from XENON_RAM)
 XENON_RAM ?= ../captures/trace-10000.bin
-SYMBOL_FILES := $(wildcard $(SRC)/game.symbols $(SRC)/symbols/*.symbols)
+SYMBOL_FILES := $(wildcard $(SRC)/game.symbols $(SRC)/game.decls $(SRC)/symbols/*.symbols)
 $(SRC)/game.h $(SRC)/game.ld $(SRC)/guest_members.h $(SRC)/data.c: $(SYMBOL_FILES) $(SRC)/level.h ../tools/gen_symbols.py
 	$(PYTHON) ../tools/gen_symbols.py --ram $(XENON_RAM)
 generate: $(SRC)/game.h

@@ -1,7 +1,4 @@
-#ifndef MAINLOOP_H
-#define MAINLOOP_H
-#include "game.h"
-
+/* the declarations game.h carries after the memory struct (tools/gen_symbols.py pastes this file in): the game's start-up and frame flow */
 /* start-up flow, vertical-blank interrupts, starfield, screen flip */
 void game_entry(void);
 void irq_vblank(void);
@@ -15,6 +12,4 @@ void stars_draw(void);
 uint16_t box_overlap(int16_t a_left, int16_t a_top, int16_t a_right, int16_t a_bottom, int16_t b_left, int16_t b_top, int16_t b_right, int16_t b_bottom);
 Object *obj_free_pop(void);
 
-
 void irq_keyboard(void);
-#endif
