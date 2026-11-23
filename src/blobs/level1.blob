@@ -26,6 +26,10 @@ record Formation2 50
 0 defs SpawnDef 2
 48 end u16
 end
+record Formation7 170
+0 defs SpawnDef 7
+168 end u16
+end
 record ShotPic 4
 0 pic ptr:u16
 end

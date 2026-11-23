@@ -1,8 +1,4 @@
 ; level 3: its blob at $54E00 (see tools/gen_blobs.py)
-record Formation7 170
-0 defs SpawnDef 7
-168 end u16
-end
 record Level3EndPiece 12
 0 cells ptr:u16
 4 w u16
