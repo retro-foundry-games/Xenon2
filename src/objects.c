@@ -5,10 +5,6 @@
 
 /* the scratch fields of Object, by the kind that uses them */
 
-#ifdef GAME_SDL
-uint8_t guest_a6a(uint8_t a01);
-#endif
-
 /* ---- helpers ---- */
 
 /* the object from the free list, put at the head of list i (the code after each call of $2418 that does this) */
@@ -622,46 +618,6 @@ void run_draws(Object *obj)
 
         ((ObjFn)obj->fn_draw)(obj);
         obj = next;
-    }
-}
-
-/* orig $0035D4: one frame of the objects: update all lists, draw all lists, then forget the kinds of the table at $43C that no
- * enemy has any more */
-void update_all(void)
-{
-    uint16_t *slot;
-    int i;
-
-    run_updates(LIST_HEAD(LIST_PLAYER));
-    run_updates(LIST_HEAD(LIST_ENEMY));
-#ifdef GAME_SDL
-    xenon2.fire_press = guest_a6a(xenon2.key_pressed);
-#else
-    xenon2.fire_press = xenon2.key_pressed;
-#endif
-    xenon2.key_pressed = 0;
-    run_updates(LIST_HEAD(LIST_MISC));
-    run_updates(LIST_HEAD(LIST_EFFECT));
-    run_updates(LIST_HEAD(LIST_FRONT));
-    run_draws(LIST_HEAD(LIST_PLAYER));
-    run_draws(LIST_HEAD(LIST_MISC));
-    run_draws(LIST_HEAD(LIST_ENEMY));
-    run_draws(LIST_HEAD(LIST_EFFECT));
-    run_draws(LIST_HEAD(LIST_FRONT));
-    slot = xenon2.pickup_groups;
-    for (i = 0; i < 8; i++, slot += 2) {
-        Object *enemy;
-
-        if (slot[0] == 0)
-            continue;
-        for (enemy = LIST_HEAD(LIST_ENEMY);; enemy = OBJ_FWD(enemy)) {
-            if (enemy->type == 0) {
-                slot[0] = 0;
-                break;
-            }
-            if ((uint16_t)enemy->kind == slot[0])
-                break;
-        }
     }
 }
 
