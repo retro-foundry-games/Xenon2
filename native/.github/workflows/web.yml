@@ -3,7 +3,6 @@ name: Deploy the browser build to Pages
 on:
   push:
     branches: [master]
-  workflow_dispatch:
 
 permissions:
   contents: read
