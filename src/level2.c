@@ -850,7 +850,7 @@ void l2_hit_a(Object *attacker, Object *target, uint16_t damage)
         return;
     }
     xenon2.l2_walls_made &= (uint8_t)~(1 << (target->piece.wall & 7));
-    l2_wreck(target, xenon2.level2_data.wreck_a);
+    l2_wreck(target, xenon2.level2_data.anim_wreck_a);
 }
 
 /* level2 $055E0E: hit routine of a piece */
@@ -861,7 +861,7 @@ void l2_hit_b(Object *attacker, Object *target, uint16_t damage)
         hit_enemy(attacker, target, damage);
         return;
     }
-    l2_wreck(target, xenon2.level2_data.wreck_b);
+    l2_wreck(target, xenon2.level2_data.anim_wreck_b);
 }
 
 /* level2 $055E28: hit routine of a piece */
@@ -872,7 +872,7 @@ void l2_hit_c(Object *attacker, Object *target, uint16_t damage)
         hit_enemy(attacker, target, damage);
         return;
     }
-    l2_wreck(target, xenon2.level2_data.wreck_c);
+    l2_wreck(target, xenon2.level2_data.anim_wreck_c);
 }
 
 /* ---- the walls of debris ---- */
@@ -1258,13 +1258,13 @@ void l2_boss_update(Object *boss)
         boss->shot_count = (uint8_t)(random_next() & 0x3f);
         if ((random_next() & 3) != 0) {
             shot = spawn_enemy_shot(0xa0, (uint16_t)y, 4, xenon2.level2_data.boss_shot_steps, 0);
-            set_anim(shot, xenon2.level2_data.boss_update_data);
+            set_anim(shot, xenon2.level2_data.anim_boss_update);
         } else {
             int dir;
 
             for (dir = 15; dir >= 0; dir--) {
                 shot = spawn_enemy_shot(0xa0, (uint16_t)y, (uint16_t)dir, xenon2.level2_data.boss_shot_steps, 0);
-                set_anim(shot, xenon2.level2_data.boss_update_data_2);
+                set_anim(shot, xenon2.level2_data.anim_boss_update_2);
             }
         }
     }
@@ -1294,7 +1294,7 @@ void l2_boss_update(Object *boss)
         shot->hit[2] = 0x3e8;
         shot->x = 0xa0;
         shot->y = (int16_t)(boss->y - xenon2.scroll_pos + 0x80);
-        set_anim(shot, xenon2.level2_data.boss_update_data_4);
+        set_anim(shot, xenon2.level2_data.anim_boss_update_4);
         shot->l2_boss.wait = 0;
         shot->l2_boss.step = (shot->l2_boss.step & 0xffffu) | (uint32_t)(uint16_t)((int16_t)(random_next() & 7)) << 16;
         return;

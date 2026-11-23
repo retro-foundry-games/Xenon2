@@ -2744,6 +2744,10 @@ static const struct { uint32_t offset, size; } blob_scripts_2[] = {   /* the ani
     { 0x1F2, 24 },
     { 0x20A, 6 },
     { 0x210, 18 },
+    { 0x222, 60 },
+    { 0x25E, 60 },
+    { 0x29A, 60 },
+    { 0x2D6, 36 },
     { 0x2FA, 908 },
     { 0xB84, 2 },
     { 0xB86, 2 },
@@ -2751,6 +2755,8 @@ static const struct { uint32_t offset, size; } blob_scripts_2[] = {   /* the ani
     { 0xEC0, 18 },
     { 0xED2, 48 },
     { 0xF02, 386 },
+    { 0x204E, 30 },
+    { 0x206C, 120 },
 };
 static const struct blob_member blob_members_3[] = {
     { 0x2, 1, 2, 0 },
@@ -4589,8 +4595,14 @@ static const struct { uint32_t offset, count; } blob_script_pointers_3[] = {   /
     { 0x1DAC, 8 },
 };
 static const struct { uint32_t offset, size; } blob_scripts_3[] = {   /* the animation scripts: where the walk of the loader starts */
+    { 0x65E, 240 },
+    { 0xC00, 212 },
+    { 0xCD4, 664 },
     { 0x1274, 42 },
     { 0x129E, 274 },
+    { 0x198E, 36 },
+    { 0x19B2, 42 },
+    { 0x19DC, 36 },
     { 0x20B6, 2 },
     { 0x20B8, 162 },
 };
@@ -7947,6 +7959,8 @@ static const struct { uint32_t offset, size; } blob_scripts_5[] = {   /* the ani
     { 0x6FA, 36 },
     { 0x71E, 36 },
     { 0x742, 604 },
+    { 0x113E, 192 },
+    { 0x2178, 358 },
     { 0x26F4, 2 },
     { 0x26F6, 2 },
     { 0x26F8, 24 },

@@ -61,7 +61,7 @@ end
 5513e enemy_enter_anims ptr:u16 4
 55270 worm_spawn Level3WormSpawn 1
 55400 worm_head_anims ptr:u16 8
-5549e worm_head_data u16 120
+5549e anim_worm_head u16 120
 5558e worm_a_pictures ptr:u16 8
 555d2 worm_b_pictures ptr:u16 8
 55622 worm_follow_pictures ptr:u16 8
@@ -69,8 +69,8 @@ end
 557a0 walker_spawn_dy s16 8
 557b0 walker_spawn_anims ptr:u16 8
 558f0 parts Level3Part 18
-55a40 part_gun_data_3 u16 106
-55b14 part_core_data u16 332
+55a40 anim_part_gun_3 u16 106
+55b14 anim_part_core u16 332
 55dac arm_tip_pictures ptr:u16 16
 560b4 snake_anim_b u16 21
 560de snake_anim_a u16 137
@@ -81,9 +81,9 @@ end
 56460 walker_update_words_4 s16 8
 56470 walker_update_words_5 s16 8
 56480 walker_update_words_6 u16 8
-567ce diver_update_data u16 18
-567f2 diver_update_data_3 u16 21
-5681c diver_update_data_2 u16 18
+567ce anim_diver_update u16 18
+567f2 anim_diver_update_3 u16 21
+5681c anim_diver_update_2 u16 18
 56840 diver_update_data_4 u16 177
 569a2 boss_update_data u16 105
 56a74 boss_flash_grid u16 188
