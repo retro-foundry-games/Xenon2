@@ -6,12 +6,6 @@
 #include "types.h"
 #include "level.h"
 
-struct Formation7 {
-    struct SpawnDef defs[7];
-    uint16_t end;
-};
-_Static_assert(sizeof(struct Formation7) == 170, "Formation7");
-
 struct Level3EndPiece {
     const uint16_t *cells;
     uint16_t w;

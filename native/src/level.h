@@ -47,6 +47,12 @@ struct Formation2 {
 };
 _Static_assert(sizeof(struct Formation2) == 50, "Formation2");
 
+struct Formation7 {
+    struct SpawnDef defs[7];
+    uint16_t end;
+};
+_Static_assert(sizeof(struct Formation7) == 170, "Formation7");
+
 struct ShotPic {
     const uint16_t *pic;
 };
