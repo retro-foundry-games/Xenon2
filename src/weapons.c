@@ -423,20 +423,20 @@ Object *give_cannon(Object *caller, Object *last)
 Object *weapon_select(uint16_t type, Object *caller, Object *last)
 {
     switch (type) {
-    case 0x44: return give_rear_shot(caller, last);
-    case 0x98: return give_side_shot(caller, last);
-    case 0x34: return give_cannon(caller, last);
-    case 0x2c: return give_drone(caller, last);
-    case 0x20: return give_laser(caller, last);
-    case 0x4c: return give_electro_ball(caller, last);
-    case 0x3c: return give_mine_2(caller, last);
-    case 0x38: return give_mine_1(caller, last);
-    case 0xc0: return give_double_shot(caller, last);
-    case 0x90: return give_missile_launcher(caller, last);
-    case 0x48: return give_homing_missile(caller, last);
-    case 0xb0: return give_flamer(caller, last);
-    case 0x28: return give_bomb(caller, last);
-    case 0x94: return give_forward_shot(caller, last);
+    case WEAPON_REAR_SHOT: return give_rear_shot(caller, last);
+    case WEAPON_SIDE_SHOT: return give_side_shot(caller, last);
+    case WEAPON_CANNON: return give_cannon(caller, last);
+    case WEAPON_DRONE: return give_drone(caller, last);
+    case WEAPON_LASER: return give_laser(caller, last);
+    case WEAPON_ELECTRO_BALL: return give_electro_ball(caller, last);
+    case WEAPON_MINE_2: return give_mine_2(caller, last);
+    case WEAPON_MINE_1: return give_mine_1(caller, last);
+    case WEAPON_DOUBLE_SHOT: return give_double_shot(caller, last);
+    case WEAPON_MISSILE_LAUNCHER: return give_missile_launcher(caller, last);
+    case WEAPON_HOMING_MISSILE: return give_homing_missile(caller, last);
+    case WEAPON_FLAMER: return give_flamer(caller, last);
+    case WEAPON_BOMB: return give_bomb(caller, last);
+    case WEAPON_FORWARD_SHOT: return give_forward_shot(caller, last);
     }
     return last;
 }
