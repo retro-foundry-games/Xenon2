@@ -95,9 +95,9 @@ def write_state(types, syms):
     out += ['#include "level%d.h"' % n for n in range(1, 6)] + ['#include "shop.h"']   # (the blobs' structs, after the types they use)
     out += ['_Static_assert(sizeof(struct %s) == %d, "struct %s has not the size game.symbols gives");' % (n, sz, n) for n, sz in sorted(types.items())]
     out.append('')
-    out += ['#define PAD_CAT2(a, b) a##b',
-            '#define PAD_CAT(a, b) PAD_CAT2(a, b)',
-            '#define PAD(n) uint8_t PAD_CAT(pad_, __LINE__)[n];   /* a gap between members, named by its line */',
+    out += ['#define PAD_NAME(line) PAD_NAME_(line)',
+            '#define PAD_NAME_(line) pad_##line',
+            '#define PAD(n) uint8_t PAD_NAME(__LINE__)[n];   /* a gap between members, named by its line */',
             '#define LAYOUT_ASSERT(member, address) _Static_assert(offsetof(struct Xenon2, member) == (address), #member " is not at its address")',
             '/* The game\'s memory, byte for byte: the members are at the offsets of the original\'s addresses, the gaps are padding.  The SDL port defines it (guest.c);',
             ' * the Amiga build links it at address 0 (game.ld). */',

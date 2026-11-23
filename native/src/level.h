@@ -7,9 +7,9 @@
 
 #define BLOB_BASE 0x54E40
 
-#define BLOB_PAD_CAT2(a, b) a##b
-#define BLOB_PAD_CAT(a, b) BLOB_PAD_CAT2(a, b)
-#define BLOB_PAD(n) uint8_t BLOB_PAD_CAT(pad_, __LINE__)[n];
+#define BLOB_PAD_NAME(line) BLOB_PAD_NAME_(line)
+#define BLOB_PAD_NAME_(line) pad_##line
+#define BLOB_PAD(n) uint8_t BLOB_PAD_NAME(__LINE__)[n];
 
 struct SpawnRec {
     int16_t scroll;
