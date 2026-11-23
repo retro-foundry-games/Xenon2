@@ -110,6 +110,7 @@ struct Level1Data {
     uint16_t pad_6ac0a[7680];   /* 6AC0A */
     uint16_t data_src[6000];   /* 6E80A */
 };
+#ifdef MATCH_MEMORY_LAYOUT
 _Static_assert(sizeof(struct Level1Data) == 116906, "Level1Data");
 _Static_assert(offsetof(struct Level1Data, shot_1_rate) == 0x54E43 - BLOB_BASE, "Level1Data.shot_1_rate");
 _Static_assert(offsetof(struct Level1Data, shot_1_gfx) == 0x54E44 - BLOB_BASE, "Level1Data.shot_1_gfx");
@@ -196,6 +197,7 @@ _Static_assert(offsetof(struct Level1Data, events_a) == 0x6A5DA - BLOB_BASE, "Le
 _Static_assert(offsetof(struct Level1Data, events_a_end) == 0x6AC08 - BLOB_BASE, "Level1Data.events_a_end");
 _Static_assert(offsetof(struct Level1Data, pad_6ac0a) == 0x6AC0A - BLOB_BASE, "Level1Data.pad_6ac0a");
 _Static_assert(offsetof(struct Level1Data, data_src) == 0x6E80A - BLOB_BASE, "Level1Data.data_src");
+#endif
 
 /* END generated */
 #include "game.h"

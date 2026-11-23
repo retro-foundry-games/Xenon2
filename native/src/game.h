@@ -31,7 +31,11 @@ _Static_assert(sizeof(struct Star) == 6, "struct Star has not the size game.symb
 
 #define PAD_NAME(line) PAD_NAME_(line)
 #define PAD_NAME_(line) pad_##line
+#ifdef MATCH_MEMORY_LAYOUT   /* the builds define it: the members are at the offsets of the original's addresses */
 #define PAD(n) uint8_t PAD_NAME(__LINE__)[n];   /* a gap between members, named by its line */
+#else
+#define PAD(n)
+#endif
 #define LAYOUT_ASSERT(member, address) _Static_assert(offsetof(struct Xenon2, member) == (address), #member " is not at its address")
 /* The game's memory, byte for byte: the members are at the offsets of the original's addresses, the gaps are padding.  The SDL port defines it (guest.c);
  * the Amiga build links it at address 0 (game.ld). */
@@ -535,6 +539,7 @@ struct Xenon2 {
     uint16_t beyond_512k[262144];  /* $080000 arr */
 };
 extern struct Xenon2 xenon2;
+#ifdef MATCH_MEMORY_LAYOUT
 LAYOUT_ASSERT(disk_retries, 0x2);
 LAYOUT_ASSERT(exc_vectors_lo, 0x8);
 LAYOUT_ASSERT(irq_vectors, 0x64);
@@ -954,6 +959,7 @@ LAYOUT_ASSERT(level5_data, 0x54e40);
 LAYOUT_ASSERT(shop_data, 0x54e40);
 LAYOUT_ASSERT(level_data_dst, 0x7d120);
 LAYOUT_ASSERT(beyond_512k, 0x80000);
+#endif
 
 #include "amiga/hw.h"
 

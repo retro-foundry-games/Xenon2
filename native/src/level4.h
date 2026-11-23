@@ -12,14 +12,18 @@ struct Level4ScrollEnemy {
     void (*update)(void);
     const uint16_t *anim;
 };
+#ifdef MATCH_MEMORY_LAYOUT
 _Static_assert(sizeof(struct Level4ScrollEnemy) == 12, "Level4ScrollEnemy");
+#endif
 
 struct Level4EnemyGun {
     uint16_t type;
     uint16_t x;
     const uint16_t *anim;
 };
+#ifdef MATCH_MEMORY_LAYOUT
 _Static_assert(sizeof(struct Level4EnemyGun) == 8, "Level4EnemyGun");
+#endif
 
 struct Level4Boss1Piece {
     void (*update)(void);
@@ -29,7 +33,9 @@ struct Level4Boss1Piece {
     uint16_t y;
     uint16_t energy;
 };
+#ifdef MATCH_MEMORY_LAYOUT
 _Static_assert(sizeof(struct Level4Boss1Piece) == 18, "Level4Boss1Piece");
+#endif
 
 struct Level4Boss2Piece {
     void (*update)(void);
@@ -41,7 +47,9 @@ struct Level4Boss2Piece {
     uint8_t energy;
     uint8_t big;
 };
+#ifdef MATCH_MEMORY_LAYOUT
 _Static_assert(sizeof(struct Level4Boss2Piece) == 20, "Level4Boss2Piece");
+#endif
 
 struct Level4Data {
     BLOB_PAD(2)
@@ -188,6 +196,7 @@ struct Level4Data {
     uint16_t pad_79480[7680];   /* 79480 */
     uint16_t data_src[80];   /* 7D080 */
 };
+#ifdef MATCH_MEMORY_LAYOUT
 _Static_assert(sizeof(struct Level4Data) == 164576, "Level4Data");
 _Static_assert(offsetof(struct Level4Data, scroll_energy) == 0x54E42 - BLOB_BASE, "Level4Data.scroll_energy");
 _Static_assert(offsetof(struct Level4Data, enemy_a_fall) == 0x54E44 - BLOB_BASE, "Level4Data.enemy_a_fall");
@@ -298,6 +307,7 @@ _Static_assert(offsetof(struct Level4Data, events_a) == 0x78EDC - BLOB_BASE, "Le
 _Static_assert(offsetof(struct Level4Data, events_a_end) == 0x7947E - BLOB_BASE, "Level4Data.events_a_end");
 _Static_assert(offsetof(struct Level4Data, pad_79480) == 0x79480 - BLOB_BASE, "Level4Data.pad_79480");
 _Static_assert(offsetof(struct Level4Data, data_src) == 0x7D080 - BLOB_BASE, "Level4Data.data_src");
+#endif
 
 /* END generated */
 #include "game.h"

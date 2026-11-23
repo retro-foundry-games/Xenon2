@@ -13,20 +13,26 @@ struct Level3EndPiece {
     uint16_t y;
     uint16_t x;
 };
+#ifdef MATCH_MEMORY_LAYOUT
 _Static_assert(sizeof(struct Level3EndPiece) == 12, "Level3EndPiece");
+#endif
 
 struct Level3WormPiece {
     uint16_t delay;
     void (*update)(void);
     const uint16_t *gfx;
 };
+#ifdef MATCH_MEMORY_LAYOUT
 _Static_assert(sizeof(struct Level3WormPiece) == 10, "Level3WormPiece");
+#endif
 
 struct Level3WormSpawn {
     uint16_t last;
     struct Level3WormPiece pieces[11];
 };
+#ifdef MATCH_MEMORY_LAYOUT
 _Static_assert(sizeof(struct Level3WormSpawn) == 112, "Level3WormSpawn");
+#endif
 
 struct Level3Part {
     void (*update)(void);
@@ -35,7 +41,9 @@ struct Level3Part {
     uint16_t x;
     uint16_t y;
 };
+#ifdef MATCH_MEMORY_LAYOUT
 _Static_assert(sizeof(struct Level3Part) == 16, "Level3Part");
+#endif
 
 struct Level3Data {
     BLOB_PAD(2)
@@ -170,6 +178,7 @@ struct Level3Data {
     uint16_t pad_70786[7680];   /* 70786 */
     uint16_t data_src[6000];   /* 74386 */
 };
+#ifdef MATCH_MEMORY_LAYOUT
 _Static_assert(sizeof(struct Level3Data) == 140326, "Level3Data");
 _Static_assert(offsetof(struct Level3Data, worm_spawn_steps) == 0x54E42 - BLOB_BASE, "Level3Data.worm_spawn_steps");
 _Static_assert(offsetof(struct Level3Data, walker_energy) == 0x54E44 - BLOB_BASE, "Level3Data.walker_energy");
@@ -279,6 +288,7 @@ _Static_assert(offsetof(struct Level3Data, events_a) == 0x6FF5E - BLOB_BASE, "Le
 _Static_assert(offsetof(struct Level3Data, events_a_end) == 0x70784 - BLOB_BASE, "Level3Data.events_a_end");
 _Static_assert(offsetof(struct Level3Data, pad_70786) == 0x70786 - BLOB_BASE, "Level3Data.pad_70786");
 _Static_assert(offsetof(struct Level3Data, data_src) == 0x74386 - BLOB_BASE, "Level3Data.data_src");
+#endif
 
 /* END generated */
 #include "game.h"

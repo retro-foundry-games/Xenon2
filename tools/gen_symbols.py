@@ -97,7 +97,11 @@ def write_state(types, syms):
     out.append('')
     out += ['#define PAD_NAME(line) PAD_NAME_(line)',
             '#define PAD_NAME_(line) pad_##line',
+            '#ifdef MATCH_MEMORY_LAYOUT   /* the builds define it: the members are at the offsets of the original\'s addresses */',
             '#define PAD(n) uint8_t PAD_NAME(__LINE__)[n];   /* a gap between members, named by its line */',
+            '#else',
+            '#define PAD(n)',
+            '#endif',
             '#define LAYOUT_ASSERT(member, address) _Static_assert(offsetof(struct Xenon2, member) == (address), #member " is not at its address")',
             '/* The game\'s memory, byte for byte: the members are at the offsets of the original\'s addresses, the gaps are padding.  The SDL port defines it (guest.c);',
             ' * the Amiga build links it at address 0 (game.ld). */',
@@ -114,7 +118,7 @@ def write_state(types, syms):
             out.append('    %s;  /* $%06X %s */' % (decl(s), s['addr'], s['kind']))
         pos = s['addr'] + s['gsize']
     out += ['};', 'extern struct Xenon2 xenon2;']
-    out += ['LAYOUT_ASSERT(%s, 0x%x);' % (m['name'], s['addr']) for s in syms for m in s['group']]
+    out += ['#ifdef MATCH_MEMORY_LAYOUT'] + ['LAYOUT_ASSERT(%s, 0x%x);' % (m['name'], s['addr']) for s in syms for m in s['group']] + ['#endif']
     out += ['', '#include "amiga/hw.h"', '']
     decls = os.path.join(SRC, 'game.decls')
     out += open(decls).read().rstrip('\n').split('\n') + ['', '#endif'] if os.path.exists(decls) else ['#endif']
