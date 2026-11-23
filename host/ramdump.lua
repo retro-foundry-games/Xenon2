@@ -6,7 +6,7 @@ local out = args:match("ram=(%S+)")
 local frames = tonumber(args:match("frames=(%d+)") or "1")
 ami.machine{
     name = "Xenon2", model = "A500", system = "../local/system", save = "../local/save", files = "..",
-    content = "../local/xenon2.adf", roms = { { "kick34005.A500", 0xc4f0f55f } },
+    content = args:match("m3u") and "../local/xenon2.m3u" or "../local/xenon2.adf", roms = { { "kick34005.A500", 0xc4f0f55f } },
     opt = args:match("joy1") and { puae_joyport_order = "2143" } or nil,
 }
 ami.boot()

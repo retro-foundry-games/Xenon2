@@ -93,7 +93,7 @@ void l3_event(uint16_t event, const struct SpawnRec *rec)
     case 3:
         saved = xenon2.difficulty_x2;
         xenon2.difficulty_x2 = xenon2.level3_data.event_param;
-        spawn_formation(0, rec, &xenon2.level3_data.formation_3.defs);
+        spawn_formation(0, rec, xenon2.level3_data.formation_3.defs);
         xenon2.difficulty_x2 = saved;
         break;
     case 4:

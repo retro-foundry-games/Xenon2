@@ -55,7 +55,7 @@ Dropping into a level or its boss (`host/scenario.lua`; the places are its `SCEN
     ... host/lockstep.lua --headless --script-args "auto=1 state=l3-boss tolerant=1 health=full syncs=600"       the lockstep from there, the autoplayer playing
     ... host/ramdump.lua --headless --script-args "joy1 load=l3-boss ram=captures/l3-boss.ram"                    the memory of the place, for the port alone:
     dev/build/xenon2-sdl-dev --lua dev/lua/exercise.lua --lua-args "ram=captures/l3-boss.ram frames=3000" --disks local     the port drops in, moves under fire; a crash is the failure
-    for l in 1 2 3 4 5: tools/poison_gaps.py $l=captures/l$l-boss.ram captures/l$l-boss-poison.ram; exercise.lua on both; the outputs must be equal (reads of unnamed memory)
+    for l in 1 2 3 4 5: tools/poison_gaps.py $l=captures/l$l-boss.ram captures/l$l-boss-poison.ram; exercise.lua on both (6000 frames from captures/levelN.ram, made by host/ramdump.lua "joy1 m3u load=STATE"); the outputs must be equal (reads of unnamed memory); levels 1-5 clean 2026-11-23; it also found level 3 formation_3 (7 defs, a crash)
     tools/poison_gaps.py shop=captures/shop-before.ram captures/shop-before-poison.ram; exercise.lua ram=... startfn=8ff2 on both: the shop (clean, 2026-11-23)
     ... host/level_events.lua --headless --script-args "state=frame-8880"                                          the event lists of a level (where the bosses come)
 
