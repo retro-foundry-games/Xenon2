@@ -6,18 +6,6 @@
 /* inlined: $400 (bra.w to the start-up code) */
 /* inlined: $E0C, $E12, $E18, $E2A, $E54, $E5A (jmp thunks of the table at $E0C: callers call the target) */
 
-/* orig $E42, $FEE, $FF2, $1002 and $100E: take an object out of its list and put it on the free list */
-void free_object(Object *obj)
-{
-    Object *next = obj->next, *prev = obj->prev;
-
-    next->prev = prev;
-    prev->next = next;
-    obj->next = xenon2.free_obj;
-    xenon2.free_obj = obj;
-    obj->type = 0;
-}
-
 /* The clip of a bob (a picture with a mask) to the screen: header words dx, dy, width, height, then rows of 4 plane words and a mask word. */
 typedef struct {
     const uint8_t *src;

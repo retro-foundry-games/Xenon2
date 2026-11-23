@@ -1,6 +1,7 @@
 #include "objects.h"
 #include "shop.h"
 #include "game_all.h"
+#include "weapon_util.h"
 
 /* the scratch fields of Object, by the kind that uses them */
 
@@ -30,7 +31,7 @@ static void set_cursor(Object *o, const struct PathCmd *p)
 }
 
 /* an object that does nothing any more */
-static void kill_object(Object *o)
+void kill_object(Object *o)
 {
     o->type = 4;
     o->fn_update = (obj_fn)free_object;
@@ -782,4 +783,302 @@ Object *spawn_enemy_shot(uint16_t x, uint16_t y, uint16_t angle, uint16_t steps,
     shot->hit[0] = 0x3e8;
     shot->hit[2] = 0x3e8;
     return shot;
+}
+
+/* ---- from the weapons module: the plumbing of objects, the hits of enemies and tiles, the spawns ---- */
+
+/* inlined: $2418 and the insertion before the sentinel of list A / B (the new object is returned) */
+Object *alloc_a(Object *caller)
+{
+    Object *o = obj_free_pop(), *tail = LIST_A->prev;
+
+    LIST_A->prev = o;
+    o->prev = tail;
+    o->next = LIST_A;
+    tail->next = o;
+    return o;
+}
+
+/* orig $E42, $FEE, $FF2, $1002 and $100E: take an object out of its list and put it on the free list */
+void free_object(Object *obj)
+{
+    Object *next = obj->next, *prev = obj->prev;
+
+    next->prev = prev;
+    prev->next = next;
+    obj->next = xenon2.free_obj;
+    xenon2.free_obj = obj;
+    obj->type = 0;
+}
+
+/* orig $005924: the hit routine of victim takes damage (the original jumps to it) */
+void apply_damage(Object *shooter, Object *victim, uint16_t damage)
+{
+    ((hit_fn)victim->fn_hit)(shooter, victim, damage);
+}
+
+/* orig $ECC, $005920: the same with the greatest damage */
+void apply_damage_max(Object *shooter, Object *victim)
+{
+    apply_damage(shooter, victim, 0x7f);
+}
+
+/* orig $F0E, $005550: 1 when the object's box meets the player's (the flag the caller tests; inlined: $200A) */
+int player_hits(Object *obj)
+{
+    const Object *p = PLAYER;
+
+    if (xenon2.dive_phase)
+        return 0;
+    return !(p->hit[2] < obj->hit[0] || p->hit[0] > obj->hit[2] || p->hit[3] < obj->hit[1] || p->hit[1] > obj->hit[3]);
+}
+
+/* orig $EAE, $00556C: 1 when the point (x, y) is in the player's box */
+int point_in_player_box(int16_t x, int16_t y)
+{
+    const Object *p = PLAYER;
+
+    if (xenon2.dive_phase)
+        return 0;
+    return !(p->hit[0] > x || p->hit[2] < x || p->hit[1] > y || p->hit[3] < y);
+}
+
+/* orig $F44, $0057B6: an object that only animates */
+void animate_only(Object *obj)
+{
+    anim_step(obj);
+}
+
+/* orig $E24, $005908: an object that follows its target */
+void follow_target(Object *obj)
+{
+    anim_step(obj);
+    obj->x = obj->target->x;
+    obj->y = obj->target->y;
+    bbox_from_frame(obj);
+}
+
+/* orig $005D8C: scrolls the objects of a list (their y by dy) and frees those that are not fixed */
+void free_chain(Object *obj, int16_t dy)
+{
+    while (obj->type != 0) {
+        Object *next = obj->prev;
+
+        if (obj->persists == 0)
+            free_object(obj);
+        else if (obj->screen_fixed == 0)
+            obj->y -= dy;
+        obj = next;
+    }
+}
+
+/* the centre of o's picture (the 16-bit arithmetic of the original) for an explosion */
+static void centre(const Object *o, int16_t *x, int16_t *y)
+{
+    const struct Pic *gfx = o->gfx;
+    int16_t dx = (int16_t)(o->x - (int16_t)gfx->hot_x), dy = (int16_t)(o->y - (int16_t)gfx->hot_y);
+
+    dx = (int16_t)(dx + dx);
+    dy = (int16_t)(dy + dy);
+    *x = (int16_t)(dx + (int16_t)gfx->width) >> 1;
+    *y = (int16_t)(dy + (int16_t)gfx->height) >> 1;
+}
+
+/* orig $E1E, $00592A: hit routine of the parts of a big enemy (enemy is a part; its chain is $56/$5A) */
+void hit_part(Object *shooter, Object *enemy, uint16_t damage)
+{
+    Object *part, *next;
+    uint16_t old;
+
+    enemy = enemy->target;
+    for (part = enemy; ; part = part->chain) {
+        part->fn_draw = draw_bob_or_first;
+        if (part->chain == 0)
+            break;
+    }
+    old = (uint16_t)enemy->energy;
+    enemy->energy = (int16_t)(old - damage);
+    if (old > damage)
+        return;
+    for (next = enemy->chain; next != 0; next = part->chain) {
+        part = next;
+        if (part->is_part >= 0) {
+            int16_t x, y;
+
+            centre(part, &x, &y);
+            spawn_effect(x, y, enemy->big ? xenon2.anim_explosion_big : xenon2.anim_explosion, draw_bob_masked);
+        }
+        kill_object(part);
+    }
+    enemy_killed(shooter, enemy);
+}
+
+/* orig $E84, $0059C8: hit routine that only flashes the object */
+void hit_flash(Object *shooter, Object *victim, uint16_t damage)
+{
+    victim->fn_draw = draw_bob_or_first;
+}
+
+/* orig $F2C, $0059DA: kills shooter (the shot) unless it is free or the player */
+void hit_kill_shooter(Object *shooter, Object *victim, uint16_t damage)
+{
+    if (shooter->type != 0 && shooter->type != 8)
+        kill_object(shooter);
+}
+
+/* orig $F26, $0059D2: flashes victim and kills shooter (the shot) */
+void hit_flash_kill_shooter(Object *shooter, Object *victim, uint16_t damage)
+{
+    victim->fn_draw = draw_bob_or_first;
+    hit_kill_shooter(shooter, victim, damage);
+}
+
+/* orig $E18, $005A0A: hit routine of an ordinary enemy */
+void hit_enemy(Object *shooter, Object *enemy, uint16_t damage)
+{
+    uint16_t old;
+
+    enemy->fn_draw = draw_bob_or_first;
+    old = (uint16_t)enemy->energy;
+    enemy->energy = (int16_t)(old - damage);
+    if (old > damage)
+        return;
+    enemy_killed(shooter, enemy);
+}
+
+static void explosion_at(Object *obj, const uint16_t *anim)
+{
+    int16_t x, y;
+
+    centre(obj, &x, &y);
+    spawn_effect(x, y, anim, draw_bob_masked);
+}
+
+/* orig $EE4, $005A1A: an enemy dies: explosion, maybe a bonus, its score */
+void enemy_killed(Object *shooter, Object *enemy)
+{
+    uint16_t *e = xenon2.pickup_groups;
+    Object *n;
+    const uint16_t *bonus_anim;
+    int i, found = 0;
+    int16_t kind;
+
+    explosion_at(enemy, enemy->big ? xenon2.anim_explosion_big : xenon2.anim_explosion);
+    kind = enemy->kind;
+    if (kind != 0) {
+        for (i = 0; i < 8; i++) {
+            if (e[2 * i] == (uint16_t)kind) {
+                found = 1;
+                break;
+            }
+        }
+        if (found && --e[2 * i + 1] == 0) {
+            e[2 * i] = 0;
+            n = alloc_b(shooter);
+            bonus_anim = xenon2.anim_bonus_small;
+            n->type = 0x60;
+            if (enemy->big) {
+                bonus_anim = xenon2.anim_bonus_big;
+                n->type = 0x18;
+            }
+            n->pickup.mode = 7;
+            n->fn_update = (obj_fn)pickup_update;
+            n->fn_draw = draw_bob_masked;
+            set_anim(n, bonus_anim);
+            n->x = enemy->x;
+            n->y = enemy->y;
+            n->pickup.dir = (n->pickup.dir & 0xffffu) | (uint32_t)(uint16_t)((int16_t)random_next()) << 16;
+        }
+    }
+    xenon2.player_score += (uint16_t)enemy->score;
+    kill_object(enemy);
+}
+
+/* orig $EA8, $005B16: hit routine: the object explodes and dies at once */
+void hit_explode(Object *shooter, Object *enemy, uint16_t damage)
+{
+    explosion_at(enemy, enemy->big ? xenon2.anim_explosion_big : xenon2.anim_explosion);
+    kill_object(enemy);
+}
+
+/* orig $005BFC: draw routine of the tile object */
+void tile_draw(Object *obj)
+{
+    obj->fn_draw = obj_nop;
+    draw_tile_grid_flash((const uint16_t *)obj->gfx, (uint16_t)obj->tile.cols, (uint16_t)obj->tile.rows, (int16_t)(obj->y - xenon2.scroll_pos), (uint16_t)obj->x >> 1);
+}
+
+/* orig $F20, $005B72: hit routine of a destructible tile block: when it breaks the background is restored */
+void hit_tile(Object *shooter, Object *tile, uint16_t damage)
+{
+    uint16_t old;
+    int16_t x, y, rows, cols;
+    Cell *dst;
+    const uint16_t *src;
+
+    tile->fn_draw = (obj_fn)tile_draw;
+    old = (uint16_t)tile->energy;
+    tile->energy = (int16_t)(old - damage);
+    if (old > damage)
+        return;
+    xenon2.player_score += (uint16_t)tile->score;
+    x = (int16_t)(((tile->tile.cols + 1) << 3) + tile->x);
+    y = (int16_t)(((tile->tile.rows + 1) << 3) + tile->y - xenon2.scroll_pos);
+    spawn_effect(x, y, xenon2.anim_explosion_big, draw_bob_masked);
+    dst = tile->map;
+    src = tile->anim;
+    for (rows = tile->tile.rows; rows >= 0; rows--) {
+        Cell *row = dst;
+
+        for (cols = tile->tile.cols; cols >= 0; cols--) {
+            row[0] = *src++;
+            row++;
+        }
+        dst += MAP_COLS;
+    }
+    kill_object(tile);
+}
+
+/* orig $E72, $00422A: count + 1 pieces (type $C, only animating) at random places in the box (x, y, w, h), animation anim; the sound $83 */
+void debris_burst(Object *obj, int16_t count, uint16_t x, uint16_t y, uint16_t w, uint16_t h, const uint16_t *anim)
+{
+    do {
+        Object *n = alloc_b(obj);
+
+        n->type = 0xc;
+        n->fn_update = (obj_fn)animate_only;
+        n->fn_draw = draw_bob_masked;
+        n->x = (int16_t)(random_below(w) + x);
+        n->y = (int16_t)(random_below(h) + y);
+        set_anim(n, anim);
+    } while (--count != -1);
+    xenon2.sfx_cmd = 0x83;
+    xenon2.sfx_cmd2 = 0x83;
+    sfx_play(0x83);
+}
+
+/* orig $E6C, $0021B6: count + 1 times two bonuses (types $60 and $18) fall in at random places at the front of list B */
+void spawn_bonuses(int16_t count)
+{
+    do {
+        Object *n = alloc_b_front(0);
+
+        n->type = 0x60;
+        n->fn_update = (obj_fn)pickup_update;
+        n->fn_draw = draw_bob_masked;
+        set_anim(n, xenon2.anim_bonus_small);
+        n->x = (int16_t)(random_below(0x12c) + 0xa);
+        n->y = (int16_t)(random_below(0xb4) + 6);
+        n->pickup.mode = 7;
+        xenon2.level_end_items++;
+        n = alloc_b_front(0);
+        n->type = 0x18;
+        n->fn_update = (obj_fn)pickup_update;
+        n->fn_draw = draw_bob_masked;
+        set_anim(n, xenon2.anim_bonus_big);
+        n->x = (int16_t)(random_below(0x12c) + 0xa);
+        n->y = (int16_t)(random_below(0xb4) + 6);
+        n->pickup.mode = 7;
+        xenon2.level_end_items++;
+    } while (--count != -1);
 }
