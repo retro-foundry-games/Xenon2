@@ -86,7 +86,7 @@ static void dismiss_slot5(void)
 Object *refill_slot0(Object *caller, Object *last)
 {
     if (xenon2.weapon_slots[0].type == 0)
-        weapon_94(caller, last);
+        give_forward_shot(caller, last);
     return last;
 }
 
@@ -105,7 +105,7 @@ static Slot *free_side_slot(int *rev_index)
 }
 
 /* orig $004AFC: weapon $94 (slot 0); returns last */
-Object *weapon_94(Object *caller, Object *last)
+Object *give_forward_shot(Object *caller, Object *last)
 {
     Slot *s = SLOT(0);
     Object *n;
@@ -116,7 +116,7 @@ Object *weapon_94(Object *caller, Object *last)
     n = alloc_a(caller);
     s->obj = n;
     n->type = 0x94;
-    n->fn_update = (obj_fn)weapon94_update;
+    n->fn_update = (obj_fn)forward_shot_update;
     n->fn_hit = s;
     n->fn_draw = obj_nop;
     n->score = 0;
@@ -128,7 +128,7 @@ Object *weapon_94(Object *caller, Object *last)
 }
 
 /* orig $004BA8: weapon $C0 (slot 0) */
-Object *weapon_c0(Object *caller, Object *last)
+Object *give_double_shot(Object *caller, Object *last)
 {
     Slot *s = SLOT(0);
     Object *n;
@@ -141,7 +141,7 @@ Object *weapon_c0(Object *caller, Object *last)
     n = alloc_a(caller);
     s->obj = n;
     n->type = 0xc0;
-    n->fn_update = weaponc0_update;
+    n->fn_update = double_shot_update;
     n->fn_draw = draw_bob_masked;
     n->fn_hit = s;
     n->gfx = xenon2.weaponc0_picture;
@@ -157,7 +157,7 @@ Object *weapon_c0(Object *caller, Object *last)
 }
 
 /* orig $004C64: weapon $98 (slot 6; slot 5 loses $44) */
-Object *weapon_98(Object *caller, Object *last)
+Object *give_side_shot(Object *caller, Object *last)
 {
     Slot *s5 = SLOT(5), *s6 = SLOT(6);
     Object *n;
@@ -174,7 +174,7 @@ Object *weapon_98(Object *caller, Object *last)
     s6->type = 0x98;
     s6->obj = n;
     n->type = 0x98;
-    n->fn_update = (obj_fn)weapon98_update;
+    n->fn_update = (obj_fn)side_shot_update;
     n->fn_draw = obj_nop;
     n->fn_hit = s6;
     n->score = 0;
@@ -186,7 +186,7 @@ Object *weapon_98(Object *caller, Object *last)
 }
 
 /* orig $004D28: weapon $28 (slot 6) */
-Object *weapon_28(Object *caller, Object *last)
+Object *give_bomb(Object *caller, Object *last)
 {
     Slot *s6 = SLOT(6);
     Object *n;
@@ -199,7 +199,7 @@ Object *weapon_28(Object *caller, Object *last)
     n = alloc_a(caller);
     s6->obj = n;
     n->type = 0x9c;
-    n->fn_update = (obj_fn)weapon9c_update;
+    n->fn_update = (obj_fn)bomb_update;
     n->fn_draw = obj_nop;
     n->fn_hit = s6;
     n->score = 0;
@@ -211,7 +211,7 @@ Object *weapon_28(Object *caller, Object *last)
 }
 
 /* orig $004DC6: weapon $48 (slot 5 or 6) */
-Object *weapon_48(Object *caller, Object *last)
+Object *give_homing_missile(Object *caller, Object *last)
 {
     Slot *s5 = SLOT(5), *s6 = SLOT(6), *slot;
     Object *n;
@@ -230,7 +230,7 @@ Object *weapon_48(Object *caller, Object *last)
     n = alloc_a(caller);
     slot->obj = n;
     n->type = 0xa0;
-    n->fn_update = (obj_fn)weaponA0_update;
+    n->fn_update = (obj_fn)homing_missile_update;
     n->fn_draw = obj_nop;
     n->fn_hit = slot;
     n->score = 0;
@@ -242,7 +242,7 @@ Object *weapon_48(Object *caller, Object *last)
 }
 
 /* orig $004E74: weapon $B0 (slot 0) */
-Object *weapon_b0(Object *caller, Object *last)
+Object *give_flamer(Object *caller, Object *last)
 {
     Slot *s = SLOT(0);
     Object *n;
@@ -255,7 +255,7 @@ Object *weapon_b0(Object *caller, Object *last)
     n = alloc_a(caller);
     s->obj = n;
     n->type = 0xb0;
-    n->fn_update = weaponb0_update;
+    n->fn_update = flamer_update;
     n->fn_draw = draw_bob_masked;
     n->fn_hit = s;
     set_anim(n, xenon2.anim_weaponb0);
@@ -294,51 +294,51 @@ static Object *weapon_slot5(Object *caller, uint16_t type, obj_fn update, const 
 }
 
 /* orig $004F66: weapon $2C (slot 5) */
-Object *weapon_2c(Object *caller, Object *last)
+Object *give_drone(Object *caller, Object *last)
 {
     if (SLOT(5)->type == 0x2c)
         return grow_weapon(SLOT(5));
     dismiss_slot5();
-    return weapon_slot5(caller, 0x2c, weapon2c_update, xenon2.anim_weapon2c, 2, 0, 0x13, 0x19);
+    return weapon_slot5(caller, 0x2c, drone_update, xenon2.anim_weapon2c, 2, 0, 0x13, 0x19);
 }
 
 /* orig $005014: weapon $4C (slot 5) */
-Object *weapon_4c(Object *caller, Object *last)
+Object *give_electro_ball(Object *caller, Object *last)
 {
     if (SLOT(5)->type == 0x4c)
         return grow_weapon(SLOT(5));
     dismiss_slot5();
-    return weapon_slot5(caller, 0x4c, weapon4c_update, xenon2.anim_weapon4c, 0, 0, 0xb, 0x19);
+    return weapon_slot5(caller, 0x4c, electro_ball_update, xenon2.anim_weapon4c, 0, 0, 0xb, 0x19);
 }
 
 /* orig $0050AC: weapon $38 (slot 5) */
-Object *weapon_38(Object *caller, Object *last)
+Object *give_mine_1(Object *caller, Object *last)
 {
     Object *n;
 
     if (SLOT(5)->type == 0x38 || SLOT(5)->type == 0x3c)
         return grow_weapon(SLOT(5));
     dismiss_slot5();
-    n = weapon_slot5(caller, 0x38, weapon38_update, xenon2.anim_weapon38, 1, 0, 9, 0x19);
+    n = weapon_slot5(caller, 0x38, mine_update, xenon2.anim_weapon38, 1, 0, 9, 0x19);
     xenon2.trail_x = -100;
     return n;
 }
 
 /* orig $005158: weapon $3C (slot 5) */
-Object *weapon_3c(Object *caller, Object *last)
+Object *give_mine_2(Object *caller, Object *last)
 {
     Object *n;
 
     if (SLOT(5)->type == 0x38 || SLOT(5)->type == 0x3c)
         return grow_weapon(SLOT(5));
     dismiss_slot5();
-    n = weapon_slot5(caller, 0x3c, weapon38_update, xenon2.anim_weapon3c, 1, 1, 0xd, 0x19);
+    n = weapon_slot5(caller, 0x3c, mine_update, xenon2.anim_weapon3c, 1, 1, 0xd, 0x19);
     xenon2.trail_x = -100;
     return n;
 }
 
 /* orig $005206: weapon $44 (slot 5; slot 6 loses $98) */
-Object *weapon_44(Object *caller, Object *last)
+Object *give_rear_shot(Object *caller, Object *last)
 {
     Slot *s6 = SLOT(6);
 
@@ -349,7 +349,7 @@ Object *weapon_44(Object *caller, Object *last)
         s6->type = 0;
     }
     dismiss_slot5();
-    return weapon_slot5(caller, 0x44, (obj_fn)weapon44_update, xenon2.anim_weapon44, 2, 0, 8, 0);
+    return weapon_slot5(caller, 0x44, (obj_fn)rear_shot_update, xenon2.anim_weapon44, 2, 0, 8, 0);
 }
 
 /* the weapons of the side slots: orig $0052E0 ($90), $00538C ($20), $00543A ($34); 0 when the four slots are taken */
@@ -383,25 +383,25 @@ static Object *weapon_side(Object *caller, uint16_t type, obj_fn update, const u
 }
 
 /* orig $0052E0 */
-Object *weapon_90(Object *caller, Object *last)
+Object *give_missile_launcher(Object *caller, Object *last)
 {
-    Object *n = weapon_side(caller, 0x90, weapon90_update, xenon2.anim_weapon90, 0, 0x11, 1);
+    Object *n = weapon_side(caller, 0x90, missile_launcher_update, xenon2.anim_weapon90, 0, 0x11, 1);
 
     return refill_slot0(caller, n ? n : last);
 }
 
 /* orig $00538C */
-Object *weapon_20(Object *caller, Object *last)
+Object *give_laser(Object *caller, Object *last)
 {
-    Object *n = weapon_side(caller, 0x20, weapon20_update, xenon2.anim_weapon20, 2, 0x12, 1);
+    Object *n = weapon_side(caller, 0x20, laser_update, xenon2.anim_weapon20, 2, 0x12, 1);
 
     return refill_slot0(caller, n ? n : last);
 }
 
 /* orig $00543A */
-Object *weapon_34(Object *caller, Object *last)
+Object *give_cannon(Object *caller, Object *last)
 {
-    Object *n = weapon_side(caller, 0x34, weapon34_update, xenon2.anim_weapon34, 0, 0xf, 0), *d;
+    Object *n = weapon_side(caller, 0x34, cannon_update, xenon2.anim_weapon34, 0, 0xf, 0), *d;
 
     if (n == 0)
         return refill_slot0(caller, last);
@@ -423,26 +423,26 @@ Object *weapon_34(Object *caller, Object *last)
 Object *weapon_select(uint16_t type, Object *caller, Object *last)
 {
     switch (type) {
-    case 0x44: return weapon_44(caller, last);
-    case 0x98: return weapon_98(caller, last);
-    case 0x34: return weapon_34(caller, last);
-    case 0x2c: return weapon_2c(caller, last);
-    case 0x20: return weapon_20(caller, last);
-    case 0x4c: return weapon_4c(caller, last);
-    case 0x3c: return weapon_3c(caller, last);
-    case 0x38: return weapon_38(caller, last);
-    case 0xc0: return weapon_c0(caller, last);
-    case 0x90: return weapon_90(caller, last);
-    case 0x48: return weapon_48(caller, last);
-    case 0xb0: return weapon_b0(caller, last);
-    case 0x28: return weapon_28(caller, last);
-    case 0x94: return weapon_94(caller, last);
+    case 0x44: return give_rear_shot(caller, last);
+    case 0x98: return give_side_shot(caller, last);
+    case 0x34: return give_cannon(caller, last);
+    case 0x2c: return give_drone(caller, last);
+    case 0x20: return give_laser(caller, last);
+    case 0x4c: return give_electro_ball(caller, last);
+    case 0x3c: return give_mine_2(caller, last);
+    case 0x38: return give_mine_1(caller, last);
+    case 0xc0: return give_double_shot(caller, last);
+    case 0x90: return give_missile_launcher(caller, last);
+    case 0x48: return give_homing_missile(caller, last);
+    case 0xb0: return give_flamer(caller, last);
+    case 0x28: return give_bomb(caller, last);
+    case 0x94: return give_forward_shot(caller, last);
     }
     return last;
 }
 
 /* orig $005592: update of weapon $94 */
-void weapon94_update(Object *obj)
+void forward_shot_update(Object *obj)
 {
     if (xenon2.dive_phase)
         return;
@@ -451,7 +451,7 @@ void weapon94_update(Object *obj)
 }
 
 /* orig $0055B2: update of weapon $98 */
-void weapon98_update(Object *obj)
+void side_shot_update(Object *obj)
 {
     if (xenon2.dive_phase)
         return;
@@ -462,7 +462,7 @@ void weapon98_update(Object *obj)
 }
 
 /* orig $0055E2: update of weapon $44 */
-void weapon44_update(Object *obj)
+void rear_shot_update(Object *obj)
 {
     anim_step(obj);
     obj->x = PLAYER->x;
@@ -479,7 +479,7 @@ void weapon44_update(Object *obj)
 }
 
 /* orig $005624: update of weapon $9c (slot 6, type $28) */
-void weapon9c_update(Object *obj)
+void bomb_update(Object *obj)
 {
     Object *other, *n;
     int16_t y;
@@ -518,7 +518,7 @@ void weapon9c_update(Object *obj)
 static const uint16_t *const drill_anim[8] = { xenon2.anim_drill_0, xenon2.anim_drill_1, xenon2.anim_drill_2, xenon2.anim_drill_3, xenon2.anim_drill_4, xenon2.anim_drill_5, xenon2.anim_drill_6, xenon2.anim_drill_7 };
 
 /* orig $0056D6: update of weapon $a0 (slot 5 or 6, type $48) */
-void weaponA0_update(Object *obj)
+void homing_missile_update(Object *obj)
 {
     Object *other, *cur;
     int16_t cnt;
@@ -696,9 +696,9 @@ void pickup_ca0(Object *obj)
 }
 
 /* orig $004920 */
-void pickup_weapon_98(Object *obj)
+void pickup_side_shot(Object *obj)
 {
-    weapon_98(obj, 0);
+    give_side_shot(obj, 0);
 }
 
 /* orig $004904, $004924: pickups with no effect */
@@ -800,18 +800,18 @@ void init_weapons(Object *caller)
     LIST_A->fn_update = obj_nop;
     LIST_A->fn_draw = obj_nop;
     LIST_A->fn_hit = (void *)obj_nop;
-    last = weapon_94(caller, last);
-    last = weapon_34(caller, last);
-    last = weapon_34(caller, last);
-    last = weapon_20(caller, last);
+    last = give_forward_shot(caller, last);
+    last = give_cannon(caller, last);
+    last = give_cannon(caller, last);
+    last = give_laser(caller, last);
     last->score = 2;
-    last = weapon_20(caller, last);
+    last = give_laser(caller, last);
     last->score = 2;
-    last = weapon_2c(caller, last);
+    last = give_drone(caller, last);
     last->score = 2;
-    last = weapon_98(caller, last);
+    last = give_side_shot(caller, last);
     last->score = 2;
-    last = weapon_c0(caller, last);
+    last = give_double_shot(caller, last);
     last->score = 2;
 }
 
@@ -826,18 +826,18 @@ static void pickup_call(int idx, Object *obj)
     case 1: pickup_speed(obj); break;
     case 2: pickup_shield_small(obj); break;
     case 3: pickup_shield_big(obj); break;
-    case 4: weapon_44(obj, 0); break;
-    case 5: pickup_weapon_98(obj); break;
+    case 4: give_rear_shot(obj, 0); break;
+    case 5: pickup_side_shot(obj); break;
     case 6: pickup_grow_weakest(obj); break;
-    case 7: weapon_34(obj, 0); break;
-    case 8: weapon_2c(obj, 0); break;
-    case 9: weapon_20(obj, 0); break;
-    case 10: weapon_4c(obj, 0); break;
-    case 11: weapon_38(obj, 0); break;
-    case 12: weapon_90(obj, 0); break;
-    case 13: weapon_48(obj, 0); break;
-    case 14: weapon_b0(obj, 0); break;
-    case 15: weapon_28(obj, 0); break;
+    case 7: give_cannon(obj, 0); break;
+    case 8: give_drone(obj, 0); break;
+    case 9: give_laser(obj, 0); break;
+    case 10: give_electro_ball(obj, 0); break;
+    case 11: give_mine_1(obj, 0); break;
+    case 12: give_missile_launcher(obj, 0); break;
+    case 13: give_homing_missile(obj, 0); break;
+    case 14: give_flamer(obj, 0); break;
+    case 15: give_bomb(obj, 0); break;
     case 16: pickup_spinner(obj); break;
     case 17: pickup_ca0(obj); break;
     case 18: pickup_bomb(obj); break;
@@ -1326,7 +1326,7 @@ test:
 }
 
 /* orig $003B4A: update of weapon $C0 (slot 0): two shots a frame while fire is held */
-void weaponc0_update(Object *obj)
+void double_shot_update(Object *obj)
 {
     obj->x = PLAYER->x;
     obj->y = PLAYER->y;
@@ -1342,7 +1342,7 @@ void weaponc0_update(Object *obj)
 }
 
 /* orig $003B94: update of weapon $B0 (slot 0): while fire is held two shots (type $B4) of random spread each frame and the sound */
-void weaponb0_update(Object *obj)
+void flamer_update(Object *obj)
 {
     int16_t i;
 
@@ -1407,7 +1407,7 @@ void pod_decoration_update(Object *obj)
 
 /* orig $003CDC: update of weapon $2C (slot 5): while fire is held every 6 frames a fan of dots (the table by the weapon's level) goes into
  * the free places of the shots' table */
-void weapon2c_update(Object *obj)
+void drone_update(Object *obj)
 {
     static const int16_t *const pat[3] = { &xenon2.weapon2c_patterns[0], &xenon2.weapon2c_patterns[17], &xenon2.weapon2c_patterns[50] };
     const int16_t *pattern;
@@ -1446,7 +1446,7 @@ void weapon2c_update(Object *obj)
 
 /* orig $003E2C: update of weapon $4C (slot 5): a beam that flies out while fire is held (v28 = 1), moved by the stick, hurting what it
  * meets, and comes back to the ship when fire is let go (v28 negative) */
-void weapon4c_update(Object *obj)
+void electro_ball_update(Object *obj)
 {
     int16_t coord, step;
     Object *enemy;
@@ -1507,7 +1507,7 @@ void weapon4c_update(Object *obj)
 }
 
 /* orig $003F3A: update of weapon $20 (side slot): every 7 frames while fire is held a beam (type $24) goes up from it */
-void weapon20_update(Object *obj)
+void laser_update(Object *obj)
 {
     Object *beam;
 
@@ -1587,7 +1587,7 @@ hurt:
 
 /* orig $004094: update of weapon $34 (side slot, the pod): with the first picture ($17336) the pod makes its little trail object
  * (type $30); with the picture $171D6 and fire held it plays the sound $80 and changes to the animation $27F2 */
-void weapon34_update(Object *obj)
+void cannon_update(Object *obj)
 {
     Object *trail;
 
@@ -1639,7 +1639,7 @@ void pod_trail_update(Object *obj)
 
 /* orig $00415A: update of weapon $90 (side slot, twin gun): with the picture $1838C it fires two shots (type $10); with $182DC
  * and fire held it changes its delay */
-void weapon90_update(Object *obj)
+void missile_launcher_update(Object *obj)
 {
     int16_t dx, i;
 
@@ -1706,7 +1706,7 @@ void shell_update(Object *obj)
 /* orig $004340: update of weapon $38 and $3C (slot 5): the shell follows the ship until fire is held (v28 = 1), flies up to the top
  * (v28 = 2), is steered by the stick, leaves a trail of copies of itself (v28 negative, they explode when fire is let go), comes back
  * (v28 = 3) when fire is let go */
-void weapon38_update(Object *obj)
+void mine_update(Object *obj)
 {
     int16_t x, y, dist, step;
 
