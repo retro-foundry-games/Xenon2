@@ -442,8 +442,7 @@ struct Xenon2 {
     uint16_t gfx_19328[635];  /* $019328 arr */
     const uint8_t digit_gfx[640];  /* $01981E tab */
     const uint16_t panel_words[640];  /* $019A9E tab */
-    uint8_t music_base[4];  /* $019F9E arr */
-    PAD(1504)
+    PAD(1508)
     uint16_t music_tempo_mul;  /* $01A582 var */
     uint8_t music_volume_hi;  /* $01A584 var */
     uint8_t music_volume_lo;  /* $01A585 var */
@@ -880,7 +879,6 @@ LAYOUT_ASSERT(gfx_192bc, 0x192bc);
 LAYOUT_ASSERT(gfx_19328, 0x19328);
 LAYOUT_ASSERT(digit_gfx, 0x1981e);
 LAYOUT_ASSERT(panel_words, 0x19a9e);
-LAYOUT_ASSERT(music_base, 0x19f9e);
 LAYOUT_ASSERT(music_tempo_mul, 0x1a582);
 LAYOUT_ASSERT(music_volume_hi, 0x1a584);
 LAYOUT_ASSERT(music_volume_lo, 0x1a585);

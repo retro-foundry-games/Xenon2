@@ -28,7 +28,7 @@ struct Instrument {
 struct SongHeader {
     uint8_t tempo;          /* 0: -> music_tempo_mul after ext.w ($1A582 word) */
     uint8_t rate;           /* 1: -> music_rate */
-    uint16_t list[4];       /* 2: offset from music_base of each channel's list of sequences (words, 0 ends) */
+    uint16_t list[4];       /* 2: offset from MUSIC_OFFSET_ZERO of each channel's list of sequences (words, 0 ends) */
 };
 
 /* a music channel ($1A596, 4 x 0x30) */
@@ -38,7 +38,7 @@ struct MusicChannel {
     uint8_t note;           /* 2: current note */
     uint8_t transpose;      /* 3 */
     const uint8_t *stream;  /* 4: sequence being played */
-    uint16_t list_off;      /* 8: offset (from music_base) of the channel's list of sequences */
+    uint16_t list_off;      /* 8: offset (from MUSIC_OFFSET_ZERO) of the channel's list of sequences */
     uint16_t list_idx;      /* a: byte index into the list */
     const uint8_t *env_start; /* c: pitch envelope start (the loop target) */
     const uint8_t *env_ptr; /* 10: pitch envelope position, bit 7 of a byte = go to env_start */
