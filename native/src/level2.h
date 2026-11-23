@@ -44,10 +44,10 @@ struct Level2WallPieces {
 _Static_assert(sizeof(struct Level2WallPieces) == 146, "Level2WallPieces");
 
 struct Level2Data {
-    BLOB_PAD(2)
+    BLOB_PAD(0, 2)
     uint16_t marker_f8_energy;   /* 54E42 */
     uint16_t marker_fc_energy;   /* 54E44 */
-    BLOB_PAD(1)
+    BLOB_PAD(6, 1)
     uint8_t turret_chance;   /* 54E47 */
     uint16_t turret_param;   /* 54E48 */
     uint16_t turret_shot_steps;   /* 54E4A */
@@ -57,17 +57,17 @@ struct Level2Data {
     uint16_t debris_wall_energy;   /* 54E52 */
     uint16_t debris_wall_steps;   /* 54E54 */
     uint16_t roamer_energy;   /* 54E56 */
-    BLOB_PAD(1)
+    BLOB_PAD(18, 1)
     uint8_t roamer_shot_fire_rate;   /* 54E59 */
     uint16_t roamer_shot_param;   /* 54E5A */
     uint16_t roamer_shot_shot_steps;   /* 54E5C */
     uint16_t init_energy;   /* 54E5E */
     uint16_t init_energy_2;   /* 54E60 */
     uint16_t front_param;   /* 54E62 */
-    BLOB_PAD(1)
+    BLOB_PAD(24, 1)
     uint8_t boss_fire_rate;   /* 54E65 */
     uint16_t boss_shot_steps;   /* 54E66 */
-    BLOB_PAD(26)
+    BLOB_PAD(28, 26)
     struct Formation1 formation_1;   /* 54E82 */
     struct Formation1 formation_2;   /* 54E9C */
     struct Formation1 formation_3;   /* 54EB6 */
@@ -104,30 +104,30 @@ struct Level2Data {
     uint16_t launcher_anim_100[193];   /* 55D42 */
     struct Level2WallPieces wall_pieces;   /* 55EC4 */
     struct Level2DebrisWall debris_wall_records[16];   /* 55F56 */
-    BLOB_PAD(938)
+    BLOB_PAD(11d6, 938)
     const uint16_t *bolt_anims_by_dir[8];   /* 563C0 */
-    BLOB_PAD(326)
+    BLOB_PAD(15a0, 326)
     struct Level2RoamerNode roamer_shot_entries[8];   /* 56526 */
     const uint16_t *front_anims_by_dir[8];   /* 56576 */
-    BLOB_PAD(612)
+    BLOB_PAD(1756, 612)
     const uint16_t *piece_pictures_other[8];   /* 567FA */
     const uint16_t *piece_pictures_118[8];   /* 5681A */
     const uint16_t *piece_pictures_11c[8];   /* 5683A */
-    BLOB_PAD(192)
+    BLOB_PAD(1a1a, 192)
     uint16_t gate_flash_cells_b[6];   /* 5691A */
     uint16_t gate_flash_cells_a[6];   /* 56926 */
     uint16_t gate_flash_cells_c[270];   /* 56932 */
     uint16_t gate_number_cells[5];   /* 56B4E */
     uint16_t gate_cells[118];   /* 56B58 */
     const uint16_t *boss_cells_by_cell[4];   /* 56C44 */
-    BLOB_PAD(498)
+    BLOB_PAD(1e14, 498)
     const uint8_t *boss_move_paths_a[2];   /* 56E46 */
     const uint8_t *boss_move_paths_b[2];   /* 56E4E */
-    BLOB_PAD(56)
+    BLOB_PAD(2016, 56)
     uint16_t anim_boss_update[15];   /* 56E8E */
     uint16_t anim_boss_update_2[60];   /* 56EAC */
     uint32_t block_group_offsets[4];   /* 56F24 */
-    BLOB_PAD(810)
+    BLOB_PAD(20f4, 810)
     uint16_t boss_grid[38];   /* 5725E */
     uint16_t boss_cells[16];   /* 572AA */
     uint16_t words_572ca[3691];   /* 572CA */
@@ -150,7 +150,7 @@ struct Level2Data {
     uint16_t pad_6dcaa[7680];   /* 6DCAA */
     uint16_t block_source[180];   /* 718AA */
     uint16_t data_src[6000];   /* 71A12 */
-    BLOB_PAD(34502)
+    BLOB_PAD(1fab2, 34502)
     uint16_t blocks[180];   /* 7CFB8 */
 };
 _Static_assert(sizeof(struct Level2Data) == 164576, "Level2Data");

@@ -44,58 +44,58 @@ struct Level4Boss2Piece {
 _Static_assert(sizeof(struct Level4Boss2Piece) == 20, "Level4Boss2Piece");
 
 struct Level4Data {
-    BLOB_PAD(2)
+    BLOB_PAD(0, 2)
     uint16_t scroll_energy;   /* 54E42 */
     uint16_t enemy_a_fall;   /* 54E44 */
-    BLOB_PAD(1)
+    BLOB_PAD(6, 1)
     uint8_t enemy_a_fire_rate;   /* 54E47 */
     uint16_t shot_a_energy;   /* 54E48 */
     uint16_t shot_a_steps;   /* 54E4A */
     uint16_t enemy_b_fall;   /* 54E4C */
-    BLOB_PAD(1)
+    BLOB_PAD(e, 1)
     uint8_t enemy_b_fire_rate;   /* 54E4F */
     uint16_t enemy_b_shot_steps;   /* 54E50 */
-    BLOB_PAD(1)
+    BLOB_PAD(12, 1)
     uint8_t b1_core_fire_rate;   /* 54E53 */
-    BLOB_PAD(1)
+    BLOB_PAD(14, 1)
     uint8_t b1_gun_fire_rate;   /* 54E55 */
     uint16_t b1_gun_shot_steps;   /* 54E56 */
-    BLOB_PAD(1)
+    BLOB_PAD(18, 1)
     uint8_t b2_head_chance;   /* 54E59 */
-    BLOB_PAD(1)
+    BLOB_PAD(1a, 1)
     uint8_t b2_eye_fire_rate;   /* 54E5B */
     uint16_t b2_eye_shot_steps;   /* 54E5C */
-    BLOB_PAD(1)
+    BLOB_PAD(1e, 1)
     uint8_t bar_fire_rate;   /* 54E5F */
     uint16_t walker_energy;   /* 54E60 */
-    BLOB_PAD(1)
+    BLOB_PAD(22, 1)
     uint8_t walker_chance;   /* 54E63 */
     uint16_t walker_step_x;   /* 54E64 */
     uint16_t tower_energy;   /* 54E66 */
-    BLOB_PAD(1)
+    BLOB_PAD(28, 1)
     uint8_t tower_fire_rate;   /* 54E69 */
     uint16_t tower_param;   /* 54E6A */
     uint16_t tower_shot_steps;   /* 54E6C */
     uint16_t init_patch;   /* 54E6E */
     uint16_t init_patch_2;   /* 54E70 */
-    BLOB_PAD(1)
+    BLOB_PAD(32, 1)
     uint8_t b2_barrel_fire_rate;   /* 54E73 */
     uint16_t b2_barrel_shot_steps;   /* 54E74 */
-    BLOB_PAD(1)
+    BLOB_PAD(36, 1)
     uint8_t init_patch_3;   /* 54E77 */
-    BLOB_PAD(1)
+    BLOB_PAD(38, 1)
     uint8_t init_patch_4;   /* 54E79 */
-    BLOB_PAD(1)
+    BLOB_PAD(3a, 1)
     uint8_t init_patch_5;   /* 54E7B */
     uint16_t walker_v5e;   /* 54E7C */
-    BLOB_PAD(1)
+    BLOB_PAD(3e, 1)
     uint8_t b2_ring_fire_rate;   /* 54E7F */
     uint16_t b2_ring_shot_steps;   /* 54E80 */
     uint16_t b2_ring_shot_picture;   /* 54E82 */
-    BLOB_PAD(2)
+    BLOB_PAD(44, 2)
     uint16_t enemy_a_shot_steps;   /* 54E86 */
     uint16_t enemy_a_shot_picture;   /* 54E88 */
-    BLOB_PAD(2)
+    BLOB_PAD(4a, 2)
     struct Formation2 formation_1;   /* 54E8C */
     struct Formation1 formation_4;   /* 54EBE */
     struct Formation1 formation_2;   /* 54ED8 */
@@ -105,52 +105,52 @@ struct Level4Data {
     uint16_t words_54f40[60];   /* 54F40 */
     uint16_t pad_54fb8[42];   /* 54FB8 */
     uint16_t words_5500c[66];   /* 5500C */
-    BLOB_PAD(202)
+    BLOB_PAD(250, 202)
     struct Level4ScrollEnemy scroll_enemies[4];   /* 5515A */
     uint16_t words_5518a[96];   /* 5518A */
-    BLOB_PAD(308)
+    BLOB_PAD(40a, 308)
     struct Level4EnemyGun enemy_a_guns[2];   /* 5537E */
-    BLOB_PAD(486)
+    BLOB_PAD(54e, 486)
     const uint16_t *anims_by_kind[8];   /* 55574 */
     uint16_t words_55594[192];   /* 55594 */
     const uint8_t *enemy_f8_paths[4];   /* 55714 */
-    BLOB_PAD(348)
+    BLOB_PAD(8e4, 348)
     struct Level4Boss1Piece boss1_pieces[19];   /* 55880 */
-    BLOB_PAD(214)
+    BLOB_PAD(b96, 214)
     uint16_t core_cells[30];   /* 55AAC */
     uint16_t core_cells_tall[92];   /* 55AE8 */
     const uint16_t *gun_cells_left[8];   /* 55BA0 */
-    BLOB_PAD(4)
+    BLOB_PAD(d80, 4)
     const uint16_t *gun_cells_right[8];   /* 55BC4 */
-    BLOB_PAD(112)
+    BLOB_PAD(da4, 112)
     uint16_t b1_core_sway[16];   /* 55C54 */
-    BLOB_PAD(412)
+    BLOB_PAD(e34, 412)
     uint16_t b1_gun_dx_by_dir[8];   /* 55E10 */
     uint16_t b1_gun_dy_by_dir[8];   /* 55E20 */
     const uint16_t *b1_gun_anims_by_angle[8];   /* 55E30 */
     uint16_t words_55e50[60];   /* 55E50 */
     uint8_t b1_gun_dirs_left[8];   /* 55EC8 */
     uint8_t b1_gun_dirs_right[8];   /* 55ED0 */
-    BLOB_PAD(322)
+    BLOB_PAD(1098, 322)
     uint16_t words_5601a[144];   /* 5601A */
     struct Level4Boss2Piece boss2_pieces[20];   /* 5613A */
-    BLOB_PAD(648)
+    BLOB_PAD(148a, 648)
     uint16_t b2_shot_anim[18];   /* 56552 */
     const uint16_t *head_pictures[4];   /* 56576 */
-    BLOB_PAD(84)
+    BLOB_PAD(1746, 84)
     const uint16_t *b2_gun_pictures[8];   /* 565DA */
-    BLOB_PAD(134)
+    BLOB_PAD(17ba, 134)
     const uint16_t *b2_barrel_anims_by_dir[8];   /* 56680 */
     uint16_t b2_muzzle_dx[8];   /* 566A0 */
     uint16_t b2_muzzle_dy[8];   /* 566B0 */
     uint16_t words_566c0[144];   /* 566C0 */
-    BLOB_PAD(242)
+    BLOB_PAD(19a0, 242)
     const uint16_t *b2_eye_anims[8];   /* 568D2 */
-    BLOB_PAD(386)
+    BLOB_PAD(1ab2, 386)
     uint16_t bar_anim_10c[18];   /* 56A74 */
     uint16_t bar_anim_other[199];   /* 56A98 */
     uint16_t bar_cells[6];   /* 56C26 */
-    BLOB_PAD(162)
+    BLOB_PAD(1df2, 162)
     uint16_t walker_anim_other[18];   /* 56CD4 */
     uint16_t walker_anim_e0[365];   /* 56CF8 */
     uint16_t walker_grid_x[11];   /* 56FD2 */
@@ -170,13 +170,13 @@ struct Level4Data {
     uint16_t b2_eye_shot_picture[96];   /* 5FDA6 */
     uint16_t enemy_b_picture_2[43];   /* 5FE66 */
     uint16_t enemy_b_picture[16];   /* 5FEBC */
-    BLOB_PAD(46)
+    BLOB_PAD(b09c, 46)
     uint16_t pad_5ff0a[1641];   /* 5FF0A */
     uint16_t words_60bdc[13917];   /* 60BDC */
     struct SpawnRec events_b[36];   /* 67896 */
     int16_t events_b_end;   /* 67A8E */
     uint16_t pad_67a90[16272];   /* 67A90 */
-    BLOB_PAD(33216)
+    BLOB_PAD(1ab70, 33216)
     struct ShotPic *shot_gfx_table[5];   /* 77B70 */
     struct ShotPic shot_gfx_cells[3];   /* 77B84 */
     struct PathCmd *formation_paths[72];   /* 77B90 */
