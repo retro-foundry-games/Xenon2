@@ -8,6 +8,9 @@
  *   xenon2-sdl [--disks FOLDER] [--scale N] [--renderer NAME]
  */
 #include <SDL3/SDL.h>
+#ifdef __EMSCRIPTEN__
+#include <emscripten.h>
+#endif
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -215,10 +218,17 @@ void host_frame_end(void)
         if (next == 0)
             next = now;
         next += 20000000;
+#ifdef __EMSCRIPTEN__
+        /* the browser's loop runs between the frames (Asyncify: the game's stack is parked here) */
+        emscripten_sleep(next > now ? (unsigned)((next - now) / 1000000) : 0);
+        if (next < now && now - next > 200000000)
+            next = now;
+#else
         if (next > now)
             SDL_DelayNS(next - now);
         else if (now - next > 200000000)
             next = now;
+#endif
     }
     joystick_registers();
     deliver_keys();
@@ -292,7 +302,11 @@ int host_init(int argc, char **argv)
 
         /* Wayland first, then X11, unless SDL_VIDEO_DRIVER says which */
         char failure[256] = "";
+#ifdef __EMSCRIPTEN__
+        const char *drivers[] = { 0, 0, 0 };   /* the browser's */
+#else
         const char *drivers[] = { getenv("SDL_VIDEO_DRIVER") ? 0 : "wayland", getenv("SDL_VIDEO_DRIVER") ? 0 : "x11", 0 };
+#endif
 
         for (int i = 0; !renderer && (i == 0 || drivers[i - 1]); i++) {
             if (drivers[i])
