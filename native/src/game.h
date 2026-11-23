@@ -5,7 +5,6 @@
 #include <stddef.h>
 #include "types.h"
 
-#include "types_blobs.h"
 #include "types_kinds.h"
 #include "types_menus.h"
 #include "types_objects.h"
@@ -13,6 +12,13 @@
 #include "types_sound.h"
 #include "types_title.h"
 #include "types_weapons.h"
+#include "level.h"
+#include "level1.h"
+#include "level2.h"
+#include "level3.h"
+#include "level4.h"
+#include "level5.h"
+#include "shop.h"
 _Static_assert(sizeof(struct HwMirror) == 12, "struct HwMirror has not the size game.symbols gives");
 _Static_assert(sizeof(struct Instrument) == 12, "struct Instrument has not the size game.symbols gives");
 _Static_assert(sizeof(struct MusicChannel) == 48, "struct MusicChannel has not the size game.symbols gives");

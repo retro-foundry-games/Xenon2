@@ -1,4 +1,4 @@
-/* level2: level 2's own code (the blob at $54E40 while level 2 is loaded).  The blob is level2_data (struct Level2Data, types_blobs.h): its integer and
+/* level2: level 2's own code (the blob at $54E40 while level 2 is loaded).  The blob is level2_data (struct Level2Data, level2.h): its integer and
  * pointer members are converted when it is loaded, the words (cells, animations, pictures) are native;
  * a function has `level2 $ADDR` for its address (not `orig $`: level 1's code is at the same addresses).  The addresses of code with no C
  * yet resolve to a function that does nothing (guest_missing_code). */
