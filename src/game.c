@@ -1,7 +1,6 @@
 #include "game.h"
 #include "game_all.h"
 #include "amiga/hw.h"
-#include "mainloop.h"
 #ifdef GAME_SDL
 extern void guest_stick_restore(void);   /* sdl/guest.c: undoes what the lockstep put into joy_stick */
 #endif

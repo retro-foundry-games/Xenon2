@@ -491,7 +491,7 @@ void host_irq_dispatch(int level)
         xenon2.irq_vectors[level - 1]();
 }
 
-extern void game_entry(void) __attribute__((weak));   /* mainloop: the start-up flow of the original ($400) */
+extern void game_entry(void) __attribute__((weak));   /* game.c: the start-up flow of the original ($400) */
 
 void host_game_start(void)
 {
