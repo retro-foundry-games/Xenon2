@@ -1152,7 +1152,7 @@ void init_objects(void)
     }
     for (i = 0; i < 7; i++)
         xenon2.weapon_slots[i].type = 0;
-    weapon_94(0, 0);
+    give_forward_shot(0, 0);
     for (i = 0; i < 14; i++)
         xenon2.slot_snapshot[i] = 0;
     latch_slots(0);

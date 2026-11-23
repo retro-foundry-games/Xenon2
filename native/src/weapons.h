@@ -17,12 +17,12 @@ typedef void (*hit_fn)(Object *shooter, Object *target, uint16_t damage);
 
 void weapon_shield_draw(Object *obj);
 void area_damage(Object *shooter, int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_t dmg);
-void spinner_update(Object *obj); void drill_update(Object *obj); void weaponc0_update(Object *obj); void weaponb0_update(Object *obj);
-void pod_decoration_update(Object *obj); void weapon2c_update(Object *obj); void weapon4c_update(Object *obj); void weapon20_update(Object *obj);
-void beam_update(Object *obj); void beam_draw(Object *obj); void weapon34_update(Object *obj); void pod_trail_update(Object *obj);
-void weapon90_update(Object *obj); void shell_update(Object *obj); void weapon38_update(Object *obj);
-void weapon94_update(Object *obj); void weapon98_update(Object *obj); void weapon44_update(Object *obj);
-void weapon9c_update(Object *obj); void weaponA0_update(Object *obj);
+void spinner_update(Object *obj); void drill_update(Object *obj); void double_shot_update(Object *obj); void flamer_update(Object *obj);
+void pod_decoration_update(Object *obj); void drone_update(Object *obj); void electro_ball_update(Object *obj); void laser_update(Object *obj);
+void beam_update(Object *obj); void beam_draw(Object *obj); void cannon_update(Object *obj); void pod_trail_update(Object *obj);
+void missile_launcher_update(Object *obj); void shell_update(Object *obj); void mine_update(Object *obj);
+void forward_shot_update(Object *obj); void side_shot_update(Object *obj); void rear_shot_update(Object *obj);
+void bomb_update(Object *obj); void homing_missile_update(Object *obj);
 
 /* the object lists: $AD8, $B3A and $B9C are sentinels in obj_list */
 #define LIST_A ((Object *)&xenon2.obj_list[1])
@@ -33,26 +33,26 @@ void weapon9c_update(Object *obj); void weaponA0_update(Object *obj);
 
 Object *weapon_select(uint16_t type, Object *caller, Object *last);               /* orig $004822 */
 Object *refill_slot0(Object *caller, Object *last);                                /* orig $005540 */
-Object *weapon_94(Object *caller, Object *last);                                 /* orig $004AFC */
+Object *give_forward_shot(Object *caller, Object *last);                                 /* orig $004AFC */
 void init_weapons(Object *caller);                                             /* orig $004A0A */
 void pickup_update(Object *obj);                                            /* orig $004634 */
 
-Object *weapon_c0(Object *caller, Object *last);                                 /* orig $004BA8 */
-Object *weapon_98(Object *caller, Object *last);                                 /* orig $004C64 */
-Object *weapon_28(Object *caller, Object *last);                                 /* orig $004D28 */
-Object *weapon_48(Object *caller, Object *last);                                 /* orig $004DC6 */
-Object *weapon_b0(Object *caller, Object *last);                                 /* orig $004E74 */
-Object *weapon_2c(Object *caller, Object *last);                                 /* orig $004F66 */
-Object *weapon_4c(Object *caller, Object *last);                                 /* orig $005014 */
-Object *weapon_38(Object *caller, Object *last);                                 /* orig $0050AC */
-Object *weapon_3c(Object *caller, Object *last);                                 /* orig $005158 */
-Object *weapon_44(Object *caller, Object *last);                                 /* orig $005206 */
-Object *weapon_90(Object *caller, Object *last);                                 /* orig $0052E0 */
-Object *weapon_20(Object *caller, Object *last);                                 /* orig $00538C */
-Object *weapon_34(Object *caller, Object *last);                                 /* orig $00543A */
+Object *give_double_shot(Object *caller, Object *last);                                 /* orig $004BA8 */
+Object *give_side_shot(Object *caller, Object *last);                                 /* orig $004C64 */
+Object *give_bomb(Object *caller, Object *last);                                 /* orig $004D28 */
+Object *give_homing_missile(Object *caller, Object *last);                                 /* orig $004DC6 */
+Object *give_flamer(Object *caller, Object *last);                                 /* orig $004E74 */
+Object *give_drone(Object *caller, Object *last);                                 /* orig $004F66 */
+Object *give_electro_ball(Object *caller, Object *last);                                 /* orig $005014 */
+Object *give_mine_1(Object *caller, Object *last);                                 /* orig $0050AC */
+Object *give_mine_2(Object *caller, Object *last);                                 /* orig $005158 */
+Object *give_rear_shot(Object *caller, Object *last);                                 /* orig $005206 */
+Object *give_missile_launcher(Object *caller, Object *last);                                 /* orig $0052E0 */
+Object *give_laser(Object *caller, Object *last);                                 /* orig $00538C */
+Object *give_cannon(Object *caller, Object *last);                                 /* orig $00543A */
 void pickup_shield_small(Object *obj); void pickup_shield_big(Object *obj); void pickup_grow_weakest(Object *obj);
 void pickup_speed(Object *obj); void pickup_move(Object *obj); void pickup_flag_d83(Object *obj); void pickup_ca0(Object *obj);
-void pickup_weapon_98(Object *obj); void pickup_nothing(Object *obj); void pickup_bomb(Object *obj); void pickup_spinner(Object *obj);
+void pickup_side_shot(Object *obj); void pickup_nothing(Object *obj); void pickup_bomb(Object *obj); void pickup_spinner(Object *obj);
 void shot_fixed_update(Object *obj); void shot_update(Object *obj);
 void kill_with_slot(Object *obj); void free_with_slot(Object *obj);
 void player_dies(Object *ship); void player_damage(Object *ship, uint16_t damage); void player_move(Object *ship); void player_update(Object *ship);
