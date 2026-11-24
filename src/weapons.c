@@ -1433,6 +1433,9 @@ void drone_update(Object *obj)
     for (i = 0x4f; i >= 0; i--, shot++) {
         if (shot->x >= 0)
             continue;
+#ifdef GAME_SDL
+        presentation_reuse(shot);
+#endif
         shot->x = (int16_t)(obj->x + *pattern++);
         shot->y = (int16_t)(obj->y + *pattern++);
         shot->dx = *pattern++;
@@ -1884,6 +1887,10 @@ void beam_draw(Object *obj)
             rot[i] = shift ? (pattern[i] >> shift) | (pattern[i] << (32 - shift)) : pattern[i];
     }
     dst += ((uint16_t)((int16_t)x >> 3) & 0xfffe) / 2;
+#ifdef GAME_SDL
+    if (presentation_capturing)
+        presentation_draw(PRESENT_BEAM, x, y);
+#endif
     cnt = xenon2.beam_state[2];
     lt = 0;
     if ((int16_t)xenon2.beam_state[0] < 0) {
@@ -1893,7 +1900,7 @@ void beam_draw(Object *obj)
                 break;
             for (i = 0; i < 4; i++) {
                 uint16_t *plane = dst + SCREEN_PLANE_WORDS * i;
-                plane[0] = (uint16_t)((plane[0] & (uint16_t)rot[0]) | (uint16_t)rot[1 + i]);
+                draw_screen_word(plane, (uint16_t)~rot[0], (uint16_t)rot[1 + i]);
             }
             dst -= SCREEN_ROW_WORDS;
             lt = (int32_t)(uintptr_t)(dst) < (int32_t)(uintptr_t)(xenon2.draw_screen);
@@ -1904,7 +1911,7 @@ void beam_draw(Object *obj)
                 break;
             for (i = 0; i < 4; i++) {
                 uint16_t *plane = dst + SCREEN_PLANE_WORDS * i;
-                plane[0] = (uint16_t)((plane[0] & (uint16_t)(rot[0] >> 16)) | (uint16_t)(rot[1 + i] >> 16));
+                draw_screen_word(plane, (uint16_t)~(rot[0] >> 16), (uint16_t)(rot[1 + i] >> 16));
             }
             dst -= SCREEN_ROW_WORDS;
             lt = (int32_t)(uintptr_t)(dst) < (int32_t)(uintptr_t)(xenon2.draw_screen);
@@ -1915,8 +1922,8 @@ void beam_draw(Object *obj)
                 break;
             for (i = 0; i < 4; i++) {
                 uint16_t *plane = dst + SCREEN_PLANE_WORDS * i;
-                plane[0] = (uint16_t)((plane[0] & (uint16_t)(rot[0] >> 16)) | (uint16_t)(rot[1 + i] >> 16));
-                plane[1] = (uint16_t)((plane[1] & (uint16_t)rot[0]) | (uint16_t)rot[1 + i]);
+                draw_screen_word(plane, (uint16_t)~(rot[0] >> 16), (uint16_t)(rot[1 + i] >> 16));
+                draw_screen_word(plane + 1, (uint16_t)~rot[0], (uint16_t)rot[1 + i]);
             }
             dst -= SCREEN_ROW_WORDS;
             lt = (int32_t)(uintptr_t)(dst) < (int32_t)(uintptr_t)(xenon2.draw_screen);

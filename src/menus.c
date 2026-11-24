@@ -67,6 +67,9 @@ void palette_fade_out(int16_t wait)
 {
     int16_t n;
 
+#ifdef GAME_SDL
+    presentation_reset();
+#endif
     for (n = 7; n >= 0; n--) {
         int i;
 

@@ -2,6 +2,21 @@
 #define DRAW_H
 #include "game.h"
 #include "amiga/hw.h"
+#ifdef GAME_SDL
+#include "sdl/presentation.h"
+#endif
+
+const struct MaskRow *tile_mask_ptr(uint16_t cell);
+
+/* Replace the masked bits and set any additional bits present in the source. */
+static inline void draw_screen_word(uint16_t *word, uint16_t mask, uint16_t bits)
+{
+#ifdef GAME_SDL
+    if (presentation_capturing)
+        presentation_word(word, mask | bits, bits);
+#endif
+    *word = (uint16_t)((*word & ~mask) | bits);
+}
 
 /* the byte COL of the row ROW of a screen (rows of 160 bytes: four planes of 40) */
 #define SCREEN_POS(screen, row, col) ((uint8_t *)(screen) + (row) * SCREEN_ROW_BYTES + (col))

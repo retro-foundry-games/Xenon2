@@ -91,17 +91,13 @@ void anim_op_free(Object *o, const uint16_t *script)
 
 /* ---- the map under the player ---- */
 
-/* the three words of tile pointers for the next 16 pixel row of the map: 0 = empty tile mask, a negative word = a mask in
- * tile_gfx, else a full one */
-static const struct MaskRow *tile_mask_ptr(uint16_t w)
+/* The map's collision mask: empty, a masked tile, or a full cell. */
+const struct MaskRow *tile_mask_ptr(uint16_t cell)
 {
-    if (w == 0)
+    if (cell == 0)
         return (const struct MaskRow *)xenon2.mask_empty;
-    if ((int16_t)w < 0) {
-        const uint8_t *m = xenon2.tile_gfx + ((uint32_t)(w & 0x7fff) << 4);
-
-        return (const struct MaskRow *)m;
-    }
+    if (cell & 0x8000)
+        return (const struct MaskRow *)(xenon2.tile_gfx + ((uint32_t)(cell & 0x7fff) << 4));
     return (const struct MaskRow *)xenon2.mask_full;
 }
 
@@ -616,7 +612,15 @@ void run_draws(Object *obj)
     while (obj->type != 0) {
         Object *volatile next = OBJ_FWD(obj);   /* kept on the stack: the handlers do not preserve registers */
 
+#ifdef GAME_SDL
+        if (presentation_capturing)
+            presentation_owner(obj);
+#endif
         ((ObjFn)obj->fn_draw)(obj);
+#ifdef GAME_SDL
+        if (presentation_capturing)
+            presentation_owner(NULL);
+#endif
         obj = next;
     }
 }
@@ -1089,6 +1093,9 @@ steal:
     next->prev = prev;
     prev->next = next;
 clear:
+#ifdef GAME_SDL
+    presentation_reuse(obj);
+#endif
     obj->is_part = 0;
     obj->persists = 0;
     obj->screen_fixed = 0;
@@ -1285,8 +1292,14 @@ void update_shots(void)
         dst += (int16_t)((uint16_t)(y) * SCREEN_ROW_BYTES);
         x16 = x & 0xf;
         dst += (uint16_t)((x ^ x16) >> 3);
-#define ORW(off, v) (*(uint16_t *)(dst + (off)) |= (uint16_t)(v))
-#define ANDW(off, v) (*(uint16_t *)(dst + (off)) &= (uint16_t)(v))
+#ifdef GAME_SDL
+        if (presentation_capturing) {
+            presentation_owner(s);
+            presentation_draw(PRESENT_SHOT, x, y);
+        }
+#endif
+#define ORW(off, v) draw_screen_word((uint16_t *)(dst + (off)), (v), (v))
+#define ANDW(off, v) draw_screen_word((uint16_t *)(dst + (off)), (uint16_t)~(v), 0)
         if ((int16_t)x16 <= 0xc) {
             lo2 = (uint16_t)(0xe000u >> x16 | 0xe000u << (16 - x16));
             lo3 = (uint16_t)(0x4000u >> x16 | 0x4000u << (16 - x16));
@@ -1334,6 +1347,10 @@ void update_shots(void)
 #undef ORW
 #undef ANDW
     }
+#ifdef GAME_SDL
+    if (presentation_capturing)
+        presentation_owner(NULL);
+#endif
 }
 
 /* orig $F02, $006862: puts the objects of a chain (towards the previous ones) back on the free list */

@@ -964,6 +964,10 @@ void l5_beam_draw(Object *obj)
     base5 = ((pat0 & 0xffff) << 16) | (pat0 & 0xffff);
     length = obj->beam.length;
     y = obj->y;
+#ifdef GAME_SDL
+    if (presentation_capturing)
+        presentation_draw(PRESENT_BEAM, obj->x, y);
+#endif
     if (y < 0) {
         length = (int16_t)(length + y);
         if (length < 0)
@@ -980,20 +984,14 @@ void l5_beam_draw(Object *obj)
 
         while (dst < limit && length != 0) {
             uint16_t m2 = (uint16_t)pat2, h1 = (uint16_t)(pat1 >> 16), l1 = (uint16_t)pat1, h0 = (uint16_t)(pat0 >> 16), l0 = (uint16_t)pat0;
-            int p;
-
-            for (p = 0; p < 4; p++)
-                dst[SCREEN_PLANE_WORDS * p] = (uint16_t)(dst[SCREEN_PLANE_WORDS * p] & m2);
-            dst[0] = (uint16_t)(dst[0] | h1);
-            dst[SCREEN_PLANE_WORDS] = (uint16_t)(dst[SCREEN_PLANE_WORDS] | l1);
-            dst[2 * SCREEN_PLANE_WORDS] = (uint16_t)(dst[2 * SCREEN_PLANE_WORDS] | h0);
-            dst[3 * SCREEN_PLANE_WORDS] = (uint16_t)(dst[3 * SCREEN_PLANE_WORDS] | l0);
-            for (p = 0; p < 4; p++)
-                dst[1 + SCREEN_PLANE_WORDS * p] = (uint16_t)(dst[1 + SCREEN_PLANE_WORDS * p] & (uint16_t)pat5);
-            dst[1] = (uint16_t)(dst[1] | (uint16_t)(pat4 >> 16));
-            dst[1 + SCREEN_PLANE_WORDS] = (uint16_t)(dst[1 + SCREEN_PLANE_WORDS] | (uint16_t)pat4);
-            dst[1 + 2 * SCREEN_PLANE_WORDS] = (uint16_t)(dst[1 + 2 * SCREEN_PLANE_WORDS] | (uint16_t)(pat3 >> 16));
-            dst[1 + 3 * SCREEN_PLANE_WORDS] = (uint16_t)(dst[1 + 3 * SCREEN_PLANE_WORDS] | (uint16_t)pat3);
+            draw_screen_word(dst, (uint16_t)~m2, h1);
+            draw_screen_word(dst + SCREEN_PLANE_WORDS, (uint16_t)~m2, l1);
+            draw_screen_word(dst + 2 * SCREEN_PLANE_WORDS, (uint16_t)~m2, h0);
+            draw_screen_word(dst + 3 * SCREEN_PLANE_WORDS, (uint16_t)~m2, l0);
+            draw_screen_word(dst + 1, (uint16_t)~pat5, (uint16_t)(pat4 >> 16));
+            draw_screen_word(dst + 1 + SCREEN_PLANE_WORDS, (uint16_t)~pat5, (uint16_t)pat4);
+            draw_screen_word(dst + 1 + 2 * SCREEN_PLANE_WORDS, (uint16_t)~pat5, (uint16_t)(pat3 >> 16));
+            draw_screen_word(dst + 1 + 3 * SCREEN_PLANE_WORDS, (uint16_t)~pat5, (uint16_t)pat3);
             dst += SCREEN_ROW_WORDS;
             length--;
         }
