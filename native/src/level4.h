@@ -178,8 +178,7 @@ struct Level4Data {
     uint16_t b1_head_picture[622];   /* 5F8CA */
     uint16_t b2_eye_shot_picture[96];   /* 5FDA6 */
     uint16_t enemy_b_picture_2[43];   /* 5FE66 */
-    uint16_t enemy_b_picture[16];   /* 5FEBC */
-    BLOB_PAD(46)
+    uint16_t enemy_b_picture[39];   /* 5FEBC */
     uint16_t pad_5ff0a[1641];   /* 5FF0A */
     uint16_t words_60bdc[13917];   /* 60BDC */
     struct SpawnRec events_b[36];   /* 67896 */

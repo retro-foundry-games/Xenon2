@@ -114,7 +114,7 @@ end
 5f8ca b1_head_picture u16 622
 5fda6 b2_eye_shot_picture u16 96
 5fe66 enemy_b_picture_2 u16 43
-5febc enemy_b_picture u16 16
+5febc enemy_b_picture u16 39
 77b70 shot_gfx_table ptr:ShotPic 5
 77b84 shot_gfx_cells ShotPic 3
 77b90 formation_paths ptr:PathCmd 72
