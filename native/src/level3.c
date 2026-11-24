@@ -513,7 +513,7 @@ void l3_diver_update(Object *obj)
             flip = 0;
         } else if (x == 0xb8) {
             obj->diver.state = 1;
-            anim = xenon2.level3_data.diver_update_data_4;
+            anim = xenon2.level3_data.anim_diver_update_4;
             flip = 0;
         } else {
             bbox_from_frame(obj);

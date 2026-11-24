@@ -84,7 +84,7 @@ end
 567ce anim_diver_update u16 18
 567f2 anim_diver_update_3 u16 21
 5681c anim_diver_update_2 u16 18
-56840 diver_update_data_4 u16 177
+56840 anim_diver_update_4 u16 177
 569a2 boss_update_data u16 105
 56a74 boss_flash_grid u16 188
 56bec boss2_shot_anims ptr:u16 8

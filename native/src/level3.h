@@ -137,7 +137,7 @@ struct Level3Data {
     uint16_t anim_diver_update[18];   /* 567CE */
     uint16_t anim_diver_update_3[21];   /* 567F2 */
     uint16_t anim_diver_update_2[18];   /* 5681C */
-    uint16_t diver_update_data_4[177];   /* 56840 */
+    uint16_t anim_diver_update_4[177];   /* 56840 */
     uint16_t boss_update_data[105];   /* 569A2 */
     uint16_t boss_flash_grid[188];   /* 56A74 */
     const uint16_t *boss2_shot_anims[8];   /* 56BEC */
@@ -249,7 +249,7 @@ _Static_assert(offsetof(struct Level3Data, walker_update_words_6) == 0x56480 - B
 _Static_assert(offsetof(struct Level3Data, anim_diver_update) == 0x567CE - BLOB_BASE, "Level3Data.anim_diver_update");
 _Static_assert(offsetof(struct Level3Data, anim_diver_update_3) == 0x567F2 - BLOB_BASE, "Level3Data.anim_diver_update_3");
 _Static_assert(offsetof(struct Level3Data, anim_diver_update_2) == 0x5681C - BLOB_BASE, "Level3Data.anim_diver_update_2");
-_Static_assert(offsetof(struct Level3Data, diver_update_data_4) == 0x56840 - BLOB_BASE, "Level3Data.diver_update_data_4");
+_Static_assert(offsetof(struct Level3Data, anim_diver_update_4) == 0x56840 - BLOB_BASE, "Level3Data.anim_diver_update_4");
 _Static_assert(offsetof(struct Level3Data, boss_update_data) == 0x569A2 - BLOB_BASE, "Level3Data.boss_update_data");
 _Static_assert(offsetof(struct Level3Data, boss_flash_grid) == 0x56A74 - BLOB_BASE, "Level3Data.boss_flash_grid");
 _Static_assert(offsetof(struct Level3Data, boss2_shot_anims) == 0x56BEC - BLOB_BASE, "Level3Data.boss2_shot_anims");
