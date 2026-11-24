@@ -140,8 +140,8 @@ struct Level5Data {
     BLOB_PAD(532)
     uint16_t boss2_draw_rows[54];   /* 5688C */
     uint16_t boss2_flash_grid[8];   /* 568F8 */
-    uint16_t boss2_draw_data[18];   /* 56908 */
-    BLOB_PAD(512)
+    uint16_t boss2_draw_data[28];   /* 56908 */
+    BLOB_PAD(492)
     struct Level5Gate gates[3];   /* 56B2C */
     BLOB_PAD(224)
     uint16_t gate_update_data[50];   /* 56C30 */
