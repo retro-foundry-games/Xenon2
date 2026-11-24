@@ -77,8 +77,9 @@ end
 55880 boss1_pieces Level4Boss1Piece 19
 55aac core_cells u16 30
 55ae8 core_cells_tall u16 92
-55ba0 gun_cells_left ptr:u16 8
+55ba0 gun_cells_left ptr:u16 9
 55bc4 gun_cells_right ptr:u16 8
+55be4 gun_cell_tables u16 56
 55c54 b1_core_sway u16 16
 55e10 b1_gun_dx_by_dir u16 8
 55e20 b1_gun_dy_by_dir u16 8
