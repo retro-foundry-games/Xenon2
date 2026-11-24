@@ -90,7 +90,9 @@ static int blob_skips(uint32_t m)
 int guest_level_table(void) { return blob_raw >= 2 ? blob_raw : 0; }
 extern void *guest_code(uint32_t address);
 
-static void missing_code(void) {}
+/* what stands for the level's code that has no C: it takes the object like the update and draw routines it stands for (WebAssembly checks the signature of an indirect call) */
+static void missing_code(void *object) { (void)object; }
+int guest_is_missing_code(const void *function) { return function == (const void *)missing_code; }
 
 static void *guest_missing_code(uint32_t address)
 {

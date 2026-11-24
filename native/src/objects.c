@@ -771,9 +771,17 @@ void free_object(Object *obj)
     obj->type = 0;
 }
 
+#ifdef GAME_SDL
+int guest_is_missing_code(const void *function);
+#else
+#define guest_is_missing_code(function) 0
+#endif
+
 /* orig $005924: the hit routine of victim takes damage (the original jumps to it) */
 void apply_damage(Object *shooter, Object *victim, uint16_t damage)
 {
+    if (victim->fn_hit == (void *)obj_nop || victim->fn_hit == (void *)obj_nop_thunk || guest_is_missing_code(victim->fn_hit))   /* (no hit routine: these have the signature of the update routines, a call through hit_fn traps in WebAssembly) */
+        return;
     ((hit_fn)victim->fn_hit)(shooter, victim, damage);
 }
 
