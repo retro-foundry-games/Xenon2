@@ -328,9 +328,13 @@ static void wait_vbl_and_show(void)
 
 /* orig $0078CE-$007D9A: the main loop, one pass for each frame.  Returns when the restart key was pressed or a player's game
  * ended with no one left (the original jumps back to $7800). */
+static int resume_in_shop;   /* the game was started inside the shop's program (a savestate): the first pass takes up after it */
+
 static void main_loop(void)
 {
     for (;;) {
+        if (resume_in_shop)
+            goto shop_returned;
         xenon2.frame_tick++;
         if ((xenon2.frame_tick & 3) == 0) {
             xenon2.pickup_kind_a = xenon2.pickup_cycle;
@@ -431,6 +435,8 @@ static void main_loop(void)
             if ((int16_t)xenon2.scroll_pos > 0x3c0 || xenon2.level_number != 5 ||
                 (xenon2.shop_closing = 0xff, xenon2.players != 2) || xenon2.player_active[other] == 0 || xenon2.player_active[other + 2] != 0) {
                 shop_run();
+shop_returned:
+                resume_in_shop = 0;
                 draw_status_digit();
             }
             xenon2.level_over = 0;
@@ -626,6 +632,13 @@ void game_entry(void)
         game_session_start();
         main_loop();
     }
+}
+
+/* the game goes on after the shop's program, which a run started inside it has just left */
+void shop_resume(void)
+{
+    resume_in_shop = 1;
+    main_loop();
 }
 
 /* orig $006bc8 and $006bce: clears the first `rows` rows of both screens (the panel's rows follow the screen's: $6bc8 clears 200, $6bce 192) */
