@@ -593,6 +593,12 @@ void guest_set_shield(uint16_t frames)
     xenon2.shield_timer = frames;
 }
 
+void guest_set_random(uint32_t a, uint32_t b)
+{
+    xenon2.random_state_a = a;
+    xenon2.random_state_b = b;
+}
+
 void guest_stick_restore(void)
 {
     if (stick_poked)
