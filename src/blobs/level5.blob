@@ -84,7 +84,7 @@ end
 56658 boss2_turret_pictures ptr:u16 8
 5688c boss2_draw_rows u16 54
 568f8 boss2_flash_grid u16 8
-56908 boss2_draw_data u16 18
+56908 boss2_draw_data u16 28
 56b2c gates Level5Gate 3
 56c30 gate_update_data u16 50
 56c94 wall_cells_128 u16 4
