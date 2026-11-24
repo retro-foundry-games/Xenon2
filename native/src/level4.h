@@ -183,8 +183,7 @@ struct Level4Data {
     uint16_t words_60bdc[13917];   /* 60BDC */
     struct SpawnRec events_b[36];   /* 67896 */
     int16_t events_b_end;   /* 67A8E */
-    uint16_t pad_67a90[16272];   /* 67A90 */
-    BLOB_PAD(33216)
+    uint16_t pad_67a90[32880];   /* 67A90 */
     struct ShotPic *shot_gfx_table[5];   /* 77B70 */
     struct ShotPic shot_gfx_cells[3];   /* 77B84 */
     struct PathCmd *formation_paths[72];   /* 77B90 */

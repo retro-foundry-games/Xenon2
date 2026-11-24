@@ -124,7 +124,7 @@ end
 7d080 data_src u16 80
 54fb8 pad_54fb8 u16 42
 5ff0a pad_5ff0a u16 1641
-67a90 pad_67a90 u16 16272
+67a90 pad_67a90 u16 32880
 78c44 pad_78c44 u16 15
 79480 pad_79480 u16 7680
 ; --- words reached by the scripts and pointers (tools/blob_gaps.py) ---
