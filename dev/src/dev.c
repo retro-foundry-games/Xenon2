@@ -70,11 +70,14 @@ static int stopped_at_hook, suspended_at_hook;   /* the game stands inside a hoo
 /* ---- the game's context --------------------------------------------------------------------------------------------------------------------------------------- */
 static void (*entry_function)(void);   /* port.run_function: the game runs this instead of its own entry */
 
+void shop_resume(void);
+
 static void game_main(void)
 {
-    if (entry_function)
+    if (entry_function) {
         entry_function();
-    else
+        shop_resume();
+    } else
         host_game_start();
     for (;;)
         host_idle();
