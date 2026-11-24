@@ -7,11 +7,14 @@
 --                   and takes the original's memory at the first sync point
 --     play=1        play it: ami9000_host host/lockstep.lua --script-args "play=1 state=frame-8880 tolerant=1"  (a window, not --headless): arrows = stick, Ctrl / Space / Return = fire;
 --                   the keys are applied to both sides at the sync points; the port's picture and the difference are shown beside the original; the first difference pauses both
+--     save=1        (with auto=1) savestates of the original at the key points, in local/save: lN-start (level load), lN-shop-before (inside the shop's routine: load it with startfn=8ff2),
+--                   lN-shop-after (the level's reload after a shop of the level), lN-bossK-before (25 to 50 sync points before the boss's flag), lN-bossK-after (boss dead / first fight won)
 --     auto=1        the autoplayer (host/autoplay.lua) plays, headless or in the window: finds differences in a run no one has to play
 --     (auto=1: ctl.py SOCK 'reload_autoplay()' loads host/autoplay.lua again while it runs; 'auto_stick{left=1}' holds a stick by hand, 'auto_stick(nil)' ends it)
 --     record=FILE   where the input of play=1 / auto=1 is written (default captures/input/play-latest.txt, overwritten each run)
 --     snap=ADDR:NAME the first time the original reaches ADDR (hex) its state is saved as local/save/NAME.state and its memory as captures/NAME.ram
 --     live=0|1      the port's panel live: the port is stepped one frame for each emulator frame and waits at a sync point for the original (default on with play=1 / auto=1)
+--     pause=N       hold at the Nth sync point compared, whatever the differences (with hold=1: look at both sides with ctl.py)
 --     hold=1        stop at the first difference and stay there, both sides standing: with `ami9000_host --control PATH` a client (ami9000/host/ctl.py PATH 'LS.port_call("print(port.peek16(0x41c))")')
 --                   asks the port and the original: LS.port_call(LUA) runs a line in the port's Lua shell, LS.port_binary(LUA) a call that answers BIN, LS.snap the original's ram at the point (LS.snap.ram), LS.ram16(addr) the original's live memory
 --     calls=1       also compare the number of calls of every function between two sync points (finds where a difference starts)
@@ -49,6 +52,33 @@ local COMPARE_MEM = args:match("mem=0") == nil
 local INLAG = args:match("inlag=(%w+)") or "auto"   -- inlag=auto (default): at the sync points reached from the shop's code the port gets the stick one sync point later than the original (1: everywhere, 0: nowhere)
 local held_joy
 local shop_loaded = false
+local RNDCALLS = args:match("rndcount=1") ~= nil   -- rndcount=1: also compare how many random numbers each side drew between two sync points (the first difference of the random generator)
+local orig_rnd, skip_rnd = 0, false
+local rnd_from, rnd_from_prev = {}, {}
+local resync_after_load = false
+local say
+local gate_served, last_snap_shop = false, false
+local SAVE = args:match("save=1") ~= nil
+local roll_n, roll_slot, roll_files = 0, 0, {}   -- the last two rolling savestates (the older one is the 'before' of a boss)
+local prev_flags, boss_count, shop_entered = {}, {}, false
+local BOSS_FLAGS = { [1] = { 0xd8b }, [3] = { 0xd96 }, [4] = { 0xd98, 0xd97 }, [5] = { 0xd99 } }   -- the byte that turns on when the boss is made
+local AFTER_FLAGS = { 0xa07, 0xd90 }   -- boss_dead, level 2's first fight won
+local function save_state(name, file)   -- the core's serialize fails at some frames: tried again at the next ones
+    for _ = 1, 20 do
+        if ami.snapshot_save((file or name) .. ".state") then if name:sub(1, 5) ~= "roll-" then say("savestate %s (emulator frame %d)", name, ami.frame()) end; return true end
+        ami.wait(1)
+    end
+    say("savestate %s: the emulator would not save it", name)
+    return false
+end
+local function copy_state(from, name)
+    local src, dst = "local/save/" .. from .. ".state", "local/save/" .. name .. ".state"
+    ami.save_file(dst, ami.file_read(src, 0, ami.file_size(src)))
+    say("savestate %s (the rolling state %s)", name, from)
+end
+local AFTER_SHOP_MEMBERS = { "stars", "screen_a", "screen_b", "panel_a", "panel_b" }   -- what the level's load after a shop leaves different: the stars and the drawing of the screens and the panel come at other times than the original's
+local after_shop = tonumber(args:match("after_shop=(%d+)") or "")   -- after_shop=LEVEL: start as if the shop of that level was just left (with state=)
+--  the level number of the shop that was visited: until that level ends the port's starfield, which does not run again after a reload (HANDOFF open item 7), is not compared
 local TRACEMEM
 do local a, l, f, t = (args:match("tracemem=(%S+)") or ""):match("^(%x+),(%d+),(%d+),(%d+)$"); if a then TRACEMEM = { tonumber(a, 16), tonumber(l), tonumber(f), tonumber(t) } end end   -- tracemem=ADDR,LEN,FROM,TO: both sides' bytes at those sync points
 local NOSPR = args:match("nospr=1") ~= nil   -- debug: sprite DMA off in the original at every frame
@@ -61,6 +91,14 @@ local AUTO = args:match("auto=1") ~= nil   -- the autoplayer (host/autoplay.lua)
 local SHIELD_INF = args:match("shield=inf") ~= nil   -- shield=inf: invulnerable for the whole run (the timer is set again at every sync point)
 local SHIELD_FRAMES = SHIELD_INF and 0x7000 or tonumber(args:match("shield=(%d+)") or "0") * 50   -- shield=SECONDS: the original and the port are invulnerable (shield_timer counts down by the sync points)
 local LIVE = (PLAY or AUTO or args:match("live=1") ~= nil) and args:match("live=0") == nil   -- the port is stepped a frame at a time beside the emulator, its panel shows it live (it waits at each sync point for the original); off for headless regression runs
+local SAVE_SCROLL, SAVE_SCROLL_NAME = args:match("savescroll=(%x+):([%w%-_]+)")   -- savescroll=HEX:NAME: save the original's state as local/save/NAME.state at the first sync point with the scroll at or below HEX (the level scrolls down)
+SAVE_SCROLL = SAVE_SCROLL and tonumber(SAVE_SCROLL, 16)
+local SAVE_AT = {}   -- saveat=N:NAME,N:NAME: save the original's state at sync point N
+for n, name in (args:match("saveat=([%w%-_:,]+)") or ""):gmatch("(%d+):([%w%-_]+)") do SAVE_AT[tonumber(n)] = name end
+local TRACK = args:match("track=1") ~= nil   -- track=1: say at which sync points the boss flags change
+local track_last = ""
+local STALL = tonumber(args:match("stall=(%d+)") or "")   -- stall=N: frames without a sync point before the run stops (default 1500)
+local PAUSE_AT = tonumber(args:match("pause=(%d+)") or "")   -- pause=N: hold at the Nth sync point compared (with hold=1)
 local HOLD = PLAY or args:match("hold=1") ~= nil   -- (a replay=FILE of a run is shown in the window with the three views too)   -- at the first difference stay paused (with --control PATH: LS.port_call(LUA) runs Lua in the port, LS.snap is the original's memory and frame at the point)
 local CALLS = args:match("calls=1") ~= nil   -- also compare how often each function of the game was called between two sync points (the code table of the port)
 local RESYNC = args:match("resync=(%d+)")   -- resync=N: after a gap of more than N emulator frames between two sync points (a disk load: the original takes its real time, the port none) the port takes the original's memory and the comparison starts again from there (default with startfn=: 120)
@@ -76,6 +114,7 @@ end
 IGNORE.screen_a_margin = true; IGNORE.screen_b_margin = true   -- (the blitter writes the part of a tile above the screen there, the port draws the part that is on the screen)
 if args:match("play=1") or args:match("replay=") then IGNORE.key_table = true; IGNORE.key_code = true end   -- (the keys reach the original's keyboard when they are pressed, the port's at the next sync point)
 for name in (args:match("ignore=(%S+)") or ""):gmatch("[%w_]+") do IGNORE[name] = true end
+if after_shop then for _, m in ipairs(AFTER_SHOP_MEMBERS) do IGNORE[m] = true end end
 local SHOW = {}
 for name in (args:match("show=(%S+)") or ""):gmatch("[%w_]+") do SHOW[#SHOW + 1] = name end
 local SHOWFROM = tonumber(args:match("showfrom=(%d+)") or "1000000000")
@@ -133,6 +172,8 @@ if STATE then
     assert(ami.snapshot_load(STATE .. ".state"), "cannot load " .. STATE)
     if args:match("health=full") then ami.poke16(0xcc6, 0x27); ami.poke8(0xa6b, 0xff); ami.log(string.format("health=full: energy now $%x", ami.peek16(0xcc6))) end   -- the player's energy ($CC6, 39 bar cells) and the flag that redraws the bar; the port takes the original's memory at the first sync point
     if SHIELD_FRAMES > 0 then ami.poke16(0xcc8, SHIELD_FRAMES) end
+    ami.wait(1)
+    ami.joystick{ left = true }; ami.wait(1); ami.joystick(); ami.wait(2)   -- the stick held when the state was saved is in the state (JOY1DAT is written only when the stick changes)
     started = true
 end
 local peer = ami.peer("port")
@@ -186,7 +227,7 @@ port_call(("count_entries(0x%x)"):format(PORT_ADDR))
 local members = load(ami.file_read("dev/members.lua", 0, ami.file_size("dev/members.lua")))()
 
 local log_lines = {}
-local function say(...)
+function say(...)
     local line = string.format(...)
     ami.log(line)
     log_lines[#log_lines + 1] = line
@@ -273,7 +314,8 @@ local function sync_point()
     if n > SYNCS then return end
     local calls = call_counts
     call_counts = {}
-    pending[#pending + 1] = { n = n, frame = ami.frame(), calls = calls, ram = (COMPARE_MEM or (STATE and n == 1)) and ami.read(0, 0x80000) or nil }
+    local rnd_calls = orig_rnd; orig_rnd = 0; rnd_from_prev = rnd_from; rnd_from = {}
+    pending[#pending + 1] = { n = n, rnd = rnd_calls, frame = ami.frame(), calls = calls, ram = (COMPARE_MEM or (STATE and n == 1)) and ami.read(0, 0x80000) or nil }
     local st = joys[n]
     if AUTO and n >= 3 and not manual then   -- (no input before sync 3: live stepping takes the original's memory at sync 1 and a stick pressed then is lost to the port) the autoplayer decides from the original's memory as it is now
         local want = autoplay(n)
@@ -317,6 +359,10 @@ local function sync_point()
 end
 for _, a in ipairs(ADDRS) do ami.hook(a, sync_point) end
 
+if RNDCALLS then
+    ami.hook(0x1f50, function() orig_rnd = orig_rnd + 1; rnd_from[#rnd_from + 1] = string.format("%x", ami.peek32(ami.reg("a7"))) end)
+    port_call("rc = 0; port.hook(0x1f50, function() rc = rc + 1 end); function rc_out() print(rc); rc = 0 end")
+end
 if CALLS then
     local table_c = ami.file_read("native/src/code_table.c", 0, ami.file_size("native/src/code_table.c"))
     local skip = { [PORT_ADDR] = true }
@@ -477,6 +523,7 @@ local function compare_memory(snap, port_ram)
                         if name == "obj_pool" then   -- (the drill's target in a slot that is not a drill any more: a long that the port keeps as a pointer, its words are stale there)
                             local slot, off = (i - 1) // 98, (i - 1) % 98
                             if off >= 48 and off < 52 and b:sub(slot * 98 + 1, slot * 98 + 2) ~= "\0\x48" then alias = true end
+                            if off >= 0x16 and off < 0x1a and a:sub(slot * 98 + 0x1b, slot * 98 + 0x1c) == "\0\0" and b:sub(slot * 98 + 0x1b, slot * 98 + 0x1c) == "\0\0" then alias = true end   -- (the picture of an object whose animation has not stepped yet: stale in the original's slot)
                         end
                         if not alias then kept[#kept + 1] = i end
                     end
@@ -587,15 +634,20 @@ local function compare_picture(snap, port_pic)
     return diffs
 end
 
+local port_paused = false   -- the pause key was given to the port and no key has ended the pause
+local load_active = false   -- the original is inside a disk load
 local loads = {}   -- the original'"'"'s memory at the return of each of its disk loads, in order
 if GATE then
     port_call("port.disk_gate(true)")
     ami.hook(0x921a, function()
-        if ami.reg("a0") == 0x54e00 then shop_loaded = (ami.reg("d0") & 0xffff) == 1476 end
+        if ami.reg("a0") == 0x54e00 then shop_loaded = (ami.reg("d0") & 0xffff) == 1476; AUTO_SHOP = shop_loaded; if shop_loaded then after_shop = ami.peek16(0xe04); for _, m in ipairs(AFTER_SHOP_MEMBERS) do IGNORE[m] = true end end end
+        ami.log(string.format("disk load at frame %d: a0 $%x sector %d shop_loaded %s", ami.frame(), ami.reg("a0"), ami.reg("d0") & 0xffff, tostring(shop_loaded)))
         local ret = ami.peek32(ami.reg("a7"))
-        ami.hook(ret, function() ami.unhook(ret); loads[#loads + 1] = ami.read(0, 0x80000) end)
+        load_active = true
+        ami.hook(ret, function() ami.unhook(ret); load_active = false; loads[#loads + 1] = ami.read(0, 0x80000) end)
     end)
 end
+if SAVE then ami.hook(0x8ff2, function() shop_entered = true end) end
 local function service_gate()   -- the port waits inside its loader: it goes on with the original's memory as its load ended
     while #loads == 0 do ami.wait(1) end
     local ram = table.remove(loads, 1)
@@ -603,8 +655,26 @@ local function service_gate()   -- the port waits inside its loader: it goes on 
     peer:send(ram)
     wait_ready()
     port_call("port.disk_release()")
+    gate_served = true
     baseline = nil
+    skip_rnd = true
+    resync_after_load = not shop_loaded   -- a level's load: its set-up draws random numbers as many times as the original's interrupts allow, the port's cannot match: the first sync point after it takes the original's memory
     say("a disk load (emulator frame %d): the port took the original's memory at the end of its load and went on from there; the comparison starts again", ami.frame())
+end
+local different, compared, mem_bad, pic_bad = 0, 0, 0, 0
+LS = { port_call = port_call, port_binary = port_binary, hex = hex, ram16 = function(a) return ami.peek16(a) end, ram32 = function(a) return ami.peek32(a) end }   -- (ctl.py reaches the port while the run goes; a hold replaces it with more)
+-- a difference that is not a member's: both sides stand (HOLD), or the run ends
+local function stop_on(message)
+    different = different + 1
+    say("%s", message)
+    if CONTINUE then return false end
+    ami.pause()
+    if not HOLD then return true end
+    LS = { port_call = port_call, port_binary = port_binary, hex = hex, ram16 = function(a) return ami.peek16(a) end, ram32 = function(a) return ami.peek32(a) end }
+    say("holding: both sides stand (the emulator is paused, the port is stopped); ctl.py SOCK 'set_continue(true)' goes on")
+    while not CONTINUE do ami.wait(1) end
+    ami.resume()
+    return false
 end
 local desired_joy, port_joy   -- the stick the original has been given, and the one the port has
 -- The original's interrupt decodes the stick into joy_stick in the middle of a slow frame: the routines that read it before see the old stick, the ones after
@@ -667,24 +737,42 @@ local function apply_joy0(snap)
     port_joy = d
     port_call(("joy(%d, %d, %d, %d, %d)"):format(d.up, d.down, d.left, d.right, d.fire))
 end
+local rand_prev
 local function apply_joy(snap)
     local r = reads[snap.n - 1]
     local first = r and r.first
     apply_joy0(snap)
-    if SHIELD_FRAMES > 0 and snap.ram and (SHIELD_INF or snap.n <= SHIELD_FRAMES + 1) then port_call(("port.set_shield(%d)"):format(snap.ram:byte(0xcc9) * 256 + snap.ram:byte(0xcca))) end
+    if SHIELD_FRAMES > 0 and snap.ram and (SHIELD_INF or snap.n <= SHIELD_FRAMES + 1) then port_call(("port.set_shield(%d)"):format(SHIELD_INF and SHIELD_FRAMES or snap.ram:byte(0xcc9) * 256 + snap.ram:byte(0xcca))) end
+    if after_shop and snap.ram then   -- the level after the shop took a time the port cannot match: the port's random numbers go on from the original's
+        local function long(a) return ((snap.ram:byte(a + 1) * 256 + snap.ram:byte(a + 2)) * 256 + snap.ram:byte(a + 3)) * 256 + snap.ram:byte(a + 4) end
+        if rand_prev then port_call(("port.set_random(%d, %d)"):format(rand_prev[1], rand_prev[2])) end   -- the state at the point before: the port is about to draw this interval's numbers
+        rand_prev = { long(0x1fee), long(0x1ff2) }
+    else
+        rand_prev = nil
+    end
     if snap.ram then port_call(("port.set_a6a(%d)"):format(snap.ram:byte(0xa6b))) end   -- the press the original's interrupt saw is in fire_press where it copied it
     -- the interrupt that brings a fire press came after the routine that read the old stick: the press is in key_pressed from there on
     port_call(("port.edge_defer(%d)"):format(first and port_joy and first & 0x80 == 0 and stick_bits(port_joy) & 0x80 ~= 0 and 1 or 0))
 end
 local prev_orig_ram, prev_port_ram, last_orig_ram, last_port_ram
-local different, compared, mem_bad, pic_bad = 0, 0, 0, 0
 local done = false
 while not done do
+    if SAVE and shop_entered then   -- inside the shop's routine, at the next frame boundary
+        shop_entered = false
+        save_state(("l%d-shop-before"):format(ami.peek16(0xe04)))
+    end
     -- two frames after the point: the emulator's frame after it is in the ring
     while #pending > 0 and ami.frame() >= pending[1].frame + 2 do
         local snap = table.remove(pending, 1)
         apply_joy(snap)
-        for _, k in ipairs(snap.keys or {}) do port_call(("key(%d, %d)"):format(k[1], k[2])) end   -- before the port runs to the point: a key that ends the pause is what lets it get there
+        local late_keys = {}
+        for _, k in ipairs(snap.keys or {}) do
+            if k[1] == 0x19 and k[2] == 1 and not port_paused then late_keys[#late_keys + 1] = k   -- the pause key reaches the original after the point, and blocks the main loop: the port gets it after the point too
+            else
+                port_call(("key(%d, %d)"):format(k[1], k[2]))   -- before the port runs to the point: a key that ends the pause is what lets it get there
+                if k[2] == 1 then port_paused = false end
+            end
+        end
         local reply
         if port_entries >= snap.n then
             reply = ("synced %d 1"):format(0)   -- (the live stepping has parked it at this entry)
@@ -698,6 +786,27 @@ while not done do
             end
             port_entries = snap.n
         end
+        if snap.shop then gate_served = false
+        elseif last_snap_shop and not gate_served and reply and reply:match("^synced") and snap.ram then
+            -- the original has left the shop and loaded the level; the port is still in the shop (its fire press at the button that leaves came at another time): it leaves now
+            local port_ram = port_binary("ram_out()")
+            port_ram = port_ram:sub(1, 0x4f2) .. snap.ram:sub(0x4f3, 0x4f6) .. port_ram:sub(0x4f7)
+            peer:send("ram_in(524288)\n")
+            peer:send(port_ram)
+            wait_ready()
+            local left = port_call("local r = 'stuck'; for i = 1, 60 do joy(0, 0, 0, 0, 1); port.run(3); joy(0, 0, 0, 0, 0); port.run(6); if port.disk_waiting() then r = 'gated'; break end end; print(r)")
+            if left:match("gated") then
+                service_gate()
+                reply = port_call(("sync(0x%x)"):format(PORT_ADDR))
+                while reply == "gated" do service_gate(); reply = port_call(("sync(0x%x)"):format(PORT_ADDR)) end
+                if stop_on("the port was still in the shop when the original had left it: it was made to leave (fire at the button that leaves)") then done = true; break end
+            else
+                stop_on(("the port would not leave the shop (%s)"):format(tostring(left)))
+                done = true; break
+            end
+        end
+        for _, k in ipairs(late_keys) do port_call(("key(%d, %d)"):format(k[1], k[2])); port_paused = true end
+        last_snap_shop = snap.shop and true or false
         if not reply or not reply:match("^synced") then say("lockstep: the port did not reach sync point %d (%s)", snap.n, tostring(reply)); done = true; break end
         if snap.joy then desired_joy = snap.joy end
         if STATE and snap.n == 1 and args:match("dumpram=(%S+)") then ami.save_file(args:match("dumpram=(%S+)"), snap.ram) end
@@ -710,14 +819,67 @@ while not done do
             baseline = nil
             say("sync point %d came %d frames after the one before (a disk load): the port takes the original's memory, the comparison starts again here", snap.n, gap)
         end
+        local loading_stars = false
+        for _, from in ipairs(rnd_from_prev) do if from == "856c" or from == "8578" then loading_stars = true end end
+        if resync_after_load and snap.ram and (snap.n < 4 or not loading_stars) then
+            resync_after_load = false
+            skip_rnd = true
+            peer:send("ram_in(524288)\n")
+            peer:send(snap.ram)
+            wait_ready()
+            baseline = nil
+            if SAVE then
+                local lvl = snap.ram:byte(0xe05) * 256 + snap.ram:byte(0xe06)
+                save_state(lvl == after_shop and ("l" .. lvl .. "-shop-after") or ("l" .. lvl .. "-start"))
+                roll_files, prev_flags = {}, {}
+            end
+            say("sync point %d: the first after a level's load, the port takes the original's memory (the random numbers of the set-up), the comparison starts again here", snap.n)
+        end
         if STATE and snap.n == 1 and not STARTFN then   -- the port is in the level, at the same program point: the original's memory in
             peer:send("ram_in(524288)\n")
             peer:send(snap.ram)
             wait_ready()
         end
+        if SAVE and snap.ram and not snap.shop then
+            local ram = snap.ram
+            local lvl = ram:byte(0xe05) * 256 + ram:byte(0xe06)
+            local function flag(a) return ram:byte(a + 1) ~= 0 end
+            local rose = {}
+            for _, a in ipairs(BOSS_FLAGS[lvl] or {}) do if flag(a) and prev_flags[a] == false then rose[#rose + 1] = "before" end end
+            for _, a in ipairs(AFTER_FLAGS) do if flag(a) and prev_flags[a] == false then rose[#rose + 1] = "after" end end
+            for _, a in ipairs(BOSS_FLAGS[lvl] or {}) do prev_flags[a] = flag(a) end
+            for _, a in ipairs(AFTER_FLAGS) do prev_flags[a] = flag(a) end
+            for _, kind in ipairs(rose) do
+                if kind == "before" then
+                    boss_count[lvl] = (boss_count[lvl] or 0) + 1
+                    local older = roll_files[1] or roll_files[2]
+                    if older then copy_state(older, ("l%d-boss%d-before"):format(lvl, boss_count[lvl])) end
+                else
+                    save_state(("l%d-boss%d-after"):format(lvl, math.max(boss_count[lvl] or 1, 1)))
+                end
+            end
+            if snap.n % 25 == 0 and lvl > 0 then
+                roll_slot = 1 - roll_slot
+                local name = "roll-" .. roll_slot
+                save_state(name)
+                roll_files = { roll_files[2], name }
+                roll_files[1] = roll_files[1]
+            end
+        end
         local problems = {}
+        if RNDCALLS then
+            local port_count = tonumber(port_call("rc_out()")) or -1
+            if skip_rnd or snap.shop or snap.n <= 2 or loading_stars then skip_rnd = false
+            elseif port_count ~= snap.rnd then problems[#problems + 1] = ("random numbers drawn since the last sync point: original %d, port %d (original from %s)"):format(snap.rnd, port_count, table.concat(rnd_from_prev, " ")) end
+        end
         if COMPARE_MEM then
             local port_ram = port_binary("ram_out()")
+            if snap.shop and snap.ram and AUTO and port_ram:sub(0x4f3, 0x4f6) ~= snap.ram:sub(0x4f3, 0x4f6) then   -- the stick the port reads in the shop comes at other times than the original's: its cursor stands where the original's does
+                port_ram = port_ram:sub(1, 0x4f2) .. snap.ram:sub(0x4f3, 0x4f6) .. port_ram:sub(0x4f7)
+                peer:send("ram_in(524288)\n")
+                peer:send(port_ram)
+                wait_ready()
+            end
             if TRACEMEM and snap.n >= TRACEMEM[3] and snap.n <= TRACEMEM[4] then
                 say("tracemem sync %d: original %s port %s", snap.n, hex(snap.ram, TRACEMEM[1] + 1, TRACEMEM[2]), hex(port_ram, TRACEMEM[1] + 1, TRACEMEM[2]))
             end
@@ -756,11 +918,28 @@ while not done do
                 end
             end
         end
-        if COMPARE_PIC then
+        if after_shop and snap.ram and snap.ram:byte(0xe05) * 256 + snap.ram:byte(0xe06) ~= after_shop then after_shop = nil; for _, m in ipairs(AFTER_SHOP_MEMBERS) do IGNORE[m] = nil end end
+        if COMPARE_PIC and not after_shop then
             local d = compare_picture(snap, port_binary("image_out()"))
             if d > 0 then pic_bad = pic_bad + 1; problems[#problems + 1] = ("%d picture pixels differ"):format(d) end
+        elseif COMPARE_PIC and (PLAY or AUTO or REPLAY) and not LIVE then   -- (the pictures are not compared after a shop's load: the panel still shows the port)
+            ami.panel(1, port_binary("image_out()"), 320, 256, 2, 1, 0)
         end
         compared = compared + 1
+        if SAVE_SCROLL and snap.ram and snap.ram:byte(0xcd1) * 256 + snap.ram:byte(0xcd2) <= SAVE_SCROLL and snap.ram:byte(0xe05) * 256 + snap.ram:byte(0xe06) >= 2 then
+            if ami.snapshot_save(SAVE_SCROLL_NAME .. ".state") then
+                say("saved the original's state local/save/%s.state at sync %d (emulator frame %d, scroll $%x)", SAVE_SCROLL_NAME, snap.n, ami.frame(), SAVE_SCROLL)
+                SAVE_SCROLL = nil
+            end
+        end
+        if SAVE_AT[snap.n] and ami.snapshot_save(SAVE_AT[snap.n] .. ".state") then
+            say("saved the original's state local/save/%s.state at sync %d (emulator frame %d)", SAVE_AT[snap.n], snap.n, ami.frame())
+        end
+        if TRACK and snap.ram then
+            local r = snap.ram
+            local now = string.format("level %d d97 %d d98 %d a07 %d d6c %d d6e %d ca4 %d over %d", r:byte(0xe05) * 256 + r:byte(0xe06), r:byte(0xd98), r:byte(0xd99), r:byte(0xa08), r:byte(0xd6d) * 256 + r:byte(0xd6e), r:byte(0xd6f) * 256 + r:byte(0xd70), r:byte(0xca5) * 256 + r:byte(0xca6), r:byte(0xa6d))
+            if now ~= track_last then say("track sync %d: %s", snap.n, now); track_last = now end
+        end
         if #problems > 0 then
             different = different + 1
             say("sync %d (emulator frame %d, port frame %s): %s", snap.n, snap.frame, reply:match("synced (%d+)") or "?", table.concat(problems, "; "))
@@ -778,22 +957,14 @@ while not done do
             end
         end
         if compared % 100 == 0 then say("%d sync points compared, %d with differences (memory %d, picture %d)", compared, different, mem_bad, pic_bad) end
+        if PAUSE_AT and compared == PAUSE_AT and stop_on(("pause=%d: both sides stand"):format(PAUSE_AT)) then done = true; break end
         if compared >= SYNCS then done = true; break end
     end
     -- the original runs code the port has no C for (the shop program, loaded from the disk at $54E00): it passes no sync point
-    if not done and started and n >= 1 and ami.frame() - last_sync_frame > 300 and ami.reg("pc") >= 0x54e00 and ami.reg("pc") < 0x80000 and not shop_reported then
+    if not done and started and n >= 1 and ami.frame() - last_sync_frame > (STALL or 1500) and not load_active and not shop_reported then
         shop_reported = true
-        say("sync point %d was the last: for %d frames the original has run code at $%06x, from the disk, that the port has no C for (the shop, fn_054e00): the port skipped it", n, ami.frame() - last_sync_frame, ami.reg("pc"))
-        different = different + 1
-        if not CONTINUE then
-            ami.pause()
-            if HOLD then
-                LS = { port_call = port_call, port_binary = port_binary, hex = hex, ram16 = function(a) return ami.peek16(a) end, ram32 = function(a) return ami.peek32(a) end }
-                say("holding: the original is in the shop, the port is stopped in swap_screens")
-                while true do ami.wait(1) end
-            end
-            done = true
-        end
+        local pc = ami.reg("pc")
+        if stop_on(("sync point %d was the last: for %d frames the original has passed no sync point (pc $%06x, level %d, the shop's cursor %02x%02x); the port is idle"):format(n, ami.frame() - last_sync_frame, pc, ami.peek16(0xe04), ami.peek8(0x4f3), ami.peek8(0x4f4))) then done = true end
     end
     if snap_request then
         ami.snapshot_save(snap_request .. ".state")
