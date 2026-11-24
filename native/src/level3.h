@@ -117,8 +117,9 @@ struct Level3Data {
     const uint16_t *walker_spawn_anims[8];   /* 557B0 */
     uint16_t words_557d0[36];   /* 557D0 */
     uint16_t pad_55818[108];   /* 55818 */
-    struct Level3Part parts[18];   /* 558F0 */
-    uint16_t words_55a10[24];   /* 55A10 */
+    struct Level3Part parts[17];   /* 558F0 */
+    uint16_t parts_end[2];   /* 55A00 */
+    uint16_t anim_part_follow[30];   /* 55A04 */
     uint16_t anim_part_gun_3[106];   /* 55A40 */
     uint16_t anim_part_core[332];   /* 55B14 */
     const uint16_t *arm_tip_pictures[16];   /* 55DAC */
@@ -233,7 +234,8 @@ _Static_assert(offsetof(struct Level3Data, walker_spawn_anims) == 0x557B0 - BLOB
 _Static_assert(offsetof(struct Level3Data, words_557d0) == 0x557D0 - BLOB_BASE, "Level3Data.words_557d0");
 _Static_assert(offsetof(struct Level3Data, pad_55818) == 0x55818 - BLOB_BASE, "Level3Data.pad_55818");
 _Static_assert(offsetof(struct Level3Data, parts) == 0x558F0 - BLOB_BASE, "Level3Data.parts");
-_Static_assert(offsetof(struct Level3Data, words_55a10) == 0x55A10 - BLOB_BASE, "Level3Data.words_55a10");
+_Static_assert(offsetof(struct Level3Data, parts_end) == 0x55A00 - BLOB_BASE, "Level3Data.parts_end");
+_Static_assert(offsetof(struct Level3Data, anim_part_follow) == 0x55A04 - BLOB_BASE, "Level3Data.anim_part_follow");
 _Static_assert(offsetof(struct Level3Data, anim_part_gun_3) == 0x55A40 - BLOB_BASE, "Level3Data.anim_part_gun_3");
 _Static_assert(offsetof(struct Level3Data, anim_part_core) == 0x55B14 - BLOB_BASE, "Level3Data.anim_part_core");
 _Static_assert(offsetof(struct Level3Data, arm_tip_pictures) == 0x55DAC - BLOB_BASE, "Level3Data.arm_tip_pictures");
