@@ -33,18 +33,22 @@ GAME_MODULES := $(filter-out runtime,$(notdir $(basename $(wildcard $(SRC)/*.c))
 AMIGA_MODULES := $(filter-out runtime,$(notdir $(basename $(wildcard $(SRC)/amiga/*.c))))
 GAME_OBJS := $(GAME_MODULES:%=$(BUILD)/%.o) $(BUILD)/runtime.o $(AMIGA_MODULES:%=$(BUILD)/amiga_%.o)
 
-.PHONY: all blob clean generate sdl sdl-run
+.PHONY: all blob clean generate sdl sdl-run test-sdl-presentation
 all: blob
 
 # game.h, game.ld, guest_members.h and data.c are made from the symbol files (tools/gen_symbols.py; the tables are read from XENON_RAM)
 XENON_RAM ?= ../captures/trace-10000.bin
 SYMBOL_FILES := $(wildcard $(SRC)/game.symbols $(SRC)/game.decls $(SRC)/symbols/*.symbols)
+ifneq ($(wildcard ../tools/gen_symbols.py),)
 $(SRC)/game.h $(SRC)/game.ld $(SRC)/guest_members.h $(SRC)/data.c: $(SYMBOL_FILES) $(SRC)/level.h ../tools/gen_symbols.py
 	$(PYTHON) ../tools/gen_symbols.py --ram $(XENON_RAM)
+endif
 generate: $(SRC)/game.h
 # the layout of the level blobs (tools/gen_blobs.py)
+ifneq ($(wildcard ../tools/gen_blobs.py),)
 $(SRC)/level.h $(SRC)/guest_blob.h $(SRC)/level2.h $(SRC)/level3.h $(SRC)/level4.h $(SRC)/level5.h: $(wildcard $(SRC)/blobs/*.blob) ../tools/gen_blobs.py
 	$(PYTHON) ../tools/gen_blobs.py
+endif
 
 $(BUILD):
 	mkdir -p $@
@@ -69,23 +73,33 @@ SDL_CFLAGS := -m32 -fpack-struct=2 -std=gnu11 -O1 -g -fno-strict-aliasing -DGAME
 SDL_GAME_MODULES := $(filter-out runtime data,$(GAME_MODULES))
 SDL_HOST_SOURCES := $(sort $(wildcard $(SRC)/sdl/*.c) $(SRC)/sdl/records.c)
 SDL_OBJS := $(SDL_GAME_MODULES:%=$(SDL_BUILD)/g_%.o) $(patsubst $(SRC)/sdl/%.c,$(SDL_BUILD)/h_%.o,$(SDL_HOST_SOURCES))
-$(SDL_BUILD)/g_%.o: $(SRC)/%.c $(SRC)/game.h $(wildcard $(SRC)/*.h) | $(SDL_BUILD)
+$(SDL_BUILD)/g_%.o: $(SRC)/%.c $(SRC)/game.h $(wildcard $(SRC)/*.h $(SRC)/sdl/*.h) | $(SDL_BUILD)
 	gcc $(SDL_CFLAGS) -c $< -o $@
 # (the files that include SDL's headers are built without -fpack-struct=2, which the game's structs need and SDL's must not have)
-$(SDL_BUILD)/h_main.o: $(SRC)/sdl/main.c $(wildcard $(SRC)/sdl/*.h $(SRC)/amiga/*.h) | $(SDL_BUILD)
+$(SDL_BUILD)/h_main.o $(SDL_BUILD)/h_pixel_scale.o: $(SDL_BUILD)/h_%.o: $(SRC)/sdl/%.c $(wildcard $(SRC)/sdl/*.h $(SRC)/amiga/*.h) | $(SDL_BUILD)
 	gcc $(filter-out -fpack-struct=2,$(SDL_CFLAGS)) -c $< -o $@
 $(SDL_BUILD)/h_%.o: $(SRC)/sdl/%.c $(SRC)/game.h $(wildcard $(SRC)/*.h $(SRC)/sdl/*.h $(SRC)/amiga/*.h) | $(SDL_BUILD)
 	gcc $(SDL_CFLAGS) -c $< -o $@
 $(SDL_BUILD):
 	mkdir -p $@
 # the loader tables of the port: how records of the disk image become records of the host, and the C function of each address of the original's code
+ifneq ($(wildcard ../tools/gen_records.py),)
 $(SRC)/sdl/records.c $(SRC)/code_table.c: $(wildcard $(SRC)/types_*.h $(filter-out $(SRC)/code_table.c $(SRC)/data.c,$(wildcard $(SRC)/*.c)) $(wildcard $(SRC)/sdl/*.c)) ../tools/gen_records.py
 	$(PYTHON) ../tools/gen_records.py
+endif
 sdl: $(SDL_BUILD)/xenon2-sdl
 $(SDL_BUILD)/xenon2-sdl: $(SDL_OBJS)
 	gcc -m32 -o $@ $^ $(shell pkg-config --libs sdl3) -lm
 sdl-run: sdl
 	$(SDL_BUILD)/xenon2-sdl --disks ../local
+
+$(SDL_BUILD)/presentation-test: $(SRC)/sdl/tests/presentation_test.c $(SDL_OBJS)
+	gcc $(SDL_CFLAGS) -o $@ $^ $(shell pkg-config --libs sdl3) -lm
+$(SDL_BUILD)/pixel-scale-test: $(SRC)/sdl/tests/pixel_scale_test.c $(SDL_BUILD)/h_pixel_scale.o
+	gcc $(filter-out -fpack-struct=2,$(SDL_CFLAGS)) -o $@ $^ $(shell pkg-config --libs sdl3) -lm
+test-sdl-presentation: $(SDL_BUILD)/presentation-test $(SDL_BUILD)/pixel-scale-test
+	$(SDL_BUILD)/presentation-test
+	SDL_VIDEO_DRIVER=dummy $(SDL_BUILD)/pixel-scale-test
 
 clean:
 	rm -rf $(BUILD)

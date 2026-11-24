@@ -6,6 +6,8 @@
 #include <stddef.h>
 #include <stdio.h>
 
+enum { HOST_VBLANK_NS = 20000000 };
+
 /* guest.c: the game's memory is struct Xenon2 (game.h); the chips' registers are objects of their own */
 extern volatile uint8_t host_custom_raw[0x1000];   /* struct Custom (amiga/hw.h) */
 extern volatile uint8_t host_cia_raw[0x2000];      /* the CIAs, $BFD000 on */
@@ -19,7 +21,7 @@ void host_export_ram_buf(uint8_t *ram_0x80000);     /* the memory in the origina
 void host_import_ram_buf(const uint8_t *ram_0x80000);   /* and back: the memory of the original into the block (before the game starts) */
 void host_set_headless(int on);                   /* before host_init */
 void host_game_start(void);                         /* call the game's entry (nothing if the C has none yet) */
-int guest_load_game_image(void);                    /* disk 1, tracks 82-159, from $70C00: the game's program and data, as the loader of disk 1 leaves them at $400 */
+int guest_load_game_image(void);                    /* the game image disk 1 leaves at $400 */
 
 /* The machine's state for a savestate (the dev build): every module hands its objects to a visitor in a fixed order; the visitor writes them to a file or reads them back.
  * Objects hold addresses of this executable (the game's memory block, the samples of a sound channel): a state is for the build that made it (no PIE). */
@@ -30,12 +32,14 @@ void sound_state(host_state_visit visit, void *arg);  /* mixer.c */
 
 /* files.c: the disks (ADF images) */
 int files_open(const char *folder);
+int files_read_bs1_game(uint8_t *image, size_t size);
 int files_read_sectors(int disk, uint32_t first_sector, uint32_t count, void *dest);   /* raw sectors of 512 bytes; 0 = ok */
 
 /* display.c: the picture from the registers and the copper list the game leaves */
 #define DISPLAY_W 320
 #define DISPLAY_H 256
 void display_render(uint32_t *rgb);
+void display_render_interpolated(uint32_t *rgb, uint64_t now);
 
 /* mixer.c: the four voices of the sound hardware.  A voice plays 8-bit samples (the data, its length in words of two bytes) at 3546895 Hz / period, with a volume of 0 to 64.
  * Started, it plays from the data and length it has then, and at the end of them again from the ones it has by then (a loop is the data and length set after the start).
@@ -57,6 +61,7 @@ void host_quit(void);
 int host_init(int argc, char **argv);               /* the options, the machine, the window: 0 = ready to start the game */
 void host_frame_end(void);                          /* the end of a video frame: picture, sound, clock, keys */
 void host_vblank(void);                             /* raise the vertical blank interrupt (calls the game's handler if it enabled it) */
+void host_screen_flip(const void *screen, uint16_t tick);
 const uint32_t *host_picture(void);                 /* the picture of the registers as they are now: DISPLAY_W x DISPLAY_H pixels, 0xAARRGGBB */
 long host_frame_count(void);
 void host_key_event(int amiga_raw_code, int down);  /* a key as the keyboard would send it */

@@ -9,6 +9,7 @@
 
 #include "game.h"
 #include "host.h"
+#include "presentation.h"
 #include "sound.h"
 
 struct Xenon2 xenon2 __attribute__((aligned(16)));
@@ -373,22 +374,30 @@ static void scripts_save(uint8_t *ram)
 #define SAMPLE_EFFECTS (SAMPLE_BANK + SAMPLE_EFFECTS_OFFSET)
 static const struct { uint32_t start; unsigned count; } sample_runs[] = { { SAMPLE_BANK, 20 }, { SAMPLE_EFFECTS, 18 } };
 
-static void samples_load(uint32_t address, const uint8_t *image, uint32_t length)
+static int sample_headers(uint32_t address, const uint8_t *image, int convert)
 {
-    if (address > SAMPLE_BANK || address + length < SAMPLE_BANK_END)
-        return;
     for (unsigned r = 0; r < 2; r++) {
         uint32_t a = sample_runs[r].start;
+        uint32_t limit = r ? SAMPLE_BANK_END : SAMPLE_EFFECTS - SOUND_SILENCE_BYTES;
 
         for (unsigned i = 0; i < sample_runs[r].count; i++) {
-            const uint8_t *src = image + (a - address);
             struct SampleHeader *h = (struct SampleHeader *)((uint8_t *)&xenon2 + a);
+            if (limit - a < sizeof *h)
+                return -1;
+            const uint8_t *src = image + (a - address);
+            uint32_t length = be32(src);
+            uint16_t rate = be16(src + 4);
 
-            h->length = be32(src);
-            h->rate = be16(src + 4);
-            a += sizeof *h + h->length;
+            if (length > limit - a - sizeof *h || (length & 1) || !rate)
+                return -1;
+            if (convert) {
+                h->length = length;
+                h->rate = rate;
+            }
+            a += sizeof *h + length;
         }
     }
+    return 0;
 }
 
 static void samples_save(uint8_t *ram)
@@ -459,21 +468,36 @@ void guest_load_range(uint32_t address, const uint8_t *image, uint32_t length)
     }
     blob_load(address, image, length);
     scripts_load(address, length);
-    samples_load(address, image, length);
+    if (address <= SAMPLE_BANK && address + length >= SAMPLE_BANK_END && sample_headers(address, image, 1))
+        fprintf(stderr, "xenon2-sdl: invalid sample bank in loaded memory.\n");
 }
 
-/* disk 1 from track 82 on is the game's program, data and variables, as the loader of disk 1 puts them at $400 ($6B400 bytes) */
+/* In the raw release, disk 1 from track 82 on is the image at $400. */
 #define GAME_IMAGE_SECTOR (82 * 11)   /* disk offset $70C00 */
 #define GAME_IMAGE_ADDRESS 0x400
 #define GAME_IMAGE_SIZE 0x6b400
 
 int guest_load_game_image(void)
 {
-    uint8_t *image = malloc(GAME_IMAGE_SIZE);
+    uint8_t sector[512];
+    if (files_read_sectors(2, 0, 1, sector) || memcmp(sector + 2, "X2B ", 4)) {
+        fprintf(stderr, "xenon2-sdl: disk 2 is missing the Xenon 2 game-disk signature. Check the disk order.\n");
+        return -1;
+    }
 
-    if (!image || files_read_sectors(1, GAME_IMAGE_SECTOR, GAME_IMAGE_SIZE / 512, image) != 0) {
+    uint8_t *image = malloc(GAME_IMAGE_SIZE);
+    if (!image) {
+        fprintf(stderr, "xenon2-sdl: could not allocate the image for disk 1.\n");
+        return -1;
+    }
+    /* $400 starts with BRA.W on both releases. Check the audio headers
+     * before interpreting any of the disk bytes as pointers or lengths. */
+    int raw = files_read_sectors(1, GAME_IMAGE_SECTOR, GAME_IMAGE_SIZE / 512, image) == 0 &&
+              be16(image) == 0x6000;
+    if ((!raw && files_read_bs1_game(image, GAME_IMAGE_SIZE)) ||
+        be16(image) != 0x6000 || sample_headers(GAME_IMAGE_ADDRESS, image, 0)) {
         free(image);
-        fprintf(stderr, "xenon2-sdl: cannot read the game's image from disk 1\n");
+        fprintf(stderr, "xenon2-sdl: disk 1 has a damaged or unsupported game image. Use the PNA or BS1/Deejay99 disk 1.\n");
         return -1;
     }
     memset(&xenon2, 0, sizeof xenon2);
@@ -623,6 +647,7 @@ void host_export_ram_buf(uint8_t *ram)   /* ram: 0x80000 bytes */
  * original's state this way) */
 void host_import_ram_buf(const uint8_t *ram)
 {
+    presentation_reset();
     memcpy(&xenon2, ram, 0x80000);
     if (blob_raw != 1)   /* (the shop's blob stays while the shop runs) */
         blob_raw = be16(ram + 0xe04) > 1 ? be16(ram + 0xe04) : 0;   /* (level_number: the level) */

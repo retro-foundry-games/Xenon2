@@ -4,9 +4,9 @@
 #   make -f Makefile.web serve    the folder is served on http://localhost:8080/ (scripts/serve_web.py)
 #   make -f Makefile.web clean
 #
-# The game runs on the browser's thread: where it waits for the next frame (host_frame_end) the stack is parked (Asyncify, emscripten_sleep) and the browser runs.
+# The game runs on the browser's thread: Asyncify parks it between machine ticks so the browser can present.
 # The disk images are not in the build: the page asks for them (web/shell.html).
-# Run inside the flake's shell (nix develop): it has emcc, cmake and ninja; XENON2_SDL3_SOURCE_DIR is SDL3's source, built here for Emscripten once.
+# Run inside the flake's shell (nix develop): it has emcc, cmake and ninja; GAME_SDL3_SOURCE_DIR is SDL3's source, built here for Emscripten once.
 # `nix build .#web` does the same in the sandbox (XENON2_NO_NIX=1: no shell of its own; SDL3_PREFIX: the SDL3 the flake built for Emscripten; W: the output folder).
 
 HERE := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
@@ -14,7 +14,7 @@ SRC  := $(HERE)/src
 W    ?= $(HERE)/build/web
 PYTHON ?= python3
 EMCC ?= emcc
-SDL3_SRC ?= $(XENON2_SDL3_SOURCE_DIR)
+SDL3_SRC ?= $(or $(XENON2_SDL3_SOURCE_DIR),$(GAME_SDL3_SOURCE_DIR))
 SDL3_PREFIX ?= $(W)/sdl3
 
 ifeq ($(or $(IN_NIX_SHELL),$(XENON2_NO_NIX)),)
@@ -25,11 +25,11 @@ else
 
 COMMON := -std=gnu11 -O2 -fno-strict-aliasing -Wall -Wno-unused-function -I$(SRC) -I$(SRC)/sdl -I$(SDL3_PREFIX)/include
 GAME_CFLAGS := $(COMMON) -fpack-struct=2 -DGAME_SDL -DMATCH_MEMORY_LAYOUT
-HOST_CFLAGS := $(COMMON) -DGAME_SDL -DMATCH_MEMORY_LAYOUT   # (SDL's headers must not be packed: main.c)
+HOST_CFLAGS := $(COMMON) -DGAME_SDL -DMATCH_MEMORY_LAYOUT   # (SDL's headers must not be packed)
 
 GAME_MODULES := $(filter-out runtime data,$(notdir $(basename $(wildcard $(SRC)/*.c))))
-HOST_MODULES := $(filter-out main,$(notdir $(basename $(wildcard $(SRC)/sdl/*.c))))
-OBJS := $(GAME_MODULES:%=$(W)/g_%.o) $(HOST_MODULES:%=$(W)/h_%.o) $(W)/h_main.o
+HOST_MODULES := $(notdir $(basename $(wildcard $(SRC)/sdl/*.c)))
+OBJS := $(GAME_MODULES:%=$(W)/g_%.o) $(HOST_MODULES:%=$(W)/h_%.o)
 
 .PHONY: all serve clean
 all: $(W)/xenon2.html
@@ -48,7 +48,7 @@ $(W)/g_%.o: $(SRC)/%.c $(wildcard $(SRC)/*.h $(SRC)/sdl/*.h $(SRC)/amiga/*.h) $(
 	$(EMCC) $(GAME_CFLAGS) -MMD -MP -c $< -o $@
 $(W)/h_%.o: $(SRC)/sdl/%.c $(wildcard $(SRC)/*.h $(SRC)/sdl/*.h $(SRC)/amiga/*.h) $(SDL3_PREFIX)/lib/libSDL3.a | $(W)
 	$(EMCC) $(GAME_CFLAGS) -MMD -MP -c $< -o $@
-$(W)/h_main.o: $(SRC)/sdl/main.c $(wildcard $(SRC)/*.h $(SRC)/sdl/*.h $(SRC)/amiga/*.h) $(SDL3_PREFIX)/lib/libSDL3.a | $(W)
+$(W)/h_main.o $(W)/h_pixel_scale.o: $(W)/h_%.o: $(SRC)/sdl/%.c $(wildcard $(SRC)/*.h $(SRC)/sdl/*.h $(SRC)/amiga/*.h) $(SDL3_PREFIX)/lib/libSDL3.a | $(W)
 	$(EMCC) $(HOST_CFLAGS) -MMD -MP -c $< -o $@
 
 LINK := -sASYNCIFY -sINITIAL_MEMORY=33554432 -sALLOW_MEMORY_GROWTH=1 -sSTACK_SIZE=1048576 -sENVIRONMENT=web -sFORCE_FILESYSTEM=1 -sINVOKE_RUN=0 \

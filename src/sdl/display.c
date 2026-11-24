@@ -7,6 +7,8 @@
 
 #include "amiga/hw.h"
 #include "host.h"
+#include "types.h"
+#include "presentation.h"
 
 #define CANVAS_V0 0x2c   /* the first line of the 256-line PAL window */
 #define CANVAS_H0 0x81   /* the first lowres pixel of the 320-pixel window */
@@ -29,7 +31,7 @@ static const uint16_t *plane_ptr(uint32_t address)
     return (const uint16_t *)guest_ptr(address);
 }
 
-static void draw_line(uint32_t *row, struct state *s, int vstart_is_first)
+static void draw_line(uint32_t *row, struct state *s, const uint16_t *motion)
 {
     int planes = (s->bplcon0 >> 12) & 7;
     int hires = (s->bplcon0 & 0x8000) != 0;
@@ -40,12 +42,22 @@ static void draw_line(uint32_t *row, struct state *s, int vstart_is_first)
     int width = words * 16;
     int bytes = words * 2;
     uint32_t palette[32];
+    const uint16_t *base[6];
 
-    (void)vstart_is_first;
     for (int i = 0; i < 32; i++)
         palette[i] = rgb_of(s->color[i]);
     if (planes > 6)
         planes = 6;
+    for (int p = 0; p < planes; p++)
+        base[p] = plane_ptr(s->pt[p]);
+    if (motion && planes == 4 && !hires && words == SCREEN_PLANE_WORDS &&
+        s->pt[1] == s->pt[0] + SCREEN_PLANE_BYTES &&
+        s->pt[2] == s->pt[1] + SCREEN_PLANE_BYTES && s->pt[3] == s->pt[2] + SCREEN_PLANE_BYTES) {
+        uintptr_t offset = (uintptr_t)base[0] - (uintptr_t)presentation_screen();
+        if (offset < SCREEN_ROWS * SCREEN_ROW_BYTES && offset % SCREEN_ROW_BYTES == 0)
+            for (int p = 0; p < planes; p++)
+                base[p] = motion + offset / 2 + p * SCREEN_PLANE_WORDS;
+    }
     for (int x = 0; x < width; x++) {
         int sx = hires ? x / 2 : x;
         int hpos = first_x + sx;
@@ -57,11 +69,9 @@ static void draw_line(uint32_t *row, struct state *s, int vstart_is_first)
         for (int p = 0; p < planes; p++) {
             int delay = (p & 1) ? delay2 : delay1;
             int bx = x - delay;
-            const uint16_t *base = plane_ptr(s->pt[p]);
-
-            if (bx < 0 || bx >= width || !base)
+            if (bx < 0 || bx >= width || !base[p])
                 continue;
-            if ((base[bx >> 4] >> (15 - (bx & 15))) & 1)
+            if ((base[p][bx >> 4] >> (15 - (bx & 15))) & 1)
                 index |= 1u << p;
         }
         row[canvas_x] = palette[index & 31];
@@ -70,7 +80,7 @@ static void draw_line(uint32_t *row, struct state *s, int vstart_is_first)
         s->pt[p] += (uint32_t)bytes + (uint32_t)(int32_t)(int16_t)((p & 1) ? s->mod2 : s->mod1);
 }
 
-void display_render(uint32_t *rgb)
+static void render(uint32_t *rgb, const uint16_t *motion)
 {
     volatile struct Custom *c = custom;
     struct state s;
@@ -110,7 +120,7 @@ void display_render(uint32_t *rgb)
                 break;
             while (line < v && line < vstop) {
                 if (line >= vstart && line - CANVAS_V0 >= 0 && line - CANVAS_V0 < DISPLAY_H)
-                    draw_line(rgb + (line - CANVAS_V0) * DISPLAY_W, &s, 0);
+                    draw_line(rgb + (line - CANVAS_V0) * DISPLAY_W, &s, motion);
                 line++;
             }
             continue;
@@ -144,8 +154,18 @@ void display_render(uint32_t *rgb)
     }
     while (line < vstop) {
         if (line >= vstart && line - CANVAS_V0 >= 0 && line - CANVAS_V0 < DISPLAY_H)
-            draw_line(rgb + (line - CANVAS_V0) * DISPLAY_W, &s, 0);
+            draw_line(rgb + (line - CANVAS_V0) * DISPLAY_W, &s, motion);
         line++;
     }
+}
+
+void display_render(uint32_t *rgb)
+{
+    render(rgb, NULL);
+}
+
+void display_render_interpolated(uint32_t *rgb, uint64_t now)
+{
+    render(rgb, presentation_picture(now));
 }
 

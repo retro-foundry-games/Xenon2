@@ -245,6 +245,15 @@ void draw_gauge(uint16_t x, uint16_t y, uint16_t fill, uint16_t max)
     uint32_t q = dividend / divisor;
     uint16_t pic = q > 0xffff ? (uint16_t)dividend : (uint16_t)q;
 
-    if (pic < 10)
+    if (pic < 10) {
+#ifdef GAME_SDL
+        if (presentation_capturing)
+            presentation_pin(1);
+#endif
         draw_bob_masked_at(x, y, xenon2.gauge_pics[pic]);
+#ifdef GAME_SDL
+        if (presentation_capturing)
+            presentation_pin(0);
+#endif
+    }
 }
