@@ -5,7 +5,7 @@
  * keys are read, the clock is waited for, and the vertical blank interrupt is raised: if the game enabled it, its handler (the C function in the
  * vector table) is called right here.
  *
- *   xenon2-sdl [--disks FOLDER] [--scale N] [--renderer NAME]
+ *   xenon2-sdl [--disks FOLDER] [--scale N] [--renderer NAME] [--interpolate]
  */
 #include <SDL3/SDL.h>
 #ifdef __EMSCRIPTEN__
@@ -17,14 +17,17 @@
 
 #include "amiga/hw.h"   /* (this file is built without -fpack-struct: SDL's headers need that; the game's memory is in guest.c) */
 #include "host.h"
+#include "pixel_scale.h"
+#include "presentation.h"
 
 
 static SDL_Window *window;
 static SDL_Renderer *renderer;
 static SDL_Texture *texture;
 static SDL_AudioStream *audio;
+static PixelScale pixel_scale;
 static const char *renderer_name;   /* --renderer NAME: software, opengl, vulkan, ... (default: SDL chooses) */
-static int headless, scale = 3;
+static int headless, interpolate, scale = 3;
 static long frames;
 static uint32_t picture[DISPLAY_W * DISPLAY_H];
 static int quitting;
@@ -110,6 +113,7 @@ static int key_queue[32], key_queue_n;
 
 void host_state(host_state_visit visit, void *arg)
 {
+    presentation_reset();
     guest_state(visit, arg);
     sound_state(visit, arg);
     visit(&frames, sizeof frames, arg);
@@ -194,47 +198,116 @@ static void poll_events(void)
     }
 }
 
-/* ---- the frame ------------------------------------------------------------------------------------------------------------------------------------------------------ */
-/* the end of a video frame of emulated time: the picture, the sound, the keys, the clock (the dev build calls this and host_vblank itself) */
-void host_frame_end(void)
+#ifdef __EMSCRIPTEN__
+/* The shell snaps the canvas to the physical pixel grid. SDL renders directly
+ * into that many pixels, including when the browser is zoomed. */
+EM_JS(int, browser_pixel_width, (void), {
+    const visible = window.visualViewport;
+    const density = window.devicePixelRatio * (visible ? visible.scale : 1);
+    if (density !== Module['xenonCanvasDensity']) Module['xenonFitCanvas']();
+    return Module['xenonCanvasWidth'];
+});
+EM_JS(int, browser_pixel_height, (void), { return Module['xenonCanvasHeight']; });
+
+EM_ASYNC_JS(void, browser_refresh, (void), {
+    await new Promise(resolve => requestAnimationFrame(resolve));
+});
+
+static bool resize_browser_window(void)
+{
+    int width = browser_pixel_width(), height = browser_pixel_height();
+    int current_width, current_height;
+
+    return SDL_GetWindowSize(window, &current_width, &current_height) &&
+        ((width == current_width && height == current_height) || SDL_SetWindowSize(window, width, height));
+}
+#endif
+
+static bool present(Uint64 now)
+{
+#ifdef __EMSCRIPTEN__
+    if (!resize_browser_window())
+        return false;
+#endif
+    if (interpolate)
+        display_render_interpolated(picture, now);
+    else
+        display_render(picture);
+    for (int i = 0; i < DISPLAY_W * DISPLAY_H; i++)
+        picture[i] |= 0xff000000u;
+    return SDL_UpdateTexture(texture, NULL, picture, DISPLAY_W * 4) &&
+        pixel_scale_draw(&pixel_scale, texture) && SDL_RenderPresent(renderer);
+}
+
+static void present_or_exit(Uint64 now)
+{
+    if (!present(now)) {
+        fprintf(stderr, "xenon2-sdl: could not present the frame: %s\n", SDL_GetError());
+        exit(1);
+    }
+}
+
+/* The clock advances in 20 ms steps. While the game waits for its next
+ * interrupt, smooth mode uses the available presentation time. */
+enum { STALL_NS = 200000000 };
+
+static void wait_for_vblank(void)
 {
     static Uint64 next;
-    int16_t samples[2 * 882];
-
-    display_render(picture);
-    for (int i = 0; i < DISPLAY_W * DISPLAY_H; i++)
-        picture[i] |= 0xff000000u;   /* opaque */
-    sound_mix(samples, 882);
-    if (!headless) {
+    Uint64 now = SDL_GetTicksNS();
+    if (!next || now > next + STALL_NS) {
+        next = now;
+        presentation_discard_history();
+    }
+    next += HOST_VBLANK_NS;
+#ifndef __EMSCRIPTEN__
+    if (!interpolate) {
         poll_events();
-        SDL_UpdateTexture(texture, 0, picture, DISPLAY_W * 4);
-        SDL_RenderClear(renderer);
-        SDL_RenderTexture(renderer, texture, 0, 0);
-        SDL_RenderPresent(renderer);
-        if (audio)
-            SDL_PutAudioStreamData(audio, samples, sizeof samples);
-        Uint64 now = SDL_GetTicksNS();
-
-        if (next == 0)
-            next = now;
-        next += 20000000;
-#ifdef __EMSCRIPTEN__
-        /* the browser's loop runs between the frames (Asyncify: the game's stack is parked here) */
-        emscripten_sleep(next > now ? (unsigned)((next - now) / 1000000) : 0);
-        if (next < now && now - next > 200000000)
-            next = now;
-#else
+        present_or_exit(now);
+        now = SDL_GetTicksNS();
         if (next > now)
             SDL_DelayNS(next - now);
-        else if (now - next > 200000000)
-            next = now;
+        return;
+    }
 #endif
+    while (now < next && !quitting) {
+#ifdef __EMSCRIPTEN__
+        browser_refresh();
+        now = SDL_GetTicksNS();
+        if (now > next + STALL_NS) {
+            next = now;
+            presentation_discard_history();
+        }
+#endif
+        poll_events();
+        present_or_exit(now);
+        now = SDL_GetTicksNS();
+    }
+}
+
+void host_screen_flip(const void *screen, uint16_t tick)
+{
+    if (interpolate)
+        presentation_flip(screen, tick, SDL_GetTicksNS());
+}
+
+/* One machine frame. Audio, joystick registers and IRQs stay on this clock. */
+void host_frame_end(void)
+{
+    int16_t samples[2 * 882];
+
+    sound_mix(samples, 882);
+    if (!headless) {
+        if (audio && SDL_GetAudioStreamQueued(audio) < (int)(sizeof samples * 10))
+            SDL_PutAudioStreamData(audio, samples, sizeof samples);
+        wait_for_vblank();
     }
     joystick_registers();
     deliver_keys();
     frames++;
     if (quitting) {
         if (!headless) {
+            pixel_scale_close(&pixel_scale);
             SDL_Quit();
         }
         exit(0);
@@ -288,8 +361,9 @@ int host_init(int argc, char **argv)
         if (!strcmp(argv[i], "--disks") && i + 1 < argc) disks = argv[++i];
         else if (!strcmp(argv[i], "--scale") && i + 1 < argc) scale = atoi(argv[++i]);
         else if (!strcmp(argv[i], "--renderer") && i + 1 < argc) renderer_name = argv[++i];
+        else if (!strcmp(argv[i], "--interpolate")) interpolate = 1;
         else {
-            fprintf(stderr, "usage: xenon2-sdl [--disks FOLDER] [--scale N] [--renderer NAME]\n");
+            fprintf(stderr, "usage: xenon2-sdl [--disks FOLDER] [--scale N] [--renderer NAME] [--interpolate]\n");
             return 2;
         }
     }
@@ -297,6 +371,7 @@ int host_init(int argc, char **argv)
         return 1;
     sound_init();
     joystick_registers();
+    presentation_enable(interpolate && !headless);
     if (!headless) {
         SDL_AudioSpec spec = { SDL_AUDIO_S16, 2, 44100 };
 
@@ -315,7 +390,12 @@ int host_init(int argc, char **argv)
                 snprintf(failure, sizeof failure, "SDL_Init: %s", SDL_GetError());
                 continue;
             }
-            window = SDL_CreateWindow("Xenon 2", DISPLAY_W * scale, DISPLAY_H * scale, 0);
+#ifdef __EMSCRIPTEN__
+            window = SDL_CreateWindow("Xenon 2", browser_pixel_width(), browser_pixel_height(), 0);
+#else
+            window = SDL_CreateWindow("Xenon 2", DISPLAY_W * scale, DISPLAY_H * scale,
+                                      SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIGH_PIXEL_DENSITY);
+#endif
             renderer = window ? SDL_CreateRenderer(window, renderer_name) : 0;
             if (!renderer) {
                 snprintf(failure, sizeof failure, "%s: %s", drivers[i] ? drivers[i] : "window", SDL_GetError());
@@ -329,11 +409,19 @@ int host_init(int argc, char **argv)
             fprintf(stderr, "xenon2-sdl: %s\n", failure);
             return 1;
         }
-        SDL_SetRenderVSync(renderer, 1);
-        SDL_SetRenderLogicalPresentation(renderer, DISPLAY_W, DISPLAY_H, SDL_LOGICAL_PRESENTATION_INTEGER_SCALE);
-        texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_XRGB8888, SDL_TEXTUREACCESS_STREAMING, DISPLAY_W, DISPLAY_H);
-        SDL_SetTextureScaleMode(texture, SDL_SCALEMODE_NEAREST);
-        SDL_SetTextureBlendMode(texture, SDL_BLENDMODE_NONE);
+#ifdef __EMSCRIPTEN__
+        SDL_SetRenderVSync(renderer, 0);
+#else
+        SDL_SetRenderVSync(renderer, interpolate ? 0 : 1);
+#endif
+        texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, DISPLAY_W, DISPLAY_H);
+        if (!texture || !SDL_SetRenderLogicalPresentation(renderer, DISPLAY_W, DISPLAY_H, SDL_LOGICAL_PRESENTATION_LETTERBOX) ||
+            !SDL_UpdateTexture(texture, NULL, picture, DISPLAY_W * 4) ||
+            !pixel_scale_open(&pixel_scale, renderer, texture, DISPLAY_W, DISPLAY_H)) {
+            fprintf(stderr, "xenon2-sdl: pixel upscaling setup: %s\n", SDL_GetError());
+            SDL_Quit();
+            return 1;
+        }
         audio = SDL_OpenAudioDeviceStream(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, &spec, 0, 0);
         if (audio)
             SDL_ResumeAudioStreamDevice(audio);

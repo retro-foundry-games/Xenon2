@@ -1,6 +1,9 @@
 #include "stars.h"
 #include "game_all.h"
 #include "amiga/hw.h"
+#ifdef GAME_SDL
+#include "sdl/presentation.h"
+#endif
 
 /* The starfield of the game keeps in each record of `stars` (struct Star of title): x = offset in the screen, y = bit mask, z = fractional line. */
 #define STAR_OFF(s) ((s)->x)
@@ -158,6 +161,12 @@ void stars_draw(void)
             uint16_t mask = STAR_MASK(s);
             uint16_t planes = p[0] | p[SCREEN_PLANE_WORDS] | p[2 * SCREEN_PLANE_WORDS] | p[3 * SCREEN_PLANE_WORDS];
 
+#ifdef GAME_SDL
+            if (presentation_capturing) {
+                int offset = STAR_OFF(s);
+                presentation_star(g * 12 + i, (offset % SCREEN_ROW_BYTES) * 8, offset / SCREEN_ROW_BYTES, mask);
+            }
+#endif
             if (planes & mask)
                 continue;
             if (g == 1 || g == 3)

@@ -1,8 +1,10 @@
 #include <string.h>
 #include "game.h"
 #include "game_all.h"
+#include "draw.h"
 #include "amiga/hw.h"
 #ifdef GAME_SDL
+#include "sdl/host.h"
 uint8_t guest_a6a(uint8_t a01);   /* sdl/guest.c */
 extern void guest_stick_restore(void);   /* sdl/guest.c: undoes what the lockstep put into joy_stick */
 #endif
@@ -53,6 +55,9 @@ void swap_screens(void)
     xenon2.copper_cur = (uint16_t *)list;
     custom->cop1lc = list;
     custom->copjmp1 = (uint16_t)list;   /* HLE: copper */
+#ifdef GAME_SDL
+    host_screen_flip(old_draw, xenon2.last_flip_vbl);
+#endif
 }
 
 /* orig $002026: swap_screens for a 200-line screen; returns the size of the screen in bytes per plane group (0x7D00) */
@@ -334,6 +339,9 @@ static void main_loop(void)
             xenon2.pickup_cycle += 2;
         }
         scroll_pos_update(xenon2.scroll_speed);
+#ifdef GAME_SDL
+        presentation_begin();
+#endif
         draw_background();
         xenon2.scroll_step = 1;
         stars_draw();
@@ -352,6 +360,9 @@ static void main_loop(void)
             if (key_command(key))
                 return;
         }
+#ifdef GAME_SDL
+        presentation_seal();
+#endif
         camera_step();
         swap_screens_192();
         apply_palette();
@@ -620,6 +631,9 @@ void game_entry(void)
 /* orig $006bc8 and $006bce: clears the first `rows` rows of both screens (the panel's rows follow the screen's: $6bc8 clears 200, $6bce 192) */
 static void clear_screens(uint16_t rows)
 {
+#ifdef GAME_SDL
+    presentation_reset();
+#endif
     for (uint16_t row = 0; row < rows; row++) {
         uint16_t *a = row < SCREEN_ROWS ? &xenon2.screen_b[row * SCREEN_ROW_WORDS] : &xenon2.panel_b[(row - SCREEN_ROWS) * SCREEN_ROW_WORDS];
         uint16_t *b = row < SCREEN_ROWS ? &xenon2.screen_a[row * SCREEN_ROW_WORDS] : &xenon2.panel_a[(row - SCREEN_ROWS) * SCREEN_ROW_WORDS];
@@ -807,6 +821,9 @@ void swap_player_state(void)
 /* orig $006fe8: all 16 palette entries, the copy and the chip's, to black */
 void clear_palette(void)
 {
+#ifdef GAME_SDL
+    presentation_reset();
+#endif
     uint16_t i;
 
     for (i = 0; i < 16; i++) {
@@ -818,6 +835,9 @@ void clear_palette(void)
 /* orig $006d9c: puts the player back at the start of a level section (scroll positions, the shot trails, the "&xenon2.player n" text) */
 void respawn_player(void)
 {
+#ifdef GAME_SDL
+    presentation_reset();
+#endif
     uint16_t pos, i;
 
     xenon2.player_dead = 0;

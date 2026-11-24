@@ -80,6 +80,8 @@ static void draw_bob(const uint16_t *gfx, int16_t x, int16_t y, int flash)
 {
     struct Bob b;
 
+    if (presentation_capturing)
+        presentation_draw(PRESENT_BOB, x, y);
     if (!bob_clip(&b, gfx, x, y, 0))
         return;
     for (int r = b.first; r <= b.last; r++) {
@@ -90,6 +92,10 @@ static void draw_bob(const uint16_t *gfx, int16_t x, int16_t y, int flash)
 
             for (int p = 0; p < 4; p++)
                 planes[p] = bob_plane(&b, row, p, w);
+            if (presentation_capturing) {
+                const uint16_t white[4] = {0xffff, 0xffff, 0xffff, 0};
+                presentation_span(b.left + w * 16, b.top + r, mask, flash ? white : planes);
+            }
             for (int i = 0; i < 16; i++) {
                 int px = b.left + w * 16 + i;
 
@@ -120,6 +126,8 @@ void draw_bob_behind_map(Object *obj)
     struct Bob b;
     int shift;
 
+    if (presentation_capturing)
+        presentation_draw(PRESENT_BEHIND_MAP, obj->x, obj->y);
     if (!bob_clip(&b, (const uint16_t *)obj->gfx, obj->x, obj->y, 1))
         return;
     shift = b.left & 15;
@@ -132,6 +140,8 @@ void draw_bob_behind_map(Object *obj)
         seen[1] = (uint16_t)(((uint32_t)mask << (16 - shift) & 0xffff) & ~seen[1]);
         for (int p = 0; p < 4; p++)
             planes[p] = bob_plane(&b, row, p, 0);
+        if (presentation_capturing)
+            presentation_span(b.left, b.top + r, mask, planes);
         for (int i = 0; i < 16; i++) {
             int j = shift + i, px = b.left + i;
 
@@ -145,13 +155,17 @@ void draw_bob_behind_map(Object *obj)
 /* the glyph or tile of 16 lines of four planes (64 words) put in the 16 pixels at byte column col of the screen, as far as `lines` lines */
 static void put_block(const uint16_t *src, int col, int line, int lines)
 {
-    for (int r = 0; r < lines; r++)
-        for (int p = 0; p < 4; p++) {
-            if (line + r >= 0)
-                *(uint16_t *)((uint8_t *)xenon2.draw_screen + (line + r) * SCREEN_ROW_BYTES + p * SCREEN_PLANE_BYTES + col) = *src;
-            src++;
-        }
+    for (int r = 0; r < lines; r++, src += 4) {
+        if (line + r < 0)
+            continue;
+        if (presentation_capturing)
+            presentation_span(col * 8, line + r, 0xffff, src);
+        for (int p = 0; p < 4; p++)
+            *(uint16_t *)((uint8_t *)xenon2.draw_screen + (line + r) * SCREEN_ROW_BYTES + p * SCREEN_PLANE_BYTES + col) = src[p];
+    }
 }
+
+static void tile_grid(const uint16_t *cells, uint16_t cols, int16_t rows, int16_t y, uint16_t x, int flash);
 
 /* orig $15CE: draw a zero-terminated string with the font into the screen at dest (2 bytes a character) */
 void draw_text(const uint8_t *text, uint8_t *dest)
@@ -192,9 +206,10 @@ void draw_background(void)
         memcpy(screen + line * SCREEN_ROW_BYTES, src, MAP_BLIT_BYTES);
         memset(screen + line * SCREEN_ROW_BYTES + MAP_BLIT_BYTES, 0, MAP_BLIT_BYTES);
     }
-    if (xenon2.skip_map_draw)
-        return;
-    draw_tile_grid((const uint16_t *)(xenon2.level_init_src + (int16_t)xenon2.map_row_offset), 0x13, 0xc, (int16_t)-(int16_t)xenon2.scroll_fine, 0);
+    if (!xenon2.skip_map_draw)
+        tile_grid((const uint16_t *)(xenon2.level_init_src + (int16_t)xenon2.map_row_offset), 0x13, 0xc, -(int16_t)xenon2.scroll_fine, 0, 0);
+    if (presentation_capturing)
+        presentation_background();
 }
 
 /* a tile of the map at byte column col and line y: a plain cell is the 16 by 16 pixels as they are; a cell with bit 15 has a mask word before each line's plane words, and
@@ -213,6 +228,10 @@ static void put_tile(const uint8_t *tiles, uint16_t cell, int col, int line, int
 
         if (line + r < 0)
             continue;
+        if (presentation_capturing) {
+            const uint16_t white[4] = {0xffff, 0xffff, 0xffff, 0};
+            presentation_span(col * 8, line + r, row[0], flash ? white : row + 1);
+        }
         for (int p = 0; p < 4; p++) {
             uint16_t *w = (uint16_t *)((uint8_t *)xenon2.draw_screen + (line + r) * SCREEN_ROW_BYTES + p * SCREEN_PLANE_BYTES + col);
 
@@ -257,11 +276,15 @@ static void tile_grid(const uint16_t *cells, uint16_t cols, int16_t rows, int16_
 /* orig $E8A, $18B6: draw a block of map cells (cols + 1 by rows + 1) at line y and byte x / 4 of the screen */
 void draw_tile_grid(const uint16_t *cells, uint16_t cols, uint16_t rows, int16_t y, uint16_t x)
 {
+    if (presentation_capturing)
+        presentation_draw(PRESENT_TILES, (x >> 2) * 8, y);
     tile_grid(cells, cols, (int16_t)rows, y, x, 0);
 }
 
 /* orig $E96, $1BD0: the same with the cells drawn as flashes */
 void draw_tile_grid_flash(const uint16_t *cells, uint16_t cols, uint16_t rows, int16_t y, uint16_t x)
 {
+    if (presentation_capturing)
+        presentation_draw(PRESENT_TILES, (x >> 2) * 8, y);
     tile_grid(cells, cols, (int16_t)rows, y, x, 1);
 }
