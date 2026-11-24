@@ -127,8 +127,10 @@ struct Level4Data {
     struct Level4Boss1Piece boss1_pieces[19];   /* 55880 */
     BLOB_PAD(214)
     uint16_t core_cells[30];   /* 55AAC */
-    uint16_t core_cells_tall[92];   /* 55AE8 */
-    const uint16_t *gun_cells_left[9];   /* 55BA0 */
+    uint16_t core_cells_tall[90];   /* 55AE8 */
+    const uint16_t *gun_cells_left_prev;   /* 55B9C */
+    const uint16_t *gun_cells_left[8];   /* 55BA0 */
+    const uint16_t *gun_cells_right_prev;   /* 55BC0 */
     const uint16_t *gun_cells_right[8];   /* 55BC4 */
     uint16_t gun_cell_tables[56];   /* 55BE4 */
     uint16_t b1_core_sway[16];   /* 55C54 */
@@ -250,7 +252,9 @@ _Static_assert(offsetof(struct Level4Data, enemy_f8_paths) == 0x55714 - BLOB_BAS
 _Static_assert(offsetof(struct Level4Data, boss1_pieces) == 0x55880 - BLOB_BASE, "Level4Data.boss1_pieces");
 _Static_assert(offsetof(struct Level4Data, core_cells) == 0x55AAC - BLOB_BASE, "Level4Data.core_cells");
 _Static_assert(offsetof(struct Level4Data, core_cells_tall) == 0x55AE8 - BLOB_BASE, "Level4Data.core_cells_tall");
+_Static_assert(offsetof(struct Level4Data, gun_cells_left_prev) == 0x55B9C - BLOB_BASE, "Level4Data.gun_cells_left_prev");
 _Static_assert(offsetof(struct Level4Data, gun_cells_left) == 0x55BA0 - BLOB_BASE, "Level4Data.gun_cells_left");
+_Static_assert(offsetof(struct Level4Data, gun_cells_right_prev) == 0x55BC0 - BLOB_BASE, "Level4Data.gun_cells_right_prev");
 _Static_assert(offsetof(struct Level4Data, gun_cells_right) == 0x55BC4 - BLOB_BASE, "Level4Data.gun_cells_right");
 _Static_assert(offsetof(struct Level4Data, gun_cell_tables) == 0x55BE4 - BLOB_BASE, "Level4Data.gun_cell_tables");
 _Static_assert(offsetof(struct Level4Data, b1_core_sway) == 0x55C54 - BLOB_BASE, "Level4Data.b1_core_sway");

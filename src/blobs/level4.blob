@@ -76,8 +76,10 @@ end
 55714 enemy_f8_paths ptr 4
 55880 boss1_pieces Level4Boss1Piece 19
 55aac core_cells u16 30
-55ae8 core_cells_tall u16 92
-55ba0 gun_cells_left ptr:u16 9
+55ae8 core_cells_tall u16 90
+55b9c gun_cells_left_prev ptr:u16 1
+55ba0 gun_cells_left ptr:u16 8
+55bc0 gun_cells_right_prev ptr:u16 1
 55bc4 gun_cells_right ptr:u16 8
 55be4 gun_cell_tables u16 56
 55c54 b1_core_sway u16 16
