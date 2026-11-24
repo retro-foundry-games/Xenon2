@@ -268,7 +268,7 @@ struct Xenon2 {
     uint16_t gfx_2af8[30];  /* $002AF8 arr */
     const uint16_t anim_debris_17[30];  /* $002B34 tab */
     const uint16_t anim_debris_5[30];  /* $002B70 tab */
-    uint16_t gfx_2bac[60];  /* $002BAC arr */
+    const uint16_t anim_debris_18[60];  /* $002BAC tab */
     const uint16_t anim_weapon90[27];  /* $002C24 tab */
     PAD(396)
     const uint16_t mask_empty[80];  /* $002DE6 tab */
@@ -277,8 +277,7 @@ struct Xenon2 {
     PAD(406)
     uint16_t area_damage_kept;  /* $0030DC var */
     PAD(1610)
-    const struct SpawnKind spawn_kinds[18];  /* $003728 tab */
-    PAD(6)
+    const struct SpawnKind spawn_kinds[19];  /* $003728 tab */
     const uint16_t anim_debris_13[12];  /* $00379A tab */
     PAD(288)
     const int16_t enemy_shot_dx[16];  /* $0038D2 tab */
@@ -312,7 +311,7 @@ struct Xenon2 {
     uint16_t * copper_cur;  /* $00700E var */
     uint16_t palette_shadow[16];  /* $007012 arr */
     PAD(2338)
-    const uint32_t key_table[4];  /* $007954 tab */
+    uint32_t key_table[4];  /* $007954 arr */
     PAD(2)
     const uint16_t weapon_damage[4];  /* $007966 tab */
     const uint16_t unused_796e[1];  /* $00796E tab */
@@ -747,7 +746,7 @@ LAYOUT_ASSERT(anim_debris_0, 0x2abc);
 LAYOUT_ASSERT(gfx_2af8, 0x2af8);
 LAYOUT_ASSERT(anim_debris_17, 0x2b34);
 LAYOUT_ASSERT(anim_debris_5, 0x2b70);
-LAYOUT_ASSERT(gfx_2bac, 0x2bac);
+LAYOUT_ASSERT(anim_debris_18, 0x2bac);
 LAYOUT_ASSERT(anim_weapon90, 0x2c24);
 LAYOUT_ASSERT(mask_empty, 0x2de6);
 LAYOUT_ASSERT(mask_full, 0x2ea6);
