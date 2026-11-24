@@ -119,7 +119,7 @@ end
 54f62 pad_54f62 u16 51
 578a2 pad_578a2 u16 7565
 5f4c0 pad_5f4c0 u16 3892
-63026 pad_63026 u16 23538
+63026 pad_63026 u16 32593
 74326 pad_74326 u16 740
 75144 pad_75144 u16 7680
 ; --- words reached by the scripts and pointers (tools/blob_gaps.py) ---

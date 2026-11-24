@@ -179,8 +179,7 @@ struct Level5Data {
     uint16_t words_6158e[3018];   /* 6158E */
     struct SpawnRec events_b[55];   /* 62D22 */
     int16_t events_b_end;   /* 63024 */
-    uint16_t pad_63026[23538];   /* 63026 */
-    BLOB_PAD(18110)
+    uint16_t pad_63026[32593];   /* 63026 */
     struct ShotPic *shot_gfx_table[4];   /* 72EC8 */
     struct ShotPic shot_gfx_cells[2];   /* 72ED8 */
     struct PathCmd *formation_paths[110];   /* 72EE0 */
