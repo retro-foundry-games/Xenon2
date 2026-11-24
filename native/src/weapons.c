@@ -1886,7 +1886,7 @@ void beam_draw(Object *obj)
         for (i = 0; i < 5; i++)
             rot[i] = shift ? (pattern[i] >> shift) | (pattern[i] << (32 - shift)) : pattern[i];
     }
-    dst += ((uint16_t)((int16_t)x >> 3) & 0xfffe) / 2;
+    dst += (int16_t)(((int16_t)x >> 3) & 0xfffe) / 2;
 #ifdef GAME_SDL
     if (presentation_capturing)
         presentation_draw(PRESENT_BEAM, x, y);
