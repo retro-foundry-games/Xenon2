@@ -80,20 +80,17 @@ struct Level1Data {
     BLOB_PAD(470)
     const uint16_t *boss_part_pictures[8];   /* 5638A */
     BLOB_PAD(1042)
-    uint16_t boss_grid;   /* 567BC */
-    BLOB_PAD(60)
+    uint16_t boss_grid[31];   /* 567BC */
     uint16_t boss_draw_table[10];   /* 567FA */
-    BLOB_PAD(2)
+    uint16_t boss_grid_end;   /* 5680E */
     uint16_t boss_draw_sources[24];   /* 56810 */
     uint16_t words_56840[6900];   /* 56840 */
     uint16_t boss_part_picture;   /* 59E28 */
     uint16_t words_59e2a[2017];   /* 59E2A */
     uint16_t pad_5adec[1307];   /* 5ADEC */
     uint16_t words_5b822[1121];   /* 5B822 */
-    uint16_t eyes_a;   /* 5C0E4 */
-    BLOB_PAD(174)
-    uint16_t eyes_b;   /* 5C194 */
-    BLOB_PAD(174)
+    uint16_t eyes_a[88];   /* 5C0E4 */
+    uint16_t eyes_b[88];   /* 5C194 */
     uint16_t eyes_c;   /* 5C244 */
     uint16_t words_5c246[775];   /* 5C246 */
     struct SpawnRec events_b[51];   /* 5C854 */
@@ -174,6 +171,7 @@ _Static_assert(offsetof(struct Level1Data, piece_pictures) == 0x56174 - BLOB_BAS
 _Static_assert(offsetof(struct Level1Data, boss_part_pictures) == 0x5638A - BLOB_BASE, "Level1Data.boss_part_pictures");
 _Static_assert(offsetof(struct Level1Data, boss_grid) == 0x567BC - BLOB_BASE, "Level1Data.boss_grid");
 _Static_assert(offsetof(struct Level1Data, boss_draw_table) == 0x567FA - BLOB_BASE, "Level1Data.boss_draw_table");
+_Static_assert(offsetof(struct Level1Data, boss_grid_end) == 0x5680E - BLOB_BASE, "Level1Data.boss_grid_end");
 _Static_assert(offsetof(struct Level1Data, boss_draw_sources) == 0x56810 - BLOB_BASE, "Level1Data.boss_draw_sources");
 _Static_assert(offsetof(struct Level1Data, words_56840) == 0x56840 - BLOB_BASE, "Level1Data.words_56840");
 _Static_assert(offsetof(struct Level1Data, boss_part_picture) == 0x59E28 - BLOB_BASE, "Level1Data.boss_part_picture");

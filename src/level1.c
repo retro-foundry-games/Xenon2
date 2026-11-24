@@ -475,7 +475,7 @@ void level1_boss_draw(Object *boss)
 
     if ((int16_t)xenon2.scroll_pos >= 0x280)
         return;
-    draw_tile_grid(&xenon2.level1_data.boss_grid, 5, 6, (uint16_t)(boss->y - xenon2.scroll_pos), 0x38);
+    draw_tile_grid(xenon2.level1_data.boss_grid, 5, 6, (uint16_t)(boss->y - xenon2.scroll_pos), 0x38);
     eye = (xenon2.l1_eyes_phase >> 4) & 0xc;
     draw_bob_masked_at(0x98, (uint16_t)(boss->y - xenon2.scroll_pos + 0x42), eyes[eye >> 2]);
 }
@@ -734,7 +734,7 @@ void level1_boss_flash(Object *boss)
     boss->fn_draw = (obj_fn)level1_boss_draw;
     if ((int16_t)xenon2.scroll_pos >= 0x280)
         return;
-    draw_tile_grid_flash(&xenon2.level1_data.boss_grid, 5, 6, (int16_t)(boss->y - xenon2.scroll_pos), 0x38);
+    draw_tile_grid_flash(xenon2.level1_data.boss_grid, 5, 6, (int16_t)(boss->y - xenon2.scroll_pos), 0x38);
 }
 
 /* orig $0561DA: hit routine of the level 1 boss: when the shooter's box meets the part of the boss that can be hurt the boss flashes
