@@ -118,7 +118,8 @@ struct Level4Data {
     uint16_t words_5518a[96];   /* 5518A */
     BLOB_PAD(308)
     struct Level4EnemyGun enemy_a_guns[2];   /* 5537E */
-    BLOB_PAD(486)
+    uint16_t anim_enemy_shots[72];   /* 5538E */
+    BLOB_PAD(342)
     const uint16_t *anims_by_kind[8];   /* 55574 */
     uint16_t words_55594[192];   /* 55594 */
     const uint8_t *enemy_f8_paths[4];   /* 55714 */
@@ -244,6 +245,7 @@ _Static_assert(offsetof(struct Level4Data, words_5500c) == 0x5500C - BLOB_BASE, 
 _Static_assert(offsetof(struct Level4Data, scroll_enemies) == 0x5515A - BLOB_BASE, "Level4Data.scroll_enemies");
 _Static_assert(offsetof(struct Level4Data, words_5518a) == 0x5518A - BLOB_BASE, "Level4Data.words_5518a");
 _Static_assert(offsetof(struct Level4Data, enemy_a_guns) == 0x5537E - BLOB_BASE, "Level4Data.enemy_a_guns");
+_Static_assert(offsetof(struct Level4Data, anim_enemy_shots) == 0x5538E - BLOB_BASE, "Level4Data.anim_enemy_shots");
 _Static_assert(offsetof(struct Level4Data, anims_by_kind) == 0x55574 - BLOB_BASE, "Level4Data.anims_by_kind");
 _Static_assert(offsetof(struct Level4Data, words_55594) == 0x55594 - BLOB_BASE, "Level4Data.words_55594");
 _Static_assert(offsetof(struct Level4Data, enemy_f8_paths) == 0x55714 - BLOB_BASE, "Level4Data.enemy_f8_paths");

@@ -4736,6 +4736,7 @@ static const struct blob_member blob_members_4[] = {
     { 0x546, 1, 2, 0 },
     { 0x548, 1, 2, 0 },
     { 0x54A, 1, 4, 1 },
+    { 0x54E, 72, 2, 0 },
     { 0x734, 8, 4, 1 },
     { 0x754, 192, 2, 0 },
     { 0x8D4, 4, 4, 1 },
@@ -6022,7 +6023,7 @@ static const struct { uint32_t offset, size; } blob_pads_4[] = {   /* the bytes 
     { 0x4A, 2 },
     { 0x250, 202 },
     { 0x40A, 308 },
-    { 0x54E, 486 },
+    { 0x5DE, 342 },
     { 0x8E4, 348 },
     { 0xB96, 214 },
     { 0xD80, 4 },
@@ -6077,6 +6078,7 @@ static const struct { uint32_t offset, count; } blob_script_pointers_4[] = {   /
     { 0x1A92, 8 },
 };
 static const struct { uint32_t offset, size; } blob_scripts_4[] = {   /* the animation scripts: where the walk of the loader starts */
+    { 0x54E, 144 },
     { 0x1712, 36 },
     { 0x1C34, 36 },
     { 0x1C58, 398 },
