@@ -25,3 +25,9 @@ The presented motion trails by one completed gameplay frame.
 
 Run `make test-sdl-presentation` to check the compositor and upscaling
 without disk images.
+
+## License
+
+This is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 2 of the License, or (at your option) any later version. See [LICENSE](LICENSE).
+
+`src/sdl/third_party/ZXSC-LICENSE.txt` is the license (MIT) of the pixel scaling code that `src/sdl/pixel_scale.*` builds on. Xenon 2 Megablast itself, its graphics, music and data are not covered and are not distributed here.
