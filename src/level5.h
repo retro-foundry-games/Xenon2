@@ -174,8 +174,7 @@ struct Level5Data {
     uint16_t words_5f360[176];   /* 5F360 */
     uint16_t pad_5f4c0[3892];   /* 5F4C0 */
     uint16_t words_61328[306];   /* 61328 */
-    uint8_t turret_fire_picture;   /* 6158C */
-    BLOB_PAD(1)
+    uint16_t turret_fire_picture;   /* 6158C */
     uint16_t words_6158e[3018];   /* 6158E */
     struct SpawnRec events_b[55];   /* 62D22 */
     int16_t events_b_end;   /* 63024 */
