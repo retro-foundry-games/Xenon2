@@ -21,7 +21,7 @@ all $(MAKECMDGOALS):
 else
 
 # the same flags as the port's (native/Makefile `sdl`), plus the instrumentation of the game's own C
-GAME_CFLAGS := -m32 -fpack-struct=2 -std=gnu11 -O1 -g -fno-strict-aliasing -fno-pie -fno-stack-protector -ffunction-sections -fdata-sections -DGAME_SDL -I$(SRC) -I$(SRC)/sdl -Wall -Wno-unused-function \
+GAME_CFLAGS := -m32 -fpack-struct=2 -std=gnu11 -O1 -g -fno-strict-aliasing -fno-pie -fno-stack-protector -ffunction-sections -fdata-sections -DGAME_SDL -DMATCH_MEMORY_LAYOUT -I$(SRC) -I$(SRC)/sdl -Wall -Wno-unused-function \
                $(shell pkg-config --cflags sdl3)
 GAME_MODULES := $(filter-out runtime data,$(notdir $(basename $(wildcard $(SRC)/*.c))))
 GAME_OBJS  := $(GAME_MODULES:%=$(BUILD)/g_%.o)
@@ -44,8 +44,8 @@ $(BUILD)/g_code_table.o: $(SRC)/code_table.c $(SRC)/game_state.h | $(BUILD)
 	gcc $(GAME_CFLAGS) -c $< -o $@
 $(BUILD)/h_%.o: $(SRC)/sdl/%.c $(HERE)/Makefile $(SRC)/game_state.h $(wildcard $(SRC)/*.h $(SRC)/sdl/*.h $(SRC)/amiga/*.h) | $(BUILD)
 	gcc $(GAME_CFLAGS) -c $< -o $@
-# (main.c includes SDL's headers: without -fpack-struct=2, as in the port's own build)
-$(BUILD)/h_main.o: $(SRC)/sdl/main.c $(wildcard $(SRC)/sdl/*.h $(SRC)/amiga/*.h) | $(BUILD)
+# (main.c and pixel_scale.c include SDL's headers: without -fpack-struct=2, as in the port's own build)
+$(BUILD)/h_main.o $(BUILD)/h_pixel_scale.o: $(BUILD)/h_%.o: $(SRC)/sdl/%.c $(wildcard $(SRC)/sdl/*.h $(SRC)/amiga/*.h) | $(BUILD)
 	gcc $(filter-out -fpack-struct=2,$(GAME_CFLAGS)) -c $< -o $@
 $(BUILD)/dev.o: $(HERE)/src/dev.c $(HERE)/Makefile $(wildcard $(SRC)/sdl/*.h) | $(BUILD)
 	gcc -m32 -std=gnu11 -O1 -g -fno-pie -fno-stack-protector -Wall -I$(SRC)/sdl -I$(LUA) -c $< -o $@
