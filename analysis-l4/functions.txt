@@ -1,0 +1,148 @@
+000e0c call        1  003662
+000e12 call        1  003676
+000e18 start       5  
+000e1e start       4  
+000e24 call        6  003662
+000e2a indirect    6  
+000e36 call        1  0570ae
+000e42 call        1  003662
+000e48 call       68  003676
+000e5a indirect    7  
+000ea2 indirect   18  
+000ec0 call        1  0571ec
+000f56 call       31  05701e
+000fee call       12  003662
+00107e call       48  00129a 00137c
+0010f6 call       88  00129e 001380
+00128e call        3  003676
+00129a call       41  0064f2 006512
+001368 call       40  003676
+0016be call       36  00790a
+0017d6 call      206  0078f8 007d6a
+001bf8 indirect   63  
+001f22 call       15  0078f4
+001f50 call       20  001ff8 003396 005adc 007dc0 008462 008468
+001ff6 call        7  007da8 007db4
+00200a call       12  003078
+002026 call       21  00851c
+00202e call        1  007a72 007d72
+002098 indirect   10  
+0022da call       30  00233e
+00233a call       61  007902 007d6e
+0023f0 call        7  0052d0
+002418 call        8  00318e 00320a 0032b6 0033d6 00345e 003680
+002c5a call       23  003912 003c7a 003f3a 004094 00415a 0045ec
+002d1a call       31  003030
+002d7a call       35  002d48 002d6e
+00300a call       24  005fc8 006080
+003052 call        7  004622 005f46
+00306e call       12  003062 0030a6
+003096 indirect   20  
+0030de call       27  0058aa
+003130 call       41  003676
+003132 call        1  0046bc 009718
+00318c call       23  00972e
+0031ec call       26  005a4c
+003286 call       12  0030ae 006854
+0032aa call      116  003256
+0034ea call       15  0033c4 00395c 00461e 004706 005f42
+003554 call       41  007924
+0035d4 call       37  007918
+003656 call        8  0035d8 0035e0 0035f2 0035fa 003602
+00366a call        8  00360a 003612 00361a 003622 00362a
+00367e start      44  
+003912 call       38  003662
+003b4a call       61  003662
+003c7a call       14  003662
+003f3a call       37  003662
+003fda call       50  003662
+004094 call       46  003662
+00415a call       49  003662
+0045e4 call       18  003662
+004634 call       70  003662
+004822 call      232  006d8a
+004f36 call        3  005244
+0052d0 call        4  0052e4 00538e 00543c
+005550 call        5  003960 00470a
+0055e2 call       16  003662
+0057b6 call        2  003662
+005850 call       32  003662
+005920 call        1  005fba
+005924 call        2  0030b8
+005932 indirect   24  
+005a1a call       66  0059c0
+005c22 call        8  005ca6
+005c9e call       32  006d5a
+005d6e call        8  00396e 005fa2
+005d8c indirect   11  006d3e 006d46 006d4e
+005de6 call       62  00604c
+005efe call       96  003662
+00615a call       35  003b7e 003b8e 00561e
+0061e6 call        9  007920
+006372 call       25  00791c
+0064a0 call        7  003676
+0064b4 call       88  0064ae
+006766 call       52  007906
+00683c call       14  00790e
+0068b0 call       23  003662
+006d22 call       23  006ec6
+006d74 call       13  006dec 007d42
+006d9c call       54  006eee
+006ec6 call       11  007d5c
+006f1e call       23  006fce
+006f94 call       19  007d50
+006fe8 call       12  006e5e 008450 0091e4
+0078ce indirect   92  
+007d42 start       3  
+007d50 indirect   18  
+007d9e call       19  0084a8
+007eb6 call       21  0084c2
+007ef8 call       13  007f32 007fbc
+007f12 indirect    6  
+007f24 call       18  009392
+007f64 call      108  008514
+00842a call       21  006e54
+008442 call       15  00842c
+0084ae call       41  00843a 008cae
+00854c call       62  0020b6 008518
+00861c call       27  0020b2
+0088b6 call       34  007d7c
+008ca0 call        5  0091e0
+0091d8 start       4  
+009248 indirect   26  
+0092ee call        4  0092b0
+00932e call       42  00929e
+0093ee call        3  0093e4
+0093f8 call       61  009248
+00951e call       36  009468 0094d8
+00957e call       13  00948e 0094c6
+0095e4 irq         3  
+0095f4 call        9  008454
+009618 call       10  0084a4
+0096b6 call       30  003662
+009734 call        4  0096ba
+009740 call      106  009734
+019f9e call        4  007d8c
+019fac call        4  0021a8
+019fba call        4  01a008
+019fd6 call        4  00217e 002194
+019fe4 call        4  006d22
+019ffc call       40  019fa2
+01a09a call       17  019fbe
+01a0f4 call        6  019fe8
+01a14e indirect   22  
+01a154 call      227  019fb0
+01b1b6 call        3  01a00c 01b2b6
+01b216 call        3  01b472
+01b26a call      100  019fda
+01b536 call        3  01b30a 01b314 01b348 01b4b0 01b508 01b5ce
+01b5a2 call       72  01b56e 01b586
+054e0c call        3  003066 0030d0
+054e10 call       12  003574
+054e18 call       24  0035b2
+054e20 call       29  006f6a
+054e24 call       11  007912
+057064 call       66  003662
+0571c0 start       4  
+0571d0 indirect   23  
+057246 call       21  003676
