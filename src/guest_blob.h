@@ -4640,6 +4640,7 @@ static const struct { uint32_t offset, size; } blob_scripts_3[] = {   /* the ani
     { 0x198E, 36 },
     { 0x19B2, 42 },
     { 0x19DC, 36 },
+    { 0x1A00, 354 },
     { 0x20B6, 2 },
     { 0x20B8, 162 },
 };
