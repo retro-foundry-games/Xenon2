@@ -68,7 +68,9 @@ end
 55790 walker_spawn_dx s16 8
 557a0 walker_spawn_dy s16 8
 557b0 walker_spawn_anims ptr:u16 8
-558f0 parts Level3Part 18
+558f0 parts Level3Part 17
+55a00 parts_end u16 2
+55a04 anim_part_follow u16 30
 55a40 anim_part_gun_3 u16 106
 55b14 anim_part_core u16 332
 55dac arm_tip_pictures ptr:u16 16
@@ -126,7 +128,6 @@ end
 54ff0 words_54ff0 u16 42
 5514e words_5514e u16 72
 557d0 words_557d0 u16 36
-55a10 words_55a10 u16 24
 56c0c words_56c0c u16 144
 66098 words_66098 u16 271
 6ef92 words_6ef92 u16 982
