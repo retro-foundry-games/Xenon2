@@ -1,10 +1,11 @@
 -- Cold boot to the first level, scripted: fire every 150 frames from 5200 on; the first time the game's disk check
 -- ($8fe8, "X2B " at $49602) fails, disk 2 replaces disk 1.  Logs the game's disk reads ($921a) and screenshots.
---   --script-args "joy1 until=N [ram=PATH] [shots=DIR every=N] [cover=PATH coverfrom=F coverlo=HEX coverhi=HEX] [ramat=F,.. ramprefix=P]"
+--   --script-args "joy1 until=N [save=NAME@FRAME] [ram=PATH] [shots=DIR every=N] [cover=PATH coverfrom=F coverlo=HEX coverhi=HEX] [ramat=F,.. ramprefix=P]"
 -- (no 'load=': a snapshot restore puts disk 1 back in DF0)
 local args = ami.args or ""
 local until_frame = tonumber(args:match("until=(%d+)") or "16000")
 local ram_out = args:match("ram=(%S+)")
+local save_name, save_frame = args:match("save=([%w_%-]+)@(%d+)")
 local shots = args:match("shots=(%S+)")
 local every = tonumber(args:match("every=(%d+)") or "1000")
 local cover = args:match("cover=(%S+)")
@@ -57,6 +58,7 @@ while ami.frame() < until_frame do
     end
     if ramat[f] then ami.save_file(string.format("%s-%d.bin", ram_prefix, f), ami.read(0, 0x80000)) end
     if shots and f % every == 0 then ami.screenshot(string.format("%s/run-%d.ppm", shots, f)) end
+    if save_name and f == tonumber(save_frame) then ami.snapshot_save(save_name .. ".state") end
     ami.wait(1)
 end
 if ram_out then ami.save_file(ram_out, ami.read(0, 0x80000)) end
