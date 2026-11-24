@@ -92,11 +92,11 @@ end
 55ad4 turret_c_cells_dc u16 4
 55adc turret_c_cells_d8 u16 4
 55ce6 unit_pieces_less_one u16 1
-567bc boss_grid u16 1
+567bc boss_grid u16 31
 56810 boss_draw_sources u16 24
 59e28 boss_part_picture u16 1
-5c0e4 eyes_a u16 1
-5c194 eyes_b u16 1
+5c0e4 eyes_a u16 88
+5c194 eyes_b u16 88
 5c244 eyes_c u16 1
 55ce8 segs LevelSeg 11
 55d6c unit_starts LevelSpawn 16
@@ -107,6 +107,7 @@ end
 68f60 formation_paths ptr:PathCmd 87
 6e80a data_src u16 6000
 567fa boss_draw_table u16 10
+5680e boss_grid_end u16 1
 6a5da events_a SpawnRec 113
 6ac08 events_a_end s16
 5c854 events_b SpawnRec 51
