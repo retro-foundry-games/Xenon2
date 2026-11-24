@@ -71,6 +71,7 @@ end
 54f26 formation_6 Formation1
 5515a scroll_enemies Level4ScrollEnemy 4
 5537e enemy_a_guns Level4EnemyGun 2
+5538e anim_enemy_shots u16 72
 55574 anims_by_kind ptr:u16 8
 55714 enemy_f8_paths ptr 4
 55880 boss1_pieces Level4Boss1Piece 19
