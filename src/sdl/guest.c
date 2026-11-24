@@ -33,8 +33,10 @@ static void object_pointers_to_host(Object *o)
         o->link.ptr = guest_ptr((uint32_t)(uintptr_t)o->link.ptr);
     if (o->type == 0x48) {   /* the target: the long in the words 30 and 32 (high first), each word loaded as it is */
         uint32_t a = (uint32_t)(uint16_t)o->drill.target_hi << 16 | (uint16_t)o->energy;
+        Object *target = a ? (Object *)guest_ptr(a) : 0;
 
-        o->drill_target.target = a ? (Object *)guest_ptr(a) : 0;
+        if (!a || target)   /* (a debris of kind $48 keeps other words here) */
+            o->drill_target.target = target;
     }
 }
 
@@ -43,10 +45,14 @@ static void object_pointers_to_guest(Object *o)
     if (o->type == 0x40 && o->link.ptr)
         o->link.ptr = (Object *)(uintptr_t)guest_address(o->link.ptr);
     if (o->type == 0x48) {
-        uint32_t a = o->drill_target.target ? guest_address(o->drill_target.target) : 0;
+        const uint8_t *t = (const uint8_t *)o->drill_target.target;
 
-        o->drill.target_hi = (int16_t)(a >> 16);
-        o->energy = (int16_t)a;
+        if (!t || (t >= (const uint8_t *)&xenon2 && t < (const uint8_t *)&xenon2 + sizeof xenon2)) {
+            uint32_t a = t ? guest_address(t) : 0;
+
+            o->drill.target_hi = (int16_t)(a >> 16);
+            o->energy = (int16_t)a;
+        }
     }
 }
 
