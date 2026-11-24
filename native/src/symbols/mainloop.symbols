@@ -24,7 +24,7 @@ var irq_joy_prev 0x208f uint8_t
 var music_tick_fn 0x2090 irq_fn                    ; music player tick, called every vertical blank
 var music_cmd_fn 0x2094 irq_fn                     ; music player command, d0.w = command
 var copper_cur 0x700e uint16_t *                   ; the copper list in use (copper_list_a or copper_list_b)
-tab key_table 0x7954 uint32_t 4                    ; key code << 24 | handler address; the last entry (code 0) matches every key
+arr key_table 0x7954 uint32_t 4                    ; key code << 24 | handler address; the last entry (code 0) matches every key
 var loading_level_digit 0x8c41 uint8_t                          ; level digit in the loading text
 var cycle_flag_a 0x8f94 uint16_t    ; set when a game or a cycle of five levels starts, never read
 var cycle_flag_b 0x8f96 uint16_t    ; cleared with cycle_flag_a, never read

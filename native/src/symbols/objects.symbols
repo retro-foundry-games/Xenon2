@@ -6,7 +6,7 @@ tab mask_full 0x2ea6 uint16_t 80                  ; a tile mask that is all soli
 tab hit_mask_ptrs 0x3ae96 uint32_t 16             ; addresses of the 16 masks below (unused: they are 150 bytes apart)
 tab hit_mask_data 0x3aed6 uint16_t 1200           ; the player's 24 row mask shifted by 0..15 pixels (75 words each)
 type SpawnKind 6                                  ; the debris an object breaks into: the type and the animation (struct SpawnKind in objects.h)
-tab spawn_kinds 0x3728 SpawnKind 18                ; the debris of each kind
+tab spawn_kinds 0x3728 SpawnKind 19                ; the debris of each kind
 var level_events_b 0x54e14 struct SpawnRec *      ; the level's second list of scroll events
 var level_formations 0x54e30 struct PathCmd **    ; the level's table of the path scripts of its formations (formation_paths)
 var level_data_start 0x54e34 uint8_t *
