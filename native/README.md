@@ -1,4 +1,4 @@
-# Xenon 2 SDL3
+# Xenon 2
 
 Build the desktop port with `make sdl`. Run it with the two disk images,
 `xenon2-disk1.adf` and `xenon2-disk2.adf`, in the folder passed to `--disks`.
