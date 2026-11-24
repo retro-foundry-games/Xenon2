@@ -6475,6 +6475,7 @@ static const struct blob_member blob_members_5[] = {
     { 0xA520, 176, 2, 0 },
     { 0xA680, 3892, 2, 0 },
     { 0xC4E8, 306, 2, 0 },
+    { 0xC74C, 1, 2, 0 },
     { 0xC74E, 3018, 2, 0 },
     { 0xDEE2, 1, 2, 0 },
     { 0xDEE4, 1, 2, 0 },
@@ -7951,7 +7952,6 @@ static const struct { uint32_t offset, size; } blob_pads_5[] = {   /* the bytes 
     { 0x2000, 98 },
     { 0x24AA, 554 },
     { 0x2A42, 32 },
-    { 0xC74D, 1 },
 };
 static const struct { uint32_t offset, count; } blob_script_pointers_5[] = {   /* the pointers to scripts */
     { 0x62, 1 },

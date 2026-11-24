@@ -110,7 +110,7 @@ end
 72ec8 shot_gfx_table ptr:ShotPic 4
 72ed8 shot_gfx_cells ShotPic 2
 72ee0 formation_paths ptr:PathCmd 110
-6158c turret_fire_picture u8 1
+6158c turret_fire_picture u16 1
 7491c events_a SpawnRec 149
 75142 events_a_end s16
 62d22 events_b SpawnRec 55
