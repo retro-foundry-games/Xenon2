@@ -106,6 +106,29 @@ extern void irq_keyboard();
 extern void irq_vblank();
 extern void irq_vblank_hooked();
 extern void kill_with_slot();
+extern void l1_boss_draw();
+extern void l1_boss_flash();
+extern void l1_boss_hit();
+extern void l1_boss_part_update();
+extern void l1_boss_update();
+extern void l1_collision_hook();
+extern void l1_debris_update();
+extern void l1_event();
+extern void l1_head_update();
+extern void l1_hit_free();
+extern void l1_hit_piece_a();
+extern void l1_hit_piece_b();
+extern void l1_hook();
+extern void l1_init();
+extern void l1_launcher_update();
+extern void l1_scroll();
+extern void l1_segment_update();
+extern void l1_spawn_unit();
+extern void l1_spawn_units();
+extern void l1_swap_hook();
+extern void l1_turret_a_update();
+extern void l1_turret_b_update();
+extern void l1_turret_c_update();
 extern void l2_block_hit();
 extern void l2_boss_draw();
 extern void l2_boss_flash();
@@ -275,29 +298,6 @@ extern void l5_wheel_hit();
 extern void l5_wheel_update();
 extern void laser_update();
 extern void latch_slots();
-extern void level1_boss_draw();
-extern void level1_boss_flash();
-extern void level1_boss_hit();
-extern void level1_boss_part_update();
-extern void level1_boss_update();
-extern void level1_collision_hook();
-extern void level1_debris_update();
-extern void level1_event();
-extern void level1_head_update();
-extern void level1_hit_free();
-extern void level1_hit_piece_a();
-extern void level1_hit_piece_b();
-extern void level1_hook();
-extern void level1_init();
-extern void level1_launcher_update();
-extern void level1_scroll();
-extern void level1_segment_update();
-extern void level1_spawn_unit();
-extern void level1_spawn_units();
-extern void level1_swap_hook();
-extern void level1_turret_a_update();
-extern void level1_turret_b_update();
-extern void level1_turret_c_update();
 extern void level_load();
 extern void level_reset_scroll();
 extern void level_start();
@@ -714,29 +714,29 @@ static const struct { uint32_t address; void *function; } code_table[] = {
     { 0x1b26a, (void *)sfx_play },
     { 0x1b536, (void *)audio_delay },
     { 0x1b540, (void *)sfx_tick },
-    { 0x54e0c, (void *)level1_collision_hook },
-    { 0x54e10, (void *)level1_event },
-    { 0x54e18, (void *)level1_hook },
-    { 0x54e20, (void *)level1_init },
-    { 0x54e24, (void *)level1_scroll },
-    { 0x54e2c, (void *)level1_swap_hook },
-    { 0x552ce, (void *)level1_turret_a_update },
-    { 0x55402, (void *)level1_turret_c_update },
-    { 0x555a2, (void *)level1_turret_b_update },
-    { 0x556dc, (void *)level1_launcher_update },
-    { 0x55c2e, (void *)level1_hit_piece_a },
-    { 0x55c46, (void *)level1_hit_piece_b },
-    { 0x55e2c, (void *)level1_spawn_units },
-    { 0x55e50, (void *)level1_spawn_unit },
-    { 0x56034, (void *)level1_hit_free },
-    { 0x5605a, (void *)level1_debris_update },
-    { 0x560c2, (void *)level1_segment_update },
-    { 0x561b4, (void *)level1_head_update },
-    { 0x561da, (void *)level1_boss_hit },
-    { 0x56278, (void *)level1_boss_part_update },
-    { 0x563aa, (void *)level1_boss_update },
-    { 0x5661a, (void *)level1_boss_draw },
-    { 0x56676, (void *)level1_boss_flash },
+    { 0x54e0c, (void *)l1_collision_hook },
+    { 0x54e10, (void *)l1_event },
+    { 0x54e18, (void *)l1_hook },
+    { 0x54e20, (void *)l1_init },
+    { 0x54e24, (void *)l1_scroll },
+    { 0x54e2c, (void *)l1_swap_hook },
+    { 0x552ce, (void *)l1_turret_a_update },
+    { 0x55402, (void *)l1_turret_c_update },
+    { 0x555a2, (void *)l1_turret_b_update },
+    { 0x556dc, (void *)l1_launcher_update },
+    { 0x55c2e, (void *)l1_hit_piece_a },
+    { 0x55c46, (void *)l1_hit_piece_b },
+    { 0x55e2c, (void *)l1_spawn_units },
+    { 0x55e50, (void *)l1_spawn_unit },
+    { 0x56034, (void *)l1_hit_free },
+    { 0x5605a, (void *)l1_debris_update },
+    { 0x560c2, (void *)l1_segment_update },
+    { 0x561b4, (void *)l1_head_update },
+    { 0x561da, (void *)l1_boss_hit },
+    { 0x56278, (void *)l1_boss_part_update },
+    { 0x563aa, (void *)l1_boss_update },
+    { 0x5661a, (void *)l1_boss_draw },
+    { 0x56676, (void *)l1_boss_flash },
     { 0x6477c, (void *)shop_irq_tick },
     { 0x647a6, (void *)shop_sound_cmd },
     { 0x649c6, (void *)shop_sound_cmd },

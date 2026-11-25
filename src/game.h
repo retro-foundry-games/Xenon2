@@ -527,11 +527,11 @@ struct Xenon2 {
     uint16_t shop_money_early;  /* $054E3C var */
     uint16_t shop_money_late;  /* $054E3E var */
     union {   /* $054E40: the blob of each level */
-        struct Level1Data level1_data;
-        struct Level2Data level2_data;
-        struct Level3Data level3_data;
-        struct Level4Data level4_data;
-        struct Level5Data level5_data;
+        struct Level1Data l1_data;
+        struct Level2Data l2_data;
+        struct Level3Data l3_data;
+        struct Level4Data l4_data;
+        struct Level5Data l5_data;
         struct ShopData shop_data;
     };
     uint16_t level_data_dst[6000];  /* $07D120 arr */
@@ -950,11 +950,11 @@ LAYOUT_ASSERT(level_data_start, 0x54e34);
 LAYOUT_ASSERT(level_events_a, 0x54e38);
 LAYOUT_ASSERT(shop_money_early, 0x54e3c);
 LAYOUT_ASSERT(shop_money_late, 0x54e3e);
-LAYOUT_ASSERT(level1_data, 0x54e40);
-LAYOUT_ASSERT(level2_data, 0x54e40);
-LAYOUT_ASSERT(level3_data, 0x54e40);
-LAYOUT_ASSERT(level4_data, 0x54e40);
-LAYOUT_ASSERT(level5_data, 0x54e40);
+LAYOUT_ASSERT(l1_data, 0x54e40);
+LAYOUT_ASSERT(l2_data, 0x54e40);
+LAYOUT_ASSERT(l3_data, 0x54e40);
+LAYOUT_ASSERT(l4_data, 0x54e40);
+LAYOUT_ASSERT(l5_data, 0x54e40);
 LAYOUT_ASSERT(shop_data, 0x54e40);
 LAYOUT_ASSERT(level_data_dst, 0x7d120);
 LAYOUT_ASSERT(beyond_512k, 0x80000);

@@ -75,7 +75,7 @@ static uint16_t aim_at_player(const Object *obj, int16_t dx, int16_t dy)
 /* the picture of the table at $77B70 (by the index of the level) */
 static const uint16_t *shot_picture(uint16_t index)
 {
-    return xenon2.level4_data.shot_gfx_table[index]->pic;
+    return xenon2.l4_data.shot_gfx_table[index]->pic;
 }
 
 /* the four cells of a table entry go to two cells at the cell and two a row below it */
@@ -99,8 +99,8 @@ void l4_spawn_bar(const struct SpawnRec *record);
 void l4_event(uint16_t which, const struct SpawnRec *record)
 {
     const struct SpawnDef *tables[7] = {
-        0, xenon2.level4_data.formation_1.defs, &xenon2.level4_data.formation_2.defs, &xenon2.level4_data.formation_3.defs,
-        &xenon2.level4_data.formation_4.defs, &xenon2.level4_data.formation_5.defs, &xenon2.level4_data.formation_6.defs };
+        0, xenon2.l4_data.formation_1.defs, &xenon2.l4_data.formation_2.defs, &xenon2.l4_data.formation_3.defs,
+        &xenon2.l4_data.formation_4.defs, &xenon2.l4_data.formation_5.defs, &xenon2.l4_data.formation_6.defs };
 
     if (which == 0)
         spawn_wave_326c(0, record);   /* $E5A */
@@ -140,22 +140,22 @@ void l4_init(void)
 
     if (xenon2.level_init_src != (uint8_t *)xenon2.level_data_dst) {
         for (i = 5999; i >= 0; i--)
-            xenon2.level_data_dst[i] = i >= 80 ? xenon2.level_data_dst[i - 80] : xenon2.level4_data.data_src[i];
+            xenon2.level_data_dst[i] = i >= 80 ? xenon2.level_data_dst[i - 80] : xenon2.l4_data.data_src[i];
         xenon2.level_init_src = (uint8_t *)xenon2.level_data_dst;
     }
     xenon2.scroll_min = 0x880;
     xenon2.scroll_max = 0x11ff;
     xenon2.l4_boss2_spawned = 0;
     xenon2.l4_boss1_spawned = 0;
-    xenon2.level4_data.boss1_pieces[1].energy = xenon2.level4_data.init_patch;
-    xenon2.level4_data.boss1_pieces[2].energy = xenon2.level4_data.init_patch;
-    xenon2.level4_data.boss1_pieces[0].energy = xenon2.level4_data.init_patch_2;
-    xenon2.level4_data.boss2_pieces[16].energy = xenon2.level4_data.init_patch_3;
-    xenon2.level4_data.boss2_pieces[17].energy = xenon2.level4_data.init_patch_3;
-    xenon2.level4_data.boss2_pieces[18].energy = xenon2.level4_data.init_patch_3;
-    xenon2.level4_data.boss2_pieces[19].energy = xenon2.level4_data.init_patch_3;
-    xenon2.level4_data.boss2_pieces[15].energy = xenon2.level4_data.init_patch_4;
-    xenon2.level4_data.boss2_pieces[4].energy = xenon2.level4_data.init_patch_5;
+    xenon2.l4_data.boss1_pieces[1].energy = xenon2.l4_data.init_patch;
+    xenon2.l4_data.boss1_pieces[2].energy = xenon2.l4_data.init_patch;
+    xenon2.l4_data.boss1_pieces[0].energy = xenon2.l4_data.init_patch_2;
+    xenon2.l4_data.boss2_pieces[16].energy = xenon2.l4_data.init_patch_3;
+    xenon2.l4_data.boss2_pieces[17].energy = xenon2.l4_data.init_patch_3;
+    xenon2.l4_data.boss2_pieces[18].energy = xenon2.l4_data.init_patch_3;
+    xenon2.l4_data.boss2_pieces[19].energy = xenon2.l4_data.init_patch_3;
+    xenon2.l4_data.boss2_pieces[15].energy = xenon2.l4_data.init_patch_4;
+    xenon2.l4_data.boss2_pieces[4].energy = xenon2.l4_data.init_patch_5;
     xenon2.difficulty_x1 = (uint16_t)(xenon2.difficulty * 6);
     xenon2.difficulty_x2 = (uint16_t)(xenon2.difficulty * 8);
 }
@@ -176,7 +176,7 @@ void l4_tower_update(Object *obj)
     obj->hit[1] = (int16_t)top;
     obj->hit[3] = (int16_t)(top + 0x1c);
     if (obj->tower.phase == 0) {
-        uint16_t sum = (uint16_t)(obj->shot_count + xenon2.level4_data.tower_fire_rate);
+        uint16_t sum = (uint16_t)(obj->shot_count + xenon2.l4_data.tower_fire_rate);
 
         obj->shot_count = (uint8_t)sum;
         if (sum > 0xff) {
@@ -185,7 +185,7 @@ void l4_tower_update(Object *obj)
         }
         return;
     }
-    cells = (obj->type == 0xd0 ? xenon2.level4_data.tower_cells_d0 : xenon2.level4_data.tower_cells_d4) + ((uint16_t)obj->tower.phase << 2);
+    cells = (obj->type == 0xd0 ? xenon2.l4_data.tower_cells_d0 : xenon2.l4_data.tower_cells_d4) + ((uint16_t)obj->tower.phase << 2);
     put_cells(obj->map, cells);
     obj->tower.phase++;
     if (obj->tower.phase == 4) {
@@ -196,7 +196,7 @@ void l4_tower_update(Object *obj)
             angle = 6;
             x = (int16_t)(x - 8);
         }
-        spawn_enemy_shot((uint16_t)x, (uint16_t)y, angle, xenon2.level4_data.tower_shot_steps, xenon2.level4_data.shot_gfx_table[xenon2.level4_data.tower_param]->pic);
+        spawn_enemy_shot((uint16_t)x, (uint16_t)y, angle, xenon2.l4_data.tower_shot_steps, xenon2.l4_data.shot_gfx_table[xenon2.l4_data.tower_param]->pic);
         return;
     }
     if (obj->tower.phase == 6)
@@ -214,7 +214,7 @@ void l4_tower_hit(Object *shot, Object *enemy, uint16_t damage)
         return;
     }
     spawn_effect((int16_t)(enemy->x + 0x10), (int16_t)(enemy->y - xenon2.scroll_pos + 0x10), xenon2.big_explosion_anim, draw_bob_masked);
-    put_cells(enemy->map, enemy->type == 0xd0 ? xenon2.level4_data.tower_hit_cells_d0 : xenon2.level4_data.tower_hit_cells_d4);
+    put_cells(enemy->map, enemy->type == 0xd0 ? xenon2.l4_data.tower_hit_cells_d0 : xenon2.l4_data.tower_hit_cells_d4);
     xenon2.player_score += 0x190;
     kill_thunk(enemy);
 }
@@ -223,7 +223,7 @@ void l4_tower_hit(Object *shot, Object *enemy, uint16_t damage)
 void l4_tower_draw(Object *obj)
 {
     obj->fn_draw = (obj_fn)obj_nop_thunk;
-    draw_tile_grid_flash((const uint16_t *)(obj->type == 0xd0 ? xenon2.level4_data.tower_cells_d0 : xenon2.level4_data.tower_cells_d4), 1, 1, (int16_t)(obj->y - xenon2.scroll_pos), (uint16_t)((uint16_t)obj->x >> 1));
+    draw_tile_grid_flash((const uint16_t *)(obj->type == 0xd0 ? xenon2.l4_data.tower_cells_d0 : xenon2.l4_data.tower_cells_d4), 1, 1, (int16_t)(obj->y - xenon2.scroll_pos), (uint16_t)((uint16_t)obj->x >> 1));
 }
 
 /* level4 $05700A: a marker makes a tower; the record's word at +$C says which of the two */
@@ -234,10 +234,10 @@ void l4_spawn_tower(const struct SpawnRec *record)
 
     obj->fn_draw = (obj_fn)obj_nop_thunk;
     obj->fn_hit = (void *)l4_tower_hit;
-    obj->energy = (int16_t)xenon2.level4_data.tower_energy;
+    obj->energy = (int16_t)xenon2.l4_data.tower_energy;
     obj->hit[0] = 0x3e8;
     obj->hit[2] = 0x3e8;
-    put_cells(obj->map, flag ? xenon2.level4_data.tower_cells_d0 : xenon2.level4_data.tower_cells_d4);
+    put_cells(obj->map, flag ? xenon2.l4_data.tower_cells_d0 : xenon2.l4_data.tower_cells_d4);
 }
 
 /* level4 $055090: the scroll: the floor of the scroll ends at $DF0 and between $AE0 and $E50 an enemy comes every 16 pixels */
@@ -254,7 +254,7 @@ void l4_scroll(void)
 
         if (xenon2.frame_tick & 0x20)
             index += 2;
-        entry = &xenon2.level4_data.scroll_enemies[index];
+        entry = &xenon2.l4_data.scroll_enemies[index];
         obj->type = (int16_t)entry->type;
         obj->x = (int16_t)entry->x;
         obj->fn_update = (obj_fn)entry->update;
@@ -264,7 +264,7 @@ void l4_scroll(void)
         obj->shot_count = (uint8_t)random_next();
         obj->y = -0x20;
         obj->l4.size = 0;
-        obj->energy = (int16_t)xenon2.level4_data.scroll_energy;
+        obj->energy = (int16_t)xenon2.l4_data.scroll_energy;
         obj->big = 0xff;
         obj->kind = 0;
         obj->score = 0x12c;
@@ -283,16 +283,16 @@ static void l4_kill(Object *obj)
 void l4_enemy_a(Object *obj)
 {
     anim_step(obj);
-    obj->y = (int16_t)(obj->y + xenon2.scroll_speed + xenon2.level4_data.enemy_a_fall);
+    obj->y = (int16_t)(obj->y + xenon2.scroll_speed + xenon2.l4_data.enemy_a_fall);
     if (obj->y >= 0xc8) {
         l4_kill(obj);
         return;
     }
     obj->l4_gun.tick++;
     if (obj->l4_gun.tick == 8) {
-        if (add_carry(&obj->shot_count, xenon2.level4_data.enemy_a_fire_rate)) {
+        if (add_carry(&obj->shot_count, xenon2.l4_data.enemy_a_fire_rate)) {
             Object *part;
-            const struct Level4EnemyGun *gun = &xenon2.level4_data.enemy_a_guns[obj->type == 0xc8 ? 0 : 1];
+            const struct Level4EnemyGun *gun = &xenon2.l4_data.enemy_a_guns[obj->type == 0xc8 ? 0 : 1];
 
             obj->shot_count = (uint8_t)(random_next() & 0x3f);
             part = alloc_in(&xenon2.obj_list[LIST_EFFECT]);
@@ -307,13 +307,13 @@ void l4_enemy_a(Object *obj)
     } else if (obj->l4_gun.tick == 0xc) {
         obj->l4_gun.tick = 0;
     }
-    if (add_carry(&obj->shot_rate, (uint8_t)xenon2.level4_data.tower_energy)) {
+    if (add_carry(&obj->shot_rate, (uint8_t)xenon2.l4_data.tower_energy)) {
         int16_t x = (int16_t)(obj->x + 0x14);
 
         obj->shot_rate = (uint8_t)(random_next() & 0x3f);
         if (obj->type != 0xc8)
             x = (int16_t)(x - 0x24);
-        spawn_enemy_shot((uint16_t)x, (uint16_t)obj->y, 4, xenon2.level4_data.enemy_a_shot_steps, shot_picture(xenon2.level4_data.enemy_a_shot_picture));
+        spawn_enemy_shot((uint16_t)x, (uint16_t)obj->y, 4, xenon2.l4_data.enemy_a_shot_steps, shot_picture(xenon2.l4_data.enemy_a_shot_picture));
     }
     bbox_from_frame(obj);
 }
@@ -345,14 +345,14 @@ void l4_shot_a(Object *obj)
         anim_header_set(obj, xenon2.anim_explosion);
         return;
     }
-    if (obj->gfx == (void *)xenon2.level4_data.shot_a_picture) {
+    if (obj->gfx == (void *)xenon2.l4_data.shot_a_picture) {
         angle = 0x80;
         dx = -10;
-        cells = xenon2.level4_data.shot_a_cells_2;
-    } else if (obj->gfx == (void *)xenon2.level4_data.shot_a_picture_3) {
+        cells = xenon2.l4_data.shot_a_cells_2;
+    } else if (obj->gfx == (void *)xenon2.l4_data.shot_a_picture_3) {
         angle = 0;
         dx = 10;
-        cells = xenon2.level4_data.shot_a_cells_4;
+        cells = xenon2.l4_data.shot_a_cells_4;
     } else {
         return;
     }
@@ -368,7 +368,7 @@ void l4_shot_a(Object *obj)
     drop->y = obj->y;
     drop->path.wait = 0;
     drop->score = 0x64;
-    drop->energy = (int16_t)xenon2.level4_data.shot_a_energy;
+    drop->energy = (int16_t)xenon2.l4_data.shot_a_energy;
     drop->big = 0;
     drop->kind = (int16_t)xenon2.pickup_cycle;
     xenon2.pickup_cycle++;
@@ -382,11 +382,11 @@ void l4_shot_a(Object *obj)
     drop->hit[0] = 0x3e8;
     drop->hit[2] = 0x3e8;
     kind = (uint16_t)((uint16_t)angle >> 5);
-    anim = xenon2.level4_data.anims_by_kind[kind];
+    anim = xenon2.l4_data.anims_by_kind[kind];
     set_anim(drop, anim);
     drop->script = (uint8_t *)cells;
     drop->cursor = (const struct PathCmd *)cells;
-    drop->steps = (int16_t)xenon2.level4_data.shot_a_steps;
+    drop->steps = (int16_t)xenon2.l4_data.shot_a_steps;
     drop->shot_count = drop->shot_rate = 0;
 }
 
@@ -406,7 +406,7 @@ void l4_enemy_f8(Object *obj)
         index = (uint16_t)((random_next() >> 3) & 1) * 2;
         if (obj->x >= 0xa0)
             index++;
-        table = xenon2.level4_data.enemy_f8_paths[index];
+        table = xenon2.l4_data.enemy_f8_paths[index];
         obj->script = (uint8_t *)table;
         obj->cursor = (const struct PathCmd *)table;
         obj->path.wait = 0;
@@ -415,7 +415,7 @@ void l4_enemy_f8(Object *obj)
     old_index = (uint16_t)(((old_angle + 0x10) >> 5) & 7);
     if (index == old_index)
         return;
-    set_anim(obj, xenon2.level4_data.anims_by_kind[index]);
+    set_anim(obj, xenon2.l4_data.anims_by_kind[index]);
     bbox_from_frame(obj);
 }
 
@@ -423,23 +423,23 @@ void l4_enemy_f8(Object *obj)
 void l4_enemy_b(Object *obj)
 {
     anim_step(obj);
-    obj->y = (int16_t)(obj->y + xenon2.scroll_speed + xenon2.level4_data.enemy_b_fall);
+    obj->y = (int16_t)(obj->y + xenon2.scroll_speed + xenon2.l4_data.enemy_b_fall);
     if (obj->y >= 0xc8) {
         l4_kill(obj);
         return;
     }
-    if (add_carry(&obj->shot_count, xenon2.level4_data.enemy_b_fire_rate)) {
+    if (add_carry(&obj->shot_count, xenon2.l4_data.enemy_b_fire_rate)) {
         int16_t x = (int16_t)(obj->x + 0x1a), y = (int16_t)(obj->y + 0x1a);
         uint16_t angle = 0xa;
-        const uint16_t *gfx = xenon2.level4_data.enemy_b_picture;
+        const uint16_t *gfx = xenon2.l4_data.enemy_b_picture;
 
         obj->shot_count = (uint8_t)(random_next() & 0x3f);
         if (obj->type != 0xd8) {
             angle = 0xd;
             x = (int16_t)(x - 0x34);
-            gfx = xenon2.level4_data.enemy_b_picture_2;
+            gfx = xenon2.l4_data.enemy_b_picture_2;
         }
-        spawn_enemy_shot((uint16_t)x, (uint16_t)y, angle, xenon2.level4_data.enemy_b_shot_steps, gfx);
+        spawn_enemy_shot((uint16_t)x, (uint16_t)y, angle, xenon2.l4_data.enemy_b_shot_steps, gfx);
     }
     bbox_from_frame(obj);
 }
@@ -449,7 +449,7 @@ void l4_enemy_b(Object *obj)
 /* level4 $055F80: the core, two guns and a chain of sixteen pieces by the table at $55880 */
 void l4_spawn_boss1(void)
 {
-    const struct Level4Boss1Piece *piece = xenon2.level4_data.boss1_pieces;
+    const struct Level4Boss1Piece *piece = xenon2.l4_data.boss1_pieces;
     Object *first = 0;
     int n;
 
@@ -500,7 +500,7 @@ void l4_b1_core(Object *obj)
 
     if ((int16_t)xenon2.scroll_max < 0x10)
         xenon2.scroll_max = 0x10;
-    sway = (uint16_t)(xenon2.scroll_speed + xenon2.level4_data.b1_core_sway[(xenon2.frame_tick & 0xf)]);
+    sway = (uint16_t)(xenon2.scroll_speed + xenon2.l4_data.b1_core_sway[(xenon2.frame_tick & 0xf)]);
     xenon2.l4_core_sway = sway;
     obj->y = (int16_t)(obj->y + (int16_t)sway);
     if (xenon2.l4_boss1_guns_left != 0) {
@@ -513,7 +513,7 @@ void l4_b1_core(Object *obj)
         obj->hit[3] = (int16_t)(obj->hit[1] + 8);
     }
     if (obj->core.tick == 0) {
-        if (!add_carry(&obj->shot_count, xenon2.level4_data.b1_core_fire_rate))
+        if (!add_carry(&obj->shot_count, xenon2.l4_data.b1_core_fire_rate))
             return;
         obj->shot_count = (uint8_t)(random_next() & 0x3f);
         xenon2.sfx_cmd2 = 0xf;
@@ -573,29 +573,29 @@ void l4_gun_dead(Object *obj)
 void l4_b1_gun(Object *obj)
 {
     uint16_t aim;
-    const uint8_t *table = obj->x < 0xa0 ? xenon2.level4_data.b1_gun_dirs_left : xenon2.level4_data.b1_gun_dirs_right;
+    const uint8_t *table = obj->x < 0xa0 ? xenon2.l4_data.b1_gun_dirs_left : xenon2.l4_data.b1_gun_dirs_right;
 
     obj->y = (int16_t)(obj->y + xenon2.l4_core_sway);
     gun_box(obj);
     aim = aim_at_player(obj, 0x10, 0x10);
     obj->b1_gun.dir = (obj->b1_gun.dir & 0xffffu) | (uint32_t)(uint16_t)((int16_t)table[aim]) << 16;
-    if (add_carry(&obj->shot_count, xenon2.level4_data.b1_gun_fire_rate)) {
+    if (add_carry(&obj->shot_count, xenon2.l4_data.b1_gun_fire_rate)) {
         Object *s;
         uint16_t angle = (uint16_t)(int16_t)(obj->b1_gun.dir >> 16);
-        const uint16_t *anim = xenon2.level4_data.b1_gun_anims_by_angle[angle];
+        const uint16_t *anim = xenon2.l4_data.b1_gun_anims_by_angle[angle];
 
         obj->shot_count = (uint8_t)(random_next() & 0x3f);
-        s = spawn_enemy_shot((uint16_t)(obj->x + 0x10), (uint16_t)(obj->y + 0x10), angle, xenon2.level4_data.b1_gun_shot_steps, anim);
+        s = spawn_enemy_shot((uint16_t)(obj->x + 0x10), (uint16_t)(obj->y + 0x10), angle, xenon2.l4_data.b1_gun_shot_steps, anim);
         set_anim(s, anim);
-        s->x = (int16_t)(s->x + (int16_t)xenon2.level4_data.b1_gun_dx_by_dir[(uint16_t)(int16_t)(s->b1_gun.dir >> 16)]);
-        s->y = (int16_t)(s->y + (int16_t)xenon2.level4_data.b1_gun_dy_by_dir[(uint16_t)(int16_t)(s->b1_gun.dir >> 16)]);
+        s->x = (int16_t)(s->x + (int16_t)xenon2.l4_data.b1_gun_dx_by_dir[(uint16_t)(int16_t)(s->b1_gun.dir >> 16)]);
+        s->y = (int16_t)(s->y + (int16_t)xenon2.l4_data.b1_gun_dy_by_dir[(uint16_t)(int16_t)(s->b1_gun.dir >> 16)]);
     }
 }
 
 /* the picture of a gun or the core by the cells of a table */
 static void gun_cells(Object *obj, int flash)
 {
-    const uint16_t *const *grid = obj->x < 0xa0 ? xenon2.level4_data.gun_cells_left : xenon2.level4_data.gun_cells_right;
+    const uint16_t *const *grid = obj->x < 0xa0 ? xenon2.l4_data.gun_cells_left : xenon2.l4_data.gun_cells_right;
     const uint16_t *cells = grid[(int16_t)(int16_t)(obj->b1_gun.dir >> 16)];
 
     if (flash)
@@ -620,11 +620,11 @@ void l4_b1_gun_draw(Object *obj)
 static void core_cells(Object *obj, int flash)
 {
     uint16_t rows = 4;
-    const uint16_t *cells = xenon2.level4_data.core_cells;
+    const uint16_t *cells = xenon2.l4_data.core_cells;
 
     if (obj->core.tick != 0) {
         rows = 5;
-        cells = xenon2.level4_data.core_cells_tall;
+        cells = xenon2.l4_data.core_cells_tall;
     }
     if (flash)
         draw_tile_grid_flash(cells, 5, rows, obj->y, 0x38);
@@ -678,7 +678,7 @@ void l4_b1_head(Object *obj)
 {
     int16_t size;
 
-    obj->gfx = (void *)xenon2.level4_data.b1_head_picture;
+    obj->gfx = (void *)xenon2.l4_data.b1_head_picture;
     obj->anim_delay = 0;
     obj->y = (int16_t)(obj->y + xenon2.l4_core_sway);
     l4_pose(obj);
@@ -713,13 +713,13 @@ static void l4_b1_piece(Object *obj, const uint16_t *gfx)
 /* level4 $055F26: a piece of the chain */
 void l4_b1_body(Object *obj)
 {
-    l4_b1_piece(obj, xenon2.level4_data.b1_head_picture);
+    l4_b1_piece(obj, xenon2.l4_data.b1_head_picture);
 }
 
 /* level4 $055F52: the last piece */
 void l4_b1_tail(Object *obj)
 {
-    l4_b1_piece(obj, xenon2.level4_data.b1_tail_picture);
+    l4_b1_piece(obj, xenon2.l4_data.b1_tail_picture);
 }
 
 /* ---- the second boss ($56976): twenty objects, a worm with a head, a gun and a ring of eyes ---- */
@@ -727,7 +727,7 @@ void l4_b1_tail(Object *obj)
 /* level4 $056976: the pieces by the table at $5613A (the latch of the weapons first) */
 void l4_spawn_boss2(const struct SpawnRec *record, uint16_t slots)
 {
-    const struct Level4Boss2Piece *piece = xenon2.level4_data.boss2_pieces;
+    const struct Level4Boss2Piece *piece = xenon2.l4_data.boss2_pieces;
     int n;
 
     (void)record;
@@ -783,7 +783,7 @@ static void follow_chain(Object *obj)
 /* the head's picture by its angle (four), and its box */
 static void head_picture(Object *obj)
 {
-    obj->gfx = (void *)xenon2.level4_data.head_pictures[(((uint16_t)(int16_t)obj->head.angle + 0x10) >> 5) & 3];
+    obj->gfx = (void *)xenon2.l4_data.head_pictures[(((uint16_t)(int16_t)obj->head.angle + 0x10) >> 5) & 3];
     bbox_from_frame(obj);
 }
 
@@ -807,7 +807,7 @@ void l4_b2_head(Object *obj)
         obj->head.angle = (obj->head.angle & 0xffff0000u) | (uint16_t)((int16_t)angle);
         obj->turn = 0;
         obj->turn_step = 0;
-        if ((uint8_t)random_next() >= xenon2.level4_data.b2_head_chance) {
+        if ((uint8_t)random_next() >= xenon2.l4_data.b2_head_chance) {
             head_picture(obj);
             return;
         }
@@ -862,7 +862,7 @@ void l4_b2_gun(Object *obj)
     if (dir > 6)
         dir = 6;
     obj->aim.dir = (obj->aim.dir & 0xffffu) | (uint32_t)(uint16_t)((int16_t)dir) << 16;
-    obj->gfx = (void *)xenon2.level4_data.b2_gun_pictures[dir];
+    obj->gfx = (void *)xenon2.l4_data.b2_gun_pictures[dir];
     bbox_from_frame(obj);
 }
 
@@ -877,16 +877,16 @@ void l4_b2_barrel(Object *obj)
     obj->y = gun->y;
     if ((int16_t)(gun->aim.dir >> 16) != (int16_t)(obj->aim.dir >> 16)) {
         obj->aim.dir = (obj->aim.dir & 0xffffu) | (uint32_t)(uint16_t)((int16_t)(gun->aim.dir >> 16)) << 16;
-        set_anim(obj, xenon2.level4_data.b2_barrel_anims_by_dir[(uint16_t)(int16_t)(obj->aim.dir >> 16)]);
+        set_anim(obj, xenon2.l4_data.b2_barrel_anims_by_dir[(uint16_t)(int16_t)(obj->aim.dir >> 16)]);
     }
-    if (add_carry(&obj->shot_count, xenon2.level4_data.b2_barrel_fire_rate)) {
+    if (add_carry(&obj->shot_count, xenon2.l4_data.b2_barrel_fire_rate)) {
         uint16_t dir = (uint16_t)(int16_t)(obj->aim.dir >> 16);
         Object *s;
 
         obj->shot_count = (uint8_t)(random_next() & 0x3f);
-        s = spawn_enemy_shot((uint16_t)(obj->x + (int16_t)xenon2.level4_data.b2_muzzle_dx[dir]), (uint16_t)(obj->y + (int16_t)xenon2.level4_data.b2_muzzle_dy[dir]), dir, xenon2.level4_data.b2_barrel_shot_steps,
-                             (void *)xenon2.level4_data.b2_shot_anim);
-        set_anim(s, xenon2.level4_data.b2_shot_anim);
+        s = spawn_enemy_shot((uint16_t)(obj->x + (int16_t)xenon2.l4_data.b2_muzzle_dx[dir]), (uint16_t)(obj->y + (int16_t)xenon2.l4_data.b2_muzzle_dy[dir]), dir, xenon2.l4_data.b2_barrel_shot_steps,
+                             (void *)xenon2.l4_data.b2_shot_anim);
+        set_anim(s, xenon2.l4_data.b2_shot_anim);
     }
     bbox_from_frame(obj);
 }
@@ -913,14 +913,14 @@ void l4_b2_ring(Object *obj)
     obj->y = (int16_t)(obj->y + xenon2.scroll_speed);
     anim_step(obj);
     follow_chain(obj);
-    if (add_carry(&obj->shot_count, xenon2.level4_data.b2_ring_fire_rate)) {
+    if (add_carry(&obj->shot_count, xenon2.l4_data.b2_ring_fire_rate)) {
         int dir;
 
         obj->shot_count = (uint8_t)(random_next() & 0x3f);
         for (dir = 7; dir >= 0; dir--) {
-            Object *s = spawn_enemy_shot((uint16_t)obj->x, (uint16_t)obj->y, (uint16_t)dir, xenon2.level4_data.b2_ring_shot_steps, shot_picture(xenon2.level4_data.b2_ring_shot_picture));
+            Object *s = spawn_enemy_shot((uint16_t)obj->x, (uint16_t)obj->y, (uint16_t)dir, xenon2.l4_data.b2_ring_shot_steps, shot_picture(xenon2.l4_data.b2_ring_shot_picture));
 
-            set_anim(s, xenon2.level4_data.b2_shot_anim);
+            set_anim(s, xenon2.l4_data.b2_shot_anim);
         }
     }
     bbox_from_frame(obj);
@@ -936,11 +936,11 @@ void l4_b2_eye(Object *obj)
     dir = aim_at_player(obj, 0, 0);
     if (dir != (uint16_t)(int16_t)(obj->aim.dir >> 16)) {
         obj->aim.dir = (obj->aim.dir & 0xffffu) | (uint32_t)(uint16_t)((int16_t)dir) << 16;
-        set_anim(obj, xenon2.level4_data.b2_eye_anims[dir]);
+        set_anim(obj, xenon2.l4_data.b2_eye_anims[dir]);
     }
-    if (add_carry(&obj->shot_count, xenon2.level4_data.b2_eye_fire_rate)) {
+    if (add_carry(&obj->shot_count, xenon2.l4_data.b2_eye_fire_rate)) {
         obj->shot_count = (uint8_t)(random_next() & 0x3f);
-        spawn_enemy_shot((uint16_t)obj->x, (uint16_t)obj->y, (uint16_t)(int16_t)(obj->aim.dir >> 16), xenon2.level4_data.b2_eye_shot_steps, (void *)xenon2.level4_data.b2_eye_shot_picture);
+        spawn_enemy_shot((uint16_t)obj->x, (uint16_t)obj->y, (uint16_t)(int16_t)(obj->aim.dir >> 16), xenon2.l4_data.b2_eye_shot_steps, (void *)xenon2.l4_data.b2_eye_shot_picture);
     }
     bbox_from_frame(obj);
     obj->hit[1] = (int16_t)(obj->hit[1] - 8);
@@ -1036,7 +1036,7 @@ void l4_spawn_bar(const struct SpawnRec *record)
 
     obj->y = (int16_t)(obj->y - xenon2.scroll_pos);
     obj->fn_draw = (obj_fn)l4_bar_draw;
-    set_anim(obj, obj->type == 0x10c ? xenon2.level4_data.bar_anim_10c : xenon2.level4_data.bar_anim_other);
+    set_anim(obj, obj->type == 0x10c ? xenon2.l4_data.bar_anim_10c : xenon2.l4_data.bar_anim_other);
 }
 
 /* level4 $056ABC: the bar: it swings out and back; it hurts the player */
@@ -1052,7 +1052,7 @@ void l4_bar_update(Object *obj)
     anim_step(obj);
     if (obj->bar.phase == 0) {
         obj->bar.step = (obj->bar.step & 0xffffu) | (uint32_t)(uint16_t)(1) << 16;
-        if (!add_carry(&obj->shot_count, xenon2.level4_data.bar_fire_rate))
+        if (!add_carry(&obj->shot_count, xenon2.l4_data.bar_fire_rate))
             goto box;
         obj->shot_count = (uint8_t)(random_next() & 0x3f);
     }
@@ -1088,12 +1088,12 @@ void l4_bar_draw(Object *obj)
 
     if (obj->type == 0x10c) {
         if (span != 0)
-            draw_tile_grid(xenon2.level4_data.bar_cells + sizeof xenon2.level4_data.bar_cells / sizeof xenon2.level4_data.bar_cells[0] - span, (uint16_t)(span - 1), 1, obj->y, (uint16_t)((uint16_t)obj->x >> 1));
+            draw_tile_grid(xenon2.l4_data.bar_cells + sizeof xenon2.l4_data.bar_cells / sizeof xenon2.l4_data.bar_cells[0] - span, (uint16_t)(span - 1), 1, obj->y, (uint16_t)((uint16_t)obj->x >> 1));
         x = (int16_t)((span << 4) + obj->x);
         y = (int16_t)(obj->y + 8);
     } else {
         if (span != 0)
-            draw_tile_grid(xenon2.level4_data.bar_cells + sizeof xenon2.level4_data.bar_cells / sizeof xenon2.level4_data.bar_cells[0] - span, (uint16_t)(span - 1), 1, obj->y,
+            draw_tile_grid(xenon2.l4_data.bar_cells + sizeof xenon2.l4_data.bar_cells / sizeof xenon2.l4_data.bar_cells[0] - span, (uint16_t)(span - 1), 1, obj->y,
                            (uint16_t)((uint16_t)((obj->x - (int16_t)(span << 4)) + 0x10) >> 1));
         x = (int16_t)(obj->x - (int16_t)(span << 4) + 0xf);
         y = (int16_t)(obj->y + 8);
@@ -1114,16 +1114,16 @@ void l4_spawn_walker(const struct SpawnRec *record)
         obj->x = (int16_t)(obj->x + 0x10);
     obj->fn_draw = (obj_fn)l4_walker_draw;
     obj->fn_hit = (obj_fn)l4_walker_hit;
-    obj->energy = (int16_t)xenon2.level4_data.walker_energy;
+    obj->energy = (int16_t)xenon2.l4_data.walker_energy;
     obj->big = -1;
     obj->hit[0] = 0x3e8;
     obj->hit[2] = 0x3e8;
     obj->score = 0xc8;
     obj->walker.side = (int16_t)record->index;
-    set_anim(obj, obj->type == 0xe0 ? xenon2.level4_data.walker_anim_e0 : xenon2.level4_data.walker_anim_other);
+    set_anim(obj, obj->type == 0xe0 ? xenon2.l4_data.walker_anim_e0 : xenon2.l4_data.walker_anim_other);
     obj->kind = 0;
-    obj->shot_count = (uint8_t)(xenon2.level4_data.walker_v5e >> 8);
-    obj->shot_rate = (uint8_t)xenon2.level4_data.walker_v5e;
+    obj->shot_count = (uint8_t)(xenon2.l4_data.walker_v5e >> 8);
+    obj->shot_rate = (uint8_t)xenon2.l4_data.walker_v5e;
     obj->walker_b.home_x = obj->x;
     obj->walker_b.home_y = obj->y;
 }
@@ -1136,8 +1136,8 @@ static void walker_reset(Object *obj)
     obj->walker.state = 0;
     obj->hit[0] = 0x3e8;
     obj->hit[2] = 0x3e8;
-    set_anim(obj, obj->type == 0xe0 ? xenon2.level4_data.walker_anim_e0 : xenon2.level4_data.walker_anim_other);
-    obj->energy = (int16_t)xenon2.level4_data.walker_energy;
+    set_anim(obj, obj->type == 0xe0 ? xenon2.l4_data.walker_anim_e0 : xenon2.l4_data.walker_anim_other);
+    obj->energy = (int16_t)xenon2.l4_data.walker_energy;
 }
 
 /* level4 $056D1C */
@@ -1149,16 +1149,16 @@ void l4_walker_update(Object *obj)
     }
     anim_step(obj);
     if (obj->walker.state == 0) {
-        if ((uint8_t)random_next() < xenon2.level4_data.walker_chance) {
+        if ((uint8_t)random_next() < xenon2.l4_data.walker_chance) {
             obj->walker.state = 1;
             obj->anim_delay = 1;
         }
         return;
     }
     if (obj->type == 0xe0)
-        obj->x = (int16_t)(obj->x + xenon2.level4_data.walker_step_x);
+        obj->x = (int16_t)(obj->x + xenon2.l4_data.walker_step_x);
     else
-        obj->x = (int16_t)(obj->x - xenon2.level4_data.walker_step_x);
+        obj->x = (int16_t)(obj->x - xenon2.l4_data.walker_step_x);
     if (obj->walker.state == 1) {
         if (obj->anim_delay == 0) {
             obj->walker.state = 2;
@@ -1168,9 +1168,9 @@ void l4_walker_update(Object *obj)
     }
     if (obj->x >= 0x28 && obj->x <= 0x118) {
         if (obj->walker.dy >= 0)
-            obj->y = (int16_t)(obj->y + xenon2.level4_data.walker_step_x);
+            obj->y = (int16_t)(obj->y + xenon2.l4_data.walker_step_x);
         else
-            obj->y = (int16_t)(obj->y - xenon2.level4_data.walker_step_x);
+            obj->y = (int16_t)(obj->y - xenon2.l4_data.walker_step_x);
     }
     if (obj->x >= -0x20 && obj->x < 0x160)
         goto box;
@@ -1220,7 +1220,7 @@ static void walker_tiles(Object *obj)
 
     if (obj->walker.state >= 2)
         return;
-    draw_tile_grid(obj->type == 0xe0 ? xenon2.level4_data.walker_grid_e0 : xenon2.level4_data.walker_grid_e4, 0, 2, (int16_t)(xenon2.level4_data.walker_grid_y[offset / 2] - xenon2.scroll_pos), xenon2.level4_data.walker_grid_x[offset / 2]);
+    draw_tile_grid(obj->type == 0xe0 ? xenon2.l4_data.walker_grid_e0 : xenon2.l4_data.walker_grid_e4, 0, 2, (int16_t)(xenon2.l4_data.walker_grid_y[offset / 2] - xenon2.scroll_pos), xenon2.l4_data.walker_grid_x[offset / 2]);
 }
 
 /* level4 $056F3E: the walker's flash */
