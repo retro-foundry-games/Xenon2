@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """native/src/blobs/levelN.blob and shop.blob -> native/src/level.h, levelN.h, shop.h and native/src/guest_blob.h.
 level.h: the records of level1.blob (the engine's: SpawnRec, SpawnDef, the formations ...), shared by the levels, and the BLOB_ macros.
-levelN.h (N 2..5) and shop.h: between the markers, the records defined in levelN.blob / shop.blob and struct LevelNData / ShopData, the layout of the blob of level N at $54E40 (the `blob` lines of symbols/weapons.symbols put them in a union in struct Xenon2: level1_data ... level5_data); level1.h has struct Level1Data.  A header that does not exist is made, one that does keeps what is outside the markers.
+levelN.h (N 2..5) and shop.h: between the markers, the records defined in levelN.blob / shop.blob and struct LevelNData / ShopData, the layout of the blob of level N at $54E40 (the `blob` lines of symbols/weapons.symbols put them in a union in struct Xenon2: l1_data ... l5_data); level1.h has struct Level1Data.  A header that does not exist is made, one that does keeps what is outside the markers.
 guest_blob.h: the members the host build converts (big endian -> its byte order, addresses -> pointers) when the blob is loaded.
 
 A line is `ADDR name TYPE [COUNT]` (hex address): u8 u16 s16 u32 (integers), cell (a cell of the tile map, COUNT cells), ptr (a pointer to the blob, const uint8_t *), code (a pointer to

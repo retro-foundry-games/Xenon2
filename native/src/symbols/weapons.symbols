@@ -90,9 +90,9 @@ arr beam_heads 0x6488 uint16_t * 3                 ; the pictures of the beam's 
 arr beam_bodies 0x6494 uint16_t * 3                ; the pictures of its tip
 tab beam_pattern 0x663a uint32_t 15               ; by level: the mask and the four planes of the beam's slice (a long each, shifted by x & 15)
 var trail_y 0x4ea uint16_t
-blob level1_data 0x54e40 Level1Data                    ; the level's blob (blobs/levelN.blob): level 1's, then those of levels 2 to 5 over it
-blob level2_data 0x54e40 Level2Data
-blob level3_data 0x54e40 Level3Data
-blob level4_data 0x54e40 Level4Data
-blob level5_data 0x54e40 Level5Data
+blob l1_data 0x54e40 Level1Data                    ; the level's blob (blobs/levelN.blob): level 1's, then those of levels 2 to 5 over it
+blob l2_data 0x54e40 Level2Data
+blob l3_data 0x54e40 Level3Data
+blob l4_data 0x54e40 Level4Data
+blob l5_data 0x54e40 Level5Data
 blob shop_data 0x54e40 ShopData                     ; the shop's blob (blobs/shop.blob)

@@ -22,18 +22,18 @@
 /* ---- level 1's blob ($54E00): the jump table at $54E0C and the routines the engine calls ---- */
 
 /* orig $054E0C (-> $5566A4): the level's extra collision test finds nothing (Z) */
-int level1_collision_hook(void)
+int l1_collision_hook(void)
 {
     return 0;
 }
 
 /* orig $054E10 (-> $055B94): level events by id (rec = the record that fired): a table of the level engine ($E60) for each */
-void level1_event(uint16_t id, const struct SpawnRec *rec)
+void l1_event(uint16_t id, const struct SpawnRec *rec)
 {
     static const struct SpawnDef *const tabs[10] = {
-        &xenon2.level1_data.formation_1.defs, &xenon2.level1_data.formation_2.defs, &xenon2.level1_data.formation_3.defs, &xenon2.level1_data.formation_4.defs,
-        &xenon2.level1_data.formation_5.defs, &xenon2.level1_data.formation_6.defs, xenon2.level1_data.formation_7.defs, &xenon2.level1_data.formation_8.defs,
-        &xenon2.level1_data.formation_9.defs, &xenon2.level1_data.formation_10.defs };
+        &xenon2.l1_data.formation_1.defs, &xenon2.l1_data.formation_2.defs, &xenon2.l1_data.formation_3.defs, &xenon2.l1_data.formation_4.defs,
+        &xenon2.l1_data.formation_5.defs, &xenon2.l1_data.formation_6.defs, xenon2.l1_data.formation_7.defs, &xenon2.l1_data.formation_8.defs,
+        &xenon2.l1_data.formation_9.defs, &xenon2.l1_data.formation_10.defs };
 
     if (id == 0) {
         spawn_wave_326c(0, rec);   /* $E5A */
@@ -46,13 +46,13 @@ void level1_event(uint16_t id, const struct SpawnRec *rec)
 /* ---- level 1's turrets: markers that draw themselves into the map ---- */
 
 /* the picture of an enemy shot: the table at $68F40 has addresses of longs, the long is the picture */
-static const void *level1_shot_gfx(uint16_t idx)
+static const void *l1_shot_gfx(uint16_t idx)
 {
-    return xenon2.level1_data.shot_gfx_table[idx]->pic;
+    return xenon2.l1_data.shot_gfx_table[idx]->pic;
 }
 
 /* the turret has left the screen: it dies */
-static int level1_turret_gone(Object *turret)
+static int l1_turret_gone(Object *turret)
 {
     if ((int16_t)(xenon2.scroll_max + 0xd0) < turret->y) {
         kill_object_thunk(turret);
@@ -62,13 +62,13 @@ static int level1_turret_gone(Object *turret)
 }
 
 /* orig $0552CE: update of the turret $E0 / $E4: its box, the map cells it shows (four steps), and now and then a shot */
-void level1_turret_a_update(Object *turret)
+void l1_turret_a_update(Object *turret)
 {
     const Cell *table;
     uint16_t offset, sum;
     int16_t x, y, dir;
 
-    if (level1_turret_gone(turret))
+    if (l1_turret_gone(turret))
         return;
     turret->hit[0] = (int16_t)(turret->x + 4);
     turret->hit[2] = (int16_t)(turret->x + 4 + 0x18);
@@ -76,13 +76,13 @@ void level1_turret_a_update(Object *turret)
     turret->hit[1] = y;
     turret->hit[3] = (int16_t)(y + 0x18);
     offset = (uint16_t)(turret->l1_turret.step << 2);
-    table = turret->type == 0xe0 ? xenon2.level1_data.turret_a_cells_e0 : xenon2.level1_data.turret_a_cells_e4;
+    table = turret->type == 0xe0 ? xenon2.l1_data.turret_a_cells_e0 : xenon2.l1_data.turret_a_cells_e4;
     turret->map[0] = table[offset];
     turret->map[1] = table[offset + 1];
     turret->map[MAP_COLS] = table[offset + 2];
     turret->map[MAP_COLS + 1] = table[offset + 3];
     turret->l1_turret.step = (int16_t)((turret->l1_turret.step + 1) & 3);
-    sum = (uint16_t)(turret->shot_count + xenon2.level1_data.shot_1_rate);
+    sum = (uint16_t)(turret->shot_count + xenon2.l1_data.shot_1_rate);
     turret->shot_count = (uint8_t)sum;
     if (!(sum & 0x100))
         return;
@@ -94,17 +94,17 @@ void level1_turret_a_update(Object *turret)
         dir = 6;
         x = (int16_t)(x - 0x10);
     }
-    spawn_enemy_shot((uint16_t)x, (uint16_t)y, (uint16_t)dir, xenon2.level1_data.shot_1_steps, level1_shot_gfx(xenon2.level1_data.shot_1_gfx));
+    spawn_enemy_shot((uint16_t)x, (uint16_t)y, (uint16_t)dir, xenon2.l1_data.shot_1_steps, l1_shot_gfx(xenon2.l1_data.shot_1_gfx));
 }
 
 /* orig $0555A2: update of the turret $E8 / $EC (sixteen steps of cells) */
-void level1_turret_b_update(Object *turret)
+void l1_turret_b_update(Object *turret)
 {
     const Cell *table;
     uint16_t offset, sum;
     int16_t x, y, dir;
 
-    if (level1_turret_gone(turret))
+    if (l1_turret_gone(turret))
         return;
     turret->hit[0] = (int16_t)(turret->x + 0xa);
     turret->hit[2] = (int16_t)(turret->x + 0xa + 0x12);
@@ -112,13 +112,13 @@ void level1_turret_b_update(Object *turret)
     turret->hit[1] = y;
     turret->hit[3] = (int16_t)(y + 0x18);
     offset = (uint16_t)((uint16_t)turret->l1_turret.step & 0xfffc);
-    table = turret->type == 0xe8 ? xenon2.level1_data.turret_b_cells_e8 : xenon2.level1_data.turret_b_cells_ec;
+    table = turret->type == 0xe8 ? xenon2.l1_data.turret_b_cells_e8 : xenon2.l1_data.turret_b_cells_ec;
     turret->map[0] = table[offset];
     turret->map[1] = table[offset + 1];
     turret->map[MAP_COLS] = table[offset + 2];
     turret->map[MAP_COLS + 1] = table[offset + 3];
     turret->l1_turret.step = (int16_t)((turret->l1_turret.step + 1) & 0xf);
-    sum = (uint16_t)(turret->shot_count + xenon2.level1_data.shot_3_rate);
+    sum = (uint16_t)(turret->shot_count + xenon2.l1_data.shot_3_rate);
     turret->shot_count = (uint8_t)sum;
     if (!(sum & 0x100))
         return;
@@ -130,17 +130,17 @@ void level1_turret_b_update(Object *turret)
         dir = 6;
         x = (int16_t)(x - 0x20);
     }
-    spawn_enemy_shot((uint16_t)x, (uint16_t)y, (uint16_t)dir, xenon2.level1_data.shot_3_steps, level1_shot_gfx(xenon2.level1_data.shot_3_gfx));
+    spawn_enemy_shot((uint16_t)x, (uint16_t)y, (uint16_t)dir, xenon2.l1_data.shot_3_steps, l1_shot_gfx(xenon2.l1_data.shot_3_gfx));
 }
 
 /* orig $055402: update of the turret $D8 / $DC (twenty steps of cells, a shot every 40 steps) */
-void level1_turret_c_update(Object *turret)
+void l1_turret_c_update(Object *turret)
 {
     const Cell *table;
     uint16_t offset, sum;
     int16_t x, y, dir;
 
-    if (level1_turret_gone(turret))
+    if (l1_turret_gone(turret))
         return;
     turret->hit[0] = (int16_t)(turret->x + 8);
     turret->hit[2] = (int16_t)(turret->x + 8 + 0x10);
@@ -148,11 +148,11 @@ void level1_turret_c_update(Object *turret)
     turret->hit[1] = y;
     turret->hit[3] = (int16_t)(y + 0x10);
     offset = (uint16_t)((uint16_t)turret->l1_turret.step & 0xfffe);
-    table = turret->type == 0xd8 ? xenon2.level1_data.turret_c_steps_d8 : xenon2.level1_data.turret_c_steps_dc;
+    table = turret->type == 0xd8 ? xenon2.l1_data.turret_c_steps_d8 : xenon2.l1_data.turret_c_steps_dc;
     turret->map[0] = table[offset];
     turret->map[1] = table[offset + 1];
     if (turret->l1_turret.step == 0) {
-        sum = (uint16_t)(turret->shot_count + xenon2.level1_data.shot_2_rate);
+        sum = (uint16_t)(turret->shot_count + xenon2.l1_data.shot_2_rate);
         turret->shot_count = (uint8_t)sum;
         if (!(sum & 0x100))
             return;
@@ -172,14 +172,14 @@ void level1_turret_c_update(Object *turret)
         dir = 6;
         x = (int16_t)(x - 0x1a);
     }
-    spawn_enemy_shot((uint16_t)x, (uint16_t)y, (uint16_t)dir, xenon2.level1_data.shot_2_steps, level1_shot_gfx(xenon2.level1_data.shot_2_gfx));
+    spawn_enemy_shot((uint16_t)x, (uint16_t)y, (uint16_t)dir, xenon2.l1_data.shot_2_steps, l1_shot_gfx(xenon2.l1_data.shot_2_gfx));
 }
 
 /* the launcher's use of the scratch fields of Object */
 
 /* orig $0556DC: update of the launcher $D0 / $D4: it moves up and down (v28 is its step, v30 its place between 0 and v2a); when the
  * player is level with it (now and then) it goes into list B and fires three shots */
-void level1_launcher_update(Object *launcher)
+void l1_launcher_update(Object *launcher)
 {
     int16_t dy, step;
     int i;
@@ -205,13 +205,13 @@ void level1_launcher_update(Object *launcher)
         launcher->prev = tail;
         launcher->next = &xenon2.obj_list[LIST_EFFECT];
         tail->next = launcher;
-        anim = launcher->type == 0xd4 ? xenon2.level1_data.anim_launcher_d4_fire : xenon2.level1_data.anim_launcher_d0_fire;
+        anim = launcher->type == 0xd4 ? xenon2.l1_data.anim_launcher_d4_fire : xenon2.l1_data.anim_launcher_d0_fire;
         set_anim(launcher, anim);
         for (i = 2; i >= 0; i--) {
             int16_t angle = launcher->type == 0xd4 ? 5 : 1;
 
-            spawn_enemy_shot((uint16_t)launcher->x, (uint16_t)(launcher->y + 7), (uint16_t)(angle + i), xenon2.level1_data.shot_4_steps,
-                             level1_shot_gfx(xenon2.level1_data.shot_4_gfx));
+            spawn_enemy_shot((uint16_t)launcher->x, (uint16_t)(launcher->y + 7), (uint16_t)(angle + i), xenon2.l1_data.shot_4_steps,
+                             l1_shot_gfx(xenon2.l1_data.shot_4_gfx));
         }
         return;
     }
@@ -224,7 +224,7 @@ void level1_launcher_update(Object *launcher)
 }
 
 /* a turret marker (spawn_marker_enemy with the update routine), hit by hit_tile, energy, no box yet */
-static Object *level1_turret(uint16_t type, const struct SpawnRec *rec, void (*update)(void), uint16_t energy)
+static Object *l1_spawn_turret(uint16_t type, const struct SpawnRec *rec, void (*update)(void), uint16_t energy)
 {
     Object *turret = spawn_marker_enemy(type, rec, update);
 
@@ -236,7 +236,7 @@ static Object *level1_turret(uint16_t type, const struct SpawnRec *rec, void (*u
 }
 
 /* the end of the turrets' set-up: the first cells are written into the map ($46), the object hides them again when it is shot */
-static void level1_turret_cells(Object *turret, const Cell *cells, const uint16_t *anim)
+static void l1_turret_cells(Object *turret, const Cell *cells, const uint16_t *anim)
 {
     turret->gfx = cells;
     turret->anim = anim;
@@ -251,7 +251,7 @@ static void level1_turret_cells(Object *turret, const Cell *cells, const uint16_
 
 /* orig $054E18 (-> $055942): level hooks by id (rec = the record that fired, scroll its scroll value): 0 remembers the record, 1 to 3 put
  * a turret (type $E8/$EC, $E0/$E4, $D8/$DC; w0c of the record says which side) into the map, 4 a launcher ($D0/$D4) */
-void level1_hook(uint16_t id, const struct SpawnRec *rec, uint16_t scroll)
+void l1_hook(uint16_t id, const struct SpawnRec *rec, uint16_t scroll)
 {
     int flag = rec->steps != 0;
     Object *obj;
@@ -261,31 +261,31 @@ void level1_hook(uint16_t id, const struct SpawnRec *rec, uint16_t scroll)
         note_spawn_record(rec, scroll);   /* $EA2 */
         return;
     case 1:
-        obj = level1_turret(flag ? 0xe8 : 0xec, rec, (void (*)(void))level1_turret_b_update, xenon2.level1_data.turret_energy[0]);
-        level1_turret_cells(obj, flag ? xenon2.level1_data.turret_b_cells_e8 : xenon2.level1_data.turret_b_cells_ec, flag ? xenon2.level1_data.turret_b_anim_e8 : xenon2.level1_data.turret_b_anim_ec);
+        obj = l1_spawn_turret(flag ? 0xe8 : 0xec, rec, (void (*)(void))l1_turret_b_update, xenon2.l1_data.turret_energy[0]);
+        l1_turret_cells(obj, flag ? xenon2.l1_data.turret_b_cells_e8 : xenon2.l1_data.turret_b_cells_ec, flag ? xenon2.l1_data.turret_b_anim_e8 : xenon2.l1_data.turret_b_anim_ec);
         return;
     case 2:
-        obj = level1_turret(flag ? 0xe0 : 0xe4, rec, (void (*)(void))level1_turret_a_update, xenon2.level1_data.boss_energy[1]);
+        obj = l1_spawn_turret(flag ? 0xe0 : 0xe4, rec, (void (*)(void))l1_turret_a_update, xenon2.l1_data.boss_energy[1]);
         if (flag) {
             obj->map++;
             obj->x = (int16_t)(obj->x + 0x10);
         }
         obj->map--;
         obj->x = (int16_t)(obj->x - 0x10);
-        level1_turret_cells(obj, flag ? xenon2.level1_data.turret_a_cells_e0 : xenon2.level1_data.turret_a_cells_e4, flag ? xenon2.level1_data.turret_a_anim_e0 : xenon2.level1_data.turret_a_anim_e4);
+        l1_turret_cells(obj, flag ? xenon2.l1_data.turret_a_cells_e0 : xenon2.l1_data.turret_a_cells_e4, flag ? xenon2.l1_data.turret_a_anim_e0 : xenon2.l1_data.turret_a_anim_e4);
         return;
     case 3:
-        obj = level1_turret(flag ? 0xd8 : 0xdc, rec, (void (*)(void))level1_turret_c_update, xenon2.level1_data.turret_energy[1]);
-        level1_turret_cells(obj, flag ? xenon2.level1_data.turret_c_cells_d8 : xenon2.level1_data.turret_c_cells_dc, xenon2.level1_data.turret_c_anim);
+        obj = l1_spawn_turret(flag ? 0xd8 : 0xdc, rec, (void (*)(void))l1_turret_c_update, xenon2.l1_data.turret_energy[1]);
+        l1_turret_cells(obj, flag ? xenon2.l1_data.turret_c_cells_d8 : xenon2.l1_data.turret_c_cells_dc, xenon2.l1_data.turret_c_anim);
         return;
     case 4:
         obj = alloc_c();
         obj->type = flag ? 0xd4 : 0xd0;
-        set_anim(obj, flag ? xenon2.level1_data.anim_launcher_d4 : xenon2.level1_data.anim_launcher_d0);
-        obj->fn_update = (obj_fn)level1_launcher_update;
+        set_anim(obj, flag ? xenon2.l1_data.anim_launcher_d4 : xenon2.l1_data.anim_launcher_d0);
+        obj->fn_update = (obj_fn)l1_launcher_update;
         obj->fn_draw = draw_bob_masked;
         obj->fn_hit = (void *)hit_enemy;
-        obj->energy = (int16_t)xenon2.level1_data.turret_energy[2];
+        obj->energy = (int16_t)xenon2.l1_data.turret_energy[2];
         obj->big = -1;
         obj->score = 0xfa;
         obj->shot_count = obj->shot_rate = 0;
@@ -301,9 +301,9 @@ void level1_hook(uint16_t id, const struct SpawnRec *rec, uint16_t scroll)
 }
 
 /* orig $054E24 (-> $055806): the level's scroll events */
-void level1_scroll(void)
+void l1_scroll(void)
 {
-    const uint16_t *patches = xenon2.level1_data.level_patches;
+    const uint16_t *patches = xenon2.l1_data.level_patches;
     uint16_t *vars = xenon2.level_vars;
     int count, i;
 
@@ -318,7 +318,7 @@ void level1_scroll(void)
     if ((int16_t)xenon2.scroll_pos >= 0xa40 && (int16_t)xenon2.scroll_pos <= 0xd10) {
         if ((int16_t)xenon2.scroll_max < 0xd10)
             xenon2.scroll_max = 0xd10;
-        level1_spawn_units();
+        l1_spawn_units();
         for (count = 15; count >= 0; count--) {
             if (*vars != 0) {
                 uint8_t *dst = xenon2.level_init_src + (int16_t)patches[0];
@@ -335,14 +335,14 @@ void level1_scroll(void)
 }
 
 /* orig $0563AA: update of the level 1 boss (type $50) */
-void level1_boss_update(Object *boss)
+void l1_boss_update(Object *boss)
 {
     Object *part, *prev_part, *link;
     int i;
     int16_t wave, new_y, lost, box_y;
     int32_t turn;
     const uint16_t *src;
-    static const uint16_t *const sources[4] = { xenon2.level1_data.boss_draw_sources, xenon2.level1_data.boss_draw_sources + 8, xenon2.level1_data.boss_draw_sources + 16, xenon2.level1_data.boss_draw_sources + 8 };
+    static const uint16_t *const sources[4] = { xenon2.l1_data.boss_draw_sources, xenon2.l1_data.boss_draw_sources + 8, xenon2.l1_data.boss_draw_sources + 16, xenon2.l1_data.boss_draw_sources + 8 };
 
     if ((int16_t)xenon2.scroll_pos > 0x1c0)
         goto hide;
@@ -367,10 +367,10 @@ void level1_boss_update(Object *boss)
             part->type = 0xfc;
             if (i == 0)
                 part->type = 0x100;
-            part->fn_update = level1_boss_part_update;
+            part->fn_update = l1_boss_part_update;
             part->fn_draw = draw_bob_masked;
             part->fn_hit = (void *)hit_kill_shooter;
-            part->gfx = &xenon2.level1_data.boss_part_picture;
+            part->gfx = &xenon2.l1_data.boss_part_picture;
             part->anim_delay = 0;
             part->shot_count = part->shot_rate = 0;
             part->anim = (const uint16_t *)prev_part;
@@ -456,10 +456,10 @@ void level1_boss_update(Object *boss)
     xenon2.l1_eyes_phase = (uint16_t)((xenon2.l1_eyes_phase & 0xff00) | ((xenon2.l1_eyes_phase + lost) & 0xff));
 draw_table:
     src = sources[(xenon2.frame_tick & 0xc) >> 2];
-    copy_long(&xenon2.level1_data.boss_draw_table[0], src);
-    copy_long(&xenon2.level1_data.boss_draw_table[2], src + 2);
-    copy_long(&xenon2.level1_data.boss_draw_table[6], src + 4);
-    copy_long(&xenon2.level1_data.boss_draw_table[8], src + 6);
+    copy_long(&xenon2.l1_data.boss_draw_table[0], src);
+    copy_long(&xenon2.l1_data.boss_draw_table[2], src + 2);
+    copy_long(&xenon2.l1_data.boss_draw_table[6], src + 4);
+    copy_long(&xenon2.l1_data.boss_draw_table[8], src + 6);
     if (boss->l1_boss.phase != 0)
         return;
 hide:
@@ -468,27 +468,27 @@ hide:
 }
 
 /* orig $05661A: draw routine of the level 1 boss */
-void level1_boss_draw(Object *boss)
+void l1_boss_draw(Object *boss)
 {
-    const void *const eyes[4] = { &xenon2.level1_data.eyes_a, &xenon2.level1_data.eyes_b, &xenon2.level1_data.eyes_c, &xenon2.level1_data.eyes_b };
+    const void *const eyes[4] = { &xenon2.l1_data.eyes_a, &xenon2.l1_data.eyes_b, &xenon2.l1_data.eyes_c, &xenon2.l1_data.eyes_b };
     uint16_t eye;
 
     if ((int16_t)xenon2.scroll_pos >= 0x280)
         return;
-    draw_tile_grid(xenon2.level1_data.boss_grid, 5, 6, (uint16_t)(boss->y - xenon2.scroll_pos), 0x38);
+    draw_tile_grid(xenon2.l1_data.boss_grid, 5, 6, (uint16_t)(boss->y - xenon2.scroll_pos), 0x38);
     eye = (xenon2.l1_eyes_phase >> 4) & 0xc;
     draw_bob_masked_at(0x98, (uint16_t)(boss->y - xenon2.scroll_pos + 0x42), eyes[eye >> 2]);
 }
 
 /* orig $054E20 (-> $5566A8): level 1 starts: its data is copied once, the boss is made */
-void level1_init(void)
+void l1_init(void)
 {
     Object *boss, *link;
     int i;
 
-    if (xenon2.level_init_src == (const uint8_t *)xenon2.level1_data.data_src) {
+    if (xenon2.level_init_src == (const uint8_t *)xenon2.l1_data.data_src) {
         for (i = 5999; i >= 0; i--)
-            xenon2.level_data_dst[i] = xenon2.level1_data.data_src[i];
+            xenon2.level_data_dst[i] = xenon2.l1_data.data_src[i];
         xenon2.level_init_src = (uint8_t *)xenon2.level_data_dst;
     }
     xenon2.scroll_min = 0;
@@ -501,14 +501,14 @@ void level1_init(void)
     boss->next = &xenon2.obj_list[LIST_ENEMY];
     link->next = boss;
     boss->type = 0x50;
-    boss->fn_update = (obj_fn)level1_boss_update;
-    boss->fn_draw = (obj_fn)level1_boss_draw;
-    boss->fn_hit = (void *)level1_boss_hit;
+    boss->fn_update = (obj_fn)l1_boss_update;
+    boss->fn_draw = (obj_fn)l1_boss_draw;
+    boss->fn_hit = (void *)l1_boss_hit;
     boss->shot_count = boss->shot_rate = 0;
     boss->persists = -1;
     boss->screen_fixed = -1;
     boss->y = 0x10;
-    boss->energy = xenon2.level1_data.boss_energy[0];
+    boss->energy = xenon2.l1_data.boss_energy[0];
     boss->l1_boss.phase = 0;
     boss->steps = 0;
     xenon2.l1_boss_spawned = 0;
@@ -528,22 +528,22 @@ void level1_init(void)
 
 
 /* orig $0055E2C: level 1: starts every unit (a chain of enemies on a path) that is not on the screen; unit_live flags the live ones */
-void level1_spawn_units(void)
+void l1_spawn_units(void)
 {
     uint16_t unit;
 
     for (unit = 0; unit < 5; unit++) {
         if (xenon2.unit_live[unit] == 0) {
             xenon2.unit_live[unit] = 0xff;
-            level1_spawn_unit(unit);
+            l1_spawn_unit(unit);
         }
     }
 }
 
 /* orig $055E50: unit starts: a place of the table is picked from the random state of the unit (the five longs at $D46 rotate right by
  * 5), then objects are made: the first one and a marker pair around the unit's pieces (type $BC after the last piece, $B8 first), the
- * head (type $10C, it follows the path) and the pieces (level1_data.segs, each follows the object before it) */
-void level1_spawn_unit(uint16_t unit)
+ * head (type $10C, it follows the path) and the pieces (l1_data.segs, each follows the object before it) */
+void l1_spawn_unit(uint16_t unit)
 {
     uint32_t r = xenon2.unit_seed[unit];
     const struct LevelSpawn *s;
@@ -552,20 +552,20 @@ void level1_spawn_unit(uint16_t unit)
 
     r = (r >> 5) | (r << 27);
     xenon2.unit_seed[unit] = r;
-    s = &xenon2.level1_data.unit_starts[r & 0xf];
+    s = &xenon2.l1_data.unit_starts[r & 0xf];
     x = s->x;
     y = (int16_t)(s->y - xenon2.scroll_step - xenon2.scroll_pos);
     if (xenon2.level_vars[(uint16_t)s->index] == 0)
         xenon2.level_vars[(uint16_t)s->index] = 0x14;
     counter = s->flag;
     wait = 0;
-    n = (int16_t)xenon2.level1_data.unit_pieces_less_one;
+    n = (int16_t)xenon2.l1_data.unit_pieces_less_one;
     first = alloc_c();
     obj = alloc_c();
     obj->type = 0x10c;
-    obj->fn_update = (obj_fn)level1_head_update;
+    obj->fn_update = (obj_fn)l1_head_update;
     obj->fn_draw = obj_nop_thunk;
-    obj->fn_hit = (void *)level1_hit_free;
+    obj->fn_hit = (void *)l1_hit_free;
     obj->unit.counter = counter;
     obj->shot_count = obj->shot_rate = 0;
     obj->script = (uint8_t *)s->path;
@@ -573,17 +573,17 @@ void level1_spawn_unit(uint16_t unit)
     obj->x = x;
     obj->y = y;
     obj->unit.wait = wait;
-    obj->steps = (int16_t)xenon2.level1_data.boss_steps;
+    obj->steps = (int16_t)xenon2.l1_data.boss_steps;
     obj->unit.id = (int16_t)unit;
     obj->hit[0] = 0x3e8;
     obj->hit[2] = 0x3e8;
     obj->score = 0;
     for (i = 0; i <= n; i++) {
-        const struct LevelSeg *seg = &xenon2.level1_data.segs[i];
+        const struct LevelSeg *seg = &xenon2.l1_data.segs[i];
 
         obj = alloc_c();
         obj->type = seg->type;
-        obj->fn_update = (obj_fn)level1_segment_update;
+        obj->fn_update = (obj_fn)l1_segment_update;
         obj->fn_draw = obj_nop_thunk;
         obj->fn_hit = (void *)seg->hit;
         obj->gfx = seg->gfx;
@@ -622,7 +622,7 @@ void level1_spawn_unit(uint16_t unit)
 }
 
 /* orig $0561B4: update of the head of a unit (type $10C): it follows its path (scrolled by scroll_speed), keeps the unit marked live */
-void level1_head_update(Object *head)
+void l1_head_update(Object *head)
 {
     head->y = (int16_t)(head->y + xenon2.scroll_speed);
     xenon2.unit_live[(uint16_t)head->unit.id] = 0xff;
@@ -632,14 +632,14 @@ void level1_head_update(Object *head)
 }
 
 /* orig $056034: hit routine of the head: the object hit is freed */
-void level1_hit_free(Object *shooter, Object *target, uint16_t damage)
+void l1_hit_free(Object *shooter, Object *target, uint16_t damage)
 {
     kill_object_thunk(target);
 }
 
 /* orig $0560C2: update of a piece of a unit (types $110, $114): it takes the place and the direction of the object before it in the list;
  * the last piece (the next is the marker $BC) keeps the unit's counter alive and goes */
-void level1_segment_update(Object *seg)
+void l1_segment_update(Object *seg)
 {
     Object *ahead;
     uint16_t offset;
@@ -661,18 +661,18 @@ void level1_segment_update(Object *seg)
     if (seg->fn_draw == obj_nop_thunk && seg->unit.wait >= 0)
         seg->fn_draw = draw_bob_masked;
     offset = (uint16_t)(((uint16_t)((int16_t)seg->l1.angle + 0x10) >> 5) & 7);
-    tab = &xenon2.level1_data.piece_pictures[seg->type == 0x110 ? 8 : 0];
+    tab = &xenon2.l1_data.piece_pictures[seg->type == 0x110 ? 8 : 0];
     seg->gfx = tab[offset];
     bbox_from_frame(seg);
 }
 
 /* the end of $055C2E and $055C46: the piece bursts into a piece that flies away (animation anim), its score is added, the object goes */
-static void level1_piece_burst(Object *piece, const uint16_t *anim)
+static void l1_piece_burst(Object *piece, const uint16_t *anim)
 {
     Object *n = alloc_b(0);
 
     n->type = piece->type;
-    n->fn_update = (obj_fn)level1_debris_update;
+    n->fn_update = (obj_fn)l1_debris_update;
     n->fn_draw = draw_bob_masked;
     n->x = piece->x;
     n->y = piece->y;
@@ -683,7 +683,7 @@ static void level1_piece_burst(Object *piece, const uint16_t *anim)
 }
 
 /* orig $055C2E: hit routine of a piece: it flashes; with no energy left it bursts (anim $55250) */
-void level1_hit_piece_a(Object *shooter, Object *target, uint16_t damage)
+void l1_hit_piece_a(Object *shooter, Object *target, uint16_t damage)
 {
     uint16_t old = (uint16_t)target->energy;
 
@@ -691,11 +691,11 @@ void level1_hit_piece_a(Object *shooter, Object *target, uint16_t damage)
     target->energy = (int16_t)(old - damage);
     if (old > damage)
         return;
-    level1_piece_burst(target, xenon2.level1_data.anim_piece_a);
+    l1_piece_burst(target, xenon2.l1_data.anim_piece_a);
 }
 
 /* orig $055C46: the same with the animation $55274 */
-void level1_hit_piece_b(Object *shooter, Object *target, uint16_t damage)
+void l1_hit_piece_b(Object *shooter, Object *target, uint16_t damage)
 {
     uint16_t old = (uint16_t)target->energy;
 
@@ -703,12 +703,12 @@ void level1_hit_piece_b(Object *shooter, Object *target, uint16_t damage)
     target->energy = (int16_t)(old - damage);
     if (old > damage)
         return;
-    level1_piece_burst(target, xenon2.level1_data.anim_piece_b);
+    l1_piece_burst(target, xenon2.l1_data.anim_piece_b);
 }
 
 /* orig $05605A: update of a burst piece: it moves by a fixed step from the table at piece_directions picked by its random byte ($2D) and goes when it
  * leaves the screen */
-void level1_debris_update(Object *debris)
+void l1_debris_update(Object *debris)
 {
     uint16_t angle;
     int16_t x, y;
@@ -729,17 +729,17 @@ void level1_debris_update(Object *debris)
 }
 
 /* orig $056676: the draw of the boss after a hit: back to the normal draw ($5661A) and the picture drawn as a flash */
-void level1_boss_flash(Object *boss)
+void l1_boss_flash(Object *boss)
 {
-    boss->fn_draw = (obj_fn)level1_boss_draw;
+    boss->fn_draw = (obj_fn)l1_boss_draw;
     if ((int16_t)xenon2.scroll_pos >= 0x280)
         return;
-    draw_tile_grid_flash(xenon2.level1_data.boss_grid, 5, 6, (int16_t)(boss->y - xenon2.scroll_pos), 0x38);
+    draw_tile_grid_flash(xenon2.l1_data.boss_grid, 5, 6, (int16_t)(boss->y - xenon2.scroll_pos), 0x38);
 }
 
 /* orig $0561DA: hit routine of the level 1 boss: when the shooter's box meets the part of the boss that can be hurt the boss flashes
  * and loses energy; at no energy it goes: bonuses fall, the screen is full of explosions, the enemies are freed and the level is done */
-void level1_boss_hit(Object *shooter, Object *boss, uint16_t damage)
+void l1_boss_hit(Object *shooter, Object *boss, uint16_t damage)
 {
     uint16_t old;
     int16_t y;
@@ -749,7 +749,7 @@ void level1_boss_hit(Object *shooter, Object *boss, uint16_t damage)
     y = (int16_t)(boss->y - xenon2.scroll_pos + 0x44);
     if (!box_overlap((int16_t)xenon2.hit_box[0], (int16_t)xenon2.hit_box[1], (int16_t)xenon2.hit_box[2], (int16_t)xenon2.hit_box[3], 0x98, y, 0xa7, (int16_t)(y + 0xe)))
         return;
-    boss->fn_draw = (obj_fn)level1_boss_flash;
+    boss->fn_draw = (obj_fn)l1_boss_flash;
     old = (uint16_t)boss->energy;
     boss->energy = (int16_t)(old - damage);
     if (old > damage)
@@ -764,7 +764,7 @@ void level1_boss_hit(Object *shooter, Object *boss, uint16_t damage)
 
 /* orig $056278: update of a part of the level 1 boss ($FC, the last $100): it takes the place and the numbers of the part before it
  * ($1C), the first one the boss's; the last part turns towards the player and shoots */
-void level1_boss_part_update(Object *part)
+void l1_boss_part_update(Object *part)
 {
     Object *prev;
 
@@ -799,7 +799,7 @@ void level1_boss_part_update(Object *part)
         uint16_t dir = direction8((int16_t)(xenon2.player.x - part->x), (int16_t)(xenon2.player.y - part->y));
 
         part->l1.angle = (part->l1.angle & 0xffffu) | (uint32_t)(uint16_t)((int16_t)dir) << 16;
-        part->gfx = xenon2.level1_data.boss_part_pictures[dir];
+        part->gfx = xenon2.l1_data.boss_part_pictures[dir];
         if (part->steps >= 0xb) {
             uint16_t sum = (uint16_t)(part->shot_count + 0xf);
 
@@ -809,7 +809,7 @@ void level1_boss_part_update(Object *part)
 
                 part->shot_count = (uint8_t)(random_next() & 0x3f);
                 shot = spawn_enemy_shot((uint16_t)part->x, (uint16_t)part->y, (uint16_t)(int16_t)(part->l1.angle >> 16), 4, 0);
-                set_anim(shot, xenon2.level1_data.anim_shot);
+                set_anim(shot, xenon2.l1_data.anim_shot);
             }
         }
     }
@@ -817,6 +817,6 @@ void level1_boss_part_update(Object *part)
 }
 
 /* orig $054E2C: the level's hook for a change of players: none in level 1 */
-void level1_swap_hook(void)
+void l1_swap_hook(void)
 {
 }

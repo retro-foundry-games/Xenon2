@@ -9,7 +9,7 @@ Object *level_collision(int16_t x0, int16_t y0, int16_t x1, int16_t y1, Object *
     if (xenon2.level_number == 2)
         return l2_collision_hook(x0, y0, x1, y1);
     if (xenon2.level_number == 1)
-        return level1_collision_hook() ? miss : 0;
+        return l1_collision_hook() ? miss : 0;
     return 0;   /* (level 3: $56FEA, no block) */
 }
 
@@ -24,7 +24,7 @@ void level_event(uint16_t event, const struct SpawnRec *record)
     else if (xenon2.level_number == 5)
         l5_event(event, record);
     else if (xenon2.level_number == 1)
-        level1_event(event, record);
+        l1_event(event, record);
 }
 
 void level_hook(uint16_t hook, const struct SpawnRec *record, uint16_t slot_value)
@@ -38,7 +38,7 @@ void level_hook(uint16_t hook, const struct SpawnRec *record, uint16_t slot_valu
     else if (xenon2.level_number == 5)
         l5_hook(hook, record, slot_value);
     else if (xenon2.level_number == 1)
-        level1_hook(hook, record, slot_value);
+        l1_hook(hook, record, slot_value);
 }
 
 void level_scroll(void)
@@ -50,7 +50,7 @@ void level_scroll(void)
     else if (xenon2.level_number == 4)
         l4_scroll();
     else if (xenon2.level_number == 1)
-        level1_scroll();
+        l1_scroll();
 }
 
 void level_swap_hook(void)
@@ -60,7 +60,7 @@ void level_swap_hook(void)
     else if (xenon2.level_number == 5)
         l5_swap_hook();
     else if (xenon2.level_number == 1)
-        level1_swap_hook();
+        l1_swap_hook();
 }
 
 void level_init(void)
@@ -74,5 +74,5 @@ void level_init(void)
     else if (xenon2.level_number == 5)
         l5_init();
     else if (xenon2.level_number == 1)
-        level1_init();
+        l1_init();
 }

@@ -199,15 +199,15 @@ _Static_assert(offsetof(struct Level1Data, data_src) == 0x6E80A - BLOB_BASE, "Le
 
 /* END generated */
 #include "game.h"
-void level1_spawn_units(void); void level1_spawn_unit(uint16_t unit); void level1_head_update(Object *head);
-void level1_hit_free(Object *shooter, Object *target, uint16_t damage); void level1_segment_update(Object *seg);
-void level1_hit_piece_a(Object *shooter, Object *target, uint16_t damage); void level1_hit_piece_b(Object *shooter, Object *target, uint16_t damage);
-void level1_debris_update(Object *debris); void level1_boss_flash(Object *boss);
-void level1_boss_hit(Object *shooter, Object *boss, uint16_t damage); void level1_boss_part_update(Object *part);
-void level1_swap_hook(void);
-void level1_turret_a_update(Object *turret); void level1_turret_b_update(Object *turret); void level1_turret_c_update(Object *turret);
-void level1_launcher_update(Object *launcher);
-void level1_hook(uint16_t id, const struct SpawnRec *rec, uint16_t scroll);
-int level1_collision_hook(void); void level1_event(uint16_t id, const struct SpawnRec *rec); void level1_scroll(void);
-void level1_boss_update(Object *boss); void level1_boss_draw(Object *boss); void level1_init(void);
+void l1_spawn_units(void); void l1_spawn_unit(uint16_t unit); void l1_head_update(Object *head);
+void l1_hit_free(Object *shooter, Object *target, uint16_t damage); void l1_segment_update(Object *seg);
+void l1_hit_piece_a(Object *shooter, Object *target, uint16_t damage); void l1_hit_piece_b(Object *shooter, Object *target, uint16_t damage);
+void l1_debris_update(Object *debris); void l1_boss_flash(Object *boss);
+void l1_boss_hit(Object *shooter, Object *boss, uint16_t damage); void l1_boss_part_update(Object *part);
+void l1_swap_hook(void);
+void l1_turret_a_update(Object *turret); void l1_turret_b_update(Object *turret); void l1_turret_c_update(Object *turret);
+void l1_launcher_update(Object *launcher);
+void l1_hook(uint16_t id, const struct SpawnRec *rec, uint16_t scroll);
+int l1_collision_hook(void); void l1_event(uint16_t id, const struct SpawnRec *rec); void l1_scroll(void);
+void l1_boss_update(Object *boss); void l1_boss_draw(Object *boss); void l1_init(void);
 #endif
