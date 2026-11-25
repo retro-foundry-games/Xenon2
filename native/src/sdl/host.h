@@ -20,6 +20,7 @@ unsigned host_vbl_count(void);                      /* the game's own frame coun
 void host_export_ram_buf(uint8_t *ram_0x80000);     /* the memory in the original's byte order, into a buffer of 0x80000 bytes */
 void host_import_ram_buf(const uint8_t *ram_0x80000);   /* and back: the memory of the original into the block (before the game starts) */
 void host_set_headless(int on);                   /* before host_init */
+int host_start_level(void);                         /* --level N: the level a new game starts in, 1 to 5 */
 void host_game_start(void);                         /* call the game's entry (nothing if the C has none yet) */
 int guest_load_game_image(void);                    /* the game image disk 1 leaves at $400 */
 
