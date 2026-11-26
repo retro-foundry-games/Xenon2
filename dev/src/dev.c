@@ -3,7 +3,7 @@
  * memory in the original's byte order and the picture, sends it keys and the stick.  The lockstep with the original (dev/lua/peer.lua, host/lockstep.lua)
  * is written in Lua on top of this.
  *
- *   xenon2-sdl-dev [--lua SCRIPT] [--lua-args TEXT] [--window] [--level N] [--scroll N] [--weapons NAME[:LEVEL],...] [port options...]   (no SCRIPT: the game is played in a window)
+ *   xenon2-sdl-dev [--lua SCRIPT] [--lua-args TEXT] [--window] [--level N] [--scroll N] [--weapons NAME[:LEVEL],...] [--autofire 1-4] [--speed 0-2] [port options...]   (no SCRIPT: the game is played in a window)
  *     (TEXT is the Lua global `args`)          the options of xenon2-sdl (--disks, ...); --headless unless --window is given
  *
  * The Lua global `port`:
@@ -496,6 +496,8 @@ void guest_set_level(uint16_t level);
 void guest_respawn_at(uint16_t scroll);
 int guest_weapon_known(const char *name);
 int guest_give_weapon(const char *name, int level);
+void guest_set_autofire(uint16_t level);
+void guest_set_speed(uint16_t level);
 
 static int l_set_shield(lua_State *s)
 {
@@ -524,6 +526,20 @@ static int l_give_weapon(lua_State *s)
 
     if (!guest_give_weapon(name, (int)luaL_optinteger(s, 2, 0)))
         return luaL_error(s, "no weapon %s, or no free slot for it", name);
+    cache_valid = 0;
+    return 0;
+}
+
+static int l_set_autofire(lua_State *s)
+{
+    guest_set_autofire((uint16_t)luaL_checkinteger(s, 1));
+    cache_valid = 0;
+    return 0;
+}
+
+static int l_set_speed(lua_State *s)
+{
+    guest_set_speed((uint16_t)luaL_checkinteger(s, 1));
     cache_valid = 0;
     return 0;
 }
@@ -821,7 +837,7 @@ static int l_close(lua_State *s)
 
 static const luaL_Reg port_functions[] = {
     { "step", l_step }, { "run", l_run }, { "run_until", l_run_until }, { "hook", l_hook }, { "unhook", l_unhook }, { "stop_on", l_stop_on },
-    { "frame", l_frame }, { "trace", l_trace }, { "joy", l_joy }, { "key", l_key }, { "ram", l_ram }, { "poke_stick", l_poke_stick }, { "poke_stale", l_poke_stale }, { "edge_defer", l_edge_defer }, { "set_a6a", l_set_a6a }, { "set_shield", l_set_shield }, { "set_random", l_set_random }, { "set_level", l_set_level }, { "respawn_at", l_respawn_at }, { "give_weapon", l_give_weapon }, { "peek8", l_peek8 }, { "peek16", l_peek16 }, { "peek32", l_peek32 },
+    { "frame", l_frame }, { "trace", l_trace }, { "joy", l_joy }, { "key", l_key }, { "ram", l_ram }, { "poke_stick", l_poke_stick }, { "poke_stale", l_poke_stale }, { "edge_defer", l_edge_defer }, { "set_a6a", l_set_a6a }, { "set_shield", l_set_shield }, { "set_random", l_set_random }, { "set_level", l_set_level }, { "respawn_at", l_respawn_at }, { "give_weapon", l_give_weapon }, { "set_autofire", l_set_autofire }, { "set_speed", l_set_speed }, { "peek8", l_peek8 }, { "peek16", l_peek16 }, { "peek32", l_peek32 },
     { "load_ram", l_load_ram }, { "load_high", l_load_high }, { "picture", l_picture }, { "picture_hash", l_picture_hash }, { "disk_gate", l_disk_gate }, { "disk_waiting", l_disk_waiting }, { "disk_release", l_disk_release }, { "run_function", l_run_function }, { "save_state", l_save_state }, { "load_state", l_load_state }, { "quit", l_quit }, { "listen", l_listen }, { "accept", l_accept }, { "readline", l_readline }, { "read", l_read }, { "write", l_write }, { "close", l_close }, { 0, 0 }
 };
 
@@ -831,6 +847,7 @@ int main(int argc, char **argv)
     char *forwarded[256];
     int n = 0, window = 0, start_level = 0, start_scroll = -1;
     const char *start_weapons = "";
+    int start_autofire = 0, start_speed = -1;
     int r;
 
     forwarded[n++] = argv[0];
@@ -848,6 +865,20 @@ int main(int argc, char **argv)
                 return 2;
             }
             start_scroll = (int)value;
+        }
+        else if (!strcmp(argv[i], "--autofire") && i + 1 < argc) {
+            start_autofire = atoi(argv[++i]);
+            if (start_autofire < 1 || start_autofire > 4) {
+                fprintf(stderr, "dev: --autofire takes 1 to 4\n");
+                return 2;
+            }
+        }
+        else if (!strcmp(argv[i], "--speed") && i + 1 < argc) {
+            start_speed = atoi(argv[++i]);
+            if (start_speed < 0 || start_speed > 2) {
+                fprintf(stderr, "dev: --speed takes 0 to 2\n");
+                return 2;
+            }
         }
         else if (!strcmp(argv[i], "--weapons") && i + 1 < argc) {
             char list[256], *item, *save = 0;
@@ -886,7 +917,7 @@ int main(int argc, char **argv)
         fprintf(stderr, "dev: --level takes 1 to 5\n");
         return 2;
     }
-    if (start_level || start_scroll >= 0 || *start_weapons) {
+    if (start_level || start_scroll >= 0 || *start_weapons || start_autofire || start_speed >= 0) {
         /* a new game loads level N (the hook runs when the game loads the level's code), and with --scroll the first frame
          * after the level's first scroll events (the first record sets scroll_y itself) is a respawn at that scroll_y */
         lua_pushinteger(L, start_level);
@@ -895,15 +926,26 @@ int main(int argc, char **argv)
         lua_setglobal(L, "start_scroll");
         lua_pushstring(L, start_weapons);
         lua_setglobal(L, "start_weapons");
+        lua_pushinteger(L, start_autofire);
+        lua_setglobal(L, "start_autofire");
+        lua_pushinteger(L, start_speed);
+        lua_setglobal(L, "start_speed");
         if (luaL_dostring(L,
             "local loaded, started, done, calls = false, false, false, 0\n"
             "if start_level > 0 then port.hook(0x917e, function() if not loaded then loaded = true; port.set_level(start_level) end end) end\n"
             "port.hook(0x6f94, function() started = true end)\n"
+            "local gave = false\n"
+            "local function give()\n"
+            "  gave = true; done = true\n"
+            "  if start_autofire > 0 then port.set_autofire(start_autofire) end\n"
+            "  if start_speed >= 0 then port.set_speed(start_speed) end\n"
+            "  for name, level in start_weapons:gmatch('(%w+):?(%d*)') do local ok, err = pcall(port.give_weapon, name, tonumber(level) or 0); if not ok then io.stderr:write('dev: --weapons: ' .. err .. '\\n') end end\n"
+            "end\n"
             "port.hook(0x3554, function()\n"
             "  if not started or done then return end\n"
             "  calls = calls + 1\n"
-            "  if calls == 3 and start_scroll >= 0 then port.respawn_at(start_scroll) end\n"
-            "  if calls == 12 then done = true; for name, level in start_weapons:gmatch('(%w+):?(%d*)') do port.give_weapon(name, tonumber(level) or 0) end end\n"
+            "  if start_scroll < 0 then give() return end\n"
+            "  if calls == 2 then port.respawn_at(start_scroll) elseif calls > 2 and port.peek8(0xa02) == 0 then give() end\n"
             "end)\n")) {
             fprintf(stderr, "dev: %s\n", lua_tostring(L, -1));
             return 1;
