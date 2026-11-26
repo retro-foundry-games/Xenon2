@@ -593,6 +593,7 @@ void shot_fixed_update(Object *obj)
     }
     if (obj->shot.hits == 0)
         return;
+    bbox_from_frame(obj);   /* $5814 */
     enemy = collide_enemies(obj);
     if (enemy == 0)
         return;
