@@ -61,12 +61,12 @@ Code that never ran in the recorded run has no C: the port logs `the original's 
 
 ## Lockstep (dev build)
 
-`dev/` is the dev build of the port (`make -C dev` -> `dev/build/xenon2-sdl-dev`): the same game C and SDL machine, run as a coroutine, with Lua 5.4
+`dev/` is the dev build of the port (`make -C dev` -> `build/dev/xenon2-sdl-dev`): the same game C and SDL machine, run as a coroutine, with Lua 5.4
 (`third_party/lua`) embedded.  The dev build only hosts Lua: the global `port` (API at the top of `dev/src/dev.c`) steps the game, runs to or hooks a function by its
 original address, reads the memory in the original's byte order and the picture, gives keys and the stick, and has raw sockets.  Interactivity is Lua's: `dev/lua/shell.lua`
 serves an interactive Lua shell on a unix socket.
 
-    dev/build/xenon2-sdl-dev --lua dev/lua/shell.lua --lua-args /tmp/x2.sock --disks local &
+    build/dev/xenon2-sdl-dev --lua dev/lua/shell.lua --lua-args /tmp/x2.sock --disks local &
     rlwrap nc -U /tmp/x2.sock                  > port.run(30)   > port.peek16(0x41c)   > port.run_until(0x2034, 20)
 
 `host/lockstep.lua` runs the original in the emulator with the dev build as its peer and drives the port through this same Lua shell (`--lua-args -`: the shell on the peer's

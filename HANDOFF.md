@@ -7,7 +7,7 @@ Xenon 2 Megablast (Amiga, Image Works 1989) ported to C following the skill in `
 
 - `native/`: the port only (the C of the game, `src/*.c`: `draw` the panel and the bobs of objects, `game` start-up, loop, swap, interrupts, the player; `stars` the starfields; `src/amiga/draw.c`, `amiga/disk.c`, `amiga/sound.c` and `amiga/shop_sound.c` program the blitter, the drive and the sound channels (the Amiga build only: the port's `src/sdl/draw.c`, `sdl/disk.c`, `sdl/sound.c` and `sdl/shop_sound.c` do the same at a high level, on the pictures, the ADF and the four voices of `sdl/mixer.c`; the blitter emulation the port had is the tag `blitter-emulation`), `objects` lists/anim/collision/spawn, `weapons` weapons/pickups/player, `game` level state/shots/respawn, `title`, `menus` (menus, hi-scores, disk), `sound`, `shop`/`shop_sound`, `level.c` the dispatch by `level_number`, `level1.c` to `level5.c`; each function `/* orig $ADDR */`; the SDL3 machine in `src/sdl/`).  Covers the menu, level 1, the music
   player and (new) the shop (`shop.c`, `shop_sound.c`, functions `/* shop $ADDR */`).  Levels 2 to 5 are ported too (`level2.c` to `level5.c`, item 11); not ported: the intro.
-- `dev/`: the dev build of the port (`make -C dev` -> `dev/build/xenon2-sdl-dev`): the same C, run as a coroutine, with Lua 5.4 (`third_party/lua`) embedded.
+- `dev/`: the dev build of the port (`make -C dev` -> `build/dev/xenon2-sdl-dev`): the same C, run as a coroutine, with Lua 5.4 (`third_party/lua`) embedded.
   Global `port` (API at the top of `dev/src/dev.c`): step, run_until, hook by original address, ram/peek, picture, joy, key, save_state/load_state,
   run_function(ADDR) (start the game at a C function), sockets.  `dev/lua/shell.lua` is an interactive Lua shell (socket, or stdin/stdout with `--lua-args -`:
   how the lockstep drives the port); `dev/lua/course.lua` plots a course through level 1 (the port as its own simulator).
@@ -45,7 +45,7 @@ Xenon 2 Megablast (Amiga, Image Works 1989) ported to C following the skill in `
     ... host/lockstep.lua --script-args "play=1 state=shop-before-512k startfn=8ff2 tolerant=1"
     # the autoplayer / the plotted course
     ... host/lockstep.lua --script-args "auto=1 hold=1 state=frame-8880 tolerant=1"
-    dev/build/xenon2-sdl-dev --lua dev/lua/course.lua --lua-args "syncs=3400 horizon=12 ew=15 sw=1 aw=6 pw=40 out=captures/input/level1-course.txt" --disks local
+    build/dev/xenon2-sdl-dev --lua dev/lua/course.lua --lua-args "syncs=3400 horizon=12 ew=15 sw=1 aw=6 pw=40 out=captures/input/level1-course.txt" --disks local
     ... host/lockstep.lua --headless --script-args "replay=captures/input/level1-course.txt hold=1 state=frame-8880 tolerant=1 syncs=3400"
 
 Dropping into a level or its boss (`host/scenario.lua`; the places are its `SCENARIOS` table: `l1-boss` .. `l5-boss`, each from the level's running state, a scroll_y a little before the boss):
@@ -54,7 +54,7 @@ Dropping into a level or its boss (`host/scenario.lua`; the places are its `SCEN
     ... host/scenario.lua --headless --script-args "state=frame-8880 scroll=9e0 out=NAME frames=120 probe=1"      any place; probe=1 prints the kinds of object every 25 frames
     ... host/lockstep.lua --headless --script-args "auto=1 state=l3-boss tolerant=1 health=full syncs=600"       the lockstep from there, the autoplayer playing
     ... host/ramdump.lua --headless --script-args "joy1 load=l3-boss ram=captures/l3-boss.ram"                    the memory of the place, for the port alone:
-    dev/build/xenon2-sdl-dev --lua dev/lua/exercise.lua --lua-args "ram=captures/l3-boss.ram frames=3000" --disks local     the port drops in, moves under fire; a crash is the failure
+    build/dev/xenon2-sdl-dev --lua dev/lua/exercise.lua --lua-args "ram=captures/l3-boss.ram frames=3000" --disks local     the port drops in, moves under fire; a crash is the failure
     for l in 1 2 3 4 5: tools/poison_gaps.py $l=captures/l$l-boss.ram captures/l$l-boss-poison.ram; exercise.lua on both (6000 frames from captures/levelN.ram, made by host/ramdump.lua "joy1 m3u load=STATE"); the outputs must be equal (reads of unnamed memory); levels 1-5 clean 2026-11-23; it also found level 3 formation_3 (7 defs, a crash)
     tools/poison_gaps.py shop=captures/shop-before.ram captures/shop-before-poison.ram; exercise.lua ram=... startfn=8ff2 on both: the shop (clean, 2026-11-23)
     host/ramdump.lua "joy1 load=xenon2-menu ram=captures/menu.ram"; exercise.lua ram=captures/menu.ram early=1 (the game starts at its entry on that memory: title, menu, the level start): clean

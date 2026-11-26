@@ -10,4 +10,4 @@ native/src/data.c
 native/src/sdl/code_table.c
 native/build/
 dev/members.lua
-dev/build/
+build/dev/

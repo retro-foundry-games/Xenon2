@@ -3,7 +3,8 @@
  * memory in the original's byte order and the picture, sends it keys and the stick.  The lockstep with the original (dev/lua/peer.lua, host/lockstep.lua)
  * is written in Lua on top of this.
  *
- *   xenon2-sdl-dev --lua SCRIPT [--lua-args TEXT] [port options...]   (TEXT is the Lua global `args`)          the options of xenon2-sdl (--disks, ...); --headless unless --window is given
+ *   xenon2-sdl-dev [--lua SCRIPT] [--lua-args TEXT] [--window] [--level N] [--scroll N] [port options...]   (no SCRIPT: the game is played in a window)
+ *     (TEXT is the Lua global `args`)          the options of xenon2-sdl (--disks, ...); --headless unless --window is given
  *
  * The Lua global `port`:
  *   port.step()                  one video frame (the end of the frame, then the game until its next host_idle); returns "frame", or "hook", ADDRESS when it stopped at a function
@@ -837,11 +838,9 @@ int main(int argc, char **argv)
         }
         else forwarded[n++] = argv[i];
     }
+    if (!script)
+        window = 1;   /* no script: the game is played in a window */
     host_set_headless(!window);
-    if (!script) {
-        fprintf(stderr, "usage: xenon2-sdl-dev --lua SCRIPT [--window] [--level N] [--scroll N] [port options]\n");
-        return 2;
-    }
     r = host_init(n, forwarded);
     if (r)
         return r;
@@ -874,10 +873,10 @@ int main(int argc, char **argv)
         }
     }
     lua_newtable(L);   /* arg: the script's path and the options that were not the port's */
-    lua_pushstring(L, script);
+    lua_pushstring(L, script ? script : "");
     lua_rawseti(L, -2, 0);
     lua_setglobal(L, "arg");
-    if (luaL_dofile(L, script) != 0) {
+    if ((script ? luaL_dofile(L, script) : luaL_dostring(L, "while true do port.step() end")) != 0) {
         fprintf(stderr, "dev: %s\n", lua_tostring(L, -1));
         return 1;
     }

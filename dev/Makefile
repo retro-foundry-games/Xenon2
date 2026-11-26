@@ -1,7 +1,7 @@
 # The dev build of the port (xenon2-sdl-dev): the port's own sources (native/src, built with -finstrument-functions so that a script can hook the
 # game's functions by their original addresses), the dev layer (src/dev.c: the game as a coroutine, Lua) and the vendored Lua (../third_party/lua).
 #
-#   make -C dev                  build dev/build/xenon2-sdl-dev
+#   make -C dev                  build build/dev/xenon2-sdl-dev
 #   make -C dev lockstep         run the lockstep with the original (needs the disks and the Kickstart in local/; see host/lockstep.lua)
 #
 # The port itself is only native/: nothing here is part of it.  The toolchain is the flake's of native/; outside its shell every target runs again inside.
@@ -11,7 +11,7 @@ ROOT   := $(abspath $(HERE)/..)
 NATIVE := $(ROOT)/native
 SRC    := $(NATIVE)/src
 LUA    := $(ROOT)/third_party/lua
-BUILD  := $(HERE)/build
+BUILD  := $(ROOT)/build/dev
 PYTHON ?= python3
 
 ifeq ($(IN_NIX_SHELL),)

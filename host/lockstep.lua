@@ -1,4 +1,4 @@
--- Lockstep of the original (this emulator) and the dev build of the port (dev/build/xenon2-sdl-dev, driven through its interactive Lua shell, dev/lua/shell.lua, on stdin/stdout): both run the game from its start (the port from
+-- Lockstep of the original (this emulator) and the dev build of the port (build/dev/xenon2-sdl-dev, driven through its interactive Lua shell, dev/lua/shell.lua, on stdin/stdout): both run the game from its start (the port from
 -- the original's memory at that moment); at every entry of swap_screens (the game passes it once a frame) the named members of the memory and the picture are compared.
 -- The first difference pauses the emulator and the port is not stepped again, so both can be looked at (the emulator's --control socket); continue=1 goes on and lists them all.
 --
@@ -133,7 +133,7 @@ ami.machine{
     name = "Xenon2 lockstep", model = "A500", system = "../local/system", save = "../local/save", files = "..",
     content = "../local/xenon2.m3u", roms = { { "kick34005.A500", 0xc4f0f55f } },
     opt = { puae_joyport_order = "2143" },
-    peers = { port = { ROOT .. "/dev/build/xenon2-sdl-dev", "--lua", ROOT .. "/dev/lua/shell.lua", "--lua-args", "-", "--disks", ROOT .. "/local" } },
+    peers = { port = { ROOT .. "/build/dev/xenon2-sdl-dev", "--lua", ROOT .. "/dev/lua/shell.lua", "--lua-args", "-", "--disks", ROOT .. "/local" } },
 }
 ami.boot()
 if REPLAY then
