@@ -841,6 +841,7 @@ int main(int argc, char **argv)
     if (!script)
         window = 1;   /* no script: the game is played in a window */
     host_set_headless(!window);
+    host_set_fixed_window(1);   /* floats in a tiling compositor */
     r = host_init(n, forwarded);
     if (r)
         return r;
