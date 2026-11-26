@@ -27,7 +27,7 @@ static SDL_Texture *texture;
 static SDL_AudioStream *audio;
 static PixelScale pixel_scale;
 static const char *renderer_name;   /* --renderer NAME: software, opengl, vulkan, ... (default: SDL chooses) */
-static int headless, interpolate, scale = 3, fixed_window;
+static int headless, interpolate, scale = 3, fixed_window, skip_menu;
 static long frames;
 static uint32_t picture[DISPLAY_W * DISPLAY_H];
 static int quitting;
@@ -353,6 +353,8 @@ void host_key_event(int raw, int down)
 void host_set_headless(int on) { headless = on; }
 /* a window that cannot be resized (a tiling compositor floats it); before host_init */
 void host_set_fixed_window(int on) { fixed_window = on; }
+void host_set_skip_menu(int on) { skip_menu = on; }
+int host_skip_menu(void) { return skip_menu; }
 
 /* the options, the machine and the window; 0 when the game can start, else the exit code */
 int host_init(int argc, char **argv)

@@ -502,6 +502,20 @@ shop_returned:
     }
 }
 
+/* the "GET READY" message, which waits for a key; the dev build's start options skip it */
+static void ready_message(void)
+{
+#ifdef GAME_SDL
+    if (host_skip_menu()) {
+        title_restore();
+        return;
+    }
+#endif
+    xenon2.text_wait_key = 0xff;
+    title_message(xenon2.ready_text);
+    xenon2.text_wait_key = 0;
+}
+
 /* orig $007800: (re)start of a game: palette faded out, level text and "GET READY" shown, then the first frame */
 static void game_session_start(void)
 {
@@ -515,8 +529,16 @@ static void game_session_start(void)
     xenon2.sfx_cmd2 = -1;
     xenon2.sfx_cmd2_aux = -1;
     xenon2.last_flip_vbl = xenon2.vbl_count;
-    title_credits();
-    menu();
+#ifdef GAME_SDL
+    if (host_skip_menu()) {
+        xenon2.continues_left = 3;
+        xenon2.players = 1;
+    } else
+#endif
+    {
+        title_credits();
+        menu();
+    }
     clear_palette();
     xenon2.cycle_flag_a = 1;
     xenon2.cycle_flag_b = 0;
@@ -528,9 +550,7 @@ static void game_session_start(void)
     xenon2.ready_text[18] = 0x31;
     if (xenon2.player_active[0] == 0)
         xenon2.ready_text[18] = 0x32;
-    xenon2.text_wait_key = 0xff;
-    title_message(xenon2.ready_text);
-    xenon2.text_wait_key = 0;
+    ready_message();
     clear_palette();
     music_restart_if_enabled();
     wait_vbl_and_show();
@@ -883,9 +903,7 @@ void respawn_player(void)
         xenon2.player_history[i * 3 + 2] = xenon2.player.y;
     }
     xenon2.ready_text[18] = (uint8_t)(xenon2.cur_player + 0x31);
-    xenon2.text_wait_key = 0xff;
-    title_message(xenon2.ready_text);
-    xenon2.text_wait_key = 0;
+    ready_message();
     clear_palette();
     if (xenon2.nashwan_timer)
         init_weapons(0);
