@@ -39,6 +39,9 @@ int files_read_sectors(int disk, uint32_t first_sector, uint32_t count, void *de
 /* display.c: the picture from the registers and the copper list the game leaves */
 #define DISPLAY_W 320
 #define DISPLAY_H 256
+/* the game's window (DIWSTRT $3A81, DIWSTOP $02C1) is the 200 lines that start 14 lines into the picture; the window shows only those */
+#define DISPLAY_TOP 14
+#define DISPLAY_VISIBLE_H 200
 void display_render(uint32_t *rgb);
 void display_render_interpolated(uint32_t *rgb, uint64_t now);
 
