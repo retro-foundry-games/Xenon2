@@ -615,6 +615,48 @@ void guest_respawn_at(uint16_t scroll)
     xenon2.player_died = 0xff;
 }
 
+/* the dev build's --weapons */
+static const struct { const char *name; uint16_t type; } weapon_names[] = {
+    { "forward", WEAPON_FORWARD_SHOT }, { "double", WEAPON_DOUBLE_SHOT }, { "side", WEAPON_SIDE_SHOT }, { "rear", WEAPON_REAR_SHOT },
+    { "cannon", WEAPON_CANNON }, { "drone", WEAPON_DRONE }, { "laser", WEAPON_LASER }, { "electro", WEAPON_ELECTRO_BALL },
+    { "mine1", WEAPON_MINE_1 }, { "mine2", WEAPON_MINE_2 }, { "missile", WEAPON_MISSILE_LAUNCHER },
+    { "homing", WEAPON_HOMING_MISSILE }, { "flamer", WEAPON_FLAMER }, { "bomb", WEAPON_BOMB },
+};
+
+int guest_weapon_known(const char *name)
+{
+    for (unsigned i = 0; i < sizeof weapon_names / sizeof *weapon_names; i++)
+        if (!strcmp(name, weapon_names[i].name))
+            return 1;
+    return 0;
+}
+
+/* the player has the weapon, at power level `level` (at most the weapon's own maximum, its energy); 0 when there is no such weapon or no free slot */
+int guest_give_weapon(const char *name, int level)
+{
+    uint16_t type = 0;
+    Object *weapon = 0;
+
+    for (unsigned i = 0; i < sizeof weapon_names / sizeof *weapon_names; i++)
+        if (!strcmp(name, weapon_names[i].name))
+            type = weapon_names[i].type;
+    if (type == 0)
+        return 0;
+    for (int i = 0; i < 7; i++)
+        if (xenon2.weapon_slots[i].type == type)
+            weapon = xenon2.weapon_slots[i].obj;
+    if (weapon == 0) {
+        weapon_select(type, &xenon2.player, 0);
+        for (int i = 0; i < 7; i++)
+            if (xenon2.weapon_slots[i].type == type)
+                weapon = xenon2.weapon_slots[i].obj;
+    }
+    if (weapon == 0)
+        return 0;
+    weapon->score = (int16_t)(level < weapon->energy ? level : weapon->energy);
+    return 1;
+}
+
 void guest_stick_restore(void)
 {
     if (stick_poked)
