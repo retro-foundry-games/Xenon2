@@ -235,7 +235,7 @@ static bool present(Uint64 now)
         display_render(picture);
     for (int i = 0; i < DISPLAY_W * DISPLAY_H; i++)
         picture[i] |= 0xff000000u;
-    return SDL_UpdateTexture(texture, NULL, picture, DISPLAY_W * 4) &&
+    return SDL_UpdateTexture(texture, NULL, picture + DISPLAY_TOP * DISPLAY_W, DISPLAY_W * 4) &&
         pixel_scale_draw(&pixel_scale, texture) && SDL_RenderPresent(renderer);
 }
 
@@ -395,7 +395,7 @@ int host_init(int argc, char **argv)
 #ifdef __EMSCRIPTEN__
             window = SDL_CreateWindow("Xenon 2", browser_pixel_width(), browser_pixel_height(), 0);
 #else
-            window = SDL_CreateWindow("Xenon 2", DISPLAY_W * scale, DISPLAY_H * scale,
+            window = SDL_CreateWindow("Xenon 2", DISPLAY_W * scale, DISPLAY_VISIBLE_H * scale,
                                       (fixed_window ? 0 : SDL_WINDOW_RESIZABLE) | SDL_WINDOW_HIGH_PIXEL_DENSITY);
 #endif
             renderer = window ? SDL_CreateRenderer(window, renderer_name) : 0;
@@ -416,10 +416,10 @@ int host_init(int argc, char **argv)
 #else
         SDL_SetRenderVSync(renderer, interpolate ? 0 : 1);
 #endif
-        texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, DISPLAY_W, DISPLAY_H);
-        if (!texture || !SDL_SetRenderLogicalPresentation(renderer, DISPLAY_W, DISPLAY_H, SDL_LOGICAL_PRESENTATION_LETTERBOX) ||
-            !SDL_UpdateTexture(texture, NULL, picture, DISPLAY_W * 4) ||
-            !pixel_scale_open(&pixel_scale, renderer, texture, DISPLAY_W, DISPLAY_H)) {
+        texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, DISPLAY_W, DISPLAY_VISIBLE_H);
+        if (!texture || !SDL_SetRenderLogicalPresentation(renderer, DISPLAY_W, DISPLAY_VISIBLE_H, SDL_LOGICAL_PRESENTATION_LETTERBOX) ||
+            !SDL_UpdateTexture(texture, NULL, picture + DISPLAY_TOP * DISPLAY_W, DISPLAY_W * 4) ||
+            !pixel_scale_open(&pixel_scale, renderer, texture, DISPLAY_W, DISPLAY_VISIBLE_H)) {
             fprintf(stderr, "xenon2-sdl: pixel upscaling setup: %s\n", SDL_GetError());
             SDL_Quit();
             return 1;

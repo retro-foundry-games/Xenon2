@@ -73,9 +73,9 @@
     game.style.bottom = Math.max(0, window.innerHeight - viewportHeight - top) + 'px';
 
     const density = window.devicePixelRatio * (visible ? visible.scale : 1);
-    const scale = Math.min(viewportWidth / 320, viewportHeight / 256);
+    const scale = Math.min(viewportWidth / 320, viewportHeight / 200);
     const width = Math.max(1, Math.min(Math.floor(viewportWidth * density), Math.round(320 * scale * density)));
-    const height = Math.max(1, Math.min(Math.floor(viewportHeight * density), Math.round(256 * scale * density)));
+    const height = Math.max(1, Math.min(Math.floor(viewportHeight * density), Math.round(200 * scale * density)));
     Module.xenonCanvasWidth = width;
     Module.xenonCanvasHeight = height;
     Module.xenonCanvasDensity = density;
