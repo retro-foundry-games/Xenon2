@@ -27,7 +27,7 @@ static SDL_Texture *texture;
 static SDL_AudioStream *audio;
 static PixelScale pixel_scale;
 static const char *renderer_name;   /* --renderer NAME: software, opengl, vulkan, ... (default: SDL chooses) */
-static int headless, interpolate, scale = 3, start_level = 1;
+static int headless, interpolate, scale = 3;
 static long frames;
 static uint32_t picture[DISPLAY_W * DISPLAY_H];
 static int quitting;
@@ -351,7 +351,6 @@ void host_key_event(int raw, int down)
 /* ---- start ------------------------------------------------------------------------------------------------------------------------------------------------------------ */
 /* no window, no sound, no clock: for a host that drives the machine itself (the dev build); before host_init */
 void host_set_headless(int on) { headless = on; }
-int host_start_level(void) { return start_level; }
 
 /* the options, the machine and the window; 0 when the game can start, else the exit code */
 int host_init(int argc, char **argv)
@@ -362,16 +361,11 @@ int host_init(int argc, char **argv)
         if (!strcmp(argv[i], "--disks") && i + 1 < argc) disks = argv[++i];
         else if (!strcmp(argv[i], "--scale") && i + 1 < argc) scale = atoi(argv[++i]);
         else if (!strcmp(argv[i], "--renderer") && i + 1 < argc) renderer_name = argv[++i];
-        else if (!strcmp(argv[i], "--level") && i + 1 < argc) start_level = atoi(argv[++i]);
         else if (!strcmp(argv[i], "--interpolate")) interpolate = 1;
         else {
-            fprintf(stderr, "usage: xenon2-sdl [--disks FOLDER] [--scale N] [--level N] [--renderer NAME] [--interpolate]\n");
+            fprintf(stderr, "usage: xenon2-sdl [--disks FOLDER] [--scale N] [--renderer NAME] [--interpolate]\n");
             return 2;
         }
-    }
-    if (start_level < 1 || start_level > 5) {
-        fprintf(stderr, "xenon2-sdl: --level takes 1 to 5\n");
-        return 2;
     }
     if (files_open(disks) || guest_load_game_image())
         return 1;
