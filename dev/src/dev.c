@@ -825,12 +825,21 @@ int main(int argc, char **argv)
         else if (!strcmp(argv[i], "--lua-args") && i + 1 < argc) script_args = argv[++i];
         else if (!strcmp(argv[i], "--window")) window = 1;
         else if (!strcmp(argv[i], "--level") && i + 1 < argc) start_level = atoi(argv[++i]);
-        else if (!strcmp(argv[i], "--scroll") && i + 1 < argc) start_scroll = (int)strtol(argv[++i], 0, 16);
+        else if (!strcmp(argv[i], "--scroll") && i + 1 < argc) {
+            char *end;
+            long value = strtol(argv[++i], &end, 0);   /* decimal, or hex with 0x */
+
+            if (*end || value < 0 || value > 0xffff) {
+                fprintf(stderr, "dev: --scroll takes a number from 0 to 65535 (0x for hex)\n");
+                return 2;
+            }
+            start_scroll = (int)value;
+        }
         else forwarded[n++] = argv[i];
     }
     host_set_headless(!window);
     if (!script) {
-        fprintf(stderr, "usage: xenon2-sdl-dev --lua SCRIPT [--window] [--level N] [--scroll HEX] [port options]\n");
+        fprintf(stderr, "usage: xenon2-sdl-dev --lua SCRIPT [--window] [--level N] [--scroll N] [port options]\n");
         return 2;
     }
     r = host_init(n, forwarded);
