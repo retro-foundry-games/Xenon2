@@ -631,10 +631,12 @@ int guest_weapon_known(const char *name)
     return 0;
 }
 
-/* the player has the weapon, at power level `level` (at most the weapon's own maximum, its energy); 0 when there is no such weapon or no free slot */
+/* the player gets one more of the weapon (a side weapon takes a free side slot, so the laser, cannon and missile launcher can be on both sides) at power level
+ * `level`, at most the weapon's own maximum (its energy); 0 when there is no such weapon or no free slot */
 int guest_give_weapon(const char *name, int level)
 {
     uint16_t type = 0;
+    const Object *before[7] = { 0 };
     Object *weapon = 0;
 
     for (unsigned i = 0; i < sizeof weapon_names / sizeof *weapon_names; i++)
@@ -643,19 +645,20 @@ int guest_give_weapon(const char *name, int level)
     if (type == 0)
         return 0;
     for (int i = 0; i < 7; i++)
-        if (xenon2.weapon_slots[i].type == type)
+        before[i] = xenon2.weapon_slots[i].type == type ? xenon2.weapon_slots[i].obj : 0;
+    weapon_select(type, &xenon2.player, 0);
+    for (int i = 0; i < 7; i++)
+        if (xenon2.weapon_slots[i].type == type && xenon2.weapon_slots[i].obj != before[i])
             weapon = xenon2.weapon_slots[i].obj;
-    if (weapon == 0) {
-        weapon_select(type, &xenon2.player, 0);
-        for (int i = 0; i < 7; i++)
-            if (xenon2.weapon_slots[i].type == type)
-                weapon = xenon2.weapon_slots[i].obj;
-    }
     if (weapon == 0)
         return 0;
     weapon->score = (int16_t)(level < weapon->energy ? level : weapon->energy);
     return 1;
 }
+
+/* the dev build's --autofire (the fire rate, 1 to 4) and --speed (the ship's speed, 0 to 2) */
+void guest_set_autofire(uint16_t level) { xenon2.autofire_level = level; }
+void guest_set_speed(uint16_t level) { xenon2.speed_level = level; }
 
 void guest_stick_restore(void)
 {
