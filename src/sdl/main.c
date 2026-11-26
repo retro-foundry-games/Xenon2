@@ -27,7 +27,7 @@ static SDL_Texture *texture;
 static SDL_AudioStream *audio;
 static PixelScale pixel_scale;
 static const char *renderer_name;   /* --renderer NAME: software, opengl, vulkan, ... (default: SDL chooses) */
-static int headless, interpolate, scale = 3;
+static int headless, interpolate, scale = 3, fixed_window;
 static long frames;
 static uint32_t picture[DISPLAY_W * DISPLAY_H];
 static int quitting;
@@ -351,6 +351,8 @@ void host_key_event(int raw, int down)
 /* ---- start ------------------------------------------------------------------------------------------------------------------------------------------------------------ */
 /* no window, no sound, no clock: for a host that drives the machine itself (the dev build); before host_init */
 void host_set_headless(int on) { headless = on; }
+/* a window that cannot be resized (a tiling compositor floats it); before host_init */
+void host_set_fixed_window(int on) { fixed_window = on; }
 
 /* the options, the machine and the window; 0 when the game can start, else the exit code */
 int host_init(int argc, char **argv)
@@ -394,7 +396,7 @@ int host_init(int argc, char **argv)
             window = SDL_CreateWindow("Xenon 2", browser_pixel_width(), browser_pixel_height(), 0);
 #else
             window = SDL_CreateWindow("Xenon 2", DISPLAY_W * scale, DISPLAY_H * scale,
-                                      SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIGH_PIXEL_DENSITY);
+                                      (fixed_window ? 0 : SDL_WINDOW_RESIZABLE) | SDL_WINDOW_HIGH_PIXEL_DENSITY);
 #endif
             renderer = window ? SDL_CreateRenderer(window, renderer_name) : 0;
             if (!renderer) {
