@@ -3,6 +3,9 @@
 #include "game_all.h"
 #include "title.h"
 #include "draw.h"
+#ifdef GAME_SDL
+int host_skip_menu(void);   /* sdl/main.c */
+#endif
 
 /* orig $8F9A: sector 0 of the disk must hold "X2B ": returns 1 when it does (Z set) */
 int game_disk_present(void)
@@ -414,11 +417,22 @@ void level_load(void)
     uint16_t level = xenon2.level_number;
     uint16_t i;
 
+    int quiet = 0;   /* the dev build's start options: the first load shows no LOADING screen */
+
     if (level == xenon2.loaded_level)
         return;
     xenon2.loaded_level = level;
+#ifdef GAME_SDL
+    {
+        static int first = 1;
+
+        quiet = first && host_skip_menu();
+        first = 0;
+    }
+#endif
     for (;;) {
-        title_in_loading();
+        if (!quiet)
+            title_in_loading();
         if (game_disk_present())
             break;
         title_out_loading();
@@ -432,7 +446,8 @@ void level_load(void)
     guest_blob_raw(level > 1 ? level : 0);   /* (level 1's members at $54E40 on do not describe the blob of another level) */
     disk_read_sectors(xenon2.level_sectors[i], xenon2.level_sectors[i + 1], &xenon2.map_image);
     xenon2.irq_vectors[2] = irq_vblank;
-    title_out_loading();
+    if (!quiet)
+        title_out_loading();
     clear_palette();
 }
 
