@@ -520,8 +520,8 @@ static void game_session_start(void)
     clear_palette();
     xenon2.cycle_flag_a = 1;
     xenon2.cycle_flag_b = 0;
-    xenon2.level_number = (uint16_t)host_start_level();
-    xenon2.loading_level_digit = (uint8_t)(xenon2.level_number + 0x30);
+    xenon2.level_number = 1;
+    xenon2.loading_level_digit = 0x31;
     level_load();
     init_level_state();
     level_start();
