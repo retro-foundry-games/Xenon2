@@ -491,10 +491,26 @@ void guest_set_a6a(uint8_t value);
 
 void guest_set_shield(uint16_t frames);
 void guest_set_random(uint32_t a, uint32_t b);
+void guest_set_level(uint16_t level);
+void guest_respawn_at(uint16_t scroll);
 
 static int l_set_shield(lua_State *s)
 {
     guest_set_shield((uint16_t)luaL_checkinteger(s, 1));
+    cache_valid = 0;
+    return 0;
+}
+
+static int l_set_level(lua_State *s)
+{
+    guest_set_level((uint16_t)luaL_checkinteger(s, 1));
+    cache_valid = 0;
+    return 0;
+}
+
+static int l_respawn_at(lua_State *s)
+{
+    guest_respawn_at((uint16_t)luaL_checkinteger(s, 1));
     cache_valid = 0;
     return 0;
 }
@@ -792,7 +808,7 @@ static int l_close(lua_State *s)
 
 static const luaL_Reg port_functions[] = {
     { "step", l_step }, { "run", l_run }, { "run_until", l_run_until }, { "hook", l_hook }, { "unhook", l_unhook }, { "stop_on", l_stop_on },
-    { "frame", l_frame }, { "trace", l_trace }, { "joy", l_joy }, { "key", l_key }, { "ram", l_ram }, { "poke_stick", l_poke_stick }, { "poke_stale", l_poke_stale }, { "edge_defer", l_edge_defer }, { "set_a6a", l_set_a6a }, { "set_shield", l_set_shield }, { "set_random", l_set_random }, { "peek8", l_peek8 }, { "peek16", l_peek16 }, { "peek32", l_peek32 },
+    { "frame", l_frame }, { "trace", l_trace }, { "joy", l_joy }, { "key", l_key }, { "ram", l_ram }, { "poke_stick", l_poke_stick }, { "poke_stale", l_poke_stale }, { "edge_defer", l_edge_defer }, { "set_a6a", l_set_a6a }, { "set_shield", l_set_shield }, { "set_random", l_set_random }, { "set_level", l_set_level }, { "respawn_at", l_respawn_at }, { "peek8", l_peek8 }, { "peek16", l_peek16 }, { "peek32", l_peek32 },
     { "load_ram", l_load_ram }, { "load_high", l_load_high }, { "picture", l_picture }, { "picture_hash", l_picture_hash }, { "disk_gate", l_disk_gate }, { "disk_waiting", l_disk_waiting }, { "disk_release", l_disk_release }, { "run_function", l_run_function }, { "save_state", l_save_state }, { "load_state", l_load_state }, { "quit", l_quit }, { "listen", l_listen }, { "accept", l_accept }, { "readline", l_readline }, { "read", l_read }, { "write", l_write }, { "close", l_close }, { 0, 0 }
 };
 
@@ -800,7 +816,7 @@ int main(int argc, char **argv)
 {
     const char *script = 0, *script_args = "";
     char *forwarded[256];
-    int n = 0, window = 0;
+    int n = 0, window = 0, start_level = 0, start_scroll = -1;
     int r;
 
     forwarded[n++] = argv[0];
@@ -808,11 +824,13 @@ int main(int argc, char **argv)
         if (!strcmp(argv[i], "--lua") && i + 1 < argc) script = argv[++i];
         else if (!strcmp(argv[i], "--lua-args") && i + 1 < argc) script_args = argv[++i];
         else if (!strcmp(argv[i], "--window")) window = 1;
+        else if (!strcmp(argv[i], "--level") && i + 1 < argc) start_level = atoi(argv[++i]);
+        else if (!strcmp(argv[i], "--scroll") && i + 1 < argc) start_scroll = (int)strtol(argv[++i], 0, 16);
         else forwarded[n++] = argv[i];
     }
     host_set_headless(!window);
     if (!script) {
-        fprintf(stderr, "usage: xenon2-sdl-dev --lua SCRIPT [--window] [port options]\n");
+        fprintf(stderr, "usage: xenon2-sdl-dev --lua SCRIPT [--window] [--level N] [--scroll HEX] [port options]\n");
         return 2;
     }
     r = host_init(n, forwarded);
@@ -826,6 +844,26 @@ int main(int argc, char **argv)
     lua_setglobal(L, "port");
     lua_pushstring(L, script_args);
     lua_setglobal(L, "args");
+    if (start_level < 0 || start_level > 5) {
+        fprintf(stderr, "dev: --level takes 1 to 5\n");
+        return 2;
+    }
+    if (start_level || start_scroll >= 0) {
+        /* a new game loads level N (the hook runs when the game loads the level's code), and with --scroll the first frame
+         * after the level's first scroll events (the first record sets scroll_y itself) is a respawn at that scroll_y */
+        lua_pushinteger(L, start_level);
+        lua_setglobal(L, "start_level");
+        lua_pushinteger(L, start_scroll);
+        lua_setglobal(L, "start_scroll");
+        if (luaL_dostring(L,
+            "local loaded, started, done, calls = false, false, false, 0\n"
+            "if start_level > 0 then port.hook(0x917e, function() if not loaded then loaded = true; port.set_level(start_level) end end) end\n"
+            "port.hook(0x6f94, function() started = true end)\n"
+            "port.hook(0x3554, function() if not started or done or start_scroll < 0 then return end; calls = calls + 1; if calls == 3 then done = true; port.respawn_at(start_scroll) end end)\n")) {
+            fprintf(stderr, "dev: %s\n", lua_tostring(L, -1));
+            return 1;
+        }
+    }
     lua_newtable(L);   /* arg: the script's path and the options that were not the port's */
     lua_pushstring(L, script);
     lua_rawseti(L, -2, 0);

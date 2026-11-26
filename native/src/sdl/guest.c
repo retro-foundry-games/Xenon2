@@ -599,6 +599,22 @@ void guest_set_random(uint32_t a, uint32_t b)
     xenon2.random_state_b = b;
 }
 
+/* the dev build's --level: the level a new game loads */
+void guest_set_level(uint16_t level)
+{
+    xenon2.level_number = level;
+    xenon2.loading_level_digit = (uint8_t)(level + 0x30);
+}
+
+/* the dev build's --scroll: the game's respawn puts the player and the map at scroll_y */
+void guest_respawn_at(uint16_t scroll)
+{
+    xenon2.scroll_y = scroll;
+    xenon2.player_lives = 5;
+    xenon2.player_energy = 0x27;
+    xenon2.player_died = 0xff;
+}
+
 void guest_stick_restore(void)
 {
     if (stick_poked)
