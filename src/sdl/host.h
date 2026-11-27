@@ -68,6 +68,7 @@ int host_init(int argc, char **argv);               /* the options, the machine,
 void host_frame_end(void);                          /* the end of a video frame: picture, sound, clock, keys */
 void host_vblank(void);                             /* raise the vertical blank interrupt (calls the game's handler if it enabled it) */
 void host_screen_flip(const void *screen, uint16_t tick);
+const int16_t *host_audio(void);                    /* the sound of the last frame: 882 stereo samples (44100 Hz, 20 ms) */
 const uint32_t *host_picture(void);                 /* the picture of the registers as they are now: DISPLAY_W x DISPLAY_H pixels, 0xAARRGGBB */
 long host_frame_count(void);
 void host_key_event(int amiga_raw_code, int down);  /* a key as the keyboard would send it */
