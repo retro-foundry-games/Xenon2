@@ -291,11 +291,13 @@ void host_screen_flip(const void *screen, uint16_t tick)
         presentation_flip(screen, tick, SDL_GetTicksNS());
 }
 
+static int16_t samples[2 * 882];   /* the sound of the last frame: 44100 Hz, stereo, 882 frames of 20 ms */
+
+const int16_t *host_audio(void) { return samples; }
+
 /* One machine frame. Audio, joystick registers and IRQs stay on this clock. */
 void host_frame_end(void)
 {
-    int16_t samples[2 * 882];
-
     sound_mix(samples, 882);
     if (!headless) {
         if (audio && SDL_GetAudioStreamQueued(audio) < (int)(sizeof samples * 10))

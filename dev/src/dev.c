@@ -22,6 +22,7 @@
  *   port.poke_stick(BYTE)        sets joy_stick (the stick byte the game decodes), as the original's interrupt does mid-frame
  *   port.peek8/16/32(address)    from the same (cached until the game runs again)
  *   port.picture()               RGB, 3 bytes a pixel, 320 x 256;  port.picture_hash()
+ *   port.audio()                 the sound of the last frame: 882 stereo samples, 16 bit little endian, 44100 Hz (3528 bytes)
  *   port.load_high(str)          the original's memory from $80000 to $FFFFF (524288 bytes), read by the map masks of bobs above the screen
  *   port.load_ram(str)           the memory of the original (0x80000 bytes, its byte order) into the port, before the game has started
  *   port.save_state(PATH)        the whole state of the port (memory block, chips, sound, disk, input, the game's stack and context); port.load_state(PATH) puts it back,
@@ -580,6 +581,12 @@ static int l_peek8(lua_State *s) { return peek(s, 1); }
 static int l_peek16(lua_State *s) { return peek(s, 2); }
 static int l_peek32(lua_State *s) { return peek(s, 4); }
 
+static int l_audio(lua_State *s)
+{
+    lua_pushlstring(s, (const char *)host_audio(), 882 * 2 * sizeof(int16_t));
+    return 1;
+}
+
 static int l_picture(lua_State *s)
 {
     const uint32_t *p = host_picture();
@@ -838,7 +845,7 @@ static int l_close(lua_State *s)
 static const luaL_Reg port_functions[] = {
     { "step", l_step }, { "run", l_run }, { "run_until", l_run_until }, { "hook", l_hook }, { "unhook", l_unhook }, { "stop_on", l_stop_on },
     { "frame", l_frame }, { "trace", l_trace }, { "joy", l_joy }, { "key", l_key }, { "ram", l_ram }, { "poke_stick", l_poke_stick }, { "poke_stale", l_poke_stale }, { "edge_defer", l_edge_defer }, { "set_a6a", l_set_a6a }, { "set_shield", l_set_shield }, { "set_random", l_set_random }, { "set_level", l_set_level }, { "respawn_at", l_respawn_at }, { "give_weapon", l_give_weapon }, { "set_autofire", l_set_autofire }, { "set_speed", l_set_speed }, { "peek8", l_peek8 }, { "peek16", l_peek16 }, { "peek32", l_peek32 },
-    { "load_ram", l_load_ram }, { "load_high", l_load_high }, { "picture", l_picture }, { "picture_hash", l_picture_hash }, { "disk_gate", l_disk_gate }, { "disk_waiting", l_disk_waiting }, { "disk_release", l_disk_release }, { "run_function", l_run_function }, { "save_state", l_save_state }, { "load_state", l_load_state }, { "quit", l_quit }, { "listen", l_listen }, { "accept", l_accept }, { "readline", l_readline }, { "read", l_read }, { "write", l_write }, { "close", l_close }, { 0, 0 }
+    { "load_ram", l_load_ram }, { "load_high", l_load_high }, { "picture", l_picture }, { "audio", l_audio }, { "picture_hash", l_picture_hash }, { "disk_gate", l_disk_gate }, { "disk_waiting", l_disk_waiting }, { "disk_release", l_disk_release }, { "run_function", l_run_function }, { "save_state", l_save_state }, { "load_state", l_load_state }, { "quit", l_quit }, { "listen", l_listen }, { "accept", l_accept }, { "readline", l_readline }, { "read", l_read }, { "write", l_write }, { "close", l_close }, { 0, 0 }
 };
 
 int main(int argc, char **argv)
