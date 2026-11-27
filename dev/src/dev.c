@@ -1031,7 +1031,6 @@ int main(int argc, char **argv)
     if (!script)
         window = 1;   /* no script: the game is played in a window */
     host_set_headless(!window);
-    host_set_fixed_window(1);   /* floats in a tiling compositor */
     host_set_skip_menu(start_level || start_scroll >= 0 || *start_weapons || start_autofire || start_speed >= 0);   /* a start option: a new game goes straight to the level */
     r = host_init(n, forwarded);
     if (r == 2)   /* an option the port does not know: its usage line is the port's only */

@@ -22,7 +22,6 @@ void host_import_ram_buf(const uint8_t *ram_0x80000);   /* and back: the memory 
 void host_set_headless(int on);                   /* before host_init */
 void host_set_skip_menu(int on);                  /* a new game goes straight to the level: no credits, no menu (the dev build's start options); before host_init */
 int host_skip_menu(void);
-void host_set_fixed_window(int on);               /* a window that cannot be resized: a tiling compositor floats it; before host_init */
 void host_game_start(void);                         /* call the game's entry (nothing if the C has none yet) */
 int guest_load_game_image(void);                    /* the game image disk 1 leaves at $400 */
 
