@@ -3,7 +3,7 @@
  * memory in the original's byte order and the picture, sends it keys and the stick.  The lockstep with the original (dev/lua/peer.lua, host/lockstep.lua)
  * is written in Lua on top of this.
  *
- *   xenon2-sdl-dev [--lua SCRIPT] [--lua-args TEXT] [--window] [--level N] [--scroll N] [--weapons NAME[:LEVEL],...] [--autofire 1-4] [--speed 0-2] [port options...]   (no SCRIPT: the game is played in a window)
+ *   xenon2-sdl-dev [--lua SCRIPT] [--record [FILE]] [--lua-args TEXT] [--window] [--level N] [--scroll N] [--weapons NAME[:LEVEL],...] [--autofire 1-4] [--speed 0-2] [--record [FILE]] [port options...]   (no SCRIPT: the game is played in a window)
  *     (TEXT is the Lua global `args`)          the options of xenon2-sdl (--disks, ...); --headless unless --window is given
  *
  * The Lua global `port`:
@@ -22,6 +22,7 @@
  *   port.poke_stick(BYTE)        sets joy_stick (the stick byte the game decodes), as the original's interrupt does mid-frame
  *   port.peek8/16/32(address)    from the same (cached until the game runs again)
  *   port.picture()               RGB, 3 bytes a pixel, 320 x 256;  port.picture_hash()
+ *   port.record_frame()          with --record: this frame's picture and sound to the MP4
  *   port.audio()                 the sound of the last frame: 882 stereo samples, 16 bit little endian, 44100 Hz (3528 bytes)
  *   port.load_high(str)          the original's memory from $80000 to $FFFFF (524288 bytes), read by the map masks of bobs above the screen
  *   port.load_ram(str)           the memory of the original (0x80000 bytes, its byte order) into the port, before the game has started
@@ -42,7 +43,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
+#include <fcntl.h>
 #include <poll.h>
+#include <signal.h>
+#include <sys/wait.h>
 #include <sys/socket.h>
 #include <sys/un.h>
 #include <ucontext.h>
@@ -587,6 +592,71 @@ static int l_audio(lua_State *s)
     return 1;
 }
 
+/* --record FILE: each frame's picture (the 320 x 200 of the game's window) and sound go to an ffmpeg that writes FILE (H.264 and AAC, the picture scaled 4 times with
+ * nearest-neighbour).  The picture comes down a pipe on its stdin, the sound on fd 3; the file is finished when the process exits. */
+static int record_video = -1, record_audio = -1;
+static pid_t record_pid;
+
+static void record_stop(void)
+{
+    if (record_pid <= 0)
+        return;
+    close(record_video);
+    close(record_audio);
+    waitpid(record_pid, 0, 0);
+    record_pid = 0;
+}
+
+static int record_start(const char *file)
+{
+    int v[2], a[2];
+
+    if (pipe(v) || pipe(a))
+        return 0;
+    fcntl(a[1], F_SETPIPE_SZ, 1 << 20);   /* (ffmpeg reads the picture first: the sound waits in the pipe) */
+    signal(SIGPIPE, SIG_IGN);
+    record_pid = fork();
+    if (record_pid == 0) {
+        dup2(v[0], 0);
+        dup2(a[0], 3);
+        close(v[1]);
+        close(a[1]);
+        execlp("ffmpeg", "ffmpeg", "-y", "-hide_banner", "-loglevel", "error",
+               "-f", "rawvideo", "-pixel_format", "rgb24", "-video_size", "320x200", "-framerate", "50", "-i", "pipe:0",
+               "-f", "s16le", "-ar", "44100", "-ac", "2", "-i", "pipe:3",
+               "-vf", "scale=1280:800:flags=neighbor,format=yuv420p", "-c:v", "libx264", "-crf", "18", "-preset", "veryfast",
+               "-c:a", "aac", "-b:a", "160k", "-movflags", "+faststart", file, (char *)0);
+        fprintf(stderr, "dev: cannot run ffmpeg: %s\n", strerror(errno));
+        _exit(1);
+    }
+    close(v[0]);
+    close(a[0]);
+    record_video = v[1];
+    record_audio = a[1];
+    atexit(record_stop);
+    return record_pid > 0;
+}
+
+static int l_record_frame(lua_State *s)
+{
+    static uint8_t rgb[DISPLAY_W * 200 * 3];
+    const uint32_t *p = host_picture() + 14 * DISPLAY_W;
+    ssize_t r;
+
+    (void)s;
+    if (record_pid <= 0)
+        return 0;
+    for (int i = 0; i < DISPLAY_W * 200; i++) {
+        rgb[3 * i] = (uint8_t)(p[i] >> 16);
+        rgb[3 * i + 1] = (uint8_t)(p[i] >> 8);
+        rgb[3 * i + 2] = (uint8_t)p[i];
+    }
+    r = write(record_video, rgb, sizeof rgb);
+    r = write(record_audio, host_audio(), 882 * 2 * sizeof(int16_t));
+    (void)r;
+    return 0;
+}
+
 static int l_picture(lua_State *s)
 {
     const uint32_t *p = host_picture();
@@ -845,25 +915,67 @@ static int l_close(lua_State *s)
 static const luaL_Reg port_functions[] = {
     { "step", l_step }, { "run", l_run }, { "run_until", l_run_until }, { "hook", l_hook }, { "unhook", l_unhook }, { "stop_on", l_stop_on },
     { "frame", l_frame }, { "trace", l_trace }, { "joy", l_joy }, { "key", l_key }, { "ram", l_ram }, { "poke_stick", l_poke_stick }, { "poke_stale", l_poke_stale }, { "edge_defer", l_edge_defer }, { "set_a6a", l_set_a6a }, { "set_shield", l_set_shield }, { "set_random", l_set_random }, { "set_level", l_set_level }, { "respawn_at", l_respawn_at }, { "give_weapon", l_give_weapon }, { "set_autofire", l_set_autofire }, { "set_speed", l_set_speed }, { "peek8", l_peek8 }, { "peek16", l_peek16 }, { "peek32", l_peek32 },
-    { "load_ram", l_load_ram }, { "load_high", l_load_high }, { "picture", l_picture }, { "audio", l_audio }, { "picture_hash", l_picture_hash }, { "disk_gate", l_disk_gate }, { "disk_waiting", l_disk_waiting }, { "disk_release", l_disk_release }, { "run_function", l_run_function }, { "save_state", l_save_state }, { "load_state", l_load_state }, { "quit", l_quit }, { "listen", l_listen }, { "accept", l_accept }, { "readline", l_readline }, { "read", l_read }, { "write", l_write }, { "close", l_close }, { 0, 0 }
+    { "load_ram", l_load_ram }, { "load_high", l_load_high }, { "picture", l_picture }, { "record_frame", l_record_frame }, { "audio", l_audio }, { "picture_hash", l_picture_hash }, { "disk_gate", l_disk_gate }, { "disk_waiting", l_disk_waiting }, { "disk_release", l_disk_release }, { "run_function", l_run_function }, { "save_state", l_save_state }, { "load_state", l_load_state }, { "quit", l_quit }, { "listen", l_listen }, { "accept", l_accept }, { "readline", l_readline }, { "read", l_read }, { "write", l_write }, { "close", l_close }, { 0, 0 }
 };
+
+
+static void usage(FILE *out)
+{
+    fprintf(out,
+        "usage: xenon2-sdl-dev [options]\n"
+        "\n"
+        "the dev build: the game with a Lua host (see the top of dev/src/dev.c). Without --lua the game is played in a window.\n"
+        "\n"
+        "dev options:\n"
+        "  --lua SCRIPT         drive the game with a Lua script (the global `port`)\n"
+        "  --lua-args TEXT      the script's global `args`\n"
+        "  --window             show the window while a script runs (a script runs headless otherwise)\n"
+        "  --level N            a new game starts in level N (1 to 5)\n"
+        "  --scroll N           respawn at that scroll position (decimal, or 0x for hex); the level scrolls down from 4608 (0x1200) to 0\n"
+        "  --weapons LIST       NAME[:LEVEL],...  forward double side rear cannon drone laser electro mine1 mine2 missile homing flamer bomb;\n"
+        "                       a side weapon named twice is on both sides\n"
+        "  --autofire N         the fire rate, 1 to 4\n"
+        "  --speed N            the ship's speed, 0 to 2\n"
+        "  --record [FILE]      record the picture and sound to an MP4 through ffmpeg (default captures/record-DATE-TIME.mp4); a played game is\n"
+        "                       recorded as it goes, a script calls port.record_frame() once a frame\n"
+        "  --help               this text\n"
+        "  (--level, --scroll, --weapons, --autofire and --speed skip the credits, the menu, the first LOADING screen and GET READY)\n"
+        "\n"
+        "port options:\n"
+        "  --disks FOLDER       the folder with the two disk images\n"
+        "  --scale N            window size, in multiples of 320 x 200\n"
+        "  --renderer NAME      software, opengl, vulkan, ...\n"
+        "  --interpolate        smooth motion\n");
+}
 
 int main(int argc, char **argv)
 {
     const char *script = 0, *script_args = "";
     char *forwarded[256];
     int n = 0, window = 0, start_level = 0, start_scroll = -1;
-    const char *start_weapons = "";
+    const char *start_weapons = "", *record = 0;
     int start_autofire = 0, start_speed = -1;
     int r;
 
     forwarded[n++] = argv[0];
     for (int i = 1; i < argc && n < 250; i++) {
-        if (!strcmp(argv[i], "--lua") && i + 1 < argc) script = argv[++i];
-        else if (!strcmp(argv[i], "--lua-args") && i + 1 < argc) script_args = argv[++i];
+        static const char *const with_value[] = { "--lua", "--lua-args", "--level", "--scroll", "--weapons", "--autofire", "--speed" };
+
+        if (!strcmp(argv[i], "--help") || !strcmp(argv[i], "-h")) {
+            usage(stdout);
+            return 0;
+        }
+        for (unsigned k = 0; k < sizeof with_value / sizeof *with_value; k++)
+            if (!strcmp(argv[i], with_value[k]) && i + 1 >= argc) {
+                fprintf(stderr, "dev: %s needs a value\n\n", argv[i]);
+                usage(stderr);
+                return 2;
+            }
+        if (!strcmp(argv[i], "--lua")) script = argv[++i];
+        else if (!strcmp(argv[i], "--lua-args")) script_args = argv[++i];
         else if (!strcmp(argv[i], "--window")) window = 1;
-        else if (!strcmp(argv[i], "--level") && i + 1 < argc) start_level = atoi(argv[++i]);
-        else if (!strcmp(argv[i], "--scroll") && i + 1 < argc) {
+        else if (!strcmp(argv[i], "--level")) start_level = atoi(argv[++i]);
+        else if (!strcmp(argv[i], "--scroll")) {
             char *end;
             long value = strtol(argv[++i], &end, 0);   /* decimal, or hex with 0x */
 
@@ -873,21 +985,32 @@ int main(int argc, char **argv)
             }
             start_scroll = (int)value;
         }
-        else if (!strcmp(argv[i], "--autofire") && i + 1 < argc) {
+        else if (!strcmp(argv[i], "--record")) {
+            static char stamp[64];
+            time_t now = time(0);
+
+            if (i + 1 < argc && strncmp(argv[i + 1], "--", 2)) {
+                record = argv[++i];
+            } else {   /* no file: captures/record-DATE-TIME.mp4 */
+                strftime(stamp, sizeof stamp, "captures/record-%Y%m%d-%H%M%S.mp4", localtime(&now));
+                record = stamp;
+            }
+        }
+        else if (!strcmp(argv[i], "--autofire")) {
             start_autofire = atoi(argv[++i]);
             if (start_autofire < 1 || start_autofire > 4) {
                 fprintf(stderr, "dev: --autofire takes 1 to 4\n");
                 return 2;
             }
         }
-        else if (!strcmp(argv[i], "--speed") && i + 1 < argc) {
+        else if (!strcmp(argv[i], "--speed")) {
             start_speed = atoi(argv[++i]);
             if (start_speed < 0 || start_speed > 2) {
                 fprintf(stderr, "dev: --speed takes 0 to 2\n");
                 return 2;
             }
         }
-        else if (!strcmp(argv[i], "--weapons") && i + 1 < argc) {
+        else if (!strcmp(argv[i], "--weapons")) {
             char list[256], *item, *save = 0;
 
             start_weapons = argv[++i];
@@ -911,6 +1034,8 @@ int main(int argc, char **argv)
     host_set_fixed_window(1);   /* floats in a tiling compositor */
     host_set_skip_menu(start_level || start_scroll >= 0 || *start_weapons || start_autofire || start_speed >= 0);   /* a start option: a new game goes straight to the level */
     r = host_init(n, forwarded);
+    if (r == 2)   /* an option the port does not know: its usage line is the port's only */
+        usage(stderr);
     if (r)
         return r;
     for (int i = 0; i < hook_count; i++)
@@ -921,6 +1046,13 @@ int main(int argc, char **argv)
     lua_setglobal(L, "port");
     lua_pushstring(L, script_args);
     lua_setglobal(L, "args");
+    if (record) {
+        if (!record_start(record)) {
+            fprintf(stderr, "dev: cannot start ffmpeg for --record\n");
+            return 1;
+        }
+        fprintf(stderr, "dev: recording to %s\n", record);
+    }
     if (start_level < 0 || start_level > 5) {
         fprintf(stderr, "dev: --level takes 1 to 5\n");
         return 2;
@@ -963,7 +1095,7 @@ int main(int argc, char **argv)
     lua_pushstring(L, script ? script : "");
     lua_rawseti(L, -2, 0);
     lua_setglobal(L, "arg");
-    if ((script ? luaL_dofile(L, script) : luaL_dostring(L, "while true do port.step() end")) != 0) {
+    if ((script ? luaL_dofile(L, script) : luaL_dostring(L, record ? "while true do port.step(); port.record_frame() end" : "while true do port.step() end")) != 0) {
         fprintf(stderr, "dev: %s\n", lua_tostring(L, -1));
         return 1;
     }
