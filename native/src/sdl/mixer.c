@@ -112,7 +112,7 @@ void sound_mix(int16_t *out, int frames)
                     v->playing = 0;
             }
         }
-        out[2 * i] = clip(left * 8);
-        out[2 * i + 1] = clip(right * 8);
+        out[2 * i] = clip(left * 4);
+        out[2 * i + 1] = clip(right * 4);
     }
 }
